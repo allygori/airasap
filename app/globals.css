@@ -1,0 +1,183 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --foreground: #111827;
+  --primary: #16a34a;
+  --primary-soft: #dcfce7;
+  --secondary: #0f172a;
+  --secondary-soft: #e2e8f0;
+  --cta: #f97316;
+  --cta-soft: #ffedd5;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+  --ink-muted: #5f6b7a;
+  --surface: #f8fafc;
+  --surface-strong: #ffffff;
+  --border: #e5e7eb;
+  --b2-background: #fbf6ea;
+  --b2-foreground: #112c32;
+  --b2-primary: #0a4a4a;
+  --b2-primary-soft: #d8f2ec;
+  --b2-secondary: #ff7a45;
+  --b2-secondary-soft: #ffe2d5;
+  --b2-ink-muted: #5d716e;
+  --b2-surface: #fffaf0;
+  --b2-surface-strong: #ffffff;
+  --b2-border: #e6d8c2;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-soft: var(--secondary-soft);
+  --color-cta: var(--cta);
+  --color-cta-soft: var(--cta-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-ink-muted: var(--ink-muted);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border-soft: var(--border);
+  --color-b2-background: var(--b2-background);
+  --color-b2-foreground: var(--b2-foreground);
+  --color-b2-primary: var(--b2-primary);
+  --color-b2-primary-soft: var(--b2-primary-soft);
+  --color-b2-secondary: var(--b2-secondary);
+  --color-b2-secondary-soft: var(--b2-secondary-soft);
+  --color-b2-ink-muted: var(--b2-ink-muted);
+  --color-b2-surface: var(--b2-surface);
+  --color-b2-surface-strong: var(--b2-surface-strong);
+  --color-b2-border-soft: var(--b2-border);
+  --font-sans: "Aptos", "Segoe UI", sans-serif;
+  --font-mono: "Cascadia Code", "Consolas", monospace;
+}
+
+.dark {
+  --background: #07110d;
+  --foreground: #f8fafc;
+  --primary: #22c55e;
+  --primary-soft: #123522;
+  --secondary: #e7eef8;
+  --secondary-soft: #172033;
+  --cta: #fb923c;
+  --cta-soft: #3a1d0d;
+  --danger: #f87171;
+  --danger-soft: #331414;
+  --ink-muted: #aab7c5;
+  --surface: #0d1712;
+  --surface-strong: #111d17;
+  --border: #24352b;
+  --b2-background: #071313;
+  --b2-foreground: #f3f0e8;
+  --b2-primary: #39a6a6;
+  --b2-primary-soft: #0e2c2e;
+  --b2-secondary: #ff8a65;
+  --b2-secondary-soft: #321b15;
+  --b2-ink-muted: #a4bbb6;
+  --b2-surface: #0c1b1c;
+  --b2-surface-strong: #102527;
+  --b2-border: #214244;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Aptos", "Segoe UI", sans-serif;
+}
+
+.brand-b2 {
+  --background: var(--b2-background);
+  --foreground: var(--b2-foreground);
+  --primary: var(--b2-primary);
+  --primary-soft: var(--b2-primary-soft);
+  --secondary: var(--b2-secondary);
+  --secondary-soft: var(--b2-secondary-soft);
+  --ink-muted: var(--b2-ink-muted);
+  --surface: var(--b2-surface);
+  --surface-strong: var(--b2-surface-strong);
+  --border: var(--b2-border);
+}
+
+::selection {
+  background: var(--cta);
+  color: #111827;
+}
+
+@keyframes pasaria-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pasaria-float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(var(--float-rotate, 0deg));
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(var(--float-rotate, 0deg));
+  }
+}
+
+@keyframes pasaria-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scaleX(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@keyframes pasaria-scan {
+  0% {
+    transform: translateY(-12%);
+  }
+
+  100% {
+    transform: translateY(118%);
+  }
+}
+
+.animate-fade-up {
+  animation: pasaria-fade-up 680ms ease both;
+}
+
+.animate-float-soft {
+  animation: pasaria-float 5s ease-in-out infinite;
+}
+
+.animate-pulse-line {
+  animation: pasaria-pulse 2.8s ease-in-out infinite;
+}
+
+.animate-scan {
+  animation: pasaria-scan 4.8s ease-in-out infinite alternate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
