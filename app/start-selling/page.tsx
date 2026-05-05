@@ -22,7 +22,7 @@ import {
   WorkflowCircle06Icon,
 } from "@hugeicons/core-free-icons";
 import Link from "next/link";
-import { ThemeToggle } from "../theme-toggle";
+import { ThemeToggle } from "../../components/theme-toggle";
 
 type IconSvgObject = readonly (readonly [
   string,
@@ -234,9 +234,8 @@ function HeroIllustration() {
                   className="flex h-20 items-end rounded-2xl bg-primary-soft p-2"
                 >
                   <div
-                    className={`w-full rounded-xl transition-all duration-700 ${
-                      index === 4 ? "bg-secondary" : "bg-primary"
-                    }`}
+                    className={`w-full rounded-xl transition-all duration-700 ${index === 4 ? "bg-secondary" : "bg-primary"
+                      }`}
                     style={{ height: `${height}%` }}
                   />
                 </div>
@@ -304,9 +303,8 @@ function BuilderIllustration() {
           </span>
           <span className="flex-1 text-sm font-black">{item.label}</span>
           <span
-            className={`h-2 rounded-full ${
-              index === 3 ? "w-20 bg-secondary" : "w-14 bg-primary/35"
-            }`}
+            className={`h-2 rounded-full ${index === 3 ? "w-20 bg-secondary" : "w-14 bg-primary/35"
+              }`}
           />
         </div>
       ))}

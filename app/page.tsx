@@ -20,7 +20,7 @@ import {
   WhatsappIcon,
   ShoppingBasket03Icon,
 } from "@hugeicons/core-free-icons";
-import { ThemeToggle } from "./theme-toggle";
+import { ThemeToggle } from "../components/theme-toggle";
 
 type IconSvgObject = readonly (readonly [
   string,
@@ -570,11 +570,10 @@ export default function Home() {
             {packages.map((item) => (
               <article
                 key={item.name}
-                className={`relative rounded-[1.5rem] border p-6 ${
-                  item.highlight
+                className={`relative rounded-[1.5rem] border p-6 ${item.highlight
                     ? "border-cta bg-cta text-[#1f1308] shadow-[0_28px_70px_rgba(249,115,22,0.26)]"
                     : "border-white/15 bg-white/8 text-white dark:bg-surface-strong dark:text-foreground"
-                }`}
+                  }`}
               >
                 {item.highlight ? (
                   <span className="absolute right-5 top-5 rounded-full bg-[#1f1308] px-3 py-1 text-xs font-black text-cta">
