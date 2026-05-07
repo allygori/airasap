@@ -27,6 +27,34 @@
   --b2-surface: #fffaf0;
   --b2-surface-strong: #ffffff;
   --b2-border: #e6d8c2;
+
+  /* Brand Primary */
+  --b-primary-50: #e7f2f2;
+  --b-primary-100: #c2dfdf;
+  --b-primary-200: #99caca;
+  --b-primary-300: #6ab2b2;
+  --b-primary-400: #429c9c;
+  --b-primary-500: #218585;
+  --b-primary-600: #176969;
+  --b-primary-700: #115151;
+  --b-primary-800: #0d3d3d;
+  --b-primary-900: #0a4a4a;
+  --b-primary-950: #052323;
+  --b-primary: var(--b-primary-900);
+
+  /* Brand Secondary */
+  --b-secondary-50: #fff2ed;
+  --b-secondary-100: #ffe1d1;
+  --b-secondary-200: #ffc2a5;
+  --b-secondary-300: #ff9d71;
+  --b-secondary-400: #ff7a45;
+  --b-secondary-500: #fa510f;
+  --b-secondary-600: #d63704;
+  --b-secondary-700: #ad2703;
+  --b-secondary-800: #882009;
+  --b-secondary-900: #6d1b0b;
+  --b-secondary-950: #3c0b03;
+  --b-secondary: var(--b-secondary-400);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
@@ -83,6 +111,30 @@
   --color-b2-surface: var(--b2-surface);
   --color-b2-surface-strong: var(--b2-surface-strong);
   --color-b2-border-soft: var(--b2-border);
+  --color-b-primary-50: var(--b-primary-50);
+  --color-b-primary-100: var(--b-primary-100);
+  --color-b-primary-200: var(--b-primary-200);
+  --color-b-primary-300: var(--b-primary-300);
+  --color-b-primary-400: var(--b-primary-400);
+  --color-b-primary-500: var(--b-primary-500);
+  --color-b-primary-600: var(--b-primary-600);
+  --color-b-primary-700: var(--b-primary-700);
+  --color-b-primary-800: var(--b-primary-800);
+  --color-b-primary-900: var(--b-primary-900);
+  --color-b-primary-950: var(--b-primary-950);
+  --color-b-primary: var(--b-primary);
+  --color-b-secondary-50: var(--b-secondary-50);
+  --color-b-secondary-100: var(--b-secondary-100);
+  --color-b-secondary-200: var(--b-secondary-200);
+  --color-b-secondary-300: var(--b-secondary-300);
+  --color-b-secondary-400: var(--b-secondary-400);
+  --color-b-secondary-500: var(--b-secondary-500);
+  --color-b-secondary-600: var(--b-secondary-600);
+  --color-b-secondary-700: var(--b-secondary-700);
+  --color-b-secondary-800: var(--b-secondary-800);
+  --color-b-secondary-900: var(--b-secondary-900);
+  --color-b-secondary-950: var(--b-secondary-950);
+  --color-b-secondary: var(--b-secondary);
   --font-sans: var(--font-sans);
   --font-mono: "Cascadia Code", "Consolas", monospace;
   --font-heading: var(--font-sans);
