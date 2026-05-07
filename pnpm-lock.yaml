@@ -8,6 +8,12 @@ importers:
 
   .:
     dependencies:
+      '@allygory/action-sheet':
+        specifier: ^1.0.0
+        version: 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/dialog':
+        specifier: ^1.0.0
+        version: 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@hugeicons/core-free-icons':
         specifier: ^4.1.1
         version: 4.1.1
@@ -38,6 +44,9 @@ importers:
       shadcn:
         specifier: ^4.6.0
         version: 4.6.0(@types/node@20.19.39)(typescript@5.9.3)
+      swiper:
+        specifier: ^12.1.4
+        version: 12.1.4
       tailwind-merge:
         specifier: ^3.5.0
         version: 3.5.0
@@ -75,6 +84,166 @@ packages:
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
+
+  '@allygory/action-sheet@1.0.0':
+    resolution: {integrity: sha512-bPwRJxFJDHbkqw88yEtH+PcINeFlInKv5OTI555C927uoTOoUWqO04bHyQAbWYCRIfgAiC7rujkZF9Py14WkoQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/context@1.0.0':
+    resolution: {integrity: sha512-PaSTsN9EzCPVaHuoBV1E2L4iJ1bGExJs8PilS0z2JvqwT+nn1jntD8n/0Kw7iCtTlLF+JnmotHGS+s3lVNeFyw==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/dialog@1.0.0':
+    resolution: {integrity: sha512-3ZIvoxRC4ASoBDg/BYgRHNniCV7RbHXEZYx/LIracr8ggnWElcgeD2iFou5Z4m3L6ffNokSazeG/9on13FGUzw==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@allygory/dismissable-layer@1.0.0':
+    resolution: {integrity: sha512-qTGevMN7CWS6rxXvVZpDpEfhnWW6oRD23x+Bq9ztwUC4RPY+Uet26t+sJGw0owEmTvSlfQNSidCSPu+yJLDEYA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/element@1.0.0':
+    resolution: {integrity: sha512-fDh9q0/70kfbVy/4XtGRKLo1mNbioZhPnauAefTZJBx+bdvs7nO/ZYfMq6Fwb5FnZdcPx1nIDHkVAoS9gOgzVQ==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@allygory/focus-scope@1.0.0':
+    resolution: {integrity: sha512-KvMVtbD/O0fF20vGUiMOu2DIV+fCsSUPJXr0FG5YoQCQhZuWlg4o/fmuQbYkzST4wZM96zvlU6Bz+1uaQom4BQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/portal@1.0.0':
+    resolution: {integrity: sha512-XT86HLjaG8snV5nbODjaWuSpgqSmBLGPUMxvAaoFFSOpasNHhe9gN9AE+cBl02zlD7X3PXW7nNnCDZTgCy2ELg==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@allygory/presence@1.0.0':
+    resolution: {integrity: sha512-CQ/VbaC645fC2+BBLmoYEfLXLXT0+D/07MtXOZ6D8v0x7i9COOXUsjNzyFKLCkJsfyQLWZldT49e8kekERe02w==}
+    peerDependencies:
+      '@types/react': '*'
+      '@types/react-dom': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+      react-dom: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      '@types/react-dom':
+        optional: true
+
+  '@allygory/slot@1.0.0':
+    resolution: {integrity: sha512-NGPcZ2XlRqj3neIly+rUjC8OUle1p2bxVr/xBBUNk6/VJ3m8tCd8Oh3z0GxFEMmY5/bQZoT8bi23d/dGTzNi+w==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-callback-ref@1.0.0':
+    resolution: {integrity: sha512-BPCY6aeHil1TQ7EpmFeTgx7CjarwSGMpD2LJCvZpK8ooVrNf25D/pOX4dmClYSJxXH+Bve2UH1eOeT+zbJLTmQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-compose-refs@1.0.0':
+    resolution: {integrity: sha512-nKy2spP4oiMY1hCjrYmLZPpn0VNG4pFV34qbKan5KXdNmsGyiCUA1C2BdktxHwX0TseLVxjcjfbPH7cfBCnGvA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-controllable-state@1.0.0':
+    resolution: {integrity: sha512-+sFMLn1Opb+YQiAIGYRiUTo0enoLaVJRM3te/K467oTGIvy29iZ3a4fsRrOtVzpk950sWLDygxyflWcC/oFAwA==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-focus-guards@1.0.0':
+    resolution: {integrity: sha512-Yc9irrM5nMN7b13g/nUmwWjOfBcnePbisGm85yvKVsk4YQJYo2xWQn6l73HdHIe1Hcr9HPnE9rX8u8888SnRnw==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-id@1.0.0':
+    resolution: {integrity: sha512-S1PBDQj8VxFq++F9pfk0T66DeRqcDs8TmaXEOL29pdWBch0dqkBQK96jh3Y8mPBbwcgD3S8LSALDBsS8GAHCzQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-layout-effect@1.0.0':
+    resolution: {integrity: sha512-zEOKjkXyasxfhvNRzr/kZZfFFFUKihaVAhLbVALYbmiR+Ge4EdzOJnsjSA7aomGJFyIj2Vt9DTugJT7nTEDD0w==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+
+  '@allygory/use-state-machine@1.0.0':
+    resolution: {integrity: sha512-DKbV9NhO51f4905HUpSVSJLMAFnmzqcNKYkgL8QVA+zfKUezzLqjqtYCyrKYImQbTMGewTWqlJujjf0J92acAQ==}
+    peerDependencies:
+      '@types/react': '*'
+      react: ^16.8 || ^17.0 || ^18.0 || ^19.0 || ^19.0.0-rc
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   '@babel/code-frame@7.29.0':
     resolution: {integrity: sha512-9NhCeYjq9+3uxgdtp20LSiJXJvN0FeCtNGpJxuMFZ1Kv3cWUNb6DOhJwUvcVCzKGR66cw4njwM6hrJLqgOwbcw==}
@@ -3487,6 +3656,10 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
+  swiper@12.1.4:
+    resolution: {integrity: sha512-bihiwoKMOQwW8FfdUbo1DgkVH25E+4ZELIq0oopL1KTKBteLuaTMi/wwFjMxtlhTkk45k3XQ89D1Fvv0spSqBA==}
+    engines: {node: '>= 4.7.0'}
+
   tagged-tag@1.0.0:
     resolution: {integrity: sha512-yEFYrVhod+hdNyx7g5Bnkkb0G6si8HJurOoOEgC8B/O0uXLHlaey/65KRv6cuWBNhBgHKAROVpc7QyYqE5gFng==}
     engines: {node: '>=20'}
@@ -3751,6 +3924,159 @@ packages:
 snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
+
+  '@allygory/action-sheet@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/context': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/dialog': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/dismissable-layer': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/element': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/focus-scope': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/portal': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/presence': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/use-callback-ref': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-controllable-state': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-focus-guards': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-id': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+    transitivePeerDependencies:
+      - '@types/react-dom'
+      - react-dom
+
+  '@allygory/context@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/dialog@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/context': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/dismissable-layer': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/element': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/focus-scope': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/portal': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/presence': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/slot': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-controllable-state': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-focus-guards': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-id': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      aria-hidden: 1.2.6
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+      react-remove-scroll: 2.7.2(@types/react@19.2.14)(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+
+  '@allygory/dismissable-layer@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/element': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/use-callback-ref': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+    transitivePeerDependencies:
+      - '@types/react-dom'
+      - react-dom
+
+  '@allygory/element@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/slot': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+
+  '@allygory/focus-scope@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/element': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/use-callback-ref': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+    transitivePeerDependencies:
+      - '@types/react-dom'
+      - react-dom
+
+  '@allygory/portal@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/element': 1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@allygory/use-layout-effect': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+
+  '@allygory/presence@1.0.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)':
+    dependencies:
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-layout-effect': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      '@allygory/use-state-machine': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+      react-dom: 19.2.4(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      '@types/react-dom': 19.2.3(@types/react@19.2.14)
+
+  '@allygory/slot@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      '@allygory/use-compose-refs': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-callback-ref@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-compose-refs@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-controllable-state@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      '@allygory/use-callback-ref': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-focus-guards@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-id@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      '@allygory/use-layout-effect': 1.0.0(@types/react@19.2.14)(react@19.2.4)
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-layout-effect@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
+
+  '@allygory/use-state-machine@1.0.0(@types/react@19.2.14)(react@19.2.4)':
+    dependencies:
+      react: 19.2.4
+    optionalDependencies:
+      '@types/react': 19.2.14
 
   '@babel/code-frame@7.29.0':
     dependencies:
@@ -7458,6 +7784,8 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
+
+  swiper@12.1.4: {}
 
   tagged-tag@1.0.0: {}
 

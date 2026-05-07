@@ -2,6 +2,12 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* Swiper styles */
+/* @import "swiper/css";
+@import "swiper/css/free-mode";
+@import "swiper/css/pagination";
+@import "swiper/css/thumbs"; */
+
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
@@ -84,6 +90,9 @@
   --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
   --sidebar-border: oklch(0.92 0.004 286.32);
   --sidebar-ring: oklch(0.705 0.015 286.067);
+
+  --font-size-2xs: 0.65rem;
+  --font-size-2xs--line-height: 0.825rem;
 }
 
 @theme inline {
@@ -172,6 +181,21 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --font-size-2xs: var(--font-size-2xs);
+
+  --animate-fade-in-down: fade-in-down 0.5s ease-out;
+
+  @keyframes fade-in-down {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 .dark {

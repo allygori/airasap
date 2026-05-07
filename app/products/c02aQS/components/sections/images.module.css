@@ -1,0 +1,13 @@
+/* .swiper-ovveride {
+} */
+
+.swiper-ovveride :global(.swiper-pagination.swiper-pagination-fraction) {
+  bottom: var(--swiper-pagination-bottom, 1rem) !important;
+  top: var(--swiper-pagination-top, auto) !important;
+  left: var(--swiper-pagination-bottom, 1rem) !important;
+  width: auto !important;
+}
+
+.swiper-slide-ovveride {
+  width: auto !important;
+}
