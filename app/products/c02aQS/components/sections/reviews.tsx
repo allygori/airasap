@@ -38,14 +38,14 @@ const Reviews = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-white md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-3 md:px-5 py-2" }}
       >
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-800">
+          <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
             Penilaian Produk
           </h2>
-          <div className="flex items-center text-[#ff7a45]">
+          <div className="flex items-center text-secondary">
             <span className="mr-1 text-xs font-bold">4.8/5</span>
             <HugeiconsIcon icon={StarIcon} size={12} className="fill-current" />
           </div>
@@ -53,10 +53,10 @@ const Reviews = ({ className = "" }: Props) => {
 
         <div className="space-y-3">
           {reviews.map((review) => (
-            <div key={review.id} className="border-b border-slate-100 pb-3 last:border-0">
+            <div key={review.id} className="border-b border-border pb-3 last:border-0">
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-medium text-slate-600">{review.user}</span>
-                <span className="text-[10px] text-slate-400">{review.date}</span>
+                <span className="text-[11px] font-medium text-foreground">{review.user}</span>
+                <span className="text-[10px] text-ink-muted">{review.date}</span>
               </div>
 
               <div className="mb-1 flex gap-0.5">
@@ -65,18 +65,18 @@ const Reviews = ({ className = "" }: Props) => {
                     key={i}
                     icon={StarIcon}
                     size={10}
-                    className={i < review.rating ? "text-[#ff7a45] fill-current" : "text-[#ff7a45]"}
+                    className={i < review.rating ? "text-secondary fill-current" : "text-secondary"}
                   />
                 ))}
               </div>
 
-              <p className="mb-2 text-xs leading-relaxed text-slate-700">
+              <p className="mb-2 text-xs leading-relaxed text-foreground">
                 {review.comment}
               </p>
 
               <div className="flex flex-wrap gap-1.5">
                 {review.video && (
-                  <div className="relative aspect-[9/16] w-16 overflow-hidden rounded-md border border-slate-200 bg-slate-100">
+                  <div className="relative aspect-[9/16] w-16 overflow-hidden rounded-md border border-border bg-surface">
                     <Image
                       src={review.video.thumbnail}
                       alt="Review video"
@@ -91,7 +91,7 @@ const Reviews = ({ className = "" }: Props) => {
                   </div>
                 )}
                 {review.images.map((img, i) => (
-                  <div key={i} className="relative aspect-square w-16 overflow-hidden rounded-md border border-slate-100">
+                  <div key={i} className="relative aspect-square w-16 overflow-hidden rounded-md border border-border">
                     <Image
                       src={img}
                       alt="Review image"
@@ -105,7 +105,7 @@ const Reviews = ({ className = "" }: Props) => {
           ))}
         </div>
 
-        <button className="mt-2 w-full rounded-md border border-slate-100 py-1.5 text-[11px] font-medium text-slate-500 hover:bg-slate-50">
+        <button className="mt-2 w-full rounded-md border border-border py-1.5 text-[11px] font-medium text-ink-muted hover:bg-surface">
           Lihat Semua Ulasan
         </button>
       </Container>

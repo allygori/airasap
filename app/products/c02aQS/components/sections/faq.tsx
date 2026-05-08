@@ -29,19 +29,19 @@ const FAQ = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-white md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-3 md:px-5 py-6" }}
       >
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-slate-800">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-foreground">
           Pertanyaan Umum (FAQ)
         </h2>
         <Accordion type="single" collapsible className="w-full">
           {faqData.map((item, index) => (
-            <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger className="text-sm font-medium text-slate-700">
+            <AccordionItem key={index} value={`item-${index}`} className="border-border">
+              <AccordionTrigger className="text-sm font-medium text-foreground hover:no-underline">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="text-sm leading-relaxed text-slate-500">
+              <AccordionContent className="text-sm leading-relaxed text-ink-muted">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>

@@ -79,7 +79,7 @@ const Images = ({ className = "" }: Props) => {
           type: "fraction",
           renderFraction(currentClass, totalClass) {
             return `
-              <div class="bg-white/75 text-center text-xs text-gray-800 px-1 py-0.5 border border-gray-300 rounded-md inline-flex opacity-90">
+              <div class="bg-surface-strong/75 text-center text-[10px] font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
                 <span class="${currentClass}"></span> / <span class="${totalClass}"></span>
               </div>
             `;
@@ -88,8 +88,8 @@ const Images = ({ className = "" }: Props) => {
         className={`${styles["swiper-ovveride"]}`}
         style={
           {
-            "--swiper-navigation-color": "#fff",
-            "--swiper-pagination-color": "#fff",
+            "--swiper-navigation-color": "var(--primary)",
+            "--swiper-pagination-color": "var(--primary)",
           } as CSSProperties
         }
         onSlideChange={(swiper) => onMainActiveIndexChange(swiper.realIndex)}
@@ -111,50 +111,52 @@ const Images = ({ className = "" }: Props) => {
       </Swiper>
 
       {/* variants:name */}
-      <div>
-        <p className="mb-0.5 px-0.5 text-xs">
+      <div className="bg-surface-strong border-b border-border py-1">
+        <p className="mb-0 px-2 text-[10px] text-ink-muted">
           {variant.colors[mainRealIndex - mainImagesTotal]?.value ? (
-            <small>
-              {variant.colors[mainRealIndex - mainImagesTotal].name}
-            </small>
+            <span>
+              Warna: {variant.colors[mainRealIndex - mainImagesTotal].name}
+            </span>
           ) : (
-            <small>Terdapat {variant.colors.length} variasi warna</small>
+            <span>Terdapat {variant.colors.length} variasi warna</span>
           )}
         </p>
       </div>
 
       {/* thumbs */}
-      <Swiper
-        ref={thumbsSwiperRef}
-        modules={[FreeMode, Thumbs]}
-        loop={false}
-        freeMode={true}
-        autoHeight={false}
-        watchSlidesProgress={true}
-        // breakpoints={breakpoints}
-        slidesPerView={"auto"}
-        spaceBetween={0}
-      >
-        {variant.colors.slice(0).map((image, idx) => {
-          return (
-            <SwiperSlide
-              key={idx}
-              className={`${styles["swiper-slide-ovveride"]} px-[0.175rem]`}
-            >
-              <div
-                className={`aspect-square h-16 w-16 overflow-hidden md:h-20 md:w-20 cursor-pointer ${idx === mainRealIndex - mainImagesTotal ? "border border-[#ee4d2d]" : ""}`}
-                onClick={() => chooseVariantColor(image, idx)}
+      <div className="bg-surface-strong pb-2 pt-2">
+        <Swiper
+          ref={thumbsSwiperRef}
+          modules={[FreeMode, Thumbs]}
+          loop={false}
+          freeMode={true}
+          autoHeight={false}
+          watchSlidesProgress={true}
+          // breakpoints={breakpoints}
+          slidesPerView={"auto"}
+          spaceBetween={0}
+        >
+          {variant.colors.slice(0).map((image, idx) => {
+            return (
+              <SwiperSlide
+                key={idx}
+                className={`${styles["swiper-slide-ovveride"]} px-[0.175rem]`}
               >
-                <Image
-                  src={image.src}
-                  alt={image.name}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-            </SwiperSlide>
-          );
-        })}
-      </Swiper>
+                <div
+                  className={`aspect-square h-14 w-14 overflow-hidden rounded-md transition-all md:h-16 md:w-16 cursor-pointer ${idx === mainRealIndex - mainImagesTotal ? "ring-2 ring-secondary ring-offset-2 ring-offset-surface-strong" : "opacity-60 grayscale-[0.5]"}`}
+                  onClick={() => chooseVariantColor(image, idx)}
+                >
+                  <Image
+                    src={image.src}
+                    alt={image.name}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              </SwiperSlide>
+            );
+          })}
+        </Swiper>
+      </div>
     </section>
   );
 };
