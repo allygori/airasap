@@ -24,7 +24,7 @@ export function SizeGuideModal() {
           Panduan Ukuran
         </button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md bg-surface-strong border-border">
+      <DialogContent className="sm:max-w-md bg-background border-border">
         <DialogHeader>
           <DialogTitle className="text-foreground">Panduan Ukuran Hana Dress</DialogTitle>
         </DialogHeader>

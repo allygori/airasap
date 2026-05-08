@@ -8,7 +8,7 @@ type Props = {
 
 const CTA = ({ className = "" }: Props) => {
   return (
-    <section className={`fixed bottom-0 left-0 z-50 w-full border-t border-border bg-surface-strong/80 backdrop-blur-xl ${className}`}>
+    <section className={`fixed bottom-0 left-0 z-50 w-full border-t border-border bg-background/80 backdrop-blur-xl ${className}`}>
       <Container
         className={`w-full md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-3 md:px-5 py-3" }}

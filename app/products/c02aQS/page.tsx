@@ -12,7 +12,7 @@ const Page = () => {
   return (
     <main className="min-h-screen bg-surface pb-24 text-foreground">
       <Container
-        className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-0 md:px-5" }}
       >
         {/* section:images */}
@@ -25,7 +25,7 @@ const Page = () => {
       {/* section:product-name */}
       <section className="">
         <Container
-          className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
+          className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
           classObject={{ padding: "px-3 md:px-5 pb-4" }}
         >
           <h1 className="m-0 text-sm font-normal">

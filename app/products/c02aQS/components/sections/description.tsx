@@ -8,7 +8,7 @@ const Description = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-3 md:px-5 py-4" }}
       >
         <h2 className="mb-2 text-sm font-semibold text-foreground uppercase tracking-wider">Deskripsi</h2>
@@ -50,7 +50,7 @@ const Description = ({ className = "" }: Props) => {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-surface-strong">
+              <tbody className="bg-background/80">
                 <tr>
                   <td className="border border-border p-2 text-center text-sm text-foreground font-medium">
                     Medium

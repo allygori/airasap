@@ -52,19 +52,19 @@ const Images = ({ className = "" }: Props) => {
       setMainPreviousRealIndex(mainRealIndex);
       setMainRealIndex(realIndex);
 
-      // slide next
-      if (mainRealIndex > realIndex) {
-        thumbsSwiperRef.current?.swiper.slideTo(realIndex - mainImagesTotal);
-      }
-      // prev
-      else {
-        thumbsSwiperRef.current?.swiper.slideTo(realIndex - mainImagesTotal);
+      if (thumbsSwiperRef.current?.swiper) {
+        if (realIndex >= mainImagesTotal) {
+          thumbsSwiperRef.current?.swiper.slideTo(realIndex - mainImagesTotal);
+        } else {
+          thumbsSwiperRef.current?.swiper.slideTo(0);
+        }
       }
     }
   };
 
   return (
     <section className={className}>
+      {/* Swiper Utama */}
       <Swiper
         ref={mainSwiperRef}
         modules={[FreeMode, Pagination, Thumbs]}
@@ -74,18 +74,17 @@ const Images = ({ className = "" }: Props) => {
         grabCursor={true}
         autoHeight={false}
         spaceBetween={0}
-        // thumbs={{ swiper: thumbsSwiper }}
         pagination={{
           type: "fraction",
           renderFraction(currentClass, totalClass) {
             return `
-              <div class="bg-surface-strong/75 text-center text-[10px] font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
+              <div class="bg-background/80 text-center text-[10px] font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
                 <span class="${currentClass}"></span> / <span class="${totalClass}"></span>
               </div>
             `;
           },
         }}
-        className={`${styles["swiper-ovveride"]}`}
+        className={styles["swiper-ovveride"]}
         style={
           {
             "--swiper-navigation-color": "var(--primary)",
@@ -94,63 +93,62 @@ const Images = ({ className = "" }: Props) => {
         }
         onSlideChange={(swiper) => onMainActiveIndexChange(swiper.realIndex)}
       >
-        {images.map((image, idx) => {
-          return (
-            <SwiperSlide key={idx}>
-              <div className="relative mx-auto w-full">
-                <Image
-                  src={image.src}
-                  alt={image.name}
-                  className="h-auto w-full"
-                  priority={idx === 0}
-                />
-              </div>
-            </SwiperSlide>
-          );
-        })}
+        {images.map((image, idx) => (
+          <SwiperSlide key={idx}>
+            <div className="relative mx-auto w-full">
+              <Image
+                src={image.src}
+                alt={image.name}
+                className="h-auto w-full"
+                priority={idx === 0}
+              />
+            </div>
+          </SwiperSlide>
+        ))}
       </Swiper>
 
-      {/* variants:name */}
-      <div className="bg-surface-strong border-b border-border py-1">
+      {/* Teks Deskripsi Varian */}
+      <div className="bg-background py-1">
         <p className="mb-0 px-2 text-[10px] text-ink-muted">
           {variant.colors[mainRealIndex - mainImagesTotal]?.value ? (
-            <span>
-              Warna: {variant.colors[mainRealIndex - mainImagesTotal].name}
-            </span>
+            <span>Warna: {variant.colors[mainRealIndex - mainImagesTotal].name}</span>
           ) : (
             <span>Terdapat {variant.colors.length} variasi warna</span>
           )}
         </p>
       </div>
 
-      {/* thumbs */}
-      <div className="bg-surface-strong pb-2 pt-2">
+      {/* Swiper Thumbs (Daftar Varian) */}
+      <div className="bg-background mx-1">
         <Swiper
           ref={thumbsSwiperRef}
           modules={[FreeMode, Thumbs]}
           loop={false}
           freeMode={true}
-          autoHeight={false}
           watchSlidesProgress={true}
-          // breakpoints={breakpoints}
           slidesPerView={"auto"}
           spaceBetween={0}
+          className="px-2 py-5"
         >
-          {variant.colors.slice(0).map((image, idx) => {
+          {variant.colors.map((image, idx) => {
+            const isActive = mainRealIndex === (mainImagesTotal + idx);
             return (
               <SwiperSlide
                 key={idx}
-                className={`${styles["swiper-slide-ovveride"]} px-[0.175rem]`}
+                className={`${styles["swiper-slide-ovveride"]} w-auto px-1`}
               >
                 <div
-                  className={`aspect-square h-14 w-14 overflow-hidden rounded-md transition-all md:h-16 md:w-16 cursor-pointer ${idx === mainRealIndex - mainImagesTotal ? "ring-2 ring-secondary ring-offset-2 ring-offset-surface-strong" : "opacity-60 grayscale-[0.5]"}`}
                   onClick={() => chooseVariantColor(image, idx)}
+                  className={`relative aspect-square h-14 w-14 md:h-16 md:w-16 cursor-pointer transition-all border-2 ${isActive ? "border-b-primary-300" : "border-transparent opacity-60 hover:opacity-100"
+                    }`}
                 >
-                  <Image
-                    src={image.src}
-                    alt={image.name}
-                    className="h-full w-full object-cover"
-                  />
+                  <div className="h-full w-full">
+                    <Image
+                      src={image.src}
+                      alt={image.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
                 </div>
               </SwiperSlide>
             );

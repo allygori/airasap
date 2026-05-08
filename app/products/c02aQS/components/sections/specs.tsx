@@ -17,7 +17,7 @@ const Specs = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-surface-strong md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
         classObject={{ padding: "px-3 md:px-5 py-4" }}
       >
         <div className="mb-3 flex items-center justify-between">
