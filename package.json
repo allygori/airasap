@@ -12,7 +12,7 @@
     "@allygory/action-sheet": "^1.0.0",
     "@allygory/dialog": "^1.0.0",
     "@hugeicons/core-free-icons": "^4.1.1",
-    "@hugeicons/react": "github:hugeicons/react",
+    "@hugeicons/react": "^1.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "next": "16.2.4",
