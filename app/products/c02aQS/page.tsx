@@ -1,5 +1,5 @@
 import Container from "@/components/shared/general/container";
-import Images from "./components/sections/images-old";
+import Images from "./components/sections/images";
 import Price from "./components/sections/price";
 import TrustSignal from "./components/sections/trust-signal";
 import Description from "./components/sections/description";

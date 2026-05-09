@@ -36,16 +36,16 @@ const Description = ({ className = "" }: Props) => {
                   <th className="border border-border bg-primary px-2 py-3.5 text-center text-xs font-semibold text-white uppercase tracking-wider">
                     Ukuran
                   </th>
-                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-[10px] font-normal text-white uppercase tracking-wider">
+                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-tiny font-normal text-white uppercase tracking-wider">
                     Lingkar Dada
                   </th>
-                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-[10px] font-normal text-white uppercase tracking-wider">
+                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-tiny font-normal text-white uppercase tracking-wider">
                     Panjang Badan
                   </th>
-                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-[10px] font-normal text-white uppercase tracking-wider">
+                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-tiny font-normal text-white uppercase tracking-wider">
                     Lingkar Bawah
                   </th>
-                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-[10px] font-normal text-white uppercase tracking-wider">
+                  <th className="border border-border bg-primary px-2 py-3.5 text-center text-tiny font-normal text-white uppercase tracking-wider">
                     Panjang Lengan
                   </th>
                 </tr>

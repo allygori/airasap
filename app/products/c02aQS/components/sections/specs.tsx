@@ -29,7 +29,7 @@ const Specs = ({ className = "" }: Props) => {
         <div className="grid grid-cols-1 gap-y-3">
           {specsData.map((spec, index) => (
             <div key={index} className="flex border-b border-border pb-2 last:border-0">
-              <span className="w-32 text-sm text-ink-muted">{spec.label}</span>
+              <span className="w-32 text-sm text-muted-foreground">{spec.label}</span>
               <span className="flex-1 text-sm text-foreground">{spec.value}</span>
             </div>
           ))}

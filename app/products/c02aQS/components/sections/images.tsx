@@ -78,7 +78,7 @@ const Images = ({ className = "" }: Props) => {
           type: "fraction",
           renderFraction(currentClass, totalClass) {
             return `
-              <div class="bg-background/80 text-center text-[10px] font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
+              <div class="bg-background/80 text-center text-tiny font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
                 <span class="${currentClass}"></span> / <span class="${totalClass}"></span>
               </div>
             `;
@@ -109,7 +109,7 @@ const Images = ({ className = "" }: Props) => {
 
       {/* Teks Deskripsi Varian */}
       <div className="bg-background py-1">
-        <p className="mb-0 px-2 text-[10px] text-ink-muted">
+        <p className="mb-0 px-2 text-tiny text-muted-foreground">
           {variant.colors[mainRealIndex - mainImagesTotal]?.value ? (
             <span>Warna: {variant.colors[mainRealIndex - mainImagesTotal].name}</span>
           ) : (
@@ -139,7 +139,7 @@ const Images = ({ className = "" }: Props) => {
               >
                 <div
                   onClick={() => chooseVariantColor(image, idx)}
-                  className={`relative aspect-square h-14 w-14 md:h-16 md:w-16 cursor-pointer transition-all border-2 ${isActive ? "border-b-primary-300" : "border-transparent opacity-60 hover:opacity-100"
+                  className={`relative aspect-square h-14 w-14 md:h-16 md:w-16 cursor-pointer transition-all border-2 ${isActive ? "border-primary-300 opacity-100" : "border-transparent opacity-80 hover:opacity-100"
                     }`}
                 >
                   <div className="h-full w-full">

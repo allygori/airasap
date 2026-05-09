@@ -18,11 +18,9 @@ const sizeData = [
 export function SizeGuideModal() {
   return (
     <Dialog>
-      <DialogTrigger asChild>
-        <button className="flex items-center gap-2 rounded-full border border-border bg-surface px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-surface-strong hover:text-secondary">
-          <HugeiconsIcon icon={RulerIcon} size={14} />
-          Panduan Ukuran
-        </button>
+      <DialogTrigger render={<button className="flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-accent hover:text-primary" />}>
+        <HugeiconsIcon icon={RulerIcon} size={14} />
+        Panduan Ukuran
       </DialogTrigger>
       <DialogContent className="sm:max-w-md bg-background border-border">
         <DialogHeader>
@@ -30,7 +28,7 @@ export function SizeGuideModal() {
         </DialogHeader>
         <div className="mt-4 overflow-hidden rounded-lg border border-border">
           <table className="w-full text-left text-sm">
-            <thead className="bg-surface text-ink-muted">
+            <thead className="bg-muted text-muted-foreground">
               <tr>
                 <th className="px-4 py-2 font-medium">Size</th>
                 <th className="px-4 py-2 font-medium">Lingkar Dada</th>
@@ -48,7 +46,7 @@ export function SizeGuideModal() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-[10px] text-ink-muted">
+        <p className="mt-3 text-tiny text-muted-foreground">
           * Ukuran dapat berbeda 1-2 cm karena proses produksi massal.
         </p>
       </DialogContent>

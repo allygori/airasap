@@ -45,9 +45,9 @@ const Reviews = ({ className = "" }: Props) => {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
             Penilaian Produk
           </h2>
-          <div className="flex items-center text-secondary">
+          <div className="flex items-center text-rating">
             <span className="mr-1 text-xs font-bold">4.8/5</span>
-            <HugeiconsIcon icon={StarIcon} size={12} className="fill-current" />
+            <HugeiconsIcon icon={StarIcon} size={12} className="text-rating fill-current" />
           </div>
         </div>
 
@@ -56,7 +56,7 @@ const Reviews = ({ className = "" }: Props) => {
             <div key={review.id} className="border-b border-border pb-3 last:border-0">
               <div className="mb-1 flex items-center justify-between">
                 <span className="text-[11px] font-medium text-foreground">{review.user}</span>
-                <span className="text-[10px] text-ink-muted">{review.date}</span>
+                <span className="text-tiny text-muted-foreground">{review.date}</span>
               </div>
 
               <div className="mb-1 flex gap-0.5">
@@ -65,7 +65,7 @@ const Reviews = ({ className = "" }: Props) => {
                     key={i}
                     icon={StarIcon}
                     size={10}
-                    className={i < review.rating ? "text-secondary fill-current" : "text-secondary"}
+                    className={i < review.rating ? "text-rating fill-current" : "text-rating"}
                   />
                 ))}
               </div>
@@ -76,7 +76,7 @@ const Reviews = ({ className = "" }: Props) => {
 
               <div className="flex flex-wrap gap-1.5">
                 {review.video && (
-                  <div className="relative aspect-[9/16] w-16 overflow-hidden rounded-md border border-border bg-surface">
+                  <div className="relative aspect-9/16 w-16 overflow-hidden rounded-md border border-border bg-muted">
                     <Image
                       src={review.video.thumbnail}
                       alt="Review video"
@@ -105,7 +105,7 @@ const Reviews = ({ className = "" }: Props) => {
           ))}
         </div>
 
-        <button className="mt-2 w-full rounded-md border border-border py-1.5 text-[11px] font-medium text-ink-muted hover:bg-surface">
+        <button className="mt-2 w-full rounded-md border border-border py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted">
           Lihat Semua Ulasan
         </button>
       </Container>
