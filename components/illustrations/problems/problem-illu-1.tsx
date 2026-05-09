@@ -1,10 +1,10 @@
 import { CSSProperties } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CursorPointer02Icon,
   Megaphone02Icon,
   Store04Icon,
 } from "@hugeicons/core-free-icons";
-import HugeIcon from "@/components/icons/huge-icon";
 
 const ProblemIllu1 = () => {
   return (
@@ -28,7 +28,7 @@ const ProblemIllu1 = () => {
             }
           >
             <span className="mx-auto grid h-10 w-10 place-items-center rounded-full bg-primary-soft text-primary">
-              <HugeIcon icon={item.icon} size={22} />
+              <HugeiconsIcon icon={item.icon} size={22} />
             </span>
             <p className="mt-4 text-sm font-black">{item.label}</p>
           </div>

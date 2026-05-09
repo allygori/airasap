@@ -1,4 +1,4 @@
-import HugeIcon from "@/components/icons/huge-icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import { proofStats } from "@/constant/stats";
 import {
   ChartUpIcon,
@@ -18,11 +18,11 @@ const HeroIllustration1 = () => {
             <div className="rounded-3xl bg-primary p-4 text-white dark:text-[#051010]">
               <div className="mb-10 flex justify-between text-[0.65rem] font-bold uppercase tracking-[0.22em] opacity-80">
                 <span className="inline-flex items-center gap-2">
-                  <HugeIcon icon={ChartUpIcon} size={15} />
+                  <HugeiconsIcon icon={ChartUpIcon} size={15} />
                   Live funnel
                 </span>
                 <span className="inline-flex items-center gap-2">
-                  <HugeIcon icon={DeliveryBox02Icon} size={15} />
+                  <HugeiconsIcon icon={DeliveryBox02Icon} size={15} />
                   COD
                 </span>
               </div>
@@ -48,7 +48,7 @@ const HeroIllustration1 = () => {
                   style={{ animationDelay: `${index * 90}ms` }}
                 >
                   <div className="mb-4 grid h-10 w-10 place-items-center rounded-2xl bg-primary-soft text-primary">
-                    <HugeIcon icon={stat.icon} size={22} />
+                    <HugeiconsIcon icon={stat.icon} size={22} />
                   </div>
                   <p className="text-xl font-black text-primary">{stat.value}</p>
                   <p className="mt-1 text-xs font-semibold text-ink-muted">
@@ -63,7 +63,7 @@ const HeroIllustration1 = () => {
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.22em] text-ink-muted">
                   <span className="inline-flex items-center gap-2">
-                    <HugeIcon icon={Target02Icon} size={15} />
+                    <HugeiconsIcon icon={Target02Icon} size={15} />
                     Product page
                   </span>
                 </p>
@@ -72,7 +72,7 @@ const HeroIllustration1 = () => {
                 </p>
               </div>
               <span className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-xs font-black text-[#1d120c] shadow-[0_10px_24px_rgba(255,122,69,0.28)]">
-                <HugeIcon icon={ShoppingCartCheck02Icon} size={16} />
+                <HugeiconsIcon icon={ShoppingCartCheck02Icon} size={16} />
                 Checkout
               </span>
             </div>

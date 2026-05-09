@@ -1,4 +1,4 @@
-import HugeIcon from "@/components/icons/huge-icon";
+import { HugeiconsIcon } from "@hugeicons/react";
 import {
   CheckmarkCircle02Icon,
   Package02Icon,
@@ -20,7 +20,7 @@ const BuilderIllu1 = () => {
           className="flex items-center gap-3 rounded-2xl border border-foreground/10 bg-background p-3 transition duration-300 hover:translate-x-1 hover:border-secondary/40"
         >
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-primary text-sm font-black text-white dark:text-[#051010]">
-            <HugeIcon icon={item.icon} size={21} />
+            <HugeiconsIcon icon={item.icon} size={21} />
           </span>
           <span className="flex-1 text-sm font-black">{item.label}</span>
           <span
