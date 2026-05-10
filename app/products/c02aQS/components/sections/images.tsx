@@ -16,6 +16,7 @@ import {
   images,
   mainImages,
 } from "@/app/products/c02aQS/lib/constants";
+import { useProductContext } from "../product-context";
 
 type Props = {
   className?: string | undefined;
@@ -47,14 +48,19 @@ const Images = ({ className = "" }: Props) => {
     );
   };
 
+  const { setSelectedVariant } = useProductContext();
+
   const onMainActiveIndexChange = (realIndex: number) => {
     if (realIndex !== mainRealIndex) {
       setMainPreviousRealIndex(mainRealIndex);
       setMainRealIndex(realIndex);
 
+      const colorIndex = realIndex >= mainImagesTotal ? realIndex - mainImagesTotal : 0;
+      setSelectedVariant("Warna", variant.colors[colorIndex].value);
+
       if (thumbsSwiperRef.current?.swiper) {
         if (realIndex >= mainImagesTotal) {
-          thumbsSwiperRef.current?.swiper.slideTo(realIndex - mainImagesTotal);
+          thumbsSwiperRef.current?.swiper.slideTo(colorIndex);
         } else {
           thumbsSwiperRef.current?.swiper.slideTo(0);
         }
