@@ -38,7 +38,7 @@ const Reviews = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-background `}
         classObject={{ padding: "px-3 md:px-5 py-2" }}
       >
         <div className="mb-2 flex items-center justify-between">

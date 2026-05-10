@@ -15,7 +15,7 @@ const TrustSignal = ({ className = "" }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-background md:w-10/12 lg:w-7/12 xl:w-5/12`}
+        className={`w-full bg-background `}
         classObject={{ padding: "px-0 md:px-5" }}
       >
         <div className="grid grid-cols-2 gap-px bg-border border-y border-border">
