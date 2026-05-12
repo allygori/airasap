@@ -32,6 +32,33 @@
   --color-primary-800: var(--p-800);
   --color-primary-900: var(--p-900);
   --color-primary-950: var(--p-950);
+
+  /* Secondary Shades */
+  --color-secondary-50: var(--s-50);
+  --color-secondary-100: var(--s-100);
+  --color-secondary-200: var(--s-200);
+  --color-secondary-300: var(--s-300);
+  --color-secondary-400: var(--s-400);
+  --color-secondary-500: var(--s-500);
+  --color-secondary-600: var(--s-600);
+  --color-secondary-700: var(--s-700);
+  --color-secondary-800: var(--s-800);
+  --color-secondary-900: var(--s-900);
+  --color-secondary-950: var(--s-950);
+
+  /* Tertiary Shades */
+  --color-tertiary-50: var(--t-50);
+  --color-tertiary-100: var(--t-100);
+  --color-tertiary-200: var(--t-200);
+  --color-tertiary-300: var(--t-300);
+  --color-tertiary-400: var(--t-400);
+  --color-tertiary-500: var(--t-500);
+  --color-tertiary-600: var(--t-600);
+  --color-tertiary-700: var(--t-700);
+  --color-tertiary-800: var(--t-800);
+  --color-tertiary-900: var(--t-900);
+  --color-tertiary-950: var(--t-950);
+
   --color-rating: var(--rating);
 
   --color-chart-5: var(--chart-5);
@@ -76,7 +103,7 @@
   --p-h: 214.77;
   --p-c: 0.124;
 
-  /* Primary Scales (50-950) */
+  /* Primary Scales (50-950) - Base #00b3d0 */
   --p-50: oklch(0.98 0.015 var(--p-h));
   --p-100: oklch(0.94 0.03 var(--p-h));
   --p-200: oklch(0.88 0.06 var(--p-h));
@@ -88,6 +115,44 @@
   --p-800: oklch(0.42 0.10 var(--p-h));
   --p-900: oklch(0.32 0.08 var(--p-h));
   --p-950: oklch(0.22 0.06 var(--p-h));
+
+  /* Secondary Scales (50-950) - Base #004BD0 */
+  --s-50: oklch(0.98 0.015 266.4);
+  --s-100: oklch(0.94 0.03 266.4);
+  --s-200: oklch(0.88 0.06 266.4);
+  --s-300: oklch(0.82 0.09 266.4);
+  --s-400: oklch(0.76 0.12 266.4);
+  --s-500: oklch(0.7055 0.15 266.4);
+  --s-600: oklch(0.62 0.18 266.4);
+  --s-700: oklch(0.52 0.22 266.4);
+  --s-800: oklch(0.44 0.264 266.4); /* #004BD0 */
+  --s-900: oklch(0.32 0.18 266.4);
+  --s-950: oklch(0.22 0.12 266.4);
+
+  /* Tertiary Scales (50-950) - Base #00D085 */
+  --t-50: oklch(0.98 0.015 156.4);
+  --t-100: oklch(0.94 0.03 156.4);
+  --t-200: oklch(0.88 0.06 156.4);
+  --t-300: oklch(0.82 0.10 156.4);
+  --t-400: oklch(0.77 0.187 156.4); /* #00D085 */
+  --t-500: oklch(0.7055 0.17 156.4);
+  --t-600: oklch(0.62 0.15 156.4);
+  --t-700: oklch(0.52 0.13 156.4);
+  --t-800: oklch(0.42 0.10 156.4);
+  --t-900: oklch(0.32 0.08 156.4);
+  --t-950: oklch(0.22 0.06 156.4);
+
+  /**
+    Figma analogous:
+    - #00b3d0 (base)
+    - #004BD0
+    - #00D085
+
+    refs:
+    - https://www.figma.com/color-wheel/
+    - https://www.canva.com/colors/color-wheel/
+    - https://www.canva.com/templates/?query=blue+green
+  */
 
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
