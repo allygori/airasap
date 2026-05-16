@@ -24,6 +24,8 @@
 .DS_Store
 *.pem
 .trash
+.data
+.orig
 
 # debug
 npm-debug.log*
