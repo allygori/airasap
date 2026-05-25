@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/mongodb';
+import { db } from '@/lib/db';
 import ToolMarketplaceIncomeReport from '@/lib/mongoose/schema/tool-marketplace-income-report';
-import importer from '@/lib/xlsx/shopee/income-statements/v1/importer';
+import importer from '@/lib/xlsx/shopee/income/v1/importer';
 
 export async function POST(request: Request) {
   try {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
     // Parse the data using the v1 importer
     const reportData = importer(arrayBuffer, file.name);
 
-    await connectToDatabase();
+    await db.connect();
 
     // Save to DB
     const report = new ToolMarketplaceIncomeReport(reportData);

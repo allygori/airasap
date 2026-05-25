@@ -1,9 +1,10 @@
 import crypto from 'crypto';
 import reader from './reader';
 import parser from './parser';
+import { calculateCRC32, detectMimeTypeByAB, size } from '@/lib/file';
 
-export default function importer(arrayBuffer: ArrayBuffer, filename: string) {
-  const { worksheets, raw_data } = reader(arrayBuffer);
+export default function importer(buffer: ArrayBuffer, filename: string) {
+  const { worksheets, raw_data } = reader(buffer);
   
   const parsed = parser(raw_data);
   
@@ -22,12 +23,12 @@ export default function importer(arrayBuffer: ArrayBuffer, filename: string) {
       from: new Date(),
       to: new Date()
     },
-    products: parsed.products.map(p => ({
-      id: p.id,
-      name: p.name,
-      quantity: p.quantity,
-      cogs: p.hpp
-    })),
+    // products: parsed.products.map(p => ({
+    //   id: p.id,
+    //   name: p.name,
+    //   quantity: p.quantity,
+    //   cogs: p.hpp
+    // })),
     summary: {
       total_income: parsed.income.grossSales,
       released_amount: parsed.income.netPayout,
@@ -39,17 +40,20 @@ export default function importer(arrayBuffer: ArrayBuffer, filename: string) {
       }
     },
     worksheets,
-    raw_data: {
-      summary_rows: raw_data.summary_rows.slice(0, 50),
-      income_rows: parsed.income.sampleRows,
-      seller_fee_rows: []
-    },
+    // raw_data: {
+    //   summary_rows: raw_data.summary_rows.slice(0, 50),
+    //   income_rows: parsed.income.sampleRows,
+    //   seller_fee_rows: []
+    // },
     source_file: {
-      original_name: filename
+      original_name: filename,
+      size: size(buffer),
+      mime_type: detectMimeTypeByAB(buffer),
+      checksum: calculateCRC32(buffer),
     },
     extra: {
-      summaryData: parsed.summary,
-      totalDiscount: parsed.income.totalDiscount,
+      summary_data: parsed.summary,
+      total_discount: parsed.income.totalDiscount,
     }
   };
 }

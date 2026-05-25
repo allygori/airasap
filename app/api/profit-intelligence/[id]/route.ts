@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/mongodb';
+import { db } from '@/lib/db';
 import ShopeeReport from '@/models/ShopeeReport';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
-    await connectToDatabase();
+    await db.connect();
     const report = await ShopeeReport.findById(params.id);
     if (!report) {
       return NextResponse.json({ error: 'Report not found' }, { status: 404 });
@@ -18,7 +18,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   try {
     const { email } = await request.json();
-    await connectToDatabase();
+    await db.connect();
     
     const report = await ShopeeReport.findByIdAndUpdate(
       params.id, 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import connectToDatabase from '@/lib/mongodb';
+import { db } from '@/lib/db';
 import ShopeeReport from '@/models/ShopeeReport';
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
@@ -10,7 +10,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Invalid updates payload' }, { status: 400 });
     }
 
-    await connectToDatabase();
+    await db.connect();
     
     const report = await ShopeeReport.findById(params.id);
     if (!report) {

@@ -381,11 +381,16 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     }
   },
   {
-    timestamps: true,
+    timestamps: {
+      createdAt: 'created_at',
+      updatedAt: 'updated_at' 
+    },
 
     minimize: false,
 
-    strict: false
+    strict: false,
+
+    collection: 'tool_marketplace_income_reports'
   }
 )
 
@@ -416,10 +421,10 @@ ToolMarketplaceIncomeReportSchema.index({
 |--------------------------------------------------------------------------
 */
 
-ToolMarketplaceIncomeReportSchema.virtual('period_label').get(function () {
-  return `${this.period?.from}-${this.period?.to}`
+ToolMarketplaceIncomeReportSchema.virtual('period_label').get(function (this: any) {
+  const p = this.period as { from?: Date; to?: Date } | undefined
+  return `${p?.from ?? ''}-${p?.to ?? ''}`
 })
-
 /*
 |--------------------------------------------------------------------------
 | Export

@@ -1,3 +1,29 @@
+export type Order = {
+  number: number;
+  id: string;
+  username: string;
+  createdAt: Date;
+  paymentMethod: string;
+  originalPrice: number;
+  totalDiscount: number;
+  sellerVouchers?: [
+    {
+      code?: string;
+      value?: number;
+    }
+  ];
+  sellerCoFundVouchers?: [
+    {
+      code?: string;
+      value?: number;
+    }
+  ];
+  adminFee: number;
+  processFee: number;
+  income: number;
+  logisticService: string;
+}
+
 export type ParsedIncome = {
   grossSales: number;
   totalDiscount: number;

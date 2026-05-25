@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { UploadCloud, FileText, ChevronRight, CheckCircle2, DollarSign, Activity, AlertTriangle, FileSpreadsheet } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -213,6 +213,10 @@ export default function MarketplaceProfitIntelligence() {
     }
   ];
 
+  useEffect(() => {
+    console.log(reportData)
+  }, [reportData])
+
 
   return (
     <div className="min-h-screen bg-gray-50/50 dark:bg-gray-900/50 p-4 md:p-8">
@@ -350,12 +354,34 @@ export default function MarketplaceProfitIntelligence() {
 
             {/* HERO METRICS */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card>
+              {/* <div className="col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="col-start-2 col-span-2">
+                  <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
+                    <CardHeader className="pb-2 text-center">
+                      <CardTitle className="text-sm text-green-700 dark:text-green-400">Real Profit (Cuan Bersih)</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold text-green-700 dark:text-green-400 text-center">
+                        {formatIDR((reportData.summary?.released_amount || 0) - calculateTotalHpp())}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div> */}
+              {/* <Card>
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground">Gross Sales</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{formatIDR(reportData.summary?.total_income || 0)}</div>
+                </CardContent>
+              </Card> */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm text-muted-foreground">Net Sales</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{formatIDR((reportData.extra?.summary_data?.[1]?.subItems?.[0]?.value+reportData.extra?.summary_data?.[1]?.subItems?.[1]?.value) || 0)}</div>
                 </CardContent>
               </Card>
               <Card>
@@ -377,11 +403,11 @@ export default function MarketplaceProfitIntelligence() {
                 </CardContent>
               </Card>
               <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-900">
-                <CardHeader className="pb-2">
+                <CardHeader className="pb-2 text-center">
                   <CardTitle className="text-sm text-green-700 dark:text-green-400">Real Profit (Cuan Bersih)</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-400 text-center">
                     {formatIDR((reportData.summary?.released_amount || 0) - calculateTotalHpp())}
                   </div>
                 </CardContent>
@@ -470,8 +496,8 @@ export default function MarketplaceProfitIntelligence() {
                   <Activity className="w-5 h-5" /> Rincian Laporan (Summary)
                 </h2>
                 {(() => {
-                  const summaryData = reportData.extra?.summaryData || [];
-                  if (summaryData.length === 0) {
+                  const summary_data = reportData.extra?.summary_data || [];
+                  if (summary_data.length === 0) {
                     return (
                       <Card>
                         <CardContent className="p-8 text-center text-muted-foreground">
@@ -481,18 +507,18 @@ export default function MarketplaceProfitIntelligence() {
                     );
                   }
 
-                  const idx1 = summaryData.findIndex((g: any) => g.name.includes("1. Total Pendapatan"));
-                  const idx2 = summaryData.findIndex((g: any) => g.name.includes("2. Total") || g.name.includes("2. Biaya") || g.name.includes("2. Pengeluaran"));
-                  const idx3 = summaryData.findIndex((g: any) => g.name.includes("3. Total yang Dilepas") || g.name.includes("3. Penghasilan") || g.name.includes("Total yang Dilepas"));
+                  const idx1 = summary_data.findIndex((g: any) => g.name.includes("1. Total Pendapatan"));
+                  const idx2 = summary_data.findIndex((g: any) => g.name.includes("2. Total") || g.name.includes("2. Biaya") || g.name.includes("2. Pengeluaran"));
+                  const idx3 = summary_data.findIndex((g: any) => g.name.includes("3. Total yang Dilepas") || g.name.includes("3. Penghasilan") || g.name.includes("Total yang Dilepas"));
 
-                  const pendapatanData = summaryData.slice(
+                  const pendapatanData = summary_data.slice(
                     idx1 !== -1 ? idx1 : 0, 
-                    idx2 !== -1 ? idx2 : (idx3 !== -1 ? idx3 : summaryData.length)
+                    idx2 !== -1 ? idx2 : (idx3 !== -1 ? idx3 : summary_data.length)
                   );
 
-                  const pengeluaranData = idx2 !== -1 ? summaryData.slice(
+                  const pengeluaranData = idx2 !== -1 ? summary_data.slice(
                     idx2, 
-                    idx3 !== -1 ? idx3 : summaryData.length
+                    idx3 !== -1 ? idx3 : summary_data.length
                   ) : [];
 
                   return (
