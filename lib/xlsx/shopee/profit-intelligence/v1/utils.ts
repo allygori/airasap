@@ -7,7 +7,7 @@ export const findValueByLabel = (rows: any[], label: string) => {
 }
 
 export const extractFields = (rows: any[], mapping: string) => {
-  const result = {}
+  const result: Record<string, any> = {}
 
   for (const [key, label] of Object.entries(mapping)) {
     result[key] = findValueByLabel(rows, label as string)

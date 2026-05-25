@@ -1,8 +1,19 @@
+export type OrderItem = {
+  productId: string;
+  name: string;
+  variationName: string;
+  quantity: number;
+  originalPrice: number;
+  discountedPrice: number;
+}
+
 export type Order = {
   number: number;
   id: string;
   username: string;
   createdAt: Date;
+  releasedAt?: Date;
+  completedAt?: Date | null;
   paymentMethod: string;
   originalPrice: number;
   totalDiscount: number;
@@ -19,9 +30,13 @@ export type Order = {
     }
   ];
   adminFee: number;
+  serviceFee: number;
+  transactionFee: number;
   processFee: number;
+  campaignFee: number;
   income: number;
   logisticService: string;
+  items?: OrderItem[];
 }
 
 export type ParsedIncome = {
@@ -38,7 +53,7 @@ export type ParsedIncome = {
     lainnya: number;
   };
   headers: string[];
-  sampleRows: any[];
+  sampleRows: unknown[][];
 }
 
 export type ParsedProduct = {
