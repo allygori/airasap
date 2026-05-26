@@ -76,7 +76,7 @@ export default function importer(
     sid,
     platform: 'shopee',
     report_type: 'income_released',
-    parser_version: 'shopee-income-v1.1',
+    parser_version: 'shopee-income-v1',
     seller: {
       username
     },
@@ -133,12 +133,12 @@ export default function importer(
       }
     },
     worksheets,
-    source_file: {
-      original_name: incomeFilename,
-      size: size(incomeBuffer),
-      mime_type: detectMimeTypeByAB(incomeBuffer),
-      checksum: incomeChecksum,
-    },
+    // source_file: {
+    //   original_name: incomeFilename,
+    //   size: size(incomeBuffer),
+    //   mime_type: detectMimeTypeByAB(incomeBuffer),
+    //   checksum: incomeChecksum,
+    // },
     source_files: sourceFiles,
     extra: {
       summary_data: parsed.summary,

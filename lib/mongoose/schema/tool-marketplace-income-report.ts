@@ -506,13 +506,13 @@ ToolMarketplaceIncomeReportSchema.index({
   'period.to': 1
 })
 
-ToolMarketplaceIncomeReportSchema.index({
-  'source_file.checksum': 1
-})
+// ToolMarketplaceIncomeReportSchema.index({
+//   'source_file.checksum': 1
+// })
 
-ToolMarketplaceIncomeReportSchema.index({
-  'source_files.checksum': 1
-})
+// ToolMarketplaceIncomeReportSchema.index({
+//   'source_files.checksum': 1
+// })
 
 ToolMarketplaceIncomeReportSchema.index(
   {

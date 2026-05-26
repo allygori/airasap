@@ -1,10 +1,14 @@
 "use client";
 
+import { useState, Fragment } from "react";
 import { ChevronDown, PackageSearch } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent } from "@/components/ui/card";
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { formatIDR } from "@/lib/formatter";
 import type { ProfitOrder } from "./types";
+import { Button } from "@/components/ui/button";
 
 type OrderListSectionProps = {
   orders: ProfitOrder[];
@@ -47,12 +51,21 @@ function StatLine({ label, value, destructive = false }: { label: string; value:
 }
 
 export function OrderListSection({ orders }: OrderListSectionProps) {
+  const [expandedOrders, setExpandedOrders] = useState<string[]>([]);
+  const isMobile = useMediaQuery("sm");
+
+  const toggleOrder = (orderId: string) => {
+    setExpandedOrders((prev) =>
+      prev.includes(orderId) ? prev.filter((id) => id !== orderId) : [...prev, orderId],
+    );
+  };
+
   return (
     <Accordion multiple defaultValue={["orders"]} className="rounded-md border bg-white px-4 dark:bg-gray-950">
       <AccordionItem value="orders" className="border-0">
         <AccordionTrigger className="py-4 hover:no-underline">
           <span className="flex items-center gap-2 text-xl font-semibold">
-            <PackageSearch className="h-5 w-5" /> List Order
+            <PackageSearch className="h-5 w-5" /> Daftar Pesanan (Order)
           </span>
         </AccordionTrigger>
         <AccordionContent className="pb-4">
@@ -64,100 +77,149 @@ export function OrderListSection({ orders }: OrderListSectionProps) {
             </Card>
           ) : (
             <div className="overflow-hidden rounded-md border">
-              <div className="hidden grid-cols-[44px_1.5fr_1fr_1fr_0.6fr_1fr_1fr] gap-3 border-b bg-muted/50 px-4 py-3 text-sm font-medium text-muted-foreground md:grid">
-                <div></div>
-                <div>Order</div>
-                <div>Pembeli</div>
-                <div>Selesai</div>
-                <div className="text-right">Item</div>
-                <div className="text-right">Income</div>
-                <div className="text-right">Total Fee</div>
-              </div>
+              <Table className="table-fixed md:table-auto">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-4 py-3">Order</TableHead>
+                    {isMobile && (
+                      <TableHead className="px-4 py-3">Pembeli</TableHead>
+                    )}
+                    {isMobile && (
+                      <TableHead className="px-4 py-3">Selesai</TableHead>
+                    )}
+                    {isMobile && (
+                      <TableHead className="px-4 py-3 text-right">Item</TableHead>
+                    )}
+                    <TableHead className="px-4 py-3 text-right">Income</TableHead>
+                    {isMobile && (
+                      <TableHead className="px-4 py-3 text-right">Total Fee</TableHead>
+                    )}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.map((order) => {
+                    const totalFees = sumFees(order);
+                    const itemCount = order.items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
+                    const isExpanded = expandedOrders.includes(order.id);
 
-              <Accordion multiple className="divide-y">
-                {orders.map((order) => {
-                  const totalFees = sumFees(order);
-                  const itemCount = order.items?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
-
-                  return (
-                    <AccordionItem key={order.id} value={order.id} className="border-0">
-                      <AccordionTrigger className="grid w-full grid-cols-[36px_1fr] items-start gap-3 rounded-none px-4 py-3 hover:bg-muted/40 hover:no-underline md:grid-cols-[44px_1.5fr_1fr_1fr_0.6fr_1fr_1fr] md:items-center [&_[data-slot=accordion-trigger-icon]]:hidden">
-                        <span className="flex h-9 w-9 items-center justify-center rounded-md border bg-background">
-                          <ChevronDown className="h-4 w-4 transition-transform group-aria-expanded/accordion-trigger:rotate-180" />
-                        </span>
-                        <span className="min-w-0 text-left">
-                          <span className="block truncate font-medium">{order.id}</span>
-                          <span className="block text-xs text-muted-foreground md:hidden">
-                            {formatDate(order.completedAt)} - {itemCount} item
-                          </span>
-                        </span>
-                        <span className="hidden text-left text-sm md:block">{order.username || "-"}</span>
-                        <span className="hidden text-left text-sm md:block">{formatDate(order.completedAt)}</span>
-                        <span className="hidden text-right text-sm md:block">{itemCount}</span>
-                        <span className="text-left text-sm font-semibold md:text-right md:text-base">
-                          {formatIDR(order.income || 0)}
-                          <span className="block text-xs font-normal text-muted-foreground md:hidden">
-                            {order.username || "Pembeli tidak tersedia"}
-                          </span>
-                        </span>
-                        <span className="hidden text-right text-sm text-destructive md:block">{formatIDR(totalFees)}</span>
-                      </AccordionTrigger>
-
-                      <AccordionContent className="px-0 pb-0">
-                        <div className="border-t bg-muted/30 p-4">
-                          <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-                            <div className="space-y-3">
-                              <div className="text-sm font-semibold">Produk dalam order</div>
-                              <div className="space-y-2">
-                                {(order.items || []).map((item, index) => (
-                                  <div key={`${order.id}-${item.productId || index}`} className="rounded-md border bg-background p-3">
-                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-                                      <div className="min-w-0">
-                                        <div className="font-medium">{item.name || "Produk tanpa nama"}</div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {item.variationName || "Variasi tidak tersedia"} - {item.productId || "-"}
-                                        </div>
-                                      </div>
-                                      <div className="text-left text-sm sm:text-right">
-                                        <div className="font-medium">Qty {item.quantity || 0}</div>
-                                        <div className="text-muted-foreground">
-                                          {formatIDR(item.discountedPrice || item.originalPrice || 0)}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                ))}
-                                {(order.items || []).length === 0 && (
-                                  <div className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
-                                    Detail produk tidak tersedia untuk order ini.
-                                  </div>
+                    return (
+                      <Fragment key={`detail-of-${order.id}`}>
+                        <TableRow>
+                          <TableCell className="px-4 py-3">
+                            <div className="flex gap-2 items-center">
+                              <Button
+                                type="button"
+                                variant={"outline"}
+                                onClick={() => toggleOrder(order.id)}
+                                aria-expanded={isExpanded}
+                                data-state={isExpanded ? "expanded" : "collapsed"}
+                                className={"py-1 px-2"}
+                              >
+                                <ChevronDown
+                                  className={`h-2 w-2 md:h-4 md:w-4 transition-transform  ${isExpanded ? "rotate-360" : "rotate-270"}`}
+                                />
+                              </Button>
+                              <div>
+                                <span className="block truncate font-medium">{order.id}</span>
+                                {!isMobile && (
+                                  <span className="block text-xs text-muted-foreground">
+                                    {formatDate(order.completedAt)} - {itemCount} item
+                                  </span>
                                 )}
+
                               </div>
                             </div>
+                          </TableCell>
+                          {isMobile && (
+                            <TableCell className="px-4 py-3">{order.username || "-"}</TableCell>
+                          )}
+                          {isMobile && (
+                            <TableCell className="px-4 py-3">{formatDate(order.completedAt)}</TableCell>
+                          )}
+                          {isMobile && (
+                            <TableCell className="px-4 py-3 text-right">{itemCount}</TableCell>
+                          )}
+                          <TableCell className="px-4 py-3 text-right">
+                            <span className="font-semibold md:text-base">{formatIDR(order.income || 0)}</span>
 
-                            <div className="rounded-md border bg-background p-4 text-sm">
-                              <StatLine label="Dibuat" value={formatDate(order.createdAt)} />
-                              <StatLine label="Selesai" value={formatDate(order.completedAt)} />
-                              <StatLine label="Pembayaran" value={order.paymentMethod || "-"} />
-                              <StatLine label="Logistik" value={order.logisticService || "-"} />
-                              <StatLine label="Harga asli" value={formatIDR(order.originalPrice || 0)} />
-                              <StatLine label="Diskon" value={formatIDR(order.totalDiscount || 0)} destructive />
-                              {Object.entries(order.fees || {}).map(([feeKey, feeValue]) => (
-                                <StatLine
-                                  key={feeKey}
-                                  label={`Fee ${feeLabels[feeKey as keyof typeof feeLabels] || feeKey}`}
-                                  value={formatIDR(feeValue || 0)}
-                                  destructive
-                                />
-                              ))}
+                            {!isMobile && (
+                              <span className="block text-xs font-normal text-muted-foreground">
+                                {order.username || "Pembeli tidak tersedia"}
+                              </span>
+                            )}
+                          </TableCell>
+                          {isMobile && (
+                            <TableCell className="px-4 py-3 text-right text-destructive">
+                              {formatIDR(totalFees)}
+                            </TableCell>
+                          )}
+                        </TableRow>
+                        <TableRow
+                          className="hover:bg-inherit"
+                          aria-hidden={!isExpanded}
+                        >
+                          <TableCell colSpan={isMobile ? 7 : 2} className="p-0">
+                            <div
+                              className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? "max-h-250 opacity-100" : "max-h-0 opacity-0"
+                                }`}
+                            >
+                              <div className="border-t bg-muted/30 p-4 w-full wrap-break-word whitespace-normal">
+                                <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+                                  <div className="space-y-3">
+                                    <div className="text-sm font-semibold">Produk dalam order</div>
+                                    <div className="space-y-2">
+                                      {(order.items || []).map((item, index) => (
+                                        <div key={`${order.id}-${item.productId}-${index}`} className="rounded-md border bg-background p-3">
+                                          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                                            <div className="min-w-0">
+                                              <div className="font-medium">{item.name || "Produk tanpa nama"}</div>
+                                              <div className="text-xs text-muted-foreground">
+                                                {item.variationName || "Variasi tidak tersedia"} - {item.productId || "-"}
+                                              </div>
+                                            </div>
+                                            <div className="text-left text-sm sm:text-right">
+                                              <div className="font-medium">Qty {item.quantity || 0}</div>
+                                              <div className="text-muted-foreground">
+                                                {formatIDR(item.discountedPrice || item.originalPrice || 0)}
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                      {(order.items || []).length === 0 && (
+                                        <div className="rounded-md border bg-background p-4 text-sm text-muted-foreground">
+                                          Detail produk tidak tersedia untuk order ini.
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  <div className="rounded-md border bg-background p-4 text-sm">
+                                    <StatLine label="Dibuat" value={formatDate(order.createdAt)} />
+                                    <StatLine label="Selesai" value={formatDate(order.completedAt)} />
+                                    <StatLine label="Pembayaran" value={order.paymentMethod || "-"} />
+                                    <StatLine label="Jasa Kirim" value={order.logisticService || "-"} />
+                                    <StatLine label="Harga asli" value={formatIDR(order.originalPrice || 0)} />
+                                    <StatLine label="Diskon" value={formatIDR(order.totalDiscount || 0)} destructive />
+                                    {Object.entries(order.fees || {}).map(([feeKey, feeValue]) => (
+                                      <StatLine
+                                        key={feeKey}
+                                        label={`Fee ${feeLabels[feeKey as keyof typeof feeLabels] || feeKey}`}
+                                        value={formatIDR(feeValue || 0)}
+                                        destructive
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  );
-                })}
-              </Accordion>
+                          </TableCell>
+                        </TableRow>
+                      </Fragment>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           )}
         </AccordionContent>

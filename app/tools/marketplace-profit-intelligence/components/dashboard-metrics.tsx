@@ -41,11 +41,11 @@ export function DashboardMetrics({ reportData, totalHpp }: DashboardMetricsProps
         </CardContent>
       </Card>
       <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/20">
-        <CardHeader className="pb-2 text-center">
+        <CardHeader className="pb-2">
           <CardTitle className="text-sm text-green-700 dark:text-green-400">Real Profit (Cuan Bersih)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-2xl font-bold text-green-700 dark:text-green-400">
+          <div className="text-2xl font-bold text-green-700 dark:text-green-400">
             {formatIDR((reportData.summary?.released_amount || 0) - totalHpp)}
           </div>
         </CardContent>

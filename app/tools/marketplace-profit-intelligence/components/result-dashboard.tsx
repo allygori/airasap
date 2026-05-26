@@ -75,7 +75,7 @@ export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
     }));
 
     try {
-      const response = await fetch(`/api/profit-intelligence/${reportId}/hpp`, {
+      const response = await fetch(`/api/profit-intelligence/${reportId}/cogs`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ updates }),

@@ -60,7 +60,6 @@ async function dbConnect() {
 }
 
 const check = async () => {
-  console.log("mongoose.connections[0].readyState: ", mongoose.connections[0].readyState)
   // Check if connection already established
   if (mongoose.connections[0].readyState) {
     return true;
@@ -72,7 +71,6 @@ const check = async () => {
 
 export async function getClient() {
   const MONGODB_URI = process.env.MONGODB_URI!;
-  console.log("getClient() MONGODB_URI", MONGODB_URI)
   const conn = await dbConnect();
 
   return conn.connection.getClient().db(MONGODB_URI);
