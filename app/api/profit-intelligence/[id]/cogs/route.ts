@@ -34,7 +34,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       };
     });
 
-    const productCogsMap = new Map(report.products.map((p: any) => [p.id, p.cogs]));
+    const productCogsMap = new Map<string, number | undefined | null>(report.products.map((p: any) => [p.id, p.cogs]));
 
     if (report.orders && Array.isArray(report.orders)) {
       report.orders = report.orders.map((order: any) => {
