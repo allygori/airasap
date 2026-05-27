@@ -34,6 +34,25 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       };
     });
 
+    const productCogsMap = new Map(report.products.map((p: any) => [p.id, p.cogs]));
+
+    if (report.orders && Array.isArray(report.orders)) {
+      report.orders = report.orders.map((order: any) => {
+        let orderTotalCogs = 0;
+        
+        if (order.items && Array.isArray(order.items)) {
+          for (const item of order.items) {
+            const itemCogs = productCogsMap.get(item.productId) || 0;
+            orderTotalCogs += (item.quantity || 1) * itemCogs;
+          }
+        }
+        
+        order.profit = (order.income || 0) - orderTotalCogs;
+        return order;
+      });
+      report.markModified('orders');
+    }
+
     report.markModified('products');
     await report.save();
 

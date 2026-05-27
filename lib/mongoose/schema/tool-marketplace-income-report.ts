@@ -161,6 +161,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
         paymentMethod: { type: String },
         logisticService: { type: String },
         income: { type: Number, default: 0 },
+        profit: { type: Number },
         originalPrice: { type: Number, default: 0 },
         totalDiscount: { type: Number, default: 0 },
         fees: {

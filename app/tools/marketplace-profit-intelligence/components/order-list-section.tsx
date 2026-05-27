@@ -9,6 +9,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { formatIDR } from "@/lib/formatter";
 import type { ProfitOrder } from "./types";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type OrderListSectionProps = {
   orders: ProfitOrder[];
@@ -41,11 +42,11 @@ function sumFees(order: ProfitOrder) {
   return Object.values(order.fees).reduce((total, value) => total + Math.abs(value || 0), 0);
 }
 
-function StatLine({ label, value, destructive = false }: { label: string; value: string; destructive?: boolean }) {
+function StatLine({ label, value, valueClass }: { label: string; value: string; valueClass?: string; }) {
   return (
     <div className="flex items-center justify-between gap-4 border-b py-2 last:border-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className={`text-right font-medium ${destructive ? "text-destructive" : ""}`}>{value}</span>
+      <span className={cn("text-right font-medium", valueClass)}>{value}</span>
     </div>
   );
 }
@@ -80,7 +81,9 @@ export function OrderListSection({ orders }: OrderListSectionProps) {
               <Table className="table-fixed md:table-auto">
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="px-4 py-3">Order</TableHead>
+                    <TableHead className="px-4 py-3">
+                      <span className="pl-10">No Pesanan</span>
+                    </TableHead>
                     {isMobile && (
                       <TableHead className="px-4 py-3">Pembeli</TableHead>
                     )}
@@ -90,10 +93,13 @@ export function OrderListSection({ orders }: OrderListSectionProps) {
                     {isMobile && (
                       <TableHead className="px-4 py-3 text-right">Item</TableHead>
                     )}
-                    <TableHead className="px-4 py-3 text-right">Income</TableHead>
+                    {isMobile && (
+                      <TableHead className="px-4 py-3 text-right">Pendapatan</TableHead>
+                    )}
                     {isMobile && (
                       <TableHead className="px-4 py-3 text-right">Total Fee</TableHead>
                     )}
+                    <TableHead className="px-4 py-3 text-right">Profit</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -139,26 +145,32 @@ export function OrderListSection({ orders }: OrderListSectionProps) {
                           {isMobile && (
                             <TableCell className="px-4 py-3 text-right">{itemCount}</TableCell>
                           )}
+                          {isMobile && (
+                            <TableCell className="px-4 py-3 text-right">
+                              <span className="font-semibold md:text-base">{formatIDR(order.income || 0)}</span>
+                            </TableCell>
+                          )}
+                          {isMobile && (
+                            <TableCell className="px-4 py-3 text-right text-destructive">
+                              {formatIDR(totalFees)}
+                            </TableCell>
+                          )}
                           <TableCell className="px-4 py-3 text-right">
-                            <span className="font-semibold md:text-base">{formatIDR(order.income || 0)}</span>
-
+                            <span className={`font-semibold md:text-base ${order.profit !== undefined ? (order.profit < 0 ? 'text-destructive' : 'text-green-600') : 'text-muted-foreground'}`}>
+                              {order.profit !== undefined ? formatIDR(order.profit) : '-'}
+                            </span>
                             {!isMobile && (
                               <span className="block text-xs font-normal text-muted-foreground">
                                 {order.username || "Pembeli tidak tersedia"}
                               </span>
                             )}
                           </TableCell>
-                          {isMobile && (
-                            <TableCell className="px-4 py-3 text-right text-destructive">
-                              {formatIDR(totalFees)}
-                            </TableCell>
-                          )}
                         </TableRow>
                         <TableRow
                           className="hover:bg-inherit"
                           aria-hidden={!isExpanded}
                         >
-                          <TableCell colSpan={isMobile ? 7 : 2} className="p-0">
+                          <TableCell colSpan={isMobile ? 8 : 2} className="p-0">
                             <div
                               className={`overflow-hidden transition-all duration-300 ease-in-out ${isExpanded ? "max-h-250 opacity-100" : "max-h-0 opacity-0"
                                 }`}
@@ -195,18 +207,20 @@ export function OrderListSection({ orders }: OrderListSectionProps) {
                                   </div>
 
                                   <div className="rounded-md border bg-background p-4 text-sm">
+                                    <StatLine label="Pendapatan" value={formatIDR(order.income || 0)} />
+                                    <StatLine label="Profit Bersih" value={order.profit !== undefined ? formatIDR(order.profit) : "-"} valueClass={order.profit !== undefined && order.profit !== 0 ? order.profit < 0 ? "text-destructive" : "text-green-600" : ""} />
                                     <StatLine label="Dibuat" value={formatDate(order.createdAt)} />
                                     <StatLine label="Selesai" value={formatDate(order.completedAt)} />
                                     <StatLine label="Pembayaran" value={order.paymentMethod || "-"} />
                                     <StatLine label="Jasa Kirim" value={order.logisticService || "-"} />
-                                    <StatLine label="Harga asli" value={formatIDR(order.originalPrice || 0)} />
-                                    <StatLine label="Diskon" value={formatIDR(order.totalDiscount || 0)} destructive />
+                                    <StatLine label="Harga Asli" value={formatIDR(order.originalPrice || 0)} />
+                                    <StatLine label="Diskon" value={formatIDR(order.totalDiscount || 0)} valueClass="text-destructive" />
                                     {Object.entries(order.fees || {}).map(([feeKey, feeValue]) => (
                                       <StatLine
                                         key={feeKey}
                                         label={`Fee ${feeLabels[feeKey as keyof typeof feeLabels] || feeKey}`}
                                         value={formatIDR(feeValue || 0)}
-                                        destructive
+                                        valueClass="text-destructive"
                                       />
                                     ))}
                                   </div>

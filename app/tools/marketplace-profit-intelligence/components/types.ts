@@ -28,6 +28,7 @@ export type ProfitOrder = {
   paymentMethod?: string;
   logisticService?: string;
   income?: number;
+  profit?: number;
   originalPrice?: number;
   totalDiscount?: number;
   fees?: {
