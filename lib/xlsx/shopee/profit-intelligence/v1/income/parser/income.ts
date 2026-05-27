@@ -1,5 +1,5 @@
 import { Order } from "../types";
-import { getColIdx } from "../utils";
+import { getColIdx } from "../../utils";
 
 const HEADER_DETECTION_KEY = "No. Pesanan";
 

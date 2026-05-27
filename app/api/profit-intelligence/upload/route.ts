@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import ToolMarketplaceIncomeReport from '@/lib/mongoose/schema/tool-marketplace-income-report';
-import importer from '@/lib/xlsx/shopee/profit-intelligence/v1/income/importer';
+import generateProfitIntelligenceReport from '@/lib/xlsx/shopee/profit-intelligence/v1';
 
 import { calculateCRC32 } from '@/lib/file';
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     }
 
     // Parse the data using the combined importer
-    const reportData = importer(incomeBuffer, incomeFile.name, orderBuffer, orderFile.name);
+    const reportData = generateProfitIntelligenceReport(incomeBuffer, incomeFile.name, orderBuffer, orderFile.name);
 
     // Save new report to DB
     const report = new ToolMarketplaceIncomeReport(reportData);

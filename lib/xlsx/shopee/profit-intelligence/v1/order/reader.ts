@@ -13,7 +13,7 @@ export default function reader(arrayBuffer: ArrayBuffer) {
     throw new Error('Format tidak sesuai: Sheet Laporan Pesanan tidak ditemukan.');
   }
 
-  const orderRows = xlsx.utils.sheet_to_json<any[]>(workbook.Sheets[sheetName], { header: 1 });
+  const orderRows = xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets[sheetName], { header: 1 });
 
   return {
     sheetName,

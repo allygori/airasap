@@ -1,37 +1,13 @@
 import crypto from 'crypto';
-import reader from './reader';
-import parser from './parser';
-import orderReader from '../order/reader';
-import orderParser from '../order/parser';
 import { calculateCRC32, detectMimeTypeByAB, size } from '@/lib/file';
+import { ParserResult, WorksheetsMap, RawIncomeData } from './types';
+import { Order } from './income/types';
 
-export default function importer(
-  incomeBuffer: ArrayBuffer,
-  incomeFilename: string,
-  orderBuffer?: ArrayBuffer,
-  orderFilename?: string
-) {
-  // Read and parse Completed Orders Excel if provided
-  let completedOrdersMap;
-  if (orderBuffer) {
-    const orderData = orderReader(orderBuffer);
-    completedOrdersMap = orderParser(orderData.rows);
-  }
-
-  // Read Income Excel
-  const { worksheets, raw_data } = reader(incomeBuffer);
-  
-  // Parse and merge data
-  const parsed = parser(raw_data, completedOrdersMap);
-  
-  const sid = crypto.randomBytes(4).toString('hex');
-  
-  // Extract Seller Username and Report Period from Summary Sheet
+export function extractSellerInfoFromSummary(summaryRows: unknown[][]) {
   let username = 'unknown';
   let fromDate = new Date();
   let toDate = new Date();
 
-  const summaryRows = raw_data.summary_rows || [];
   for (const row of summaryRows) {
     if (row && row.length >= 2) {
       const label = String(row[0]).toLowerCase();
@@ -39,14 +15,32 @@ export default function importer(
       if (label.includes('username') && val) {
         username = String(val).trim();
       } else if (label.includes('dari') && val) {
-        const d = new Date(val);
+        const d = new Date(String(val));
         if (!isNaN(d.getTime())) fromDate = d;
       } else if (label.includes('ke') && val) {
-        const d = new Date(val);
+        const d = new Date(String(val));
         if (!isNaN(d.getTime())) toDate = d;
       }
     }
   }
+
+  return { username, fromDate, toDate };
+}
+
+export function formatReportData(
+  parsed: ParserResult, 
+  worksheets: WorksheetsMap,
+  rawData: RawIncomeData,
+  incomeBuffer: ArrayBuffer,
+  incomeFilename: string,
+  orderBuffer?: ArrayBuffer,
+  orderFilename?: string
+) {
+  const sid = crypto.randomBytes(4).toString('hex');
+  
+  // Extract Seller Username and Report Period from Summary Sheet
+  const summaryRows = rawData.summary_rows || [];
+  const { username, fromDate, toDate } = extractSellerInfoFromSummary(summaryRows);
 
   const incomeChecksum = calculateCRC32(incomeBuffer);
   const sourceFiles = [
@@ -88,13 +82,13 @@ export default function importer(
       income_checksum: incomeChecksum,
       order_checksum: orderBuffer ? calculateCRC32(orderBuffer) : undefined
     },
-    products: parsed.products.map(p => ({
+    products: parsed.products.map((p) => ({
       id: p.id,
       name: p.name,
       quantity: p.quantity,
       cogs: p.cogs || 0
     })),
-    orders: parsed.income.orders.map(o => ({
+    orders: parsed.income.orders.map((o: Order) => ({
       id: o.id,
       username: o.username,
       createdAt: o.createdAt,
@@ -112,7 +106,7 @@ export default function importer(
         process: Math.abs(o.processFee || 0),
         campaign: Math.abs(o.campaignFee || 0)
       },
-      items: (o.items || []).map(item => ({
+      items: (o.items || []).map((item) => ({
         productId: item.productId,
         name: item.name,
         variationName: item.variationName || '',
@@ -126,19 +120,13 @@ export default function importer(
       total_income: parsed.income.grossSales,
       released_amount: parsed.income.netPayout,
       total_expense: {
-        total: Object.values(parsed.income.fees).reduce((total, value) => total + value, 0),
+        total: Object.values(parsed.income.fees).reduce((total: number, value: number) => total + value, 0),
         admin_and_service_fee: {
           items: parsed.income.fees
         }
       }
     },
     worksheets,
-    // source_file: {
-    //   original_name: incomeFilename,
-    //   size: size(incomeBuffer),
-    //   mime_type: detectMimeTypeByAB(incomeBuffer),
-    //   checksum: incomeChecksum,
-    // },
     source_files: sourceFiles,
     extra: {
       summary_data: parsed.summary,

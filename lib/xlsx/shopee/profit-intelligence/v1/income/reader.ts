@@ -12,9 +12,9 @@ export default function reader(arrayBuffer: ArrayBuffer) {
     throw new Error('Format tidak sesuai: Sheet Laporan Penghasilan tidak ditemukan.');
   }
 
-  const summaryRows = summarySheetName ? xlsx.utils.sheet_to_json<any[]>(workbook.Sheets[summarySheetName], { header: 1 }) : [];
-  const incomeRows = incomeSheetName ? xlsx.utils.sheet_to_json<any[]>(workbook.Sheets[incomeSheetName], { header: 1 }) : [];
-  const sellerFeeRows = feeSheetName ? xlsx.utils.sheet_to_json<any[]>(workbook.Sheets[feeSheetName], { header: 1 }) : [];
+  const summaryRows = summarySheetName ? xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets[summarySheetName], { header: 1 }) : [];
+  const incomeRows = incomeSheetName ? xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets[incomeSheetName], { header: 1 }) : [];
+  const sellerFeeRows = feeSheetName ? xlsx.utils.sheet_to_json<unknown[]>(workbook.Sheets[feeSheetName], { header: 1 }) : [];
 
   return {
     worksheets: {

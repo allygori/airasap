@@ -1,22 +1,8 @@
 import { ParsedOrderCompleted } from "./types";
-import { getColIdx } from "../income/utils";
+import { getColIdx, parseDate, parseMoney } from "../utils";
 
 const HEADER_DETECTION_KEY = "No. Pesanan";
 
-function parseMoney(val: unknown): number {
-  if (val === undefined || val === null || val === '') return 0;
-  if (typeof val === 'number') return val;
-  // Shopee excel values can be strings with dots like "130.000"
-  const clean = String(val).replace(/\./g, '').replace(/,/g, '.');
-  return parseFloat(clean) || 0;
-}
-
-function parseDate(val: unknown): Date | null {
-  if (!val) return null;
-  if (!(val instanceof Date) && typeof val !== 'string' && typeof val !== 'number') return null;
-  const d = new Date(val);
-  return isNaN(d.getTime()) ? null : d;
-}
 
 function assertRequiredColumns(headers: string[], columns: string[]) {
   const missingColumns = columns.filter((column) => getColIdx(headers, column) === -1);
@@ -75,7 +61,7 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
     // Filter out canceled or invalid status if needed, but usually we match Completed orders
     // The sheet lists all orders, but we group them anyway.
     const status = String(row[idxStatus] || '').trim();
-    
+
     // We only process if it is not empty
     const productName = String(row[idxProductName] || '').trim();
     if (!productName) continue;
@@ -83,11 +69,11 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
     const sku = String(row[idxSku] || '').trim();
     const parentSku = String(row[idxParentSku] || '').trim();
     const variationName = String(row[idxVariation] || '').trim();
-    
+
     const originalPrice = parseMoney(row[idxOriginalPrice]);
     const discountedPrice = parseMoney(row[idxDiscountedPrice]);
     const quantity = parseInt(String(row[idxQuantity] || '0'), 10) || 0;
-    
+
     const completedAt = parseDate(row[idxCompletedAt]);
 
     if (!ordersMap.has(orderId)) {

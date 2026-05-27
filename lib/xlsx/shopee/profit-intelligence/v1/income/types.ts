@@ -52,8 +52,9 @@ export type ParsedIncome = {
     ongkirDibayarPenjual: number;
     lainnya: number;
   };
-  headers: string[];
-  sampleRows: unknown[][];
+  orders: Order[];
+  headers?: string[];
+  sampleRows?: unknown[][];
 }
 
 export type ParsedProduct = {

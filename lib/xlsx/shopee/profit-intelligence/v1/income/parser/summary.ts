@@ -1,7 +1,9 @@
-export default function parseSummarySheet(sData: any[][]) {
-  const summary_data: any[] = [];
+import { SummaryGroup } from '../types';
+
+export default function parseSummarySheet(sData: unknown[][]) {
+  const summary_data: SummaryGroup[] = [];
   let inSummarySection = false;
-  let currentGroup: any = null;
+  let currentGroup: SummaryGroup | null = null;
 
   for (let i = 0; i < sData.length; i++) {
     const row = sData[i];
