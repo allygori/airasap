@@ -6,10 +6,10 @@ import type { ProfitReportData } from "./types";
 
 type DashboardMetricsProps = {
   reportData: ProfitReportData;
-  totalHpp: number;
+  totalCOGS: number;
 };
 
-export function DashboardMetrics({ reportData, totalHpp }: DashboardMetricsProps) {
+export function DashboardMetrics({ reportData, totalCOGS }: DashboardMetricsProps) {
   const netSales =
     (reportData.extra?.summary_data?.[1]?.subItems?.[0]?.value || 0) +
     (reportData.extra?.summary_data?.[1]?.subItems?.[1]?.value || 0);
@@ -37,7 +37,7 @@ export function DashboardMetrics({ reportData, totalHpp }: DashboardMetricsProps
           <CardTitle className="text-sm text-amber-700 dark:text-amber-400">Estimasi HPP (Modal)</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{formatIDR(totalHpp)}</div>
+          <div className="text-2xl font-bold text-amber-700 dark:text-amber-400">{formatIDR(totalCOGS)}</div>
         </CardContent>
       </Card>
       <Card className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/20">
@@ -46,7 +46,7 @@ export function DashboardMetrics({ reportData, totalHpp }: DashboardMetricsProps
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-green-700 dark:text-green-400">
-            {formatIDR((reportData.summary?.released_amount || 0) - totalHpp)}
+            {formatIDR((reportData.summary?.released_amount || 0) - totalCOGS)}
           </div>
         </CardContent>
       </Card>

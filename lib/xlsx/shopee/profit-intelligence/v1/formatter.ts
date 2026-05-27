@@ -126,7 +126,6 @@ export function formatReportData(
         }
       }
     },
-    worksheets,
     source_files: sourceFiles,
     extra: {
       summary_data: parsed.summary,

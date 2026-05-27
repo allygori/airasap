@@ -3,8 +3,9 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Geist } from "next/font/google";
 import { cn } from "@/lib/utils";
+import { Toaster } from "@/components/ui/sonner"
 
-const geist = Geist({subsets:['latin'],variable:'--font-sans'});
+const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
 
 export const metadata: Metadata = {
   title: "Pasaria.id",
@@ -25,6 +26,7 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col">
         <Providers>{children}</Providers>
+        <Toaster />
       </body>
     </html>
   );

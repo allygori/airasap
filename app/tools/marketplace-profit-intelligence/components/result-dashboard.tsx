@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { DashboardMetrics } from "./dashboard-metrics";
-import { HppInputSection } from "./hpp-input-section";
+import { COGSInputSection } from "./cogs-input-section";
 import { OrderListSection } from "./order-list-section";
 import { ReportSummarySection } from "./report-summary-section";
 import type { ProfitReportData } from "./types";
@@ -14,11 +15,11 @@ type ResultDashboardProps = {
 export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
   const [reportData, setReportData] = useState<ProfitReportData>(initialReportData);
   const [selectedProductIds, setSelectedProductIds] = useState<Set<string>>(new Set());
-  const [bulkHppValue, setBulkHppValue] = useState("");
-  const [isUpdatingHpp, setIsUpdatingHpp] = useState(false);
+  const [bulkCOGSValue, setBulkCOGSValue] = useState("");
+  const [isUpdatingCOGS, setIsUpdatingCOGS] = useState(false);
 
   const reportId = reportData._id;
-  const totalHpp = reportData.products.reduce((total, product) => total + (product.cogs || 0) * product.quantity, 0);
+  const totalCOGS = reportData.products.reduce((total, product) => total + (product.cogs || 0) * product.quantity, 0);
 
   const toggleProductSelect = (id: string) => {
     const nextSelectedProductIds = new Set(selectedProductIds);
@@ -41,7 +42,7 @@ export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
     setSelectedProductIds(new Set(reportData.products.map((product) => product.id)));
   };
 
-  const handleSingleHppChange = (id: string, value: string) => {
+  const handleSingleCOGSChange = (id: string, value: string) => {
     setReportData({
       ...reportData,
       products: reportData.products.map((product) =>
@@ -50,8 +51,8 @@ export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
     });
   };
 
-  const applyBulkHpp = () => {
-    const value = Number(bulkHppValue);
+  const applyBulkCOGS = () => {
+    const value = Number(bulkCOGSValue);
     if (Number.isNaN(value) || selectedProductIds.size === 0) return;
 
     setReportData({
@@ -60,14 +61,14 @@ export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
         selectedProductIds.has(product.id) ? { ...product, cogs: value } : product
       ),
     });
-    setBulkHppValue("");
+    setBulkCOGSValue("");
     setSelectedProductIds(new Set());
   };
 
-  const saveHppToDb = async () => {
+  const saveCOGSToDb = async () => {
     if (!reportId) return;
 
-    setIsUpdatingHpp(true);
+    setIsUpdatingCOGS(true);
 
     const updates = reportData.products.map((product) => ({
       id: product.id,
@@ -84,33 +85,34 @@ export function ResultDashboard({ initialReportData }: ResultDashboardProps) {
 
       if (data.success) {
         setReportData(data.report);
-        alert("HPP berhasil disimpan!");
+        toast.success("HPP berhasil disimpan!");
       } else {
-        alert("Error: " + data.error);
+        console.error("Error: " + data.error);
+        toast.error("Gagal menyimpan HPP");
       }
     } catch {
-      alert("Failed to save HPP");
+      toast.error("Gagal menyimpan HPP");
     } finally {
-      setIsUpdatingHpp(false);
+      setIsUpdatingCOGS(false);
     }
   };
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-8 duration-500">
-      <DashboardMetrics reportData={reportData} totalHpp={totalHpp} />
+      <DashboardMetrics reportData={reportData} totalCOGS={totalCOGS} />
 
       <div className="space-y-4">
-        <HppInputSection
+        <COGSInputSection
           products={reportData.products}
           selectedProductIds={selectedProductIds}
-          bulkHppValue={bulkHppValue}
-          isUpdatingHpp={isUpdatingHpp}
-          onBulkHppChange={setBulkHppValue}
-          onApplyBulkHpp={applyBulkHpp}
-          onSaveHpp={saveHppToDb}
+          bulkCOGSValue={bulkCOGSValue}
+          isUpdatingCOGS={isUpdatingCOGS}
+          onBulkCOGSChange={setBulkCOGSValue}
+          onApplyBulkCOGS={applyBulkCOGS}
+          onSaveCOGS={saveCOGSToDb}
           onToggleProductSelect={toggleProductSelect}
           onToggleAllProducts={toggleAllProducts}
-          onSingleHppChange={handleSingleHppChange}
+          onSingleCOGSChange={handleSingleCOGSChange}
         />
 
         <ReportSummarySection summaryData={reportData.extra?.summary_data || []} />

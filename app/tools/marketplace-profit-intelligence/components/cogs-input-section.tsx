@@ -8,34 +8,34 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { ProfitProduct } from "./types";
 
-type HppInputSectionProps = {
+type COGSInputSectionProps = {
   products: ProfitProduct[];
   selectedProductIds: Set<string>;
-  bulkHppValue: string;
-  isUpdatingHpp: boolean;
-  onBulkHppChange: (value: string) => void;
-  onApplyBulkHpp: () => void;
-  onSaveHpp: () => void;
+  bulkCOGSValue: string;
+  isUpdatingCOGS: boolean;
+  onBulkCOGSChange: (value: string) => void;
+  onApplyBulkCOGS: () => void;
+  onSaveCOGS: () => void;
   onToggleProductSelect: (id: string) => void;
   onToggleAllProducts: () => void;
-  onSingleHppChange: (id: string, value: string) => void;
+  onSingleCOGSChange: (id: string, value: string) => void;
 };
 
-export function HppInputSection({
+export function COGSInputSection({
   products,
   selectedProductIds,
-  bulkHppValue,
-  isUpdatingHpp,
-  onBulkHppChange,
-  onApplyBulkHpp,
-  onSaveHpp,
+  bulkCOGSValue,
+  isUpdatingCOGS,
+  onBulkCOGSChange,
+  onApplyBulkCOGS,
+  onSaveCOGS,
   onToggleProductSelect,
   onToggleAllProducts,
-  onSingleHppChange,
-}: HppInputSectionProps) {
+  onSingleCOGSChange,
+}: COGSInputSectionProps) {
   return (
-    <Accordion multiple defaultValue={["hpp"]} className="rounded-md border bg-white px-4 dark:bg-gray-950">
-      <AccordionItem value="hpp" className="border-0">
+    <Accordion multiple defaultValue={["cogs"]} className="rounded-md border bg-white px-4 dark:bg-gray-950">
+      <AccordionItem value="cogs" className="border-0">
         <AccordionTrigger className="py-4 hover:no-underline">
           <span className="flex items-center gap-2 text-xl font-semibold">
             <DollarSign className="h-5 w-5" /> Input HPP (Harga Pokok)
@@ -52,18 +52,18 @@ export function HppInputSection({
                   type="number"
                   placeholder="Nilai HPP Bulk"
                   className="w-32"
-                  value={bulkHppValue}
-                  onChange={(event) => onBulkHppChange(event.target.value)}
+                  value={bulkCOGSValue}
+                  onChange={(event) => onBulkCOGSChange(event.target.value)}
                 />
                 <Button
                   variant="secondary"
-                  onClick={onApplyBulkHpp}
-                  disabled={selectedProductIds.size === 0 || !bulkHppValue}
+                  onClick={onApplyBulkCOGS}
+                  disabled={selectedProductIds.size === 0 || !bulkCOGSValue}
                 >
                   Apply ke {selectedProductIds.size} Produk
                 </Button>
-                <Button onClick={onSaveHpp} disabled={isUpdatingHpp}>
-                  {isUpdatingHpp ? "Menyimpan..." : "Simpan HPP"}
+                <Button onClick={onSaveCOGS} disabled={isUpdatingCOGS}>
+                  {isUpdatingCOGS ? "Menyimpan..." : "Simpan HPP"}
                 </Button>
               </div>
             </div>
@@ -92,7 +92,7 @@ export function HppInputSection({
                           onCheckedChange={() => onToggleProductSelect(product.id)}
                         />
                       </TableCell>
-                      <TableCell className="max-w-[200px] truncate font-medium" title={product.name}>
+                      <TableCell className="max-w-50 truncate font-medium" title={product.name}>
                         {product.name}
                         <div className="text-xs text-muted-foreground">{product.id}</div>
                       </TableCell>
@@ -102,7 +102,7 @@ export function HppInputSection({
                           type="number"
                           className="text-right"
                           value={product.cogs || ""}
-                          onChange={(event) => onSingleHppChange(product.id, event.target.value)}
+                          onChange={(event) => onSingleCOGSChange(product.id, event.target.value)}
                           placeholder="0"
                         />
                       </TableCell>

@@ -1,6 +1,6 @@
-import mongoose from 'mongoose'
+import mongoose from "mongoose";
 
-const { Schema } = mongoose
+const { Schema } = mongoose;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,41 +12,41 @@ const MoneyItemSchema = new Schema(
   {
     label: {
       type: String,
-      required: true
+      required: true,
     },
 
     value: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     raw_label: {
-      type: String
-    }
+      type: String,
+    },
   },
-  { _id: false }
-)
+  { _id: false },
+);
 
 const MoneyGroupSchema = new Schema(
   {
     total: {
       type: Number,
-      default: 0
+      default: 0,
     },
 
     items: {
       type: Map,
       of: Number,
-      default: {}
+      default: {},
     },
 
     raw_items: {
       type: [MoneyItemSchema],
-      default: []
-    }
+      default: [],
+    },
   },
-  { _id: false }
-)
+  { _id: false },
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -69,25 +69,25 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     platform: {
       type: String,
       required: true,
-      enum: ['shopee'] // 'tiktok' (future)
+      enum: ["shopee"], // 'tiktok' (future)
     },
 
     report_type: {
       type: String,
       required: true,
       enum: [
-        'income_released',
-        'income_unreleased',
-        'ads',
-        'affiliate',
-        'other'
-      ]
+        "income_released",
+        "income_unreleased",
+        "ads",
+        "affiliate",
+        "other",
+      ],
     },
 
     parser_version: {
       type: String,
       required: true,
-      default: 'shopee-income-v1.1'
+      default: "shopee-income-v1.1",
     },
 
     /*
@@ -100,16 +100,16 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       username: {
         type: String,
         required: true,
-        index: true
+        index: true,
       },
 
       shop_id: {
-        type: String
+        type: String,
       },
 
       shop_name: {
-        type: String
-      }
+        type: String,
+      },
     },
 
     /*
@@ -122,19 +122,19 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       from: {
         type: Date,
         required: true,
-        index: true
+        index: true,
       },
 
       to: {
         type: Date,
         required: true,
-        index: true
-      }
+        index: true,
+      },
     },
 
     currency: {
       type: String,
-      default: 'IDR'
+      default: "IDR",
     },
 
     /*
@@ -142,63 +142,73 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     | Products
     |--------------------------------------------------------------------------
     */
-    products: [{
-      id: { type: String, required: true },
-      name: { type: String, required: true },
-      quantity: { type: Number, required: true, default: 0 },
-      cogs: { type: Number, required: true, default: 0 },
-    }],
-
-    orders: [{
-      id: { type: String, required: true },
-      username: { type: String },
-      createdAt: { type: Date },
-      releasedAt: { type: Date },
-      completedAt: { type: Date },
-      paymentMethod: { type: String },
-      logisticService: { type: String },
-      income: { type: Number, default: 0 },
-      originalPrice: { type: Number, default: 0 },
-      totalDiscount: { type: Number, default: 0 },
-      fees: {
-        admin: { type: Number, default: 0 },
-        service: { type: Number, default: 0 },
-        transaction: { type: Number, default: 0 },
-        process: { type: Number, default: 0 },
-        campaign: { type: Number, default: 0 }
+    products: [
+      {
+        id: { type: String, required: true },
+        name: { type: String, required: true },
+        quantity: { type: Number, required: true, default: 0 },
+        cogs: { type: Number, required: true, default: 0 },
       },
-      items: [{
-        productId: { type: String },
-        name: { type: String },
-        variationName: { type: String },
-        quantity: { type: Number, default: 1 },
-        originalPrice: { type: Number, default: 0 },
-        discountedPrice: { type: Number, default: 0 }
-      }]
-    }],
+    ],
 
-    order_diff: {
-      income_only: [{
+    orders: [
+      {
         id: { type: String, required: true },
         username: { type: String },
         createdAt: { type: Date },
         releasedAt: { type: Date },
-        income: { type: Number, default: 0 },
-        originalPrice: { type: Number, default: 0 }
-      }],
-
-      order_only: [{
-        id: { type: String, required: true },
-        username: { type: String },
-        status: { type: String },
-        createdAt: { type: Date },
-        paidAt: { type: Date },
         completedAt: { type: Date },
-        totalPayment: { type: Number, default: 0 },
-        itemCount: { type: Number, default: 0 },
-        quantity: { type: Number, default: 0 },
-        productNames: { type: [String], default: [] }
-      }]
+        paymentMethod: { type: String },
+        logisticService: { type: String },
+        income: { type: Number, default: 0 },
+        originalPrice: { type: Number, default: 0 },
+        totalDiscount: { type: Number, default: 0 },
+        fees: {
+          admin: { type: Number, default: 0 },
+          service: { type: Number, default: 0 },
+          transaction: { type: Number, default: 0 },
+          process: { type: Number, default: 0 },
+          campaign: { type: Number, default: 0 },
+        },
+        items: [
+          {
+            productId: { type: String },
+            name: { type: String },
+            variationName: { type: String },
+            quantity: { type: Number, default: 1 },
+            originalPrice: { type: Number, default: 0 },
+            discountedPrice: { type: Number, default: 0 },
+          },
+        ],
+      },
+    ],
+
+    order_diff: {
+      income_only: [
+        {
+          id: { type: String, required: true },
+          username: { type: String },
+          createdAt: { type: Date },
+          releasedAt: { type: Date },
+          income: { type: Number, default: 0 },
+          originalPrice: { type: Number, default: 0 },
+        },
+      ],
+
+      order_only: [
+        {
+          id: { type: String, required: true },
+          username: { type: String },
+          status: { type: String },
+          createdAt: { type: Date },
+          paidAt: { type: Date },
+          completedAt: { type: Date },
+          totalPayment: { type: Number, default: 0 },
+          itemCount: { type: Number, default: 0 },
+          quantity: { type: Number, default: 0 },
+          productNames: { type: [String], default: [] },
+        },
+      ],
     },
 
     /*
@@ -216,7 +226,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
       total_income: {
         type: Number,
-        default: 0
+        default: 0,
       },
 
       /*
@@ -227,7 +237,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
       order_subtotal: {
         type: MoneyGroupSchema,
-        default: () => ({})
+        default: () => ({}),
       },
 
       /*
@@ -238,7 +248,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
       shopee_voucher_and_subsidy: {
         type: MoneyGroupSchema,
-        default: () => ({})
+        default: () => ({}),
       },
 
       /*
@@ -250,23 +260,23 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       total_expense: {
         total: {
           type: Number,
-          default: 0
+          default: 0,
         },
 
         shipping: {
           type: MoneyGroupSchema,
-          default: () => ({})
+          default: () => ({}),
         },
 
         admin_and_service_fee: {
           type: MoneyGroupSchema,
-          default: () => ({})
+          default: () => ({}),
         },
 
         other_fees: {
           type: MoneyGroupSchema,
-          default: () => ({})
-        }
+          default: () => ({}),
+        },
       },
 
       /*
@@ -277,7 +287,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
       other_values: {
         type: MoneyGroupSchema,
-        default: () => ({})
+        default: () => ({}),
       },
 
       /*
@@ -289,132 +299,55 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       released_amount: {
         type: Number,
         default: 0,
-        index: true
-      }
-    },
-
-    /*
-    |--------------------------------------------------------------------------
-    | Worksheet Metadata
-    |--------------------------------------------------------------------------
-    */
-
-    worksheets: {
-      summary: {
-        name: String,
-        total_rows: Number
+        index: true,
       },
-
-      income: {
-        name: String,
-        total_rows: Number
-      },
-
-      seller_fee: {
-        name: String,
-        total_rows: Number
-      }
     },
-
-    /*
-    |--------------------------------------------------------------------------
-    | Raw Parsed Data
-    |--------------------------------------------------------------------------
-    */
-
-    /** deprecated, not used anymore */
-    // raw_data: {
-    //   summary_rows: {
-    //     type: [[Schema.Types.Mixed]],
-    //     default: []
-    //   },
-
-    //   income_rows: {
-    //     type: [[Schema.Types.Mixed]],
-    //     default: []
-    //   },
-
-    //   seller_fee_rows: {
-    //     type: [[Schema.Types.Mixed]],
-    //     default: []
-    //   }
-    // },
 
     /*
     |--------------------------------------------------------------------------
     | Original File Metadata
     |--------------------------------------------------------------------------
     */
-
-    /** deprecated, not used anymore */
-    // source_file: {
-    //   original_name: {
-    //     type: String,
-    //     required: false
-    //   },
-
-    //   mime_type: {
-    //     type: String
-    //   },
-
-    //   size: {
-    //     type: Number
-    //   },
-
-    //   checksum: {
-    //     type: String,
-    //     // index: true
-    //   },
-
-    //   storage_provider: {
-    //     type: String,
-    //     enum: ['local', 's3', 'r2'],
-    //     default: 'local'
-    //   },
-
-    //   storage_path: {
-    //     type: String
-    //   }
-    // },
-
-    source_files: [{
-      file_type: {
-        type: String,
-        enum: ['income', 'order', 'ads', 'affiliate', 'other'],
-        required: true
+    source_files: [
+      {
+        file_type: {
+          type: String,
+          enum: ["income", "order", "ads", "affiliate", "other"],
+          required: true,
+        },
+        original_name: {
+          type: String,
+          required: true,
+        },
+        mime_type: {
+          type: String,
+        },
+        size: {
+          type: Number,
+        },
+        checksum: {
+          type: String,
+          index: true,
+        },
+        storage_provider: {
+          type: String,
+          default: "local",
+        },
+        storage_path: {
+          type: String,
+        },
       },
-      original_name: {
-        type: String,
-        required: true
-      },
-      mime_type: {
-        type: String
-      },
-      size: {
-        type: Number
-      },
-      checksum: {
-        type: String,
-        index: true
-      },
-      storage_provider: {
-        type: String,
-        default: 'local'
-      },
-      storage_path: {
-        type: String
-      }
-    }],
+    ],
 
     source_pair: {
       income_checksum: {
         type: String,
-        index: true
+        index: true,
       },
       order_checksum: {
         type: String,
-        index: true
-      }
+        index: true,
+      },
     },
 
     /*
@@ -432,35 +365,27 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     imported_at: {
       type: Date,
       default: Date.now,
-      index: true
+      index: true,
     },
 
     last_parsed_at: {
-      type: Date
+      type: Date,
     },
 
     parse_status: {
       type: String,
-      enum: [
-        'pending',
-        'processing',
-        'completed',
-        'failed'
-      ],
-      default: 'completed',
-      index: true
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "completed",
+      index: true,
     },
 
     parse_errors: [
       {
         message: String,
-
         field: String,
-
         row: Number,
-
-        raw_value: Schema.Types.Mixed
-      }
+        raw_value: Schema.Types.Mixed,
+      },
     ],
 
     /*
@@ -472,22 +397,19 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     extra: {
       type: Map,
       of: Schema.Types.Mixed,
-      default: {}
-    }
+      default: {},
+    },
   },
   {
     timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at' 
+      createdAt: "created_at",
+      updatedAt: "updated_at",
     },
-
     minimize: false,
-
     strict: false,
-
-    collection: 'tool_marketplace_income_reports'
-  }
-)
+    collection: "tool_marketplace_income_reports",
+  },
+);
 
 /*
 |--------------------------------------------------------------------------
@@ -497,14 +419,14 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
 ToolMarketplaceIncomeReportSchema.index({
   platform: 1,
-  report_type: 1
-})
+  report_type: 1,
+});
 
 ToolMarketplaceIncomeReportSchema.index({
-  'seller.username': 1,
-  'period.from': 1,
-  'period.to': 1
-})
+  "seller.username": 1,
+  "period.from": 1,
+  "period.to": 1,
+});
 
 // ToolMarketplaceIncomeReportSchema.index({
 //   'source_file.checksum': 1
@@ -516,32 +438,38 @@ ToolMarketplaceIncomeReportSchema.index({
 
 ToolMarketplaceIncomeReportSchema.index(
   {
-    'source_pair.income_checksum': 1,
-    'source_pair.order_checksum': 1
+    "source_pair.income_checksum": 1,
+    "source_pair.order_checksum": 1,
   },
   {
     unique: true,
     partialFilterExpression: {
-      'source_pair.income_checksum': { $exists: true },
-      'source_pair.order_checksum': { $exists: true }
-    }
-  }
-)
+      "source_pair.income_checksum": { $exists: true },
+      "source_pair.order_checksum": { $exists: true },
+    },
+  },
+);
 
 /*
 |--------------------------------------------------------------------------
 | Virtuals
 |--------------------------------------------------------------------------
 */
+ToolMarketplaceIncomeReportSchema.virtual("period_label").get(function (this: {
+  period?: { from?: Date; to?: Date };
+}) {
+  const p = this.period as { from?: Date; to?: Date } | undefined;
+  return `${p?.from ?? ""}-${p?.to ?? ""}`;
+});
 
-ToolMarketplaceIncomeReportSchema.virtual('period_label').get(function (this: { period?: { from?: Date; to?: Date } }) {
-  const p = this.period as { from?: Date; to?: Date } | undefined
-  return `${p?.from ?? ''}-${p?.to ?? ''}`
-})
+
 /*
 |--------------------------------------------------------------------------
 | Export
 |--------------------------------------------------------------------------
 */
-
-export default mongoose.models.ToolMarketplaceIncomeReport || mongoose.model('ToolMarketplaceIncomeReport', ToolMarketplaceIncomeReportSchema);
+export default mongoose.models.ToolMarketplaceIncomeReport ||
+  mongoose.model(
+    "ToolMarketplaceIncomeReport",
+    ToolMarketplaceIncomeReportSchema,
+  );
