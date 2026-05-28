@@ -18,11 +18,12 @@ export default function generateProfitIntelligenceReport(
   }
 
   // 2. Read Income Excel
-  const { worksheets, raw_data } = incomeReader(incomeBuffer);
-  
+  const { worksheets, raw_data } =
+    incomeReader(incomeBuffer);
+
   // 3. Parse and merge data
   const parsed = incomeParser(raw_data, completedOrdersMap);
-  
+
   // 4. Format and return final report schema
   return formatReportData(
     parsed,

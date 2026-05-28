@@ -15,8 +15,6 @@ import mongoose from 'mongoose';
 
 import '@/lib/mongoose/schema/tool-marketplace-income-report';
 
-
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var mongoose: any; // This is necessary for Next.js hot reloading
@@ -32,7 +30,9 @@ async function dbConnect() {
   const MONGODB_URI = process.env.MONGODB_URI!;
 
   if (!MONGODB_URI) {
-    throw new Error('Please define the MONGODB_URI environment variable inside .env.local');
+    throw new Error(
+      'Please define the MONGODB_URI environment variable inside .env.local'
+    );
   }
 
   if (cached.conn) {
@@ -44,9 +44,11 @@ async function dbConnect() {
       bufferCommands: false,
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    cached.promise = mongoose
+      .connect(MONGODB_URI, opts)
+      .then((mongoose) => {
+        return mongoose;
+      });
   }
 
   try {
@@ -66,8 +68,7 @@ const check = async () => {
   }
 
   return false;
-}
-
+};
 
 export async function getClient() {
   const MONGODB_URI = process.env.MONGODB_URI!;
@@ -82,4 +83,4 @@ export const db = {
   connect: dbConnect,
   check,
   getClient,
-}
+};

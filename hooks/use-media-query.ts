@@ -1,10 +1,10 @@
-import { useState } from 'react'
-import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect'
+import { useState } from 'react';
+import { useIsomorphicLayoutEffect } from './use-isomorphic-layout-effect';
 
 type UseMediaQueryOptions = {
-  defaultValue?: boolean
-  initializeWithValue?: boolean
-}
+  defaultValue?: boolean;
+  initializeWithValue?: boolean;
+};
 
 // 1. Definisikan mapping default breakpoint Tailwind
 const TAILWIND_BREAKPOINTS = {
@@ -13,11 +13,11 @@ const TAILWIND_BREAKPOINTS = {
   lg: '(min-width: 1024px)',
   xl: '(min-width: 1280px)',
   '2xl': '(min-width: 1536px)',
-} as const
+} as const;
 
-type TailwindBreakpoint = keyof typeof TAILWIND_BREAKPOINTS
+type TailwindBreakpoint = keyof typeof TAILWIND_BREAKPOINTS;
 
-const IS_SERVER = typeof window === 'undefined'
+const IS_SERVER = typeof window === 'undefined';
 
 // 2. Perbarui tipe parameter `query` agar mendukung autocomplete breakpoint Tailwind
 export function useMediaQuery(
@@ -25,56 +25,60 @@ export function useMediaQuery(
   {
     defaultValue = false,
     initializeWithValue = true,
-  }: UseMediaQueryOptions = {},
+  }: UseMediaQueryOptions = {}
 ): boolean {
-  
   // 3. Fungsi pembantu untuk mengubah shorthand Tailwind menjadi full query
   const parseQuery = (input: string): string => {
     if (input in TAILWIND_BREAKPOINTS) {
-      return TAILWIND_BREAKPOINTS[input as TailwindBreakpoint]
+      return TAILWIND_BREAKPOINTS[
+        input as TailwindBreakpoint
+      ];
     }
-    return input
-  }
+    return input;
+  };
 
   const getMatches = (inputQuery: string): boolean => {
     if (IS_SERVER) {
-      return defaultValue
+      return defaultValue;
     }
-    const targetQuery = parseQuery(inputQuery)
-    return window.matchMedia(targetQuery).matches
-  }
+    const targetQuery = parseQuery(inputQuery);
+    return window.matchMedia(targetQuery).matches;
+  };
 
   const [matches, setMatches] = useState<boolean>(() => {
     if (initializeWithValue) {
-      return getMatches(query)
+      return getMatches(query);
     }
-    return defaultValue
-  })
+    return defaultValue;
+  });
 
   function handleChange() {
-    setMatches(getMatches(query))
+    setMatches(getMatches(query));
   }
 
   useIsomorphicLayoutEffect(() => {
-    const targetQuery = parseQuery(query)
-    const matchMedia = window.matchMedia(targetQuery)
+    const targetQuery = parseQuery(query);
+    const matchMedia = window.matchMedia(targetQuery);
 
-    handleChange()
+    handleChange();
 
     if (matchMedia.addListener) {
-      matchMedia.addListener(handleChange)
+      matchMedia.addListener(handleChange);
     } else {
-      matchMedia.addEventListener('change', handleChange)
+      matchMedia.addEventListener('change', handleChange);
     }
 
     return () => {
       if (matchMedia.removeListener) {
-        matchMedia.removeListener(handleChange)
+        matchMedia.removeListener(handleChange);
       } else {
-        matchMedia.removeEventListener('change', handleChange)
+        matchMedia.removeEventListener(
+          'change',
+          handleChange
+        );
       }
-    }
-  }, [query])
+    };
+  }, [query]);
 
-  return matches
+  return matches;
 }

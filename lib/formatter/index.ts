@@ -1,1 +1,1 @@
-export { formatIDR } from "./format-idr"
+export { formatIDR } from './format-idr';

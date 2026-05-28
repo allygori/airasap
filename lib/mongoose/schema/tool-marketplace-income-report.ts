@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
@@ -24,7 +24,7 @@ const MoneyItemSchema = new Schema(
       type: String,
     },
   },
-  { _id: false },
+  { _id: false }
 );
 
 const MoneyGroupSchema = new Schema(
@@ -45,7 +45,7 @@ const MoneyGroupSchema = new Schema(
       default: [],
     },
   },
-  { _id: false },
+  { _id: false }
 );
 
 /*
@@ -69,25 +69,25 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
     platform: {
       type: String,
       required: true,
-      enum: ["shopee"], // 'tiktok' (future)
+      enum: ['shopee'], // 'tiktok' (future)
     },
 
     report_type: {
       type: String,
       required: true,
       enum: [
-        "income_released",
-        "income_unreleased",
-        "ads",
-        "affiliate",
-        "other",
+        'income_released',
+        'income_unreleased',
+        'ads',
+        'affiliate',
+        'other',
       ],
     },
 
     parser_version: {
       type: String,
       required: true,
-      default: "shopee-income-v1.1",
+      default: 'shopee-income-v1.1',
     },
 
     /*
@@ -134,7 +134,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
     currency: {
       type: String,
-      default: "IDR",
+      default: 'IDR',
     },
 
     /*
@@ -146,7 +146,11 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       {
         id: { type: String, required: true },
         name: { type: String, required: true },
-        quantity: { type: Number, required: true, default: 0 },
+        quantity: {
+          type: Number,
+          required: true,
+          default: 0,
+        },
         cogs: { type: Number, required: true, default: 0 },
       },
     ],
@@ -313,7 +317,13 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       {
         file_type: {
           type: String,
-          enum: ["income", "order", "ads", "affiliate", "other"],
+          enum: [
+            'income',
+            'order',
+            'ads',
+            'affiliate',
+            'other',
+          ],
           required: true,
         },
         original_name: {
@@ -332,7 +342,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
         },
         storage_provider: {
           type: String,
-          default: "local",
+          default: 'local',
         },
         storage_path: {
           type: String,
@@ -375,8 +385,13 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
 
     parse_status: {
       type: String,
-      enum: ["pending", "processing", "completed", "failed"],
-      default: "completed",
+      enum: [
+        'pending',
+        'processing',
+        'completed',
+        'failed',
+      ],
+      default: 'completed',
       index: true,
     },
 
@@ -403,13 +418,13 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
   },
   {
     timestamps: {
-      createdAt: "created_at",
-      updatedAt: "updated_at",
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     },
     minimize: false,
     strict: false,
-    collection: "tool_marketplace_income_reports",
-  },
+    collection: 'tool_marketplace_income_reports',
+  }
 );
 
 /*
@@ -424,9 +439,9 @@ ToolMarketplaceIncomeReportSchema.index({
 });
 
 ToolMarketplaceIncomeReportSchema.index({
-  "seller.username": 1,
-  "period.from": 1,
-  "period.to": 1,
+  'seller.username': 1,
+  'period.from': 1,
+  'period.to': 1,
 });
 
 // ToolMarketplaceIncomeReportSchema.index({
@@ -439,16 +454,16 @@ ToolMarketplaceIncomeReportSchema.index({
 
 ToolMarketplaceIncomeReportSchema.index(
   {
-    "source_pair.income_checksum": 1,
-    "source_pair.order_checksum": 1,
+    'source_pair.income_checksum': 1,
+    'source_pair.order_checksum': 1,
   },
   {
     unique: true,
     partialFilterExpression: {
-      "source_pair.income_checksum": { $exists: true },
-      "source_pair.order_checksum": { $exists: true },
+      'source_pair.income_checksum': { $exists: true },
+      'source_pair.order_checksum': { $exists: true },
     },
-  },
+  }
 );
 
 /*
@@ -456,21 +471,25 @@ ToolMarketplaceIncomeReportSchema.index(
 | Virtuals
 |--------------------------------------------------------------------------
 */
-ToolMarketplaceIncomeReportSchema.virtual("period_label").get(function (this: {
+ToolMarketplaceIncomeReportSchema.virtual(
+  'period_label'
+).get(function (this: {
   period?: { from?: Date; to?: Date };
 }) {
-  const p = this.period as { from?: Date; to?: Date } | undefined;
-  return `${p?.from ?? ""}-${p?.to ?? ""}`;
+  const p = this.period as
+    | { from?: Date; to?: Date }
+    | undefined;
+  return `${p?.from ?? ''}-${p?.to ?? ''}`;
 });
-
 
 /*
 |--------------------------------------------------------------------------
 | Export
 |--------------------------------------------------------------------------
 */
-export default mongoose.models.ToolMarketplaceIncomeReport ||
+export default mongoose.models
+  .ToolMarketplaceIncomeReport ||
   mongoose.model(
-    "ToolMarketplaceIncomeReport",
-    ToolMarketplaceIncomeReportSchema,
+    'ToolMarketplaceIncomeReport',
+    ToolMarketplaceIncomeReportSchema
   );

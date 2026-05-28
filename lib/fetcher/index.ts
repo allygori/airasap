@@ -4,7 +4,10 @@
  */
 
 export interface FetchOptions extends RequestInit {
-  params?: Record<string, string | number | boolean | undefined | string[]>;
+  params?: Record<
+    string,
+    string | number | boolean | undefined | string[]
+  >;
   revalidate?: number | false;
   tags?: string[];
 }
@@ -37,13 +40,24 @@ export async function fetchAPI<T>(
   endpoint: string,
   options: FetchOptions = {}
 ): Promise<T | null> {
-  const { params, revalidate, tags, headers: customHeaders, ...rest } = options;
+  const {
+    params,
+    revalidate,
+    tags,
+    headers: customHeaders,
+    ...rest
+  } = options;
 
-  const baseUrl = process.env.BETTER_AUTH_URL || 'http://localhost:3000';
+  const baseUrl =
+    process.env.BETTER_AUTH_URL || 'http://localhost:3000';
   const apiSecret = process.env.INTERNAL_API_SECRET;
 
   // 1. Construct URL with parameters
-  const url = new URL(endpoint.startsWith('http') ? endpoint : `${baseUrl}${endpoint}`);
+  const url = new URL(
+    endpoint.startsWith('http')
+      ? endpoint
+      : `${baseUrl}${endpoint}`
+  );
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
@@ -63,7 +77,11 @@ export async function fetchAPI<T>(
     headers.set('x-api-secret', apiSecret);
   }
 
-  if (!headers.has('Content-Type') && rest.body && !(rest.body instanceof FormData)) {
+  if (
+    !headers.has('Content-Type') &&
+    rest.body &&
+    !(rest.body instanceof FormData)
+  ) {
     headers.set('Content-Type', 'application/json');
   }
 
@@ -82,18 +100,27 @@ export async function fetchAPI<T>(
   }
 
   try {
-    const response = await fetch(url.toString(), fetchOptions);
+    const response = await fetch(
+      url.toString(),
+      fetchOptions
+    );
 
     // Handle HTTP errors
     if (!response.ok) {
       let errorMsg = `Fetch failed: ${response.status} ${response.statusText}`;
       try {
         const errorJson = await response.json();
-        errorMsg = errorJson.error?.message || errorJson.message || errorMsg;
+        errorMsg =
+          errorJson.error?.message ||
+          errorJson.message ||
+          errorMsg;
       } catch {
         // Fallback if not JSON
       }
-      console.error(`[fetchAPI Error] ${url.pathname}:`, errorMsg);
+      console.error(
+        `[fetchAPI Error] ${url.pathname}:`,
+        errorMsg
+      );
       return null;
     }
 
@@ -101,13 +128,19 @@ export async function fetchAPI<T>(
     const json = (await response.json()) as ApiResponse<T>;
 
     if (!json.success) {
-      console.error(`[fetchAPI API Error] ${url.pathname}:`, json.error?.message || 'Unknown error');
+      console.error(
+        `[fetchAPI API Error] ${url.pathname}:`,
+        json.error?.message || 'Unknown error'
+      );
       return null;
     }
 
     return json.data;
   } catch (error) {
-    console.error(`[fetchAPI Network Error] ${endpoint}:`, error instanceof Error ? error.message : error);
+    console.error(
+      `[fetchAPI Network Error] ${endpoint}:`,
+      error instanceof Error ? error.message : error
+    );
     return null;
   }
 }

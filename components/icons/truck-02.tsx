@@ -2,7 +2,7 @@ type Props = {
   className?: string;
 };
 
-const Truck02 = ({ className = "" }: Props) => {
+const Truck02 = ({ className = '' }: Props) => {
   return (
     <svg
       fill="currentColor"

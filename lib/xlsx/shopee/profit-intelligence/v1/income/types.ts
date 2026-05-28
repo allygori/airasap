@@ -5,7 +5,7 @@ export type OrderItem = {
   quantity: number;
   originalPrice: number;
   discountedPrice: number;
-}
+};
 
 export type Order = {
   number: number;
@@ -21,13 +21,13 @@ export type Order = {
     {
       code?: string;
       value?: number;
-    }
+    },
   ];
   sellerCoFundVouchers?: [
     {
       code?: string;
       value?: number;
-    }
+    },
   ];
   adminFee: number;
   serviceFee: number;
@@ -37,7 +37,7 @@ export type Order = {
   income: number;
   logisticService: string;
   items?: OrderItem[];
-}
+};
 
 export type ParsedIncome = {
   grossSales: number;
@@ -55,17 +55,17 @@ export type ParsedIncome = {
   orders: Order[];
   headers?: string[];
   sampleRows?: unknown[][];
-}
+};
 
 export type ParsedProduct = {
   id: string;
   name: string;
   quantity: number;
   hpp: number;
-}
+};
 
 export type SummaryGroup = {
   name: string;
   value: number;
   subItems: { name: string; value: number }[];
-}
+};

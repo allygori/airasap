@@ -1,12 +1,11 @@
-import { createElement } from "react";
-import { IconSvgObject } from "@/types/icon";
-
+import { createElement } from 'react';
+import { IconSvgObject } from '@/types/icon';
 
 type HugeIconProps = {
   icon: IconSvgObject;
   className?: string;
   size?: number;
-}
+};
 
 export const HugeiconsIcon = ({
   icon,
@@ -35,6 +34,6 @@ export const HugeiconsIcon = ({
       })}
     </svg>
   );
-}
+};
 
-export default HugeiconsIcon
+export default HugeiconsIcon;

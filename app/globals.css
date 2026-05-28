@@ -1,6 +1,6 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -13,13 +13,17 @@
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-surface: var(--surface);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent-foreground: var(
+    --sidebar-accent-foreground
+  );
   --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary-foreground: var(
+    --sidebar-primary-foreground
+  );
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  
+
   /* Primary Shades */
   --color-primary-50: var(--p-50);
   --color-primary-100: var(--p-100);
@@ -109,10 +113,12 @@
   --p-200: oklch(0.88 0.06 var(--p-h));
   --p-300: oklch(0.82 0.09 var(--p-h));
   --p-400: oklch(0.76 0.11 var(--p-h));
-  --p-500: oklch(0.7055 var(--p-c) var(--p-h)); /* Base #00b3d0 */
+  --p-500: oklch(
+    0.7055 var(--p-c) var(--p-h)
+  ); /* Base #00b3d0 */
   --p-600: oklch(0.62 0.12 var(--p-h));
   --p-700: oklch(0.52 0.11 var(--p-h));
-  --p-800: oklch(0.42 0.10 var(--p-h));
+  --p-800: oklch(0.42 0.1 var(--p-h));
   --p-900: oklch(0.32 0.08 var(--p-h));
   --p-950: oklch(0.22 0.06 var(--p-h));
 
@@ -133,12 +139,12 @@
   --t-50: oklch(0.98 0.015 156.4);
   --t-100: oklch(0.94 0.03 156.4);
   --t-200: oklch(0.88 0.06 156.4);
-  --t-300: oklch(0.82 0.10 156.4);
+  --t-300: oklch(0.82 0.1 156.4);
   --t-400: oklch(0.77 0.187 156.4); /* #00D085 */
   --t-500: oklch(0.7055 0.17 156.4);
   --t-600: oklch(0.62 0.15 156.4);
   --t-700: oklch(0.52 0.13 156.4);
-  --t-800: oklch(0.42 0.10 156.4);
+  --t-800: oklch(0.42 0.1 156.4);
   --t-900: oklch(0.32 0.08 156.4);
   --t-950: oklch(0.22 0.06 156.4);
 
@@ -160,11 +166,13 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  
+
   --primary: var(--p-500);
   --primary-foreground: oklch(0.98 0.01 var(--p-h));
-  --surface: oklch(0.96 0 0); /* Subtle grey for page background */
-  
+  --surface: oklch(
+    0.96 0 0
+  ); /* Subtle grey for page background */
+
   --secondary: oklch(0.967 0.001 286.375);
   --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0 0);
@@ -175,7 +183,9 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --rating: oklch(0.795 0.184 86.087); /* Amber/Gold for ratings */
+  --rating: oklch(
+    0.795 0.184 86.087
+  ); /* Amber/Gold for ratings */
 
   /* Charts: Balanced cyan scale */
   --chart-1: var(--p-500);
@@ -183,7 +193,7 @@
   --chart-3: var(--p-700);
   --chart-4: var(--p-400);
   --chart-5: var(--p-800);
-  
+
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
@@ -196,17 +206,17 @@
 }
 
 .dark {
-  --background: oklch(16.52% 0.006 285.70);
+  --background: oklch(16.52% 0.006 285.7);
   --foreground: oklch(0.985 0 0);
   --card: oklch(19.31% 0.008 285.63);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(19.31% 0.008 285.63);
   --popover-foreground: oklch(0.985 0 0);
-  
+
   --primary: var(--p-500);
   --primary-foreground: oklch(0.98 0.01 var(--p-h));
   --surface: oklch(19.31% 0.008 285.63);
-  
+
   --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -225,7 +235,7 @@
   --chart-3: var(--p-600);
   --chart-4: var(--p-700);
   --chart-5: var(--p-800);
-  
+
   --sidebar: oklch(19.31% 0.008 285.63);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: var(--p-500);
@@ -274,11 +284,13 @@
 @keyframes pasaria-float {
   0%,
   100% {
-    transform: translateY(0) rotate(var(--float-rotate, 0deg));
+    transform: translateY(0)
+      rotate(var(--float-rotate, 0deg));
   }
 
   50% {
-    transform: translateY(-10px) rotate(var(--float-rotate, 0deg));
+    transform: translateY(-10px)
+      rotate(var(--float-rotate, 0deg));
   }
 }
 
@@ -318,10 +330,9 @@
 }
 
 .animate-scan {
-  animation: pasaria-scan 4.8s ease-in-out infinite alternate;
+  animation: pasaria-scan 4.8s ease-in-out infinite
+    alternate;
 }
-
-
 
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -1,18 +1,26 @@
-import { ParsedOrderCompleted } from "./types";
-import { getColIdx, parseDate, parseMoney } from "../utils";
+import { ParsedOrderCompleted } from './types';
+import { getColIdx, parseDate, parseMoney } from '../utils';
 
-const HEADER_DETECTION_KEY = "No. Pesanan";
+const HEADER_DETECTION_KEY = 'No. Pesanan';
 
-
-function assertRequiredColumns(headers: string[], columns: string[]) {
-  const missingColumns = columns.filter((column) => getColIdx(headers, column) === -1);
+function assertRequiredColumns(
+  headers: string[],
+  columns: string[]
+) {
+  const missingColumns = columns.filter(
+    (column) => getColIdx(headers, column) === -1
+  );
 
   if (missingColumns.length > 0) {
-    throw new Error(`Format tidak sesuai: Kolom Download Pesanan Selesai tidak ditemukan: ${missingColumns.join(', ')}.`);
+    throw new Error(
+      `Format tidak sesuai: Kolom Download Pesanan Selesai tidak ditemukan: ${missingColumns.join(', ')}.`
+    );
   }
 }
 
-export default function parser(rows: unknown[][]): Map<string, ParsedOrderCompleted> {
+export default function parser(
+  rows: unknown[][]
+): Map<string, ParsedOrderCompleted> {
   let headerRowIndex = -1;
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
     if (rows[i] && rows[i].includes(HEADER_DETECTION_KEY)) {
@@ -22,11 +30,17 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
   }
 
   if (headerRowIndex === -1) {
-    throw new Error('Format tidak sesuai: Kolom No. Pesanan tidak ditemukan di Laporan Pesanan.');
+    throw new Error(
+      'Format tidak sesuai: Kolom No. Pesanan tidak ditemukan di Laporan Pesanan.'
+    );
   }
 
-  const headers = rows[headerRowIndex].map(h => String(h).trim());
-  const dataRows = rows.slice(headerRowIndex + 1).filter(r => r && r.length > 0 && r[0]);
+  const headers = rows[headerRowIndex].map((h) =>
+    String(h).trim()
+  );
+  const dataRows = rows
+    .slice(headerRowIndex + 1)
+    .filter((r) => r && r.length > 0 && r[0]);
 
   assertRequiredColumns(headers, [
     'No. Pesanan',
@@ -34,7 +48,7 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
     'Nama Produk',
     'Jumlah',
     'Waktu Pesanan Dibuat',
-    'Waktu Pesanan Selesai'
+    'Waktu Pesanan Selesai',
   ]);
 
   const idxOrderId = getColIdx(headers, 'No. Pesanan');
@@ -44,13 +58,31 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
   const idxParentSku = getColIdx(headers, 'SKU Induk');
   const idxVariation = getColIdx(headers, 'Nama Variasi');
   const idxOriginalPrice = getColIdx(headers, 'Harga Awal');
-  const idxDiscountedPrice = getColIdx(headers, 'Harga Setelah Diskon');
+  const idxDiscountedPrice = getColIdx(
+    headers,
+    'Harga Setelah Diskon'
+  );
   const idxQuantity = getColIdx(headers, 'Jumlah');
-  const idxCreatedAt = getColIdx(headers, 'Waktu Pesanan Dibuat');
-  const idxPaidAt = getColIdx(headers, 'Waktu Pembayaran Dilakukan');
-  const idxUsername = getColIdx(headers, 'Username (Pembeli)');
-  const idxTotalPayment = getColIdx(headers, 'Total Pembayaran');
-  const idxCompletedAt = getColIdx(headers, 'Waktu Pesanan Selesai');
+  const idxCreatedAt = getColIdx(
+    headers,
+    'Waktu Pesanan Dibuat'
+  );
+  const idxPaidAt = getColIdx(
+    headers,
+    'Waktu Pembayaran Dilakukan'
+  );
+  const idxUsername = getColIdx(
+    headers,
+    'Username (Pembeli)'
+  );
+  const idxTotalPayment = getColIdx(
+    headers,
+    'Total Pembayaran'
+  );
+  const idxCompletedAt = getColIdx(
+    headers,
+    'Waktu Pesanan Selesai'
+  );
 
   const ordersMap = new Map<string, ParsedOrderCompleted>();
 
@@ -63,16 +95,25 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
     const status = String(row[idxStatus] || '').trim();
 
     // We only process if it is not empty
-    const productName = String(row[idxProductName] || '').trim();
+    const productName = String(
+      row[idxProductName] || ''
+    ).trim();
     if (!productName) continue;
 
     const sku = String(row[idxSku] || '').trim();
-    const parentSku = String(row[idxParentSku] || '').trim();
-    const variationName = String(row[idxVariation] || '').trim();
+    const parentSku = String(
+      row[idxParentSku] || ''
+    ).trim();
+    const variationName = String(
+      row[idxVariation] || ''
+    ).trim();
 
     const originalPrice = parseMoney(row[idxOriginalPrice]);
-    const discountedPrice = parseMoney(row[idxDiscountedPrice]);
-    const quantity = parseInt(String(row[idxQuantity] || '0'), 10) || 0;
+    const discountedPrice = parseMoney(
+      row[idxDiscountedPrice]
+    );
+    const quantity =
+      parseInt(String(row[idxQuantity] || '0'), 10) || 0;
 
     const completedAt = parseDate(row[idxCompletedAt]);
 
@@ -85,7 +126,7 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
         paidAt: parseDate(row[idxPaidAt]),
         completedAt,
         totalPayment: parseMoney(row[idxTotalPayment]),
-        items: []
+        items: [],
       });
     }
 
@@ -95,7 +136,7 @@ export default function parser(rows: unknown[][]): Map<string, ParsedOrderComple
       variationName,
       originalPrice,
       discountedPrice,
-      quantity
+      quantity,
     });
   }
 

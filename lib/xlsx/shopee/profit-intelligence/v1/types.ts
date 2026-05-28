@@ -1,5 +1,10 @@
 import { ParsedOrderCompleted } from './order/types';
-import { SummaryGroup, Order, ParsedProduct, ParsedIncome } from './income/types';
+import {
+  SummaryGroup,
+  Order,
+  ParsedProduct,
+  ParsedIncome,
+} from './income/types';
 
 export type RawIncomeData = {
   summary_rows?: unknown[][];
@@ -53,6 +58,11 @@ export type OrderDiff = {
 export type ParserResult = {
   summary: SummaryGroup[];
   income: ParsedIncome;
-  products: { id: string; name: string; quantity: number; cogs: number }[];
+  products: {
+    id: string;
+    name: string;
+    quantity: number;
+    cogs: number;
+  }[];
   orderDiff: OrderDiff;
 };

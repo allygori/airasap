@@ -1,8 +1,8 @@
-import Container from "@/components/shared/general/container";
+import Container from '@/components/shared/general/container';
 // import { HugeiconsIcon } from "@hugeicons/react";
-import { HugeiconsIcon } from "@/components/icons/hugeicons-icon";
-import { StarIcon } from "@hugeicons/core-free-icons";
-import Image from "next/image";
+import { HugeiconsIcon } from '@/components/icons/hugeicons-icon';
+import { StarIcon } from '@hugeicons/core-free-icons';
+import Image from 'next/image';
 
 type Props = {
   className?: string;
@@ -11,52 +11,68 @@ type Props = {
 const reviews = [
   {
     id: 1,
-    user: "S***a",
+    user: 'S***a',
     rating: 5,
-    date: "2024-05-01",
-    comment: "Bajunya bagus banget, pas di badan. Bahannya adem dan tidak nerawang. Pengiriman cepat!",
+    date: '2024-05-01',
+    comment:
+      'Bajunya bagus banget, pas di badan. Bahannya adem dan tidak nerawang. Pengiriman cepat!',
     images: [
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=200&h=200&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=200&h=200&auto=format&fit=crop",
+      'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=200&h=200&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=200&h=200&auto=format&fit=crop',
     ],
     video: {
-      thumbnail: "https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=200&h=300&auto=format&fit=crop",
-      url: "#"
-    }
+      thumbnail:
+        'https://images.unsplash.com/photo-1496747611176-843222e1e57c?q=80&w=200&h=300&auto=format&fit=crop',
+      url: '#',
+    },
   },
   {
     id: 2,
-    user: "B***u",
+    user: 'B***u',
     rating: 4,
-    date: "2024-04-28",
-    comment: "Warna aslinya sedikit lebih gelap dari foto, tapi tetap bagus. Seller ramah.",
+    date: '2024-04-28',
+    comment:
+      'Warna aslinya sedikit lebih gelap dari foto, tapi tetap bagus. Seller ramah.',
     images: [],
-  }
+  },
 ];
 
-const Reviews = ({ className = "" }: Props) => {
+const Reviews = ({ className = '' }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`w-full bg-background `}
-        classObject={{ padding: "px-3 md:px-5 py-2" }}
+        className={`bg-background w-full`}
+        classObject={{ padding: 'px-3 md:px-5 py-2' }}
       >
         <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-foreground">
+          <h2 className="text-foreground text-xs font-semibold tracking-wider uppercase">
             Penilaian Produk
           </h2>
-          <div className="flex items-center text-rating">
-            <span className="mr-1 text-xs font-bold">4.8/5</span>
-            <HugeiconsIcon icon={StarIcon} size={12} className="text-rating fill-current" />
+          <div className="text-rating flex items-center">
+            <span className="mr-1 text-xs font-bold">
+              4.8/5
+            </span>
+            <HugeiconsIcon
+              icon={StarIcon}
+              size={12}
+              className="text-rating fill-current"
+            />
           </div>
         </div>
 
         <div className="space-y-3">
           {reviews.map((review) => (
-            <div key={review.id} className="border-b border-border pb-3 last:border-0">
+            <div
+              key={review.id}
+              className="border-border border-b pb-3 last:border-0"
+            >
               <div className="mb-1 flex items-center justify-between">
-                <span className="text-[11px] font-medium text-foreground">{review.user}</span>
-                <span className="text-tiny text-muted-foreground">{review.date}</span>
+                <span className="text-foreground text-[11px] font-medium">
+                  {review.user}
+                </span>
+                <span className="text-tiny text-muted-foreground">
+                  {review.date}
+                </span>
               </div>
 
               <div className="mb-1 flex gap-0.5">
@@ -65,18 +81,22 @@ const Reviews = ({ className = "" }: Props) => {
                     key={i}
                     icon={StarIcon}
                     size={10}
-                    className={i < review.rating ? "text-rating fill-current" : "text-rating"}
+                    className={
+                      i < review.rating
+                        ? 'text-rating fill-current'
+                        : 'text-rating'
+                    }
                   />
                 ))}
               </div>
 
-              <p className="mb-2 text-xs leading-relaxed text-foreground">
+              <p className="text-foreground mb-2 text-xs leading-relaxed">
                 {review.comment}
               </p>
 
               <div className="flex flex-wrap gap-1.5">
                 {review.video && (
-                  <div className="relative aspect-9/16 w-16 overflow-hidden rounded-md border border-border bg-muted">
+                  <div className="border-border bg-muted relative aspect-9/16 w-16 overflow-hidden rounded-md border">
                     <Image
                       src={review.video.thumbnail}
                       alt="Review video"
@@ -85,13 +105,21 @@ const Reviews = ({ className = "" }: Props) => {
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="flex h-5 w-5 items-center justify-center rounded-full bg-black/40 text-white">
-                        <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                        <svg
+                          className="h-2.5 w-2.5 fill-current"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
                       </div>
                     </div>
                   </div>
                 )}
                 {review.images.map((img, i) => (
-                  <div key={i} className="relative aspect-square w-16 overflow-hidden rounded-md border border-border">
+                  <div
+                    key={i}
+                    className="border-border relative aspect-square w-16 overflow-hidden rounded-md border"
+                  >
                     <Image
                       src={img}
                       alt="Review image"
@@ -105,7 +133,7 @@ const Reviews = ({ className = "" }: Props) => {
           ))}
         </div>
 
-        <button className="mt-2 w-full rounded-md border border-border py-1.5 text-[11px] font-medium text-muted-foreground hover:bg-muted">
+        <button className="border-border text-muted-foreground hover:bg-muted mt-2 w-full rounded-md border py-1.5 text-[11px] font-medium">
           Lihat Semua Ulasan
         </button>
       </Container>

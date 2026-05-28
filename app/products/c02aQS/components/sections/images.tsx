@@ -1,22 +1,35 @@
-"use client";
+'use client';
 
-import "swiper/css";
-import "swiper/css/free-mode";
-import "swiper/css/pagination";
-import "swiper/css/thumbs";
-import styles from "./images.module.css";
+import 'swiper/css';
+import 'swiper/css/free-mode';
+import 'swiper/css/pagination';
+import 'swiper/css/thumbs';
+import styles from './images.module.css';
 
-import { CSSProperties, useState, useRef, useEffect } from "react";
-import Image, { StaticImageData } from "next/image";
-import { Swiper, SwiperSlide, SwiperRef } from "swiper/react";
-import { register } from "swiper/element/bundle";
-import { FreeMode, Pagination, Thumbs } from "swiper/modules";
+import {
+  CSSProperties,
+  useState,
+  useRef,
+  useEffect,
+} from 'react';
+import Image, { StaticImageData } from 'next/image';
+import {
+  Swiper,
+  SwiperSlide,
+  SwiperRef,
+} from 'swiper/react';
+import { register } from 'swiper/element/bundle';
+import {
+  FreeMode,
+  Pagination,
+  Thumbs,
+} from 'swiper/modules';
 import {
   variant,
   images,
   mainImages,
-} from "@/app/products/c02aQS/lib/constants";
-import { useProductContext } from "../product-context";
+} from '@/app/products/c02aQS/lib/constants';
+import { useProductContext } from '../product-context';
 
 type Props = {
   className?: string | undefined;
@@ -28,23 +41,28 @@ type TImage = {
   src: StaticImageData;
 };
 
-const Images = ({ className = "" }: Props) => {
+const Images = ({ className = '' }: Props) => {
   useEffect(() => {
     register();
   }, []);
 
   const mainSwiperRef = useRef<SwiperRef>(null);
   const thumbsSwiperRef = useRef<SwiperRef>(null);
-  const [mainRealIndex, setMainRealIndex] = useState<number>(0);
-  const [mainPreviousRealIndex, setMainPreviousRealIndex] = useState<number>(0);
+  const [mainRealIndex, setMainRealIndex] =
+    useState<number>(0);
+  const [mainPreviousRealIndex, setMainPreviousRealIndex] =
+    useState<number>(0);
 
   const mainImagesTotal = mainImages.length;
 
-  const chooseVariantColor = (image: TImage, index: number) => {
+  const chooseVariantColor = (
+    image: TImage,
+    index: number
+  ) => {
     mainSwiperRef.current?.swiper.slideToLoop(
       mainImagesTotal + index,
       500,
-      false,
+      false
     );
   };
 
@@ -55,12 +73,20 @@ const Images = ({ className = "" }: Props) => {
       setMainPreviousRealIndex(mainRealIndex);
       setMainRealIndex(realIndex);
 
-      const colorIndex = realIndex >= mainImagesTotal ? realIndex - mainImagesTotal : 0;
-      setSelectedVariant("Warna", variant.colors[colorIndex].value);
+      const colorIndex =
+        realIndex >= mainImagesTotal
+          ? realIndex - mainImagesTotal
+          : 0;
+      setSelectedVariant(
+        'Warna',
+        variant.colors[colorIndex].value
+      );
 
       if (thumbsSwiperRef.current?.swiper) {
         if (realIndex >= mainImagesTotal) {
-          thumbsSwiperRef.current?.swiper.slideTo(colorIndex);
+          thumbsSwiperRef.current?.swiper.slideTo(
+            colorIndex
+          );
         } else {
           thumbsSwiperRef.current?.swiper.slideTo(0);
         }
@@ -81,7 +107,7 @@ const Images = ({ className = "" }: Props) => {
         autoHeight={false}
         spaceBetween={0}
         pagination={{
-          type: "fraction",
+          type: 'fraction',
           renderFraction(currentClass, totalClass) {
             return `
               <div class="bg-background/80 text-center text-tiny font-medium text-foreground px-2 py-0.5 border border-border rounded-md inline-flex backdrop-blur-sm">
@@ -90,14 +116,16 @@ const Images = ({ className = "" }: Props) => {
             `;
           },
         }}
-        className={styles["swiper-ovveride"]}
+        className={styles['swiper-ovveride']}
         style={
           {
-            "--swiper-navigation-color": "var(--primary)",
-            "--swiper-pagination-color": "var(--primary)",
+            '--swiper-navigation-color': 'var(--primary)',
+            '--swiper-pagination-color': 'var(--primary)',
           } as CSSProperties
         }
-        onSlideChange={(swiper) => onMainActiveIndexChange(swiper.realIndex)}
+        onSlideChange={(swiper) =>
+          onMainActiveIndexChange(swiper.realIndex)
+        }
       >
         {images.map((image, idx) => (
           <SwiperSlide key={idx}>
@@ -115,11 +143,21 @@ const Images = ({ className = "" }: Props) => {
 
       {/* Teks Deskripsi Varian */}
       <div className="bg-background py-1">
-        <p className="mb-0 px-2 text-tiny text-muted-foreground">
-          {variant.colors[mainRealIndex - mainImagesTotal]?.value ? (
-            <span>Warna: {variant.colors[mainRealIndex - mainImagesTotal].name}</span>
+        <p className="text-tiny text-muted-foreground mb-0 px-2">
+          {variant.colors[mainRealIndex - mainImagesTotal]
+            ?.value ? (
+            <span>
+              Warna:{' '}
+              {
+                variant.colors[
+                  mainRealIndex - mainImagesTotal
+                ].name
+              }
+            </span>
           ) : (
-            <span>Terdapat {variant.colors.length} variasi warna</span>
+            <span>
+              Terdapat {variant.colors.length} variasi warna
+            </span>
           )}
         </p>
       </div>
@@ -132,21 +170,27 @@ const Images = ({ className = "" }: Props) => {
           loop={false}
           freeMode={true}
           watchSlidesProgress={true}
-          slidesPerView={"auto"}
+          slidesPerView={'auto'}
           spaceBetween={0}
           className="px-2 py-5"
         >
           {variant.colors.map((image, idx) => {
-            const isActive = mainRealIndex === (mainImagesTotal + idx);
+            const isActive =
+              mainRealIndex === mainImagesTotal + idx;
             return (
               <SwiperSlide
                 key={idx}
-                className={`${styles["swiper-slide-ovveride"]} w-auto px-1`}
+                className={`${styles['swiper-slide-ovveride']} w-auto px-1`}
               >
                 <div
-                  onClick={() => chooseVariantColor(image, idx)}
-                  className={`relative aspect-square h-14 w-14 md:h-16 md:w-16 cursor-pointer transition-all border-2 ${isActive ? "border-primary-300 opacity-100" : "border-transparent opacity-80 hover:opacity-100"
-                    }`}
+                  onClick={() =>
+                    chooseVariantColor(image, idx)
+                  }
+                  className={`relative aspect-square h-14 w-14 cursor-pointer border-2 transition-all md:h-16 md:w-16 ${
+                    isActive
+                      ? 'border-primary-300 opacity-100'
+                      : 'border-transparent opacity-80 hover:opacity-100'
+                  }`}
                 >
                   <div className="h-full w-full">
                     <Image

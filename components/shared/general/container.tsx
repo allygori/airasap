@@ -8,14 +8,14 @@ type Props = {
 
 const Container = ({
   children,
-  className = "",
+  className = '',
   classObject = {
-    padding: "px-5",
+    padding: 'px-5',
   },
 }: Props) => {
   return (
     <div
-      className={`container mx-auto ${classObject?.padding || ""} ${className}`}
+      className={`container mx-auto ${classObject?.padding || ''} ${className}`}
     >
       {children}
     </div>

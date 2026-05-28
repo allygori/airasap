@@ -42,7 +42,12 @@ export type ProfitOrder = {
 };
 
 export type SourceFile = {
-  file_type: 'income' | 'order' | 'ads' | 'affiliate' | 'other';
+  file_type:
+    | 'income'
+    | 'order'
+    | 'ads'
+    | 'affiliate'
+    | 'other';
   original_name: string;
   mime_type?: string;
   size?: number;

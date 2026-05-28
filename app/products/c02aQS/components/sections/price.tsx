@@ -1,30 +1,38 @@
-import Container from "@/components/shared/general/container";
+import Container from '@/components/shared/general/container';
 
 type Props = {
   className?: string;
 };
 
-const Price = ({ className = "" }: Props) => {
+const Price = ({ className = '' }: Props) => {
   return (
     <section className={className}>
       <Container
-        className={`flex w-full flex-row items-center justify-between bg-background `}
-        classObject={{ padding: "px-3 md:px-5 pb-2 pt-4" }}
+        className={`bg-background flex w-full flex-row items-center justify-between`}
+        classObject={{ padding: 'px-3 md:px-5 pb-2 pt-4' }}
       >
         <div className="flex flex-row items-center">
           {/* price */}
           <div className="flex flex-row items-baseline">
-            <span className="text-sm font-medium text-primary">Rp</span>
-            <span className="text-lg font-medium text-primary">120.000</span>
+            <span className="text-primary text-sm font-medium">
+              Rp
+            </span>
+            <span className="text-primary text-lg font-medium">
+              120.000
+            </span>
           </div>
           {/* discount price */}
-          <div className="mx-1 flex shrink grow-0 flex-row items-center truncate text-muted-foreground line-through">
+          <div className="text-muted-foreground mx-1 flex shrink grow-0 flex-row items-center truncate line-through">
             <span className="text-sm font-light">Rp</span>
-            <span className="text-sm font-light">220.000</span>
+            <span className="text-sm font-light">
+              220.000
+            </span>
           </div>
         </div>
         <div>
-          <p className="text-xs font-normal text-muted-foreground">937 Terjual</p>
+          <p className="text-muted-foreground text-xs font-normal">
+            937 Terjual
+          </p>
         </div>
 
         {/* discount precentage */}

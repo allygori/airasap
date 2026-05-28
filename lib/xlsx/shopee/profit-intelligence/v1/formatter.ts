@@ -1,9 +1,19 @@
 import crypto from 'crypto';
-import { calculateCRC32, detectMimeTypeByAB, size } from '@/lib/file';
-import { ParserResult, WorksheetsMap, RawIncomeData } from './types';
+import {
+  calculateCRC32,
+  detectMimeTypeByAB,
+  size,
+} from '@/lib/file';
+import {
+  ParserResult,
+  WorksheetsMap,
+  RawIncomeData,
+} from './types';
 import { Order } from './income/types';
 
-export function extractSellerInfoFromSummary(summaryRows: unknown[][]) {
+export function extractSellerInfoFromSummary(
+  summaryRows: unknown[][]
+) {
   let username = 'unknown';
   let fromDate = new Date();
   let toDate = new Date();
@@ -28,7 +38,7 @@ export function extractSellerInfoFromSummary(summaryRows: unknown[][]) {
 }
 
 export function formatReportData(
-  parsed: ParserResult, 
+  parsed: ParserResult,
   worksheets: WorksheetsMap,
   rawData: RawIncomeData,
   incomeBuffer: ArrayBuffer,
@@ -37,10 +47,11 @@ export function formatReportData(
   orderFilename?: string
 ) {
   const sid = crypto.randomBytes(4).toString('hex');
-  
+
   // Extract Seller Username and Report Period from Summary Sheet
   const summaryRows = rawData.summary_rows || [];
-  const { username, fromDate, toDate } = extractSellerInfoFromSummary(summaryRows);
+  const { username, fromDate, toDate } =
+    extractSellerInfoFromSummary(summaryRows);
 
   const incomeChecksum = calculateCRC32(incomeBuffer);
   const sourceFiles = [
@@ -50,8 +61,8 @@ export function formatReportData(
       size: size(incomeBuffer),
       mime_type: detectMimeTypeByAB(incomeBuffer),
       checksum: incomeChecksum,
-      storage_provider: 'local'
-    }
+      storage_provider: 'local',
+    },
   ];
 
   if (orderBuffer && orderFilename) {
@@ -61,7 +72,7 @@ export function formatReportData(
       size: size(orderBuffer),
       mime_type: detectMimeTypeByAB(orderBuffer),
       checksum: calculateCRC32(orderBuffer),
-      storage_provider: 'local'
+      storage_provider: 'local',
     });
   }
 
@@ -72,21 +83,23 @@ export function formatReportData(
     report_type: 'income_released',
     parser_version: 'shopee-income-v1',
     seller: {
-      username
+      username,
     },
     period: {
       from: fromDate,
-      to: toDate
+      to: toDate,
     },
     source_pair: {
       income_checksum: incomeChecksum,
-      order_checksum: orderBuffer ? calculateCRC32(orderBuffer) : undefined
+      order_checksum: orderBuffer
+        ? calculateCRC32(orderBuffer)
+        : undefined,
     },
     products: parsed.products.map((p) => ({
       id: p.id,
       name: p.name,
       quantity: p.quantity,
-      cogs: p.cogs || 0
+      cogs: p.cogs || 0,
     })),
     orders: parsed.income.orders.map((o: Order) => ({
       id: o.id,
@@ -104,7 +117,7 @@ export function formatReportData(
         service: Math.abs(o.serviceFee || 0),
         transaction: Math.abs(o.transactionFee || 0),
         process: Math.abs(o.processFee || 0),
-        campaign: Math.abs(o.campaignFee || 0)
+        campaign: Math.abs(o.campaignFee || 0),
       },
       items: (o.items || []).map((item) => ({
         productId: item.productId,
@@ -112,24 +125,27 @@ export function formatReportData(
         variationName: item.variationName || '',
         quantity: item.quantity,
         originalPrice: item.originalPrice,
-        discountedPrice: item.discountedPrice
-      }))
+        discountedPrice: item.discountedPrice,
+      })),
     })),
     order_diff: parsed.orderDiff,
     summary: {
       total_income: parsed.income.grossSales,
       released_amount: parsed.income.netPayout,
       total_expense: {
-        total: Object.values(parsed.income.fees).reduce((total: number, value: number) => total + value, 0),
+        total: Object.values(parsed.income.fees).reduce(
+          (total: number, value: number) => total + value,
+          0
+        ),
         admin_and_service_fee: {
-          items: parsed.income.fees
-        }
-      }
+          items: parsed.income.fees,
+        },
+      },
     },
     source_files: sourceFiles,
     extra: {
       summary_data: parsed.summary,
       total_discount: parsed.income.totalDiscount,
-    }
+    },
   };
 }

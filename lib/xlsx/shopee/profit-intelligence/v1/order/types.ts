@@ -9,7 +9,7 @@ export type RawOrderRow = {
   discountedPrice: number;
   quantity: number;
   completedAt: Date | null;
-}
+};
 
 export type ParsedOrderCompleted = {
   orderId: string;
@@ -27,4 +27,4 @@ export type ParsedOrderCompleted = {
     discountedPrice: number;
     quantity: number;
   }[];
-}
+};

@@ -1,41 +1,65 @@
-import { Order } from "../types";
-import { getColIdx } from "../../utils";
+import { Order } from '../types';
+import { getColIdx } from '../../utils';
 
-const HEADER_DETECTION_KEY = "No. Pesanan";
+const HEADER_DETECTION_KEY = 'No. Pesanan';
 
 function stringValue(value: unknown) {
-  return value === undefined || value === null ? '' : String(value);
+  return value === undefined || value === null
+    ? ''
+    : String(value);
 }
 
 function dateValue(value: unknown) {
   if (value instanceof Date) return value;
-  if (typeof value === 'string' || typeof value === 'number') return new Date(value);
+  if (
+    typeof value === 'string' ||
+    typeof value === 'number'
+  )
+    return new Date(value);
   return new Date('');
 }
 
-function assertRequiredColumns(headers: string[], columns: string[]) {
-  const missingColumns = columns.filter((column) => getColIdx(headers, column) === -1);
+function assertRequiredColumns(
+  headers: string[],
+  columns: string[]
+) {
+  const missingColumns = columns.filter(
+    (column) => getColIdx(headers, column) === -1
+  );
 
   if (missingColumns.length > 0) {
-    throw new Error(`Format tidak sesuai: Kolom Income Sudah Dilepas tidak ditemukan: ${missingColumns.join(', ')}.`);
+    throw new Error(
+      `Format tidak sesuai: Kolom Income Sudah Dilepas tidak ditemukan: ${missingColumns.join(', ')}.`
+    );
   }
 }
 
-export default function parseIncomeSheet(incomeData: unknown[][]) {
+export default function parseIncomeSheet(
+  incomeData: unknown[][]
+) {
   let incomeHeaderRowIndex = -1;
   for (let i = 0; i < 10; i++) {
-    if (incomeData[i] && incomeData[i].includes(HEADER_DETECTION_KEY)) {
+    if (
+      incomeData[i] &&
+      incomeData[i].includes(HEADER_DETECTION_KEY)
+    ) {
       incomeHeaderRowIndex = i;
       break;
     }
   }
 
   if (incomeHeaderRowIndex === -1) {
-    throw new Error('Kolom No. Pesanan tidak ditemukan di Laporan Penghasilan.');
+    throw new Error(
+      'Kolom No. Pesanan tidak ditemukan di Laporan Penghasilan.'
+    );
   }
 
-  const incomeHeaders = incomeData[incomeHeaderRowIndex].map((header) => String(header).trim());
-  const incomeRows = incomeData.slice(incomeHeaderRowIndex + 1).filter(r => r && r.length > 0 && r[0]);
+  const incomeHeaders = incomeData[
+    incomeHeaderRowIndex
+  ].map((header) => String(header).trim());
+  const incomeRows = incomeData
+    .slice(incomeHeaderRowIndex + 1)
+    .filter((r) => r && r.length > 0 && r[0]);
 
   assertRequiredColumns(incomeHeaders, [
     'No. Pesanan',
@@ -44,43 +68,109 @@ export default function parseIncomeSheet(incomeData: unknown[][]) {
     'Tanggal Dana Dilepaskan',
     'Harga Asli Produk',
     'Total Diskon Produk',
-    'Total Penghasilan'
+    'Total Penghasilan',
   ]);
 
   const idxNumber = getColIdx(incomeHeaders, 'No.');
-  const idxOrderId = getColIdx(incomeHeaders, 'No. Pesanan');
-  const idxUsername = getColIdx(incomeHeaders, 'Username (Pembeli)');
-  const idxOrderCreatedAt = getColIdx(incomeHeaders, 'Waktu Pesanan Dibuat');
-  const idxReleasedAt = getColIdx(incomeHeaders, 'Tanggal Dana Dilepaskan');
-  const idxPaymentMethod = getColIdx(incomeHeaders, 'Metode pembayaran pembeli');
-  const idxOriginalPrice = getColIdx(incomeHeaders, 'Harga Asli Produk');
-  const idxTotalDiscount = getColIdx(incomeHeaders, 'Total Diskon Produk');
-  const idxSellerVoucher = getColIdx(incomeHeaders, 'Voucher disponsor oleh Penjual');
-  const idxVoucherCode = getColIdx(incomeHeaders, 'Kode Voucher');
-  const idxLogisticService = getColIdx(incomeHeaders, 'Nama Kurir');
-  const idxAdminFee = getColIdx(incomeHeaders, 'Biaya Administrasi');
-  const idxProgramFee = getColIdx(incomeHeaders, 'Biaya Layanan');
-  const idxProcessFee = getColIdx(incomeHeaders, 'Biaya Proses Pesanan');
-  const idxTransactionFee = getColIdx(incomeHeaders, 'Biaya Transaksi');
-  const idxCampaignFee = getColIdx(incomeHeaders, 'Biaya Kampanye');
-  const idxTotalIncome = getColIdx(incomeHeaders, 'Total Penghasilan');
+  const idxOrderId = getColIdx(
+    incomeHeaders,
+    'No. Pesanan'
+  );
+  const idxUsername = getColIdx(
+    incomeHeaders,
+    'Username (Pembeli)'
+  );
+  const idxOrderCreatedAt = getColIdx(
+    incomeHeaders,
+    'Waktu Pesanan Dibuat'
+  );
+  const idxReleasedAt = getColIdx(
+    incomeHeaders,
+    'Tanggal Dana Dilepaskan'
+  );
+  const idxPaymentMethod = getColIdx(
+    incomeHeaders,
+    'Metode pembayaran pembeli'
+  );
+  const idxOriginalPrice = getColIdx(
+    incomeHeaders,
+    'Harga Asli Produk'
+  );
+  const idxTotalDiscount = getColIdx(
+    incomeHeaders,
+    'Total Diskon Produk'
+  );
+  const idxSellerVoucher = getColIdx(
+    incomeHeaders,
+    'Voucher disponsor oleh Penjual'
+  );
+  const idxVoucherCode = getColIdx(
+    incomeHeaders,
+    'Kode Voucher'
+  );
+  const idxLogisticService = getColIdx(
+    incomeHeaders,
+    'Nama Kurir'
+  );
+  const idxAdminFee = getColIdx(
+    incomeHeaders,
+    'Biaya Administrasi'
+  );
+  const idxProgramFee = getColIdx(
+    incomeHeaders,
+    'Biaya Layanan'
+  );
+  const idxProcessFee = getColIdx(
+    incomeHeaders,
+    'Biaya Proses Pesanan'
+  );
+  const idxTransactionFee = getColIdx(
+    incomeHeaders,
+    'Biaya Transaksi'
+  );
+  const idxCampaignFee = getColIdx(
+    incomeHeaders,
+    'Biaya Kampanye'
+  );
+  const idxTotalIncome = getColIdx(
+    incomeHeaders,
+    'Total Penghasilan'
+  );
 
   let grossSales = 0;
   let totalDiscount = 0;
   let netPayout = 0;
-  const fees = { administrasi: 0, layanan: 0, transaksi: 0, prosesPesanan: 0, kampanye: 0, ongkirDibayarPenjual: 0, lainnya: 0 };
+  const fees = {
+    administrasi: 0,
+    layanan: 0,
+    transaksi: 0,
+    prosesPesanan: 0,
+    kampanye: 0,
+    ongkirDibayarPenjual: 0,
+    lainnya: 0,
+  };
   const orders: Order[] = [];
 
-  incomeRows.forEach(row => {
+  incomeRows.forEach((row) => {
     grossSales += Number(row[idxOriginalPrice]) || 0;
     totalDiscount += Number(row[idxTotalDiscount]) || 0;
     netPayout += Number(row[idxTotalIncome]) || 0;
 
-    fees.administrasi += Math.abs(Number(row[idxAdminFee]) || 0);
-    fees.layanan += Math.abs(Number(row[idxProgramFee]) || 0);
-    fees.transaksi += Math.abs(Number(row[idxTransactionFee]) || 0);
-    fees.prosesPesanan += Math.abs(Number(row[idxProcessFee]) || 0);
-    fees.kampanye += Math.abs(Number(row[idxCampaignFee]) || 0);
+    fees.administrasi += Math.abs(
+      Number(row[idxAdminFee]) || 0
+    );
+    fees.layanan += Math.abs(
+      Number(row[idxProgramFee]) || 0
+    );
+    fees.transaksi += Math.abs(
+      Number(row[idxTransactionFee]) || 0
+    );
+    fees.prosesPesanan += Math.abs(
+      Number(row[idxProcessFee]) || 0
+    );
+    fees.kampanye += Math.abs(
+      Number(row[idxCampaignFee]) || 0
+    );
 
     orders.push({
       number: Number(row[idxNumber]),
@@ -92,7 +182,10 @@ export default function parseIncomeSheet(incomeData: unknown[][]) {
       originalPrice: Number(row[idxOriginalPrice]),
       totalDiscount: Number(row[idxTotalDiscount]),
       sellerVouchers: [
-        { code: stringValue(row[idxVoucherCode]), value: Number(row[idxSellerVoucher]) }
+        {
+          code: stringValue(row[idxVoucherCode]),
+          value: Number(row[idxSellerVoucher]),
+        },
       ],
       adminFee: Number(row[idxAdminFee]) || 0,
       serviceFee: Number(row[idxProgramFee]) || 0,
@@ -100,8 +193,8 @@ export default function parseIncomeSheet(incomeData: unknown[][]) {
       processFee: Number(row[idxProcessFee]) || 0,
       campaignFee: Number(row[idxCampaignFee]) || 0,
       income: Number(row[idxTotalIncome]) || 0,
-      logisticService: stringValue(row[idxLogisticService])
-    })
+      logisticService: stringValue(row[idxLogisticService]),
+    });
   });
 
   return {

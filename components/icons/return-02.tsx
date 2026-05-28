@@ -2,7 +2,7 @@ type Props = {
   className?: string;
 };
 
-const Return02 = ({ className = "" }: Props) => {
+const Return02 = ({ className = '' }: Props) => {
   return (
     <svg
       width="800px"

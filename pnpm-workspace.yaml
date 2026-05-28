@@ -5,4 +5,3 @@ blockExoticSubdeps: true
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
-  
