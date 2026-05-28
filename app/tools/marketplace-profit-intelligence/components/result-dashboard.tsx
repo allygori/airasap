@@ -7,6 +7,7 @@ import { COGSInputSection } from './cogs-input-section';
 import { OrderListSection } from './order-list-section';
 import { ReportSummarySection } from './report-summary-section';
 import type { ProfitReportData } from './types';
+import ChartsSection from './charts/charts-section';
 
 type ResultDashboardProps = {
   initialReportData: ProfitReportData;
@@ -136,6 +137,12 @@ export function ResultDashboard({
       />
 
       <div className="space-y-4">
+        <ChartsSection
+          start={reportData.period.from}
+          end={reportData.period.to}
+          orders={reportData.orders || []}
+        />
+
         <COGSInputSection
           products={reportData.products}
           selectedProductIds={selectedProductIds}

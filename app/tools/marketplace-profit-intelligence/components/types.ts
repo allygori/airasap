@@ -24,6 +24,7 @@ export type ProfitOrder = {
   id: string;
   username?: string;
   createdAt?: string | Date;
+  releasedAt?: string | Date;
   completedAt?: string | Date;
   paymentMethod?: string;
   logisticService?: string;
@@ -59,6 +60,10 @@ export type SourceFile = {
 export type ProfitReportData = {
   _id?: string;
   sid?: string;
+  period: {
+    from: Date | string;
+    to: Date | string;
+  };
   summary?: {
     released_amount?: number;
     total_income?: number;
