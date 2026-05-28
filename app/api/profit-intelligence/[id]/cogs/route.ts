@@ -46,15 +46,22 @@ export async function PUT(
       return {
         id: p.id,
         name: p.name,
+        variationName: p.variationName || '',
         quantity: p.quantity,
         cogs: newCogs,
       };
     });
 
-    const productCogsMap = new Map<
-      string,
-      number | undefined | null
-    >(report.products.map((p: any) => [p.id, p.cogs]));
+    // Build a map of product COGS keyed by product ID (which may include -variation)
+    const productCogsMap = new Map<string, number>(
+      report.products.map((p: any) => [
+        p.id,
+        p.cogs as number,
+      ])
+    );
+
+    // Accumulator for prorated profit per product
+    const productProfitMap = new Map<string, number>();
 
     if (report.orders && Array.isArray(report.orders)) {
       report.orders = report.orders.map((order: any) => {
@@ -69,11 +76,52 @@ export async function PUT(
           }
         }
 
-        order.profit = (order.income || 0) - orderTotalCogs;
+        const orderProfit =
+          (order.income || 0) - orderTotalCogs;
+        order.profit = orderProfit;
+
+        // Prorate order profit to each item proportionally based on revenue share
+        if (order.items && Array.isArray(order.items)) {
+          const totalRevenue = order.items.reduce(
+            (sum: number, item: any) =>
+              sum +
+              (item.discountedPrice ||
+                item.originalPrice ||
+                0) *
+                (item.quantity || 1),
+            0
+          );
+
+          for (const item of order.items) {
+            const itemRevenue =
+              (item.discountedPrice ||
+                item.originalPrice ||
+                0) * (item.quantity || 1);
+            const share =
+              totalRevenue > 0
+                ? itemRevenue / totalRevenue
+                : 0;
+            const itemProfit = orderProfit * share;
+            const productId = item.productId || '';
+
+            productProfitMap.set(
+              productId,
+              (productProfitMap.get(productId) || 0) +
+                itemProfit
+            );
+          }
+        }
+
         return order;
       });
       report.markModified('orders');
     }
+
+    // Apply totalProfit to each product
+    report.products = report.products.map((p: any) => ({
+      ...p,
+      totalProfit: productProfitMap.get(p.id) ?? undefined,
+    }));
 
     report.markModified('products');
     await report.save();

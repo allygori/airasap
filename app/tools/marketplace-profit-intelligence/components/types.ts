@@ -8,7 +8,10 @@ export type ProfitProduct = {
   id: string;
   name: string;
   quantity: number;
+  variationName: string;
+  key: string;
   cogs?: number;
+  totalProfit?: number;
 };
 
 export type ProfitOrderItem = {

@@ -21,9 +21,25 @@ type CompletedOrderItem =
 type ProductMapItem = {
   id: string;
   name: string;
+  variationName: string;
+  key: string;
   quantity: number;
   cogs: number;
 };
+
+/**
+ * Generate a unique product key combining productId and variationName.
+ * Products without variation use productId only.
+ */
+function makeProductKey(
+  productId: string,
+  variationName?: string
+): string {
+  const variation = (variationName || '').trim();
+  return variation
+    ? `${productId}::${variation}`
+    : productId;
+}
 
 function normalizeProductName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
@@ -68,17 +84,28 @@ function getProductId(
 
 function addProduct(
   productsMap: Map<string, ProductMapItem>,
-  product: { id: string; name: string; quantity: number }
+  product: {
+    id: string;
+    name: string;
+    variationName: string;
+    quantity: number;
+  }
 ) {
-  if (productsMap.has(product.id)) {
-    productsMap.get(product.id)!.quantity +=
-      product.quantity;
+  const key = makeProductKey(
+    product.id,
+    product.variationName
+  );
+
+  if (productsMap.has(key)) {
+    productsMap.get(key)!.quantity += product.quantity;
     return;
   }
 
-  productsMap.set(product.id, {
+  productsMap.set(key, {
     id: product.id,
     name: product.name,
+    variationName: product.variationName,
+    key: key,
     quantity: product.quantity,
     cogs: 0,
   });
@@ -154,12 +181,20 @@ export default function parser(
       incomeOrder.completedAt = completedOrder.completedAt;
       incomeOrder.items = completedOrder.items.map(
         (item) => {
-          const productId = getProductId(item, feeItems);
+          const baseProductId = getProductId(
+            item,
+            feeItems
+          );
+          const productKey = makeProductKey(
+            baseProductId,
+            item.variationName
+          );
 
           return {
-            productId,
+            productId: baseProductId,
             name: item.productName,
             variationName: item.variationName,
+            key: productKey,
             quantity: item.quantity,
             originalPrice: item.originalPrice,
             discountedPrice: item.discountedPrice,
@@ -169,14 +204,15 @@ export default function parser(
 
       // Add to global products mapping with correct quantity
       for (const item of completedOrder.items) {
-        const prodId = getProductId(item, feeItems);
+        const baseProductId = getProductId(item, feeItems);
         const displayName = item.variationName
           ? `${item.productName} (${item.variationName})`
           : item.productName;
 
         addProduct(productsMap, {
-          id: prodId,
+          id: baseProductId,
           name: displayName,
+          variationName: item.variationName || '',
           quantity: item.quantity,
         });
       }
@@ -198,6 +234,7 @@ export default function parser(
           addProduct(productsMap, {
             id: fi.productId,
             name: fi.productName,
+            variationName: '',
             quantity: 1,
           });
         }
@@ -218,6 +255,7 @@ export default function parser(
         addProduct(productsMap, {
           id: prodId,
           name: 'Produk Tidak Teridentifikasi',
+          variationName: '',
           quantity: 1,
         });
       }

@@ -6,18 +6,21 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { ChartBarOrderTrends } from './chart-bar-order-trends';
-import { ProfitOrder } from '../types';
+import { ProfitOrder, ProfitProduct } from '../types';
+import { ChartPieProfitContribution } from './chart-pie-profit-contributions';
 
 type ChartsSectionProps = {
   start: Date | string;
   end: Date | string;
   orders: ProfitOrder[];
+  products: ProfitProduct[];
 };
 
 const ChartsSection = ({
   start,
   end,
   orders,
+  products,
 }: ChartsSectionProps) => {
   return (
     <Accordion
@@ -32,11 +35,17 @@ const ChartsSection = ({
           </span>
         </AccordionTrigger>
         <AccordionContent className="pb-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             <ChartBarOrderTrends
               start={start}
               end={end}
               orders={orders}
+            />
+
+            <ChartPieProfitContribution
+              start={start}
+              end={end}
+              products={products}
             />
           </div>
 

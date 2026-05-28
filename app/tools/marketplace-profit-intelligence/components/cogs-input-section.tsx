@@ -83,7 +83,8 @@ export function COGSInputSection({
                     !bulkCOGSValue
                   }
                 >
-                  Apply ke {selectedProductIds.size} Produk
+                  Terapkan ke {selectedProductIds.size}{' '}
+                  Produk
                 </Button>
                 <Button
                   onClick={onSaveCOGS}
@@ -123,7 +124,9 @@ export function COGSInputSection({
                 </TableHeader>
                 <TableBody>
                   {products.map((product) => (
-                    <TableRow key={product.id}>
+                    <TableRow
+                      key={`${product.id}::${product.variationName}`}
+                    >
                       <TableCell>
                         <Checkbox
                           checked={selectedProductIds.has(
@@ -142,7 +145,15 @@ export function COGSInputSection({
                       >
                         {product.name}
                         <div className="text-muted-foreground text-xs">
-                          {product.id}
+                          {product.variationName ? (
+                            <span>
+                              {product.id} {' - '}{' '}
+                              {product.variationName}
+                            </span>
+                          ) : (
+                            <span>{product.id}</span>
+                          )}
+                          {/* {product.id} {' - '} {product.variationName} */}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

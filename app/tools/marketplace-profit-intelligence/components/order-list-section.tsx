@@ -293,11 +293,11 @@ export function OrderListSection({
                                                     'Produk tanpa nama'}
                                                 </div>
                                                 <div className="text-muted-foreground text-xs">
-                                                  {item.variationName ||
-                                                    'Variasi tidak tersedia'}{' '}
-                                                  -{' '}
                                                   {item.productId ||
-                                                    '-'}
+                                                    '-'}{' '}
+                                                  -{' '}
+                                                  {item.variationName ||
+                                                    'Variasi tidak tersedia'}
                                                 </div>
                                               </div>
                                               <div className="text-left text-sm sm:text-right">

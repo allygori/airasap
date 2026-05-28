@@ -61,6 +61,8 @@ export type ParserResult = {
   products: {
     id: string;
     name: string;
+    variationName: string;
+    key: string;
     quantity: number;
     cogs: number;
   }[];

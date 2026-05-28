@@ -98,6 +98,8 @@ export function formatReportData(
     products: parsed.products.map((p) => ({
       id: p.id,
       name: p.name,
+      variationName: p.variationName || '',
+      key: p.key || '',
       quantity: p.quantity,
       cogs: p.cogs || 0,
     })),

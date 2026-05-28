@@ -146,12 +146,15 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       {
         id: { type: String, required: true },
         name: { type: String, required: true },
+        variationName: { type: String },
+        key: { type: String }, // unique key, format: `${id}::{variationName}`
         quantity: {
           type: Number,
           required: true,
           default: 0,
         },
         cogs: { type: Number, required: true, default: 0 },
+        totalProfit: { type: Number },
       },
     ],
 

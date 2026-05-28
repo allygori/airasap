@@ -128,7 +128,7 @@ export const ChartBarOrderTrends = ({
             Trend Penjualan & Dana Dilepas
           </CardTitle>
           <CardDescription className="text-xs">
-            Periode {formatDate(start)} - {formatDate(end)}
+            Periode: {formatDate(start)} - {formatDate(end)}
           </CardDescription>
         </div>
         <div className="flex">

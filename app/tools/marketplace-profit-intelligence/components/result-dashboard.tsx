@@ -137,12 +137,6 @@ export function ResultDashboard({
       />
 
       <div className="space-y-4">
-        <ChartsSection
-          start={reportData.period.from}
-          end={reportData.period.to}
-          orders={reportData.orders || []}
-        />
-
         <COGSInputSection
           products={reportData.products}
           selectedProductIds={selectedProductIds}
@@ -154,6 +148,13 @@ export function ResultDashboard({
           onToggleProductSelect={toggleProductSelect}
           onToggleAllProducts={toggleAllProducts}
           onSingleCOGSChange={handleSingleCOGSChange}
+        />
+
+        <ChartsSection
+          start={reportData.period.from}
+          end={reportData.period.to}
+          orders={reportData.orders || []}
+          products={reportData.products || []}
         />
 
         <ReportSummarySection
