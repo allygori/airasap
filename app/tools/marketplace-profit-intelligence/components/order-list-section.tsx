@@ -87,7 +87,9 @@ export function OrderListSection({
   const [expandedOrders, setExpandedOrders] = useState<
     string[]
   >([]);
-  const isMobile = useMediaQuery('sm');
+  const isNotMobile = useMediaQuery('sm', {
+    initializeWithValue: false,
+  });
 
   const toggleOrder = (orderId: string) => {
     setExpandedOrders((prev) =>
@@ -237,9 +239,12 @@ export function OrderListSection({
                           className="hover:bg-inherit"
                           aria-hidden={!isExpanded}
                         >
-                          <TableCell className="p-0">
+                          <TableCell
+                            className="p-0"
+                            colSpan={isNotMobile ? 7 : 2}
+                          >
                             <div
-                              className={`max-w-full overflow-hidden transition-all duration-300 ease-in-out ${
+                              className={`w-full max-w-full overflow-hidden transition-all duration-300 ease-in-out ${
                                 isExpanded
                                   ? 'max-h-250 opacity-100'
                                   : 'max-h-0 opacity-0'
