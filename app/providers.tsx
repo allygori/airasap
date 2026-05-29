@@ -1,6 +1,4 @@
-'use client';
-
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from '@wrksz/themes/next';
 
 export function Providers({
   children,

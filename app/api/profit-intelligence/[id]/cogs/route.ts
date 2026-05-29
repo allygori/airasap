@@ -47,6 +47,7 @@ export async function PUT(
         id: p.id,
         name: p.name,
         variationName: p.variationName || '',
+        key: p.key,
         quantity: p.quantity,
         cogs: newCogs,
       };

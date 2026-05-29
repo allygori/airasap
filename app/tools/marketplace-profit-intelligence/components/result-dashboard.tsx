@@ -153,6 +153,10 @@ export function ResultDashboard({
         <ChartsSection
           start={reportData.period.from}
           end={reportData.period.to}
+          totalProfit={
+            (reportData.summary?.released_amount || 0) -
+            totalCOGS
+          }
           orders={reportData.orders || []}
           products={reportData.products || []}
         />

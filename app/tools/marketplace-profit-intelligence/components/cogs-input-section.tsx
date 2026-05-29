@@ -153,7 +153,6 @@ export function COGSInputSection({
                           ) : (
                             <span>{product.id}</span>
                           )}
-                          {/* {product.id} {' - '} {product.variationName} */}
                         </div>
                       </TableCell>
                       <TableCell className="text-right">

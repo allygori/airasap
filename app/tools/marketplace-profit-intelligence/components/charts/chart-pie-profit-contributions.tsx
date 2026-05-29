@@ -24,12 +24,14 @@ import { PieChartIcon } from 'lucide-react';
 type ChartPieProfitContributionProps = {
   start: Date | string;
   end: Date | string;
+  totalProfit: number;
   products: ProfitProduct[];
 };
 
 export function ChartPieProfitContribution({
   start,
   end,
+  totalProfit,
   products,
 }: ChartPieProfitContributionProps) {
   const chartData = useMemo(() => {
@@ -43,7 +45,9 @@ export function ChartPieProfitContribution({
     const top = sorted.slice(0, 4).map((p, i) => ({
       name: p.name,
       profit: p.totalProfit,
-      formattedProfit: formatIDR(p.totalProfit ?? 0),
+      formattedProfit: formatIDR(p.totalProfit ?? 0, {
+        showSymbol: false,
+      }),
       fill: `var(--chart-${i + 1})`,
     }));
 
@@ -56,7 +60,9 @@ export function ChartPieProfitContribution({
       top.push({
         name: 'Lainnya',
         profit: total,
-        formattedProfit: formatIDR(total),
+        formattedProfit: formatIDR(total, {
+          showSymbol: false,
+        }),
         fill: `var(--chart-5)`,
       });
     }
@@ -155,10 +161,6 @@ export function ChartPieProfitContribution({
                           y={(viewBox.cy || 0) - 8}
                           className="fill-muted-foreground text-xs font-normal"
                         >
-                          {/* {totalVisitors.toLocaleString()} */}
-                          {/* {formatIDR(1049182, {
-                            showSymbol: false,
-                          })} */}
                           IDR
                         </tspan>
                         <tspan
@@ -167,7 +169,7 @@ export function ChartPieProfitContribution({
                           className="fill-foreground text-sm font-bold"
                         >
                           {/* Visitors */}
-                          {formatIDR(1049182, {
+                          {formatIDR(totalProfit ?? 0, {
                             showSymbol: false,
                           })}
                         </tspan>

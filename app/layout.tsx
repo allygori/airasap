@@ -32,8 +32,11 @@ export default function RootLayout({
       )}
     >
       <body className="flex min-h-full flex-col">
-        <Providers>{children}</Providers>
-        <Toaster />
+        <Providers>
+          {children}
+
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

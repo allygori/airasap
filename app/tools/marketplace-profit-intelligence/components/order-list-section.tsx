@@ -127,31 +127,26 @@ export function OrderListSection({
                         No Pesanan
                       </span>
                     </TableHead>
-                    {isMobile && (
-                      <TableHead className="px-4 py-3">
-                        Pembeli
-                      </TableHead>
-                    )}
-                    {isMobile && (
-                      <TableHead className="px-4 py-3">
-                        Selesai
-                      </TableHead>
-                    )}
-                    {isMobile && (
-                      <TableHead className="px-4 py-3 text-right">
-                        Item
-                      </TableHead>
-                    )}
-                    {isMobile && (
-                      <TableHead className="px-4 py-3 text-right">
-                        Pendapatan
-                      </TableHead>
-                    )}
-                    {isMobile && (
-                      <TableHead className="px-4 py-3 text-right">
-                        Total Fee
-                      </TableHead>
-                    )}
+                    <TableHead
+                      className={cn(
+                        'px-4 py-3',
+                        'hidden sm:table-cell'
+                      )}
+                    >
+                      Pembeli
+                    </TableHead>
+                    <TableHead className="hidden px-4 py-3 sm:table-cell">
+                      Selesai
+                    </TableHead>
+                    <TableHead className="hidden px-4 py-3 text-right sm:table-cell">
+                      Item
+                    </TableHead>
+                    <TableHead className="hidden px-4 py-3 text-right sm:table-cell">
+                      Pendapatan
+                    </TableHead>
+                    <TableHead className="hidden px-4 py-3 text-right sm:table-cell">
+                      Total Fee
+                    </TableHead>
                     <TableHead className="px-4 py-3 text-right">
                       Profit
                     </TableHead>
@@ -198,48 +193,32 @@ export function OrderListSection({
                                 <span className="block truncate font-medium">
                                   {order.id}
                                 </span>
-                                {!isMobile && (
-                                  <span className="text-muted-foreground block text-xs">
-                                    {formatDate(
-                                      order.completedAt
-                                    )}{' '}
-                                    - {itemCount} item
-                                  </span>
-                                )}
+                                <span className="text-muted-foreground block text-xs sm:hidden">
+                                  {formatDate(
+                                    order.completedAt
+                                  )}{' '}
+                                  - {itemCount} item
+                                </span>
                               </div>
                             </div>
                           </TableCell>
-                          {isMobile && (
-                            <TableCell className="px-4 py-3">
-                              {order.username || '-'}
-                            </TableCell>
-                          )}
-                          {isMobile && (
-                            <TableCell className="px-4 py-3">
-                              {formatDate(
-                                order.completedAt
-                              )}
-                            </TableCell>
-                          )}
-                          {isMobile && (
-                            <TableCell className="px-4 py-3 text-right">
-                              {itemCount}
-                            </TableCell>
-                          )}
-                          {isMobile && (
-                            <TableCell className="px-4 py-3 text-right">
-                              <span className="font-semibold md:text-base">
-                                {formatIDR(
-                                  order.income || 0
-                                )}
-                              </span>
-                            </TableCell>
-                          )}
-                          {isMobile && (
-                            <TableCell className="text-destructive px-4 py-3 text-right">
-                              {formatIDR(totalFees)}
-                            </TableCell>
-                          )}
+                          <TableCell className="hidden px-4 py-3 sm:table-cell">
+                            {order.username || '-'}
+                          </TableCell>
+                          <TableCell className="hidden px-4 py-3 sm:table-cell">
+                            {formatDate(order.completedAt)}
+                          </TableCell>
+                          <TableCell className="hidden px-4 py-3 text-right sm:table-cell">
+                            {itemCount}
+                          </TableCell>
+                          <TableCell className="hidden px-4 py-3 text-right sm:table-cell">
+                            <span className="font-semibold md:text-base">
+                              {formatIDR(order.income || 0)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-destructive hidden px-4 py-3 text-right sm:table-cell">
+                            {formatIDR(totalFees)}
+                          </TableCell>
                           <TableCell className="px-4 py-3 text-right">
                             <span
                               className={`font-semibold md:text-base ${order.profit !== undefined ? (order.profit < 0 ? 'text-destructive' : 'text-green-600') : 'text-muted-foreground'}`}
@@ -248,24 +227,19 @@ export function OrderListSection({
                                 ? formatIDR(order.profit)
                                 : '-'}
                             </span>
-                            {!isMobile && (
-                              <span className="text-muted-foreground block text-xs font-normal">
-                                {order.username ||
-                                  'Pembeli tidak tersedia'}
-                              </span>
-                            )}
+                            <span className="text-muted-foreground block text-xs font-normal sm:hidden">
+                              {order.username ||
+                                'Pembeli tidak tersedia'}
+                            </span>
                           </TableCell>
                         </TableRow>
                         <TableRow
                           className="hover:bg-inherit"
                           aria-hidden={!isExpanded}
                         >
-                          <TableCell
-                            colSpan={isMobile ? 8 : 2}
-                            className="p-0"
-                          >
+                          <TableCell className="p-0">
                             <div
-                              className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                              className={`max-w-full overflow-hidden transition-all duration-300 ease-in-out ${
                                 isExpanded
                                   ? 'max-h-250 opacity-100'
                                   : 'max-h-0 opacity-0'

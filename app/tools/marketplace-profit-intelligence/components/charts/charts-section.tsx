@@ -12,6 +12,7 @@ import { ChartPieProfitContribution } from './chart-pie-profit-contributions';
 type ChartsSectionProps = {
   start: Date | string;
   end: Date | string;
+  totalProfit: number;
   orders: ProfitOrder[];
   products: ProfitProduct[];
 };
@@ -19,6 +20,7 @@ type ChartsSectionProps = {
 const ChartsSection = ({
   start,
   end,
+  totalProfit,
   orders,
   products,
 }: ChartsSectionProps) => {
@@ -45,6 +47,7 @@ const ChartsSection = ({
             <ChartPieProfitContribution
               start={start}
               end={end}
+              totalProfit={totalProfit}
               products={products}
             />
           </div>
