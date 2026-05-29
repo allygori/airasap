@@ -31,15 +31,15 @@ export function ResultDashboard({
     0
   );
 
-  const toggleProductSelect = (id: string) => {
+  const toggleProductSelect = (key: string) => {
     const nextSelectedProductIds = new Set(
       selectedProductIds
     );
 
-    if (nextSelectedProductIds.has(id)) {
-      nextSelectedProductIds.delete(id);
+    if (nextSelectedProductIds.has(key)) {
+      nextSelectedProductIds.delete(key);
     } else {
-      nextSelectedProductIds.add(id);
+      nextSelectedProductIds.add(key);
     }
 
     setSelectedProductIds(nextSelectedProductIds);
@@ -55,19 +55,19 @@ export function ResultDashboard({
 
     setSelectedProductIds(
       new Set(
-        reportData.products.map((product) => product.id)
+        reportData.products.map((product) => product.key)
       )
     );
   };
 
   const handleSingleCOGSChange = (
-    id: string,
+    key: string,
     value: string
   ) => {
     setReportData({
       ...reportData,
       products: reportData.products.map((product) =>
-        product.id === id
+        product.key === key
           ? { ...product, cogs: Number(value) || 0 }
           : product
       ),
@@ -85,7 +85,7 @@ export function ResultDashboard({
     setReportData({
       ...reportData,
       products: reportData.products.map((product) =>
-        selectedProductIds.has(product.id)
+        selectedProductIds.has(product.key)
           ? { ...product, cogs: value }
           : product
       ),
@@ -100,7 +100,7 @@ export function ResultDashboard({
     setIsUpdatingCOGS(true);
 
     const updates = reportData.products.map((product) => ({
-      id: product.id,
+      key: product.key,
       cogs: product.cogs,
     }));
 

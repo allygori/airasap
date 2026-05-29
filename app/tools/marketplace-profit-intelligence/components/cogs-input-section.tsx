@@ -129,11 +129,11 @@ export function COGSInputSection({
                       <TableCell>
                         <Checkbox
                           checked={selectedProductIds.has(
-                            product.id
+                            product.key
                           )}
                           onCheckedChange={() =>
                             onToggleProductSelect(
-                              product.id
+                              product.key
                             )
                           }
                           className="cursor-pointer"
@@ -165,7 +165,7 @@ export function COGSInputSection({
                           value={product.cogs || ''}
                           onChange={(event) =>
                             onSingleCOGSChange(
-                              product.id,
+                              product.key,
                               event.target.value
                             )
                           }
