@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { Pie, PieChart } from 'recharts';
+import { Label, Pie, PieChart } from 'recharts';
 
 import {
   Card,
@@ -100,7 +100,7 @@ export function ChartPieProfitContribution({
   }
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col overflow-visible">
       <CardHeader className="flex flex-col items-stretch border-b p-0! sm:flex-row">
         <div className="flex flex-1 flex-col justify-center gap-1 px-6 pt-4 pb-4 sm:py-6">
           <CardTitle className="sm:text-sm">
@@ -133,8 +133,50 @@ export function ChartPieProfitContribution({
               label={(props: any) =>
                 `${props.formattedProfit}`
               }
-              outerRadius="80%"
-            />
+              outerRadius="75%"
+              innerRadius={60}
+            >
+              <Label
+                content={({ viewBox }) => {
+                  if (
+                    viewBox &&
+                    'cx' in viewBox &&
+                    'cy' in viewBox
+                  ) {
+                    return (
+                      <text
+                        x={viewBox.cx}
+                        y={viewBox.cy}
+                        textAnchor="middle"
+                        dominantBaseline="middle"
+                      >
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) - 8}
+                          className="fill-muted-foreground text-xs font-normal"
+                        >
+                          {/* {totalVisitors.toLocaleString()} */}
+                          {/* {formatIDR(1049182, {
+                            showSymbol: false,
+                          })} */}
+                          IDR
+                        </tspan>
+                        <tspan
+                          x={viewBox.cx}
+                          y={(viewBox.cy || 0) + 8}
+                          className="fill-foreground text-sm font-bold"
+                        >
+                          {/* Visitors */}
+                          {formatIDR(1049182, {
+                            showSymbol: false,
+                          })}
+                        </tspan>
+                      </text>
+                    );
+                  }
+                }}
+              />
+            </Pie>
           </PieChart>
         </ChartContainer>
       </CardContent>

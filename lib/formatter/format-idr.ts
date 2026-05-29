@@ -1,7 +1,29 @@
-export const formatIDR = (num: number) => {
-  return new Intl.NumberFormat('id-ID', {
+type Options = {
+  showSymbol?: boolean;
+};
+
+export const formatIDR = (
+  num: number,
+  options: Options = {
+    showSymbol: true,
+  }
+) => {
+  const formatter = new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
     maximumFractionDigits: 0,
-  }).format(num);
+  });
+
+  if (options.showSymbol === false) {
+    const filtered = formatter
+      .formatToParts(num)
+      .filter((part) => part.type !== 'currency')
+      .map((part) => part.value)
+      .join('')
+      .trim();
+
+    return filtered;
+  }
+
+  return formatter.format(num);
 };

@@ -111,6 +111,7 @@ export function COGSInputSection({
                         onCheckedChange={
                           onToggleAllProducts
                         }
+                        className="cursor-pointer"
                       />
                     </TableHead>
                     <TableHead>Produk</TableHead>
@@ -124,9 +125,7 @@ export function COGSInputSection({
                 </TableHeader>
                 <TableBody>
                   {products.map((product) => (
-                    <TableRow
-                      key={`${product.id}::${product.variationName}`}
-                    >
+                    <TableRow key={`${product.key}`}>
                       <TableCell>
                         <Checkbox
                           checked={selectedProductIds.has(
@@ -137,6 +136,7 @@ export function COGSInputSection({
                               product.id
                             )
                           }
+                          className="cursor-pointer"
                         />
                       </TableCell>
                       <TableCell
