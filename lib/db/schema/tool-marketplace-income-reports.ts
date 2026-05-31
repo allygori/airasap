@@ -181,6 +181,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
         items: [
           {
             productId: { type: String },
+            productKey: { type: String },
             name: { type: String },
             variationName: { type: String },
             quantity: { type: Number, default: 1 },

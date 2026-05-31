@@ -10,6 +10,7 @@ import {
   RawIncomeData,
 } from './types';
 import { Order } from './income/types';
+import { makeProductKey } from './utils';
 
 export function extractSellerInfoFromSummary(
   summaryRows: unknown[][]
@@ -123,6 +124,10 @@ export function formatReportData(
       },
       items: (o.items || []).map((item) => ({
         productId: item.productId,
+        productKey: makeProductKey(
+          item.productId,
+          item.variationName
+        ),
         name: item.name,
         variationName: item.variationName || '',
         quantity: item.quantity,

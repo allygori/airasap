@@ -31,7 +31,7 @@ export async function PUT(
     // Create a map for quick lookup (supporting cogs or fallback hpp)
     const updateMap = new Map(
       updates.map((u: any) => [
-        u.id,
+        u.key,
         u.cogs !== undefined ? u.cogs : u.hpp,
       ])
     );
@@ -39,24 +39,26 @@ export async function PUT(
     // Update the products array in the database
     let totalCogs = 0;
     report.products = report.products.map((p: any) => {
-      const newCogs = updateMap.has(p.id)
-        ? Number(updateMap.get(p.id))
+      const newCogs = updateMap.has(p.key)
+        ? Number(updateMap.get(p.key))
         : p.cogs || 0;
       totalCogs += newCogs * p.quantity;
       return {
         id: p.id,
+        key: p.key,
         name: p.name,
         variationName: p.variationName || '',
-        key: p.key,
         quantity: p.quantity,
         cogs: newCogs,
       };
     });
 
-    // Build a map of product COGS keyed by product ID (which may include -variation)
+    // Build a map of product COGS keyed by product key, which is
+    // combined product id and variation name, only if exist
+    // if variation name not exists use product id
     const productCogsMap = new Map<string, number>(
       report.products.map((p: any) => [
-        p.id,
+        p.key,
         p.cogs as number,
       ])
     );
@@ -71,7 +73,7 @@ export async function PUT(
         if (order.items && Array.isArray(order.items)) {
           for (const item of order.items) {
             const itemCogs =
-              productCogsMap.get(item.productId) || 0;
+              productCogsMap.get(item.productKey) || 0;
             orderTotalCogs +=
               (item.quantity || 1) * itemCogs;
           }
@@ -103,11 +105,11 @@ export async function PUT(
                 ? itemRevenue / totalRevenue
                 : 0;
             const itemProfit = orderProfit * share;
-            const productId = item.productId || '';
+            const productKey = item.productKey || '';
 
             productProfitMap.set(
-              productId,
-              (productProfitMap.get(productId) || 0) +
+              productKey,
+              (productProfitMap.get(productKey) || 0) +
                 itemProfit
             );
           }
@@ -121,7 +123,7 @@ export async function PUT(
     // Apply totalProfit to each product
     report.products = report.products.map((p: any) => ({
       ...p,
-      totalProfit: productProfitMap.get(p.id) ?? undefined,
+      totalProfit: productProfitMap.get(p.key) ?? undefined,
     }));
 
     report.markModified('products');

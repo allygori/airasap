@@ -65,10 +65,29 @@ export const ChartBarOrderTrends = ({
       const _start = new Date(start);
       const _end = new Date(end);
 
+      const getDateKey = (date: Date | string) => {
+        // 1. Coerce to Date object safely
+        const dateObj =
+          typeof date === 'string' ? new Date(date) : date;
+
+        // 2. Extract local date parts (Avoids UTC shifting bugs)
+        const year = dateObj.getFullYear();
+        const month = String(
+          dateObj.getMonth() + 1
+        ).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(
+          2,
+          '0'
+        );
+
+        // 3. Create the stable string key (YYYY-MM-DD)
+        return `${year}-${month}-${day}`;
+      };
+
       grouped = getDatesBetween(_start, _end).reduce(
         (acc, curr: Date) => {
           const item: ChartData = {
-            date: curr.toISOString(),
+            date: getDateKey(curr),
             createdAt: 0,
             releasedAt: 0,
           };
@@ -76,18 +95,12 @@ export const ChartBarOrderTrends = ({
           const _createdAt = orders.filter(
             (o) =>
               o.createdAt &&
-              new Date(o.createdAt)
-                .toISOString()
-                .split('T')[0] ===
-                curr.toISOString().split('T')[0]
+              getDateKey(o.createdAt) === item.date
           );
           const _releasedAt = orders.filter(
             (o) =>
               o.releasedAt &&
-              new Date(o.releasedAt)
-                .toISOString()
-                .split('T')[0] ===
-                curr.toISOString().split('T')[0]
+              getDateKey(o.releasedAt) === item.date
           );
 
           item.createdAt = _createdAt.length ?? 0;

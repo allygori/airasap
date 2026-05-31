@@ -344,3 +344,9 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+/** recharts */
+.recharts-zIndex-layer_300 {
+  border: none;
+  outline: none;
+}

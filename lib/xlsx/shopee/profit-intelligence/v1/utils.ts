@@ -51,3 +51,17 @@ export const extractFields = (
 
   return result;
 };
+
+/**
+ * Generate a unique product key combining productId and variationName.
+ * Products without variation use productId only.
+ */
+export const makeProductKey = (
+  productId: string,
+  variationName?: string
+): string => {
+  const variation = (variationName || '').trim();
+  return variation
+    ? `${productId}::${variation}`
+    : productId;
+};

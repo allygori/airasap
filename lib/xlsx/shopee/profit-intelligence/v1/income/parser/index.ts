@@ -3,6 +3,7 @@ import parseIncomeSheet from './income';
 import parseSellerFeeSheet from './seller-fee';
 
 import { ParsedOrderCompleted } from '../../order/types';
+import { makeProductKey } from '../../utils';
 
 type RawIncomeData = {
   summary_rows?: unknown[][];
@@ -26,20 +27,6 @@ type ProductMapItem = {
   quantity: number;
   cogs: number;
 };
-
-/**
- * Generate a unique product key combining productId and variationName.
- * Products without variation use productId only.
- */
-function makeProductKey(
-  productId: string,
-  variationName?: string
-): string {
-  const variation = (variationName || '').trim();
-  return variation
-    ? `${productId}::${variation}`
-    : productId;
-}
 
 function normalizeProductName(value: string) {
   return value.trim().toLowerCase().replace(/\s+/g, ' ');
