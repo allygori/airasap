@@ -1,0 +1,414 @@
+'use client';
+
+import Image from 'next/image';
+import { useIsMobile } from '@/hooks/use-mobile';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+// import { BlogPostType, MediaType, UserType, CategoryType, TagType } from "@/components/blog/types"
+import {
+  Calendar,
+  Tag,
+  User,
+  MapPin,
+  ExternalLink,
+  Edit2,
+  FileText,
+  Image as ImageIcon,
+} from 'lucide-react';
+import { useState } from 'react';
+
+type MediaType = {
+  url: string;
+};
+
+type UserType = {
+  name: string;
+};
+
+type CategoryType = {
+  name: string;
+};
+
+interface ViewDrawerProps<T = any> {
+  item: T;
+  children: React.ReactNode;
+  editUrl?: string;
+  viewUrl?: string;
+}
+
+const snapPoints = ['148px', '355px', 1];
+
+export function ViewDrawer<T extends Record<string, any>>({
+  item,
+  children,
+  editUrl,
+  viewUrl,
+}: ViewDrawerProps<T>) {
+  const isMobile = useIsMobile();
+  const [snap, setSnap] = useState<number | string | null>(
+    snapPoints[0]
+  );
+
+  // Detection logic
+  const isPost = 'title' in item && 'content' in item;
+  const isMedia = 'filename' in item && 'url' in item;
+  const isCategory =
+    'name' in item && 'slug' in item && 'parent' in item;
+  const isTag =
+    'name' in item && 'slug' in item && !('parent' in item);
+
+  const title =
+    item.title ||
+    item.name ||
+    item.filename ||
+    'Item Details';
+  const description = isPost
+    ? 'Article Preview & Details'
+    : isMedia
+      ? 'Media Asset Details'
+      : isCategory
+        ? 'Category Information'
+        : isTag
+          ? 'Tag Configuration'
+          : 'General Information';
+
+  return (
+    <Drawer
+      direction={isMobile ? 'bottom' : 'right'}
+      {...(isMobile
+        ? ({
+            snapPoints,
+            activeSnapPoint: snap,
+            setActiveSnapPoint: setSnap,
+            fadeFromIndex: 1,
+          } as never)
+        : {})}
+    >
+      <DrawerTrigger asChild>{children}</DrawerTrigger>
+      <DrawerContent
+        className={
+          isMobile ? 'p-0' : 'ml-auto p-0 sm:max-w-md'
+        }
+      >
+        <div className="flex max-w-full min-w-0 flex-1 flex-col overflow-hidden">
+          <DrawerHeader className="min-w-0 shrink-0 gap-1 border-b pb-4">
+            <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
+              {isPost && (
+                <FileText className="size-4 shrink-0 text-blue-500" />
+              )}
+              {isMedia && (
+                <ImageIcon className="size-4 shrink-0 text-purple-500" />
+              )}
+              {(isCategory || isTag) && (
+                <Tag className="size-4 shrink-0 text-emerald-500" />
+              )}
+              <Badge
+                variant="outline"
+                className="h-5 shrink-0 truncate text-[10px] font-bold tracking-tighter uppercase"
+              >
+                {isPost
+                  ? 'Post'
+                  : isMedia
+                    ? 'Media'
+                    : isCategory
+                      ? 'Category'
+                      : isTag
+                        ? 'Tag'
+                        : 'Item'}
+              </Badge>
+            </div>
+            <DrawerTitle className="text-xl leading-tight font-bold break-words">
+              {title}
+            </DrawerTitle>
+            <DrawerDescription className="text-sm break-words">
+              {description}
+            </DrawerDescription>
+          </DrawerHeader>
+
+          <div className="scrollbar-hide min-h-0 min-w-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto p-4">
+            {/* Visual Preview for Post or Media */}
+            {(isPost || isMedia) && (
+              <div className="bg-muted group relative aspect-video w-full overflow-hidden rounded-xl border shadow-sm">
+                <Image
+                  src={
+                    isMedia
+                      ? item.url
+                      : (
+                          item.featured_image as unknown as MediaType
+                        )?.url || ''
+                  }
+                  alt={title}
+                  fill
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {!isMedia && !item.featured_image && (
+                  <div className="text-muted-foreground flex h-full items-center justify-center text-xs italic">
+                    No preview image available
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Core Details Grid */}
+            <div className="grid gap-6">
+              {/* Excerpt/Description Section */}
+              {(item.excerpt || item.description) && (
+                <section className="bg-muted/30 border-muted-foreground/20 min-w-0 rounded-xl border border-dashed p-4">
+                  <h4 className="text-muted-foreground/60 mb-2 flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase">
+                    <FileText className="size-3" />
+                    Summary / Description
+                  </h4>
+                  <p className="text-foreground/80 text-sm leading-relaxed break-words italic">
+                    &ldquo;
+                    {item.excerpt || item.description}
+                    &rdquo;
+                  </p>
+                </section>
+              )}
+
+              {/* Status & Metadata (Post specific) */}
+              {isPost && (
+                <div className="grid min-w-0 grid-cols-2 gap-4">
+                  <DetailBox
+                    label="Status"
+                    icon={
+                      <CheckCircle
+                        isPublished={
+                          item.published_status ===
+                          'published'
+                        }
+                      />
+                    }
+                  >
+                    <Badge
+                      variant={
+                        item.published_status ===
+                        'published'
+                          ? 'default'
+                          : 'outline'
+                      }
+                      className="text-[10px] capitalize"
+                    >
+                      {item.published_status}
+                    </Badge>
+                  </DetailBox>
+                  <DetailBox
+                    label="Read Time"
+                    icon={
+                      <div className="size-1.5 rounded-full bg-blue-500" />
+                    }
+                  >
+                    <span className="font-medium">
+                      {item.reading_time || 0} minutes
+                    </span>
+                  </DetailBox>
+                  <DetailBox
+                    label="Author"
+                    icon={<User className="size-3" />}
+                  >
+                    <span className="truncate">
+                      {(item.author as unknown as UserType)
+                        ?.name || 'Unknown'}
+                    </span>
+                  </DetailBox>
+                  <DetailBox
+                    label="Nano ID"
+                    icon={
+                      <div className="bg-muted-foreground size-1.5 rounded-full" />
+                    }
+                  >
+                    <span className="font-mono text-[10px] tracking-widest uppercase">
+                      {item.nid}
+                    </span>
+                  </DetailBox>
+                </div>
+              )}
+
+              {/* Media Specific Details */}
+              {isMedia && (
+                <div className="grid min-w-0 grid-cols-2 gap-4">
+                  <DetailBox
+                    label="File Size"
+                    icon={
+                      <div className="size-1.5 rounded-full bg-amber-500" />
+                    }
+                  >
+                    <span>
+                      {(item.size / 1024).toFixed(1)} KB
+                    </span>
+                  </DetailBox>
+                  <DetailBox
+                    label="Type"
+                    icon={
+                      <div className="size-1.5 rounded-full bg-blue-500" />
+                    }
+                  >
+                    <span className="truncate">
+                      {item.mime_type}
+                    </span>
+                  </DetailBox>
+                </div>
+              )}
+
+              {/* Category Specific */}
+              {isCategory && item.parent && (
+                <DetailBox
+                  label="Parent Category"
+                  icon={<MapPin className="size-3" />}
+                >
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px]"
+                  >
+                    {(
+                      item.parent as unknown as CategoryType
+                    )?.name || 'N/A'}
+                  </Badge>
+                </DetailBox>
+              )}
+
+              {/* URLs Section */}
+              {(item.slug || isMedia) && (
+                <section className="min-w-0">
+                  <h4 className="text-muted-foreground/60 mb-2 text-[10px] font-bold tracking-widest uppercase">
+                    Permanent URL
+                  </h4>
+                  <div className="flex min-w-0 flex-col gap-2">
+                    <div className="group relative min-w-0">
+                      <p className="bg-muted/50 truncate rounded-lg border p-3 pr-16 font-mono text-[11px] leading-none select-all">
+                        {isMedia
+                          ? item.url
+                          : `/blog/${item.slug}`}
+                      </p>
+                      <button
+                        onClick={() => {
+                          const url = isMedia
+                            ? item.url
+                            : `${window.location.origin}/blog/${item.slug}`;
+                          if (!isMobile) {
+                            navigator.clipboard.writeText(
+                              url
+                            );
+                          }
+                        }}
+                        className="bg-background absolute top-1/2 right-2 -translate-y-1/2 rounded border px-2 py-1 text-[9px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
+                      >
+                        Copy
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Timestamps */}
+              <div className="text-muted-foreground/60 flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-4 text-[10px]">
+                <span className="flex items-center gap-1">
+                  <Calendar className="size-3" /> Added{' '}
+                  {new Date(
+                    item.created_at
+                  ).toLocaleDateString()}
+                </span>
+                {item.updated_at && (
+                  <span>
+                    Updated{' '}
+                    {new Date(
+                      item.updated_at
+                    ).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <DrawerFooter className="bg-muted/10 shrink-0 border-t">
+            <div className="flex w-full flex-col gap-2">
+              {editUrl && (
+                <Button
+                  className="h-11 w-full rounded-xl shadow-sm"
+                  onClick={() =>
+                    (window.location.href = `${editUrl}/${item._id}`)
+                  }
+                >
+                  <Edit2 className="mr-2 size-4" />
+                  Edit{' '}
+                  {isPost
+                    ? 'Content'
+                    : isMedia
+                      ? 'Asset'
+                      : 'Details'}
+                </Button>
+              )}
+              {viewUrl && item.slug && (
+                <Button
+                  variant="outline"
+                  className="h-11 w-full rounded-xl"
+                  onClick={() =>
+                    window.open(
+                      `${viewUrl}/${item.slug}`,
+                      '_blank'
+                    )
+                  }
+                >
+                  <ExternalLink className="mr-2 size-4" />
+                  View Live Site
+                </Button>
+              )}
+              <DrawerClose asChild>
+                <Button
+                  variant="secondary"
+                  className="h-11 w-full rounded-xl"
+                >
+                  Close Preview
+                </Button>
+              </DrawerClose>
+            </div>
+          </DrawerFooter>
+        </div>
+      </DrawerContent>
+    </Drawer>
+  );
+}
+
+function DetailBox({
+  label,
+  icon,
+  children,
+}: {
+  label: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-background flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+      <span className="text-muted-foreground/50 flex min-w-0 items-center gap-1 text-[9px] font-bold tracking-widest uppercase">
+        <span className="shrink-0">{icon}</span>
+        <span className="truncate">{label}</span>
+      </span>
+      <div className="min-w-0 truncate py-0.5 text-sm leading-none font-semibold">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CheckCircle({
+  isPublished,
+}: {
+  isPublished: boolean;
+}) {
+  return (
+    <div
+      className={`size-1.5 rounded-full ${isPublished ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500'}`}
+    />
+  );
+}

@@ -1,13 +1,25 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import { Geist } from 'next/font/google';
+// import { Geist } from 'next/font/google';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/sonner';
 
-const geist = Geist({
+// const geist = Geist({
+//   subsets: ['latin'],
+//   variable: '--font-sans',
+// });
+
+const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: '--font-plus-jakarta',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const metadata: Metadata = {
@@ -28,10 +40,12 @@ export default function RootLayout({
       className={cn(
         'h-full antialiased',
         'font-sans',
-        geist.variable
+        inter.variable
       )}
     >
-      <body className="flex min-h-full flex-col">
+      <body
+        className={`${plusJakarta.variable} flex min-h-full flex-col font-sans antialiased`}
+      >
         <Providers>
           {children}
 
