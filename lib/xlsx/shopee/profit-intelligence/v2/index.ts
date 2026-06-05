@@ -22,10 +22,7 @@ export default function generateProfitIntelligenceReport(
     incomeReader(incomeBuffer);
 
   // 3. Parse and merge data
-  const parsed = incomeParser(
-    raw_data,
-    completedOrdersMap as any
-  );
+  const parsed = incomeParser(raw_data, completedOrdersMap);
 
   // 4. Format and return final report schema
   return formatReportData(

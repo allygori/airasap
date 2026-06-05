@@ -41,7 +41,7 @@ export const findValueByLabel = (
 
 export const extractFields = (
   rows: unknown[][],
-  mapping: string
+  mapping: Record<string, string>
 ) => {
   const result: Record<string, unknown> = {};
 
