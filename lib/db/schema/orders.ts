@@ -20,51 +20,109 @@ const OrderSchema = new Schema(
     },
 
     // Order ID & statuses
-    order_id: { type: String },
+    order_id: { type: String, alias: 'orderId' },
     status: { type: String },
-    cancellation_return_status: { type: String },
+    cancellation_return_status: {
+      type: String,
+      alias: 'cancellationReturnStatus',
+    },
 
     username: { type: String },
-    number_of_products_ordered: { type: Number },
+    number_of_products_ordered: {
+      type: Number,
+      alias: 'numberOfProductsOrdered',
+    },
 
     // Payment
-    total_payment: { type: Number }, // buyer payment amount
-    payment_method: { type: String },
-    paid_at: { type: Date },
-    order_subtotal: { type: Number },
+    total_payment: { type: Number, alias: 'totalPayment' }, // buyer payment amount
+    payment_method: {
+      type: String,
+      alias: 'paymentMethod',
+    },
+    paid_at: { type: Date, alias: 'paidAt' },
+    order_subtotal: {
+      type: Number,
+      alias: 'orderSubtotal',
+    },
 
     // Discounts and Cashback
-    total_discount: { type: Number },
-    discount_from_seller: { type: Number },
-    discount_from_shopee: { type: Number },
-    voucher_borne_by_seller: { type: Number },
-    voucher_borne_by_shopee: { type: Number },
-    coin_cashback: { type: Number },
-    bundle_deal: { type: Boolean, default: false },
-    bundle_deal_discount_from_shopee: { type: Number },
-    bundle_deal_discount_from_seller: { type: Number },
-    shopee_coin_offset: { type: Number },
-    credit_card_discount: { type: Number },
+    total_discount: {
+      type: Number,
+      alias: 'totalDiscount',
+    },
+    discount_from_seller: {
+      type: Number,
+      alias: 'discountFromSeller',
+    },
+    discount_from_shopee: {
+      type: Number,
+      alias: 'discountFromShopee',
+    },
+    voucher_borne_by_seller: {
+      type: Number,
+      alias: 'voucherBorneBySeller',
+    },
+    voucher_borne_by_shopee: {
+      type: Number,
+      alias: 'voucherBorneByShopee',
+    },
+    coin_cashback: { type: Number, alias: 'coinCashback' },
+    bundle_deal: {
+      type: Boolean,
+      default: false,
+      alias: 'bundleDeal',
+    },
+    bundle_deal_discount_from_shopee: {
+      type: Number,
+      alias: 'bundleDealDiscountFromShopee',
+    },
+    bundle_deal_discount_from_seller: {
+      type: Number,
+      alias: 'bundleDealDiscountFromSeller',
+    },
+    shopee_coin_offset: {
+      type: Number,
+      alias: 'shopeeCoinOffset',
+    },
+    credit_card_discount: {
+      type: Number,
+      alias: 'creditCardDiscount',
+    },
 
     // Shipping
     // shipped_by_advance_fulfillment: { type: Boolean, default: false },
     // tracking_number: { type: String },
     // drop_off_or_counter_pick_up: { type: String },
     // order_must_be_shipped_before: { type: Date },
-    shipping_option: { type: String },
-    estimated_shipping_fee: { type: Number },
-    shipping_fee_paid_by_buyer: { type: Number },
-    estimated_shipping_fee_discount: { type: Number },
-    product_weight: { type: Number }, // unit: gram
-    total_weight: { type: Number }, // unit: gram
-    receiver_name: { type: String },
-    phone_number: { type: String },
+    shipping_option: {
+      type: String,
+      alias: 'shippingOption',
+    },
+    estimated_shipping_fee: {
+      type: Number,
+      alias: 'estimatedShippingFee',
+    },
+    shipping_fee_paid_by_buyer: {
+      type: Number,
+      alias: 'shippingFeePaidByBuyer',
+    },
+    estimated_shipping_fee_discount: {
+      type: Number,
+      alias: 'estimatedShippingFeeDiscount',
+    },
+    product_weight: {
+      type: Number,
+      alias: 'productWeight',
+    }, // unit: gram
+    total_weight: { type: Number, alias: 'totalWeight' }, // unit: gram
+    receiver_name: { type: String, alias: 'receiverName' },
+    phone_number: { type: String, alias: 'phoneNumber' },
     address: {
       street: { type: String },
       city: { type: String },
       province: { type: String },
     },
-    buyer_note: { type: String },
+    buyer_note: { type: String, alias: 'buyerNote' },
     note: { type: String },
 
     // /** @todo Need fixation */
@@ -75,15 +133,33 @@ const OrderSchema = new Schema(
           ref: 'Product',
           required: true,
         },
-        parent_sku: { type: String },
-        sku_reference_number: { type: String },
-        product_name: { type: String },
-        variation_name: { type: String },
-        product_key: { type: String },
-        original_price: { type: Number },
-        price_after_discount: { type: Number },
+        parent_sku: { type: String, alias: 'parentSku' },
+        sku_reference_number: {
+          type: String,
+          alias: 'skuReferenceNumber',
+        },
+        product_name: {
+          type: String,
+          alias: 'productName',
+        },
+        variation_name: {
+          type: String,
+          alias: 'variationName',
+        },
+        product_key: { type: String, alias: 'productKey' },
+        original_price: {
+          type: Number,
+          alias: 'originalPrice',
+        },
+        price_after_discount: {
+          type: Number,
+          alias: 'priceAfterDiscount',
+        },
         quantity: { type: Number },
-        returned_quantity: { type: Number },
+        returned_quantity: {
+          type: Number,
+          alias: 'returnedQuantity',
+        },
 
         // unit_price: { type: Number },
         // gross_amount: { type: Number },
@@ -92,30 +168,51 @@ const OrderSchema = new Schema(
     ],
 
     // Fees
-    admin_fee: { type: Number }, // Biaya Administrasi (mandatory)
-    order_process_fee: { type: Number }, // Biaya Proses Pesanan (mandatory)
+    admin_fee: { type: Number, alias: 'adminFee' }, // Biaya Administrasi (mandatory)
+    order_process_fee: {
+      type: Number,
+      alias: 'orderProcessFee',
+    }, // Biaya Proses Pesanan (mandatory)
     // service_fee: { type: Number }, // Biaya Layanan
-    affiliate_fee: { type: Number }, // Biaya AMS (Affiliate fee)
-    campaign_fee: { type: Number }, // Biaya kampanye
-    voucher_fee: { type: Number }, // Voucher
-    shipping_fee: { type: Number },
-    other_fee: { type: Number },
+    affiliate_fee: { type: Number, alias: 'affiliateFee' }, // Biaya AMS (Affiliate fee)
+    campaign_fee: { type: Number, alias: 'campaignFee' }, // Biaya kampanye
+    voucher_fee: { type: Number, alias: 'voucherFee' }, // Voucher
+    shipping_fee: { type: Number, alias: 'shippingFee' },
+    other_fee: { type: Number, alias: 'otherFee' },
 
     // Return
-    return_shipping_fee: { type: Number },
+    return_shipping_fee: {
+      type: Number,
+      alias: 'returnShippingFee',
+    },
 
     // Released
-    released_amount: { type: Number },
-    net_amount: { type: Number },
+    released_amount: {
+      type: Number,
+      alias: 'releasedAmount',
+    },
+    net_amount: { type: Number, alias: 'netAmount' },
 
     // Timestamps
-    shipping_arranged_at: { type: Date },
-    order_created_at: { type: Date },
-    order_released_at: { type: Date },
-    order_completed_at: { type: Date },
+    shipping_arranged_at: {
+      type: Date,
+      alias: 'shippingArrangedAt',
+    },
+    order_created_at: {
+      type: Date,
+      alias: 'orderCreatedAt',
+    },
+    order_released_at: {
+      type: Date,
+      alias: 'orderReleasedAt',
+    },
+    order_completed_at: {
+      type: Date,
+      alias: 'orderCompletedAt',
+    },
 
     // Custom fields
-    deleted_at: { type: Date }, // soft delete
+    deleted_at: { type: Date, alias: 'deletedAt' }, // soft delete
   },
   {
     timestamps: {
