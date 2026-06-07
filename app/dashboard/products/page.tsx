@@ -21,14 +21,13 @@ export default function PostIndexPage() {
           <div className="space-y-1.5">
             <div className="text-primary animate-in slide-in-from-left-4 flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase duration-500">
               <FileText className="h-4 w-4" />
-              Blog Posts
+              Goods
             </div>
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl dark:text-white">
-              Articles
+              Products
             </h1>
             <p className="max-w-lg font-medium text-slate-500 dark:text-slate-400">
-              Manage title, excerpt, article body, author,
-              category, tags, featured image and many.
+              Manage Title, COGS and many.
             </p>
           </div>
         </div>

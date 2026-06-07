@@ -7,6 +7,7 @@ const ProductSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
+      alias: 'organizationId',
     },
     store: {
       type: Schema.Types.ObjectId,
