@@ -21,12 +21,23 @@ const ProductSchema = new Schema(
     },
     name: { type: String, required: true },
     product_key: { type: String }, // product_id::variation_name
-    shopee: {
-      product_id: { type: String },
-      // product_key: { type: String }, // product_id::variation_name
-    },
-    // variants: [{}]
-    variation_name: { type: String },
+    product_id: { type: String },
+    // shopee: {
+    //   // product_key: { type: String }, // product_id::variation_name
+    // },
+    variants: [
+      {
+        name: { type: String, required: true },
+        product_key: { type: String }, // product_id::variation name
+        price: { type: Number, required: true },
+        quantity: { type: Number, default: 0 },
+        discount: { type: Number, default: 0 },
+        finalPrice: { type: Number },
+        SKU: { type: String, required: false },
+        GTIN: { type: String, required: false },
+      },
+    ],
+    // variation_name: { type: String },
     is_active: { type: Boolean, default: true },
 
     // Custom fields

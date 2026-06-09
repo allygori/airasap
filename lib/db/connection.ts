@@ -16,6 +16,8 @@ import '@/lib/db/schema/members';
 import '@/lib/db/schema/invitations';
 import '@/lib/db/schema/sessions';
 import '@/lib/db/schema/verifications';
+import '@/lib/db/schema/products';
+import '@/lib/db/schema/stores';
 import '@/lib/db/schema/tool-marketplace-income-reports';
 import { multiTenancyPlugin } from './plugins/multi-tenancy';
 

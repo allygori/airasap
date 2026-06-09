@@ -34,14 +34,13 @@ export default function PostIndexPage() {
       </div>
 
       <CollectionShell
-        title="Articles"
-        endpoint="/api/posts?sort=-updated_at"
-        // columns={columns}
+        title="Products"
+        endpoint="/api/dashboard/products?sort=-created_at"
         columns={[]}
-        searchFields={['title', 'slug', 'excerpt']}
-        primarySearchField="title"
-        createUrl="/dashboard/posts/create"
-        createText="Create Post"
+        searchFields={['name']}
+        primarySearchField="name"
+        createUrl="/dashboard/products/create"
+        createText="Create Product"
         isSortable={false}
       />
     </>
