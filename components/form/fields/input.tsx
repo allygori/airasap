@@ -9,11 +9,11 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { FieldInfo } from '../partials/field-info';
+// import { cn } from '@/lib/utils';
 
 type InputFieldProps = ComponentProps<'input'> & {
   label?: string;
   description?: string;
-  // props: ComponentProps<"input">;
 };
 
 // function FieldInfo({ field }: { field: AnyFieldApi }) {
@@ -51,6 +51,13 @@ export function InputField({
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
         {...props}
+        // className={cn(
+        //   props.className,
+        //   // props.disabled
+        //   //   ? 'cursor-not-allowed!'
+        //   //   : 'cursor-text'
+        //   'disabled:cursor-not-allowed'
+        // )}
       />
       {description && (
         <FieldDescription>{description}</FieldDescription>

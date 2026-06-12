@@ -78,8 +78,8 @@ export const getPostColumns = (
       enableHiding: false,
     },
     {
-      accessorKey: 'title',
-      header: 'Article Title',
+      accessorKey: 'name',
+      header: 'Nama',
       cell: ({ row }) => (
         <ViewDrawer
           item={row.original}
@@ -90,56 +90,56 @@ export const getPostColumns = (
             variant="link"
             className="text-foreground w-fit px-0 text-left font-semibold underline-offset-4 hover:underline"
           >
-            {row.original.title}
+            {row.original.name}
           </Button>
         </ViewDrawer>
       ),
       enableHiding: false,
     },
-    {
-      accessorKey: 'category.name',
-      header: 'Category',
-      cell: ({ row }) => (
-        <div className="w-32">
-          <Badge
-            variant="outline"
-            className="text-muted-foreground px-1.5"
-          >
-            {(
-              row.original
-                .category as unknown as CategoryType
-            )?.name || 'Uncategorized'}
-          </Badge>
-        </div>
-      ),
-    },
-    {
-      accessorKey: 'published_status',
-      header: 'Status',
-      cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className="text-muted-foreground gap-2 px-1.5 capitalize"
-        >
-          {row.original.published_status === 'published' ? (
-            <CheckCircle2 className="size-3 fill-green-500 dark:fill-green-400" />
-          ) : (
-            <Loader2 className="size-3 animate-spin" />
-          )}
-          {row.original.published_status}
-        </Badge>
-      ),
-    },
-    {
-      accessorKey: 'author.name',
-      header: 'Author',
-      cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          {(row.original.author as unknown as UserType)
-            ?.name || 'Unknown'}
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: 'category.name',
+    //   header: 'Category',
+    //   cell: ({ row }) => (
+    //     <div className="w-32">
+    //       <Badge
+    //         variant="outline"
+    //         className="text-muted-foreground px-1.5"
+    //       >
+    //         {(
+    //           row.original
+    //             .category as unknown as CategoryType
+    //         )?.name || 'Uncategorized'}
+    //       </Badge>
+    //     </div>
+    //   ),
+    // },
+    // {
+    //   accessorKey: 'published_status',
+    //   header: 'Status',
+    //   cell: ({ row }) => (
+    //     <Badge
+    //       variant="outline"
+    //       className="text-muted-foreground gap-2 px-1.5 capitalize"
+    //     >
+    //       {row.original.published_status === 'published' ? (
+    //         <CheckCircle2 className="size-3 fill-green-500 dark:fill-green-400" />
+    //       ) : (
+    //         <Loader2 className="size-3 animate-spin" />
+    //       )}
+    //       {row.original.published_status}
+    //     </Badge>
+    //   ),
+    // },
+    // {
+    //   accessorKey: 'author.name',
+    //   header: 'Author',
+    //   cell: ({ row }) => (
+    //     <div className="text-sm font-medium">
+    //       {(row.original.author as unknown as UserType)
+    //         ?.name || 'Unknown'}
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: 'created_at',
       header: 'Date Created',

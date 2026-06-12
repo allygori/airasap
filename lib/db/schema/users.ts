@@ -18,14 +18,20 @@ const UserSchema = new Schema(
     //   default: 'owner',
     // },
     // username: { type: String },
-    deleted_at: { type: Date }, // soft delete
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at', // Use `created_at` to store the created date
-      updatedAt: 'updated_at', // and `updated_at` to store the last updated date
+    created_at: {
+      type: Date,
+      default: Date.now(),
+      alias: 'createdAt',
     },
+    updated_at: { type: Date, alias: 'updatedAt' },
+    deleted_at: { type: Date }, // soft delete
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at', // Use `created_at` to store the created date
+  //     updatedAt: 'updated_at', // and `updated_at` to store the last updated date
+  //   },
+  // }
 );
 
 const User =

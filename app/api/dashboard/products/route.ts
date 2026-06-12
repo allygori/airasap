@@ -11,6 +11,8 @@ import {
 } from '@/lib/api/response';
 import { validateBody } from '@/lib/api/validator';
 import { createProductSchema } from '@/lib/schema/product.schema';
+import { auth } from '@/lib/auth/auth';
+import { db } from '@/lib/db/connection';
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error
@@ -21,7 +23,13 @@ function getErrorMessage(error: unknown) {
 export async function GET(request: NextRequest) {
   try {
     const reqHeaders = await headers();
-    const orgId = reqHeaders.get('x-organization-id');
+    // const orgId = reqHeaders.get('x-organization-id');
+    const session = await auth.api.getSession({
+      headers: reqHeaders,
+    });
+    const orgId = session?.session?.activeOrganizationId;
+
+    await db.connect();
 
     const ScopedProduct =
       await getTenantBoundModel(Product);
@@ -55,7 +63,11 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    const total = await Product.countDocuments(baseFilter)
+    console.log(JSON.stringify(baseFilter, null, 2));
+
+    const total = await ScopedProduct.countDocuments(
+      baseFilter
+    )
       .setOptions({ organizationId: orgId })
       .exec();
 

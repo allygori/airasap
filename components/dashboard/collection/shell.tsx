@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 
 import { CollectionHeader } from './header';
 import { CollectionTable } from './table';
+import { authClient } from '@/lib/auth/auth-client';
 
 type CollectionShellProps<TData extends { _id: string }> = {
   title: string;
@@ -46,8 +47,14 @@ export function CollectionShell<
   onRowClick,
   onDataUpdate,
 }: CollectionShellProps<TData>) {
+  const { data: session } = authClient.useSession();
+
   const [data, setData] = React.useState<TData[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(
+    null
+  );
+
   const [rowSelection, setRowSelection] = React.useState(
     {}
   );
@@ -65,7 +72,12 @@ export function CollectionShell<
       setIsLoading(true);
       // Build URL with search/filters if needed in future
       // For now, simple fetch as current implementation does
-      const res = await fetch(endpoint);
+      const res = await fetch(endpoint, {
+        // method: 'GET',
+        // headers: {
+        //   'X-Organization-ID': session?.session?.activeOrganizationId
+        // }
+      });
       if (!res.ok)
         throw new Error(
           `Failed to fetch ${title.toLowerCase()}`
@@ -76,6 +88,7 @@ export function CollectionShell<
       onDataUpdate?.(fetchedData);
     } catch (err) {
       console.error(err);
+      setError(`Failed to load ${title.toLowerCase()}`);
       toast.error(`Failed to load ${title.toLowerCase()}`);
     } finally {
       setIsLoading(false);
@@ -127,6 +140,7 @@ export function CollectionShell<
               data={data}
               setData={isSortable ? setData : undefined}
               isLoading={isLoading}
+              error={error}
               searchFields={searchFields}
               primarySearchField={primarySearchField}
               isSortable={isSortable}

@@ -21,13 +21,13 @@ import '@/lib/db/schema/stores';
 import '@/lib/db/schema/tool-marketplace-income-reports';
 import { multiTenancyPlugin } from './plugins/multi-tenancy';
 
+// Init global plugins
+mongoose.plugin(multiTenancyPlugin);
+
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   var mongoose: any; // This is necessary for Next.js hot reloading
 }
-
-// Init global plugins
-global.mongoose.plugin(multiTenancyPlugin);
 
 let cached = global.mongoose;
 

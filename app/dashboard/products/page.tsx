@@ -23,7 +23,7 @@ export default function PostIndexPage() {
               <FileText className="h-4 w-4" />
               Goods
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-5xl dark:text-white">
+            <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-4xl dark:text-white">
               Products
             </h1>
             <p className="max-w-lg font-medium text-slate-500 dark:text-slate-400">

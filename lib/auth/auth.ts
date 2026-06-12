@@ -15,22 +15,32 @@ export const auth = betterAuth({
     // client,
     // transaction: false // Disable if Replica Set is not available
   }), // Pass both db and client for session stability
-  user: {
-    modelName: 'users',
-  },
   baseURL:
     process.env.BETTER_AUTH_URL || 'http://localhost:3000',
   basePath: '/api/auth',
   secret: process.env.BETTER_AUTH_SECRET,
   emailAndPassword: {
     enabled: true,
-    requireEmailVerification: true,
+    requireEmailVerification: false,
+    autoSignIn: true,
   },
   plugins: [organization(), admin()],
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || '',
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      mapProfileToUser: (profile) => {
+        return {
+          firstName: profile.given_name,
+          lastName: profile.family_name,
+        };
+      },
+    },
+  },
+  user: {
+    modelName: 'users',
+    additionalFields: {
+      timezone: { type: 'string' },
     },
   },
 

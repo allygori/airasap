@@ -21,16 +21,16 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 
-type InputFieldProps = ComponentProps<'input'> & {
+type DateTimeFieldProps = ComponentProps<'input'> & {
   label?: string;
   description?: string;
 };
 
-export function InputDateTimeField({
+export function DateTimeField({
   label,
   description,
   ...props
-}: InputFieldProps) {
+}: DateTimeFieldProps) {
   const field = useFieldContext<string | undefined>();
   const [open, setOpen] = useState(false);
 
@@ -117,7 +117,7 @@ export function InputDateTimeField({
           step="1"
           value={time}
           onChange={(e) => setTime(e.target.value)}
-          className="bg-background min-w-[120px] appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+          className="bg-background min-w-30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
           {...(props as any)}
         />
       </Field>

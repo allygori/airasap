@@ -43,6 +43,7 @@ type CollectionTableProps<TData extends { _id: string }> = {
   data: TData[];
   setData?: React.Dispatch<React.SetStateAction<TData[]>>;
   isLoading?: boolean;
+  error?: string | null;
   searchFields?: string[];
   primarySearchField?: string;
   placeholder?: string;
@@ -93,6 +94,7 @@ export function CollectionTable<
   data,
   setData,
   isLoading,
+  error,
   searchFields,
   primarySearchField,
   placeholder,
@@ -147,12 +149,28 @@ export function CollectionTable<
       );
     }
 
+    if (error) {
+      return (
+        <TableRow>
+          <TableCell
+            colSpan={columnsCount}
+            className="h-64 text-center"
+          >
+            <h2 className="text-lg font-medium text-red-400">
+              Something went wrong!
+            </h2>
+            <p className="text-sm">{error}</p>
+          </TableCell>
+        </TableRow>
+      );
+    }
+
     if (!table.getRowModel().rows?.length) {
       return (
         <TableRow>
           <TableCell
             colSpan={columnsCount}
-            className="h-24 text-center"
+            className="h-64 text-center"
           >
             No items found in this collection.
           </TableCell>

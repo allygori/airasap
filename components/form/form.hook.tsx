@@ -14,6 +14,11 @@ const TextField = lazy(() =>
     default: m.InputField,
   }))
 );
+const PasswordField = lazy(() =>
+  import('../form/fields/password').then((m) => ({
+    default: m.PasswordField,
+  }))
+);
 const TextareaField = lazy(() =>
   import('../form/fields/textarea').then((m) => ({
     default: m.TextareaField,
@@ -30,8 +35,13 @@ const MultiselectField = lazy(() =>
   }))
 );
 const DateTimeField = lazy(() =>
-  import('../form/fields/input-date-time').then((m) => ({
-    default: m.InputDateTimeField,
+  import('./fields/date-time').then((m) => ({
+    default: m.DateTimeField,
+  }))
+);
+const AvatarField = lazy(() =>
+  import('./fields/avatar').then((m) => ({
+    default: m.AvatarField,
   }))
 );
 
@@ -45,10 +55,12 @@ export const { useAppForm, withForm, withFieldGroup } =
   createFormHook({
     fieldComponents: {
       TextField,
+      PasswordField,
       TextareaField,
       SelectField,
       MultiselectField,
       DateTimeField,
+      AvatarField,
     },
     formComponents: {
       SubmitButton,

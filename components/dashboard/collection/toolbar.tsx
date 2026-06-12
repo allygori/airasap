@@ -27,17 +27,17 @@ export function CollectionToolbar<TData>({
   // Use primarySearchField if provided, otherwise fallback to global filter
   const searchValue = primarySearchField
     ? ((table
-        .getColumn(primarySearchField)
+        ?.getColumn(primarySearchField)
         ?.getFilterValue() as string) ?? '')
-    : ((table.getState().globalFilter as string) ?? '');
+    : ((table?.getState().globalFilter as string) ?? '');
 
   const handleSearchChange = (value: string) => {
     if (primarySearchField) {
       table
-        .getColumn(primarySearchField)
+        ?.getColumn(primarySearchField)
         ?.setFilterValue(value);
     } else {
-      table.setGlobalFilter(value);
+      table?.setGlobalFilter(value);
     }
   };
 

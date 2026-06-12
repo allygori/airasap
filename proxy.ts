@@ -22,27 +22,27 @@ export default async function proxy(request: NextRequest) {
         c.name.endsWith('better-auth.session_token')
       );
 
-  // 2. Proteksi Khusus Rute API
-  if (pathname.startsWith('/api')) {
-    const apiSecretHeader =
-      request.headers.get('x-api-secret');
+  // // 2. Proteksi Khusus Rute API
+  // if (pathname.startsWith('/api')) {
+  //   const apiSecretHeader =
+  //     request.headers.get('x-api-secret');
 
-    // Izinkan jika ada API Secret yang cocok ATAU ada Session Token
-    const isValidSecret =
-      apiSecretHeader === process.env.INTERNAL_API_SECRET;
-    const isValidSession = !!sessionToken;
+  //   // Izinkan jika ada API Secret yang cocok ATAU ada Session Token
+  //   const isValidSecret =
+  //     apiSecretHeader === process.env.INTERNAL_API_SECRET;
+  //   const isValidSession = !!sessionToken;
 
-    if (!isValidSecret && !isValidSession) {
-      return NextResponse.json(
-        {
-          error:
-            'Unauthorized: Invalid API Secret or Session',
-        },
-        { status: 401 }
-      );
-    }
-    return NextResponse.next();
-  }
+  //   if (!isValidSecret && !isValidSession) {
+  //     return NextResponse.json(
+  //       {
+  //         error:
+  //           'Unauthorized: Invalid API Secret or Session',
+  //       },
+  //       { status: 401 }
+  //     );
+  //   }
+  //   return NextResponse.next();
+  // }
 
   // 3. Proteksi Rute Halaman (Dashboard/Login)
   const isProtectedPath = protectedPaths.some((path) =>
