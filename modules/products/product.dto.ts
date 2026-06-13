@@ -60,10 +60,47 @@ export const BulkUpdateStatusSchema = z.object({
  */
 export const ProductFilterSchema = z.object({
   platform: z.string().optional(),
-  is_active: z.boolean().optional(),
+  is_active: z.preprocess((value) => {
+    if (value === 'true' || value === true) return true;
+    if (value === 'false' || value === false) return false;
+    return undefined;
+  }, z.boolean().optional()),
   search: z.string().optional(),
-  page: z.number().int().positive().optional().default(1),
-  limit: z.number().int().positive().optional().default(10),
+  page: z.preprocess((value) => {
+    if (typeof value === 'string' && value.length) {
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  }, z.number().int().positive().optional().default(1)),
+  limit: z.preprocess((value) => {
+    if (typeof value === 'string' && value.length) {
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? value : parsed;
+    }
+    return value;
+  }, z.number().int().positive().optional().default(10)),
+});
+
+/**
+ * Skema untuk search query
+ */
+export const ProductSearchQuerySchema = z.object({
+  q: z.string().min(1, 'Search query wajib diisi'),
+});
+
+/**
+ * Skema untuk parameter route product ID
+ */
+export const ProductIdParamsSchema = z.object({
+  id: z.string().min(1, 'Product ID tidak valid'),
+});
+
+/**
+ * Skema untuk parameter route platform
+ */
+export const ProductPlatformParamsSchema = z.object({
+  platform: z.string().min(1, 'Platform tidak valid'),
 });
 
 /**
@@ -79,6 +116,23 @@ export type UpdateProductDTO = z.infer<
 export type BulkUpdateStatusDTO = z.infer<
   typeof BulkUpdateStatusSchema
 >;
+
+export type MassUploadResultDTO = {
+  createdCount: number;
+  updatedCount: number;
+  totalRows: number;
+  totalProducts: number;
+};
+
 export type ProductFilterDTO = z.infer<
   typeof ProductFilterSchema
+>;
+export type ProductSearchQueryDTO = z.infer<
+  typeof ProductSearchQuerySchema
+>;
+export type ProductIdParamsDTO = z.infer<
+  typeof ProductIdParamsSchema
+>;
+export type ProductPlatformParamsDTO = z.infer<
+  typeof ProductPlatformParamsSchema
 >;

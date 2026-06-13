@@ -6,6 +6,11 @@
 import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
 import {
+  ProductIdParamsSchema,
+  ProductIdParamsDTO,
+} from '@/modules/products/product.dto';
+import { withValidation } from '@/lib/api/validate';
+import {
   apiSuccess,
   apiError,
   ErrorCodes,
@@ -22,16 +27,13 @@ function getTenantContext(req: Request) {
   };
 }
 
-/**
- * POST /api/v1/dashboard/products/[id]/restore
- * Restore soft-deleted product
- */
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+export const POST = withValidation(
+  {
+    params: ProductIdParamsSchema,
+  },
+  async (request, context) => {
+    const validatedParams =
+      context.validatedParams as ProductIdParamsDTO;
     const tenantContext = getTenantContext(request);
 
     if (!tenantContext.organizationId) {
@@ -42,36 +44,14 @@ export async function POST(
       );
     }
 
-    if (!id || id.trim().length === 0) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Product ID tidak valid',
-        400
-      );
-    }
-
     const productService = new ProductService(
       tenantContext
     );
     const restoredProduct =
-      await productService.restoreProduct(id);
+      await productService.restoreProduct(
+        validatedParams.id
+      );
 
     return apiSuccess(restoredProduct);
-  } catch (error: any) {
-    console.error('[POST /products/:id/restore]', error);
-
-    if (error.message?.includes('tidak ditemukan')) {
-      return apiError(
-        ErrorCodes.NOT_FOUND,
-        error.message,
-        404
-      );
-    }
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message || 'Gagal memulihkan produk',
-      500
-    );
   }
-}
+);

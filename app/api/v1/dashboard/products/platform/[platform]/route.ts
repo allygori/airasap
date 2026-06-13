@@ -6,6 +6,11 @@
 import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
 import {
+  ProductPlatformParamsSchema,
+  ProductPlatformParamsDTO,
+} from '@/modules/products/product.dto';
+import { withValidation } from '@/lib/api/validate';
+import {
   apiSuccess,
   apiError,
   ErrorCodes,
@@ -22,16 +27,13 @@ function getTenantContext(req: Request) {
   };
 }
 
-/**
- * GET /api/v1/dashboard/products/platform/[platform]
- * Get products filtered by platform
- */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ platform: string }> }
-) {
-  try {
-    const { platform } = await params;
+export const GET = withValidation(
+  {
+    params: ProductPlatformParamsSchema,
+  },
+  async (request, context) => {
+    const validatedParams =
+      context.validatedParams as ProductPlatformParamsDTO;
     const tenantContext = getTenantContext(request);
 
     if (!tenantContext.organizationId) {
@@ -42,19 +44,13 @@ export async function GET(
       );
     }
 
-    if (!platform || platform.trim().length === 0) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Platform tidak valid',
-        400
-      );
-    }
-
     const productService = new ProductService(
       tenantContext
     );
     const products =
-      await productService.getProductsByPlatform(platform);
+      await productService.getProductsByPlatform(
+        validatedParams.platform
+      );
 
     return apiSuccess(products, {
       page: 1,
@@ -62,17 +58,5 @@ export async function GET(
       total: products.length,
       total_pages: 1,
     });
-  } catch (error: any) {
-    console.error(
-      '[GET /products/platform/:platform]',
-      error
-    );
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message ||
-        'Gagal mengambil produk dari platform',
-      500
-    );
   }
-}
+);

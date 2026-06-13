@@ -5,9 +5,14 @@
  * DELETE /api/v1/dashboard/products/[id] - Delete product (soft delete)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
-import { UpdateProductSchema } from '@/modules/products/product.dto';
+import {
+  UpdateProductDTO,
+  UpdateProductSchema,
+  ProductIdParamsSchema,
+  ProductIdParamsDTO,
+} from '@/modules/products/product.dto';
 import { withValidation } from '@/lib/api/validate';
 import {
   apiSuccess,
@@ -30,12 +35,13 @@ function getTenantContext(req: Request) {
  * GET /api/v1/dashboard/products/[id]
  * Retrieve product by ID
  */
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+export const GET = withValidation(
+  {
+    params: ProductIdParamsSchema,
+  },
+  async (request, context) => {
+    const validatedParams =
+      context.validatedParams as ProductIdParamsDTO;
     const tenantContext = getTenantContext(request);
 
     if (!tenantContext.organizationId) {
@@ -46,101 +52,43 @@ export async function GET(
       );
     }
 
-    if (!id || id.trim().length === 0) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Product ID tidak valid',
-        400
-      );
-    }
-
     const productService = new ProductService(
       tenantContext
     );
-    const product = await productService.getProductById(id);
+    const product = await productService.getProductById(
+      validatedParams.id
+    );
 
     return apiSuccess(product);
-  } catch (error: any) {
-    console.error('[GET /products/:id]', error);
-
-    if (error.message?.includes('tidak ditemukan')) {
-      return apiError(
-        ErrorCodes.NOT_FOUND,
-        error.message,
-        404
-      );
-    }
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message || 'Gagal mengambil detail produk',
-      500
-    );
   }
-}
+);
 
 /**
  * PATCH /api/v1/dashboard/products/[id]
  * Update product (partial update)
  */
 export const PATCH = withValidation(
-  UpdateProductSchema,
-  async (request, { params, validatedBody }) => {
-    try {
-      const { id } = await params;
-      const tenantContext = getTenantContext(request);
+  {
+    body: UpdateProductSchema,
+    params: ProductIdParamsSchema,
+  },
+  async (request, context) => {
+    const validatedBody =
+      context.validatedBody as UpdateProductDTO;
+    const validatedParams =
+      context.validatedParams as ProductIdParamsDTO;
+    const tenantContext = getTenantContext(request);
 
-      if (!tenantContext.organizationId) {
-        return apiError(
-          ErrorCodes.BAD_REQUEST,
-          'Organization ID wajib diisi dalam header (x-organization-id)',
-          400
-        );
-      }
-
-      if (!id || id.trim().length === 0) {
-        return apiError(
-          ErrorCodes.BAD_REQUEST,
-          'Product ID tidak valid',
-          400
-        );
-      }
-
-      const productService = new ProductService(
-        tenantContext
+    const productService = new ProductService(
+      tenantContext
+    );
+    const updatedProduct =
+      await productService.updateProduct(
+        validatedParams.id,
+        validatedBody
       );
-      const updatedProduct =
-        await productService.updateProduct(
-          id,
-          validatedBody
-        );
 
-      return apiSuccess(updatedProduct);
-    } catch (error: any) {
-      console.error('[PATCH /products/:id]', error);
-
-      if (error.message?.includes('tidak ditemukan')) {
-        return apiError(
-          ErrorCodes.NOT_FOUND,
-          error.message,
-          404
-        );
-      }
-
-      if (error.message?.includes('sudah ada')) {
-        return apiError(
-          ErrorCodes.CONFLICT,
-          error.message,
-          409
-        );
-      }
-
-      return apiError(
-        ErrorCodes.INTERNAL_ERROR,
-        error.message || 'Gagal memperbarui produk',
-        500
-      );
-    }
+    return apiSuccess(updatedProduct);
   }
 );
 
@@ -154,52 +102,23 @@ export const PUT = PATCH;
  * DELETE /api/v1/dashboard/products/[id]
  * Soft delete product (sets deleted_at)
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id } = await params;
+export const DELETE = withValidation(
+  {
+    params: ProductIdParamsSchema,
+  },
+  async (request, context) => {
+    const validatedParams =
+      context.validatedParams as ProductIdParamsDTO;
     const tenantContext = getTenantContext(request);
-
-    if (!tenantContext.organizationId) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Organization ID wajib diisi dalam header (x-organization-id)',
-        400
-      );
-    }
-
-    if (!id || id.trim().length === 0) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Product ID tidak valid',
-        400
-      );
-    }
 
     const productService = new ProductService(
       tenantContext
     );
     const deletedProduct =
-      await productService.deleteProduct(id);
+      await productService.deleteProduct(
+        validatedParams.id
+      );
 
     return apiSuccess(deletedProduct);
-  } catch (error: any) {
-    console.error('[DELETE /products/:id]', error);
-
-    if (error.message?.includes('tidak ditemukan')) {
-      return apiError(
-        ErrorCodes.NOT_FOUND,
-        error.message,
-        404
-      );
-    }
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message || 'Gagal menghapus produk',
-      500
-    );
   }
-}
+);

@@ -3,8 +3,8 @@
  * GET /api/v1/dashboard/products/active
  */
 
-import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
+import { withValidation } from '@/lib/api/validate';
 import {
   apiSuccess,
   apiError,
@@ -26,7 +26,7 @@ function getTenantContext(req: Request) {
  * GET /api/v1/dashboard/products/active
  * Get only active products
  */
-export async function GET(request: NextRequest) {
+export const GET = withValidation({}, async (request) => {
   try {
     const tenantContext = getTenantContext(request);
 
@@ -59,4 +59,4 @@ export async function GET(request: NextRequest) {
       500
     );
   }
-}
+});

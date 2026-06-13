@@ -6,6 +6,11 @@
 import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
 import {
+  ProductSearchQuerySchema,
+  ProductSearchQueryDTO,
+} from '@/modules/products/product.dto';
+import { withValidation } from '@/lib/api/validate';
+import {
   apiSuccess,
   apiError,
   ErrorCodes,
@@ -22,15 +27,11 @@ function getTenantContext(req: Request) {
   };
 }
 
-/**
- * GET /api/v1/dashboard/products/search
- * Search products by name or product_id
- *
- * Query params:
- * - q: string (search query, required)
- */
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withValidation(
+  {
+    query: ProductSearchQuerySchema,
+  },
+  async (request, context) => {
     const tenantContext = getTenantContext(request);
 
     if (!tenantContext.organizationId) {
@@ -41,21 +42,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const query = request.nextUrl.searchParams.get('q');
-
-    if (!query || query.trim().length === 0) {
-      return apiError(
-        ErrorCodes.BAD_REQUEST,
-        'Search query (q) wajib diisi',
-        400
-      );
-    }
+    const validatedQuery =
+      context.validatedQuery as ProductSearchQueryDTO;
 
     const productService = new ProductService(
       tenantContext
     );
-    const results =
-      await productService.searchProducts(query);
+    const results = await productService.searchProducts(
+      validatedQuery.q
+    );
 
     return apiSuccess(results, {
       page: 1,
@@ -63,13 +58,5 @@ export async function GET(request: NextRequest) {
       total: results.length,
       total_pages: 1,
     });
-  } catch (error: any) {
-    console.error('[GET /products/search]', error);
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message || 'Gagal mencari produk',
-      500
-    );
   }
-}
+);

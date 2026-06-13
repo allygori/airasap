@@ -4,11 +4,13 @@
  * POST /api/v1/dashboard/products - Create new product
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
 import {
   CreateProductSchema,
+  CreateProductDTO,
   ProductFilterSchema,
+  ProductFilterDTO,
 } from '@/modules/products/product.dto';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -16,11 +18,7 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-import { parseQueryParams } from '@/lib/api/query-builder';
 
-/**
- * Extract tenant context from request headers
- */
 function getTenantContext(req: Request) {
   return {
     organizationId:
@@ -29,20 +27,11 @@ function getTenantContext(req: Request) {
   };
 }
 
-/**
- * GET /api/v1/dashboard/products
- * List products dengan pagination dan filtering
- *
- * Query params:
- * - page: number (default: 1)
- * - limit: number (default: 10, max: 100)
- * - platform: string (filter by platform)
- * - is_active: boolean (filter by status)
- * - search: string (search by name or product_id)
- * - sort: string (e.g., "-created_at" for descending)
- */
-export async function GET(request: NextRequest) {
-  try {
+export const GET = withValidation(
+  {
+    query: ProductFilterSchema,
+  },
+  async (request, context) => {
     const tenantContext = getTenantContext(request);
 
     if (!tenantContext.organizationId) {
@@ -53,29 +42,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Parse query parameters
-    const queryParams = parseQueryParams(request, {
-      allowedFilters: ['platform', 'is_active'],
-      searchFields: ['name', 'product_id'],
-    });
-
-    // Validasi query parameters
-    const validatedFilter = ProductFilterSchema.parse({
-      page: queryParams.page,
-      limit: queryParams.limit,
-      platform: queryParams.filters.platform,
-      is_active:
-        queryParams.filters.is_active === 'true'
-          ? true
-          : queryParams.filters.is_active === 'false'
-            ? false
-            : undefined,
-      search: queryParams.search,
-    });
-
     const productService = new ProductService(
       tenantContext
     );
+    const validatedFilter =
+      context.validatedQuery as ProductFilterDTO;
+
     const result =
       await productService.getProductsWithPagination(
         validatedFilter
@@ -87,49 +59,9 @@ export async function GET(request: NextRequest) {
       total: result.pagination.total,
       total_pages: result.pagination.totalPages,
     });
-  } catch (error: any) {
-    console.error('[GET /products]', error);
-
-    if (error.name === 'ZodError') {
-      return apiError(
-        ErrorCodes.VALIDATION_ERROR,
-        'Parameter query tidak valid',
-        400,
-        error.errors.map((e: any) => ({
-          path: e.path.join('.'),
-          message: e.message,
-        }))
-      );
-    }
-
-    return apiError(
-      ErrorCodes.INTERNAL_ERROR,
-      error.message || 'Gagal mengambil daftar produk',
-      500
-    );
   }
-}
+);
 
-/**
- * POST /api/v1/dashboard/products
- * Create new product
- *
- * Required header:
- * - x-organization-id: Organization ID (required)
- * - x-store-id: Store ID (optional)
- *
- * Body:
- * ```json
- * {
- *   "name": "Product Name",
- *   "product_id": "unique-id",
- *   "platform": "shopee",
- *   "key": "product-key",
- *   "is_active": true,
- *   "variants": [...]
- * }
- * ```
- */
 export const POST = withValidation(
   CreateProductSchema,
   async (request, { validatedBody }) => {
@@ -147,14 +79,14 @@ export const POST = withValidation(
       const productService = new ProductService(
         tenantContext
       );
+      const body = validatedBody as CreateProductDTO;
       const newProduct =
-        await productService.createProduct(validatedBody);
+        await productService.createProduct(body);
 
       return apiSuccess(newProduct, undefined, 201);
     } catch (error: any) {
       console.error('[POST /products]', error);
 
-      // Handle duplicate product_id
       if (error.message?.includes('sudah ada')) {
         return apiError(
           ErrorCodes.CONFLICT,

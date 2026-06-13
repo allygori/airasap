@@ -2,9 +2,11 @@
  * Product Bulk Operations Endpoints
  */
 
-import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
-import { BulkUpdateStatusSchema } from '@/modules/products/product.dto';
+import {
+  BulkUpdateStatusSchema,
+  BulkUpdateStatusDTO,
+} from '@/modules/products/product.dto';
 import { withValidation } from '@/lib/api/validate';
 import {
   apiSuccess,
@@ -35,8 +37,14 @@ function getTenantContext(req: Request) {
  * }
  * ```
  */
-export const POST = withValidation(
-  BulkUpdateStatusSchema,
+export const POST = withValidation<
+  BulkUpdateStatusDTO,
+  unknown,
+  unknown
+>(
+  {
+    body: BulkUpdateStatusSchema,
+  },
   async (request, { validatedBody }) => {
     try {
       const tenantContext = getTenantContext(request);
@@ -52,10 +60,9 @@ export const POST = withValidation(
       const productService = new ProductService(
         tenantContext
       );
-      const result =
-        await productService.bulkUpdateStatus(
-          validatedBody
-        );
+      const result = await productService.bulkUpdateStatus(
+        validatedBody!
+      );
 
       return apiSuccess(result);
     } catch (error: any) {
