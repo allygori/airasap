@@ -27,6 +27,7 @@
 .data
 .orig
 .artifacts
+.upload
 
 # debug
 npm-debug.log*

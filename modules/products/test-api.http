@@ -1,0 +1,150 @@
+### Product API - HTTP Client Test File
+### Use this with REST Client VS Code extension
+
+@baseUrl = http://localhost:3000
+@organizationId = org-test-123
+@storeId = store-test-456
+@productId = 
+
+###
+### 1. GET ALL PRODUCTS WITH PAGINATION
+###
+GET {{baseUrl}}/api/products?page=1&limit=10
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 2. GET PRODUCTS WITH FILTERS (platform & search)
+###
+GET {{baseUrl}}/api/products?page=1&limit=10&platform=shopee&is_active=true&search=laptop
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 3. SEARCH PRODUCTS
+###
+GET {{baseUrl}}/api/products/search?q=gaming
+x-organization-id: {{organizationId}}
+
+###
+### 4. GET ACTIVE PRODUCTS ONLY
+###
+GET {{baseUrl}}/api/products/active
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 5. GET PRODUCTS BY PLATFORM
+###
+GET {{baseUrl}}/api/products/platform/shopee
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 6. CREATE PRODUCT
+###
+POST {{baseUrl}}/api/products
+Content-Type: application/json
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+{
+  "name": "Laptop Gaming ASUS ROG",
+  "product_id": "asus-rog-g14-2024",
+  "platform": "shopee",
+  "key": "laptop-gaming-asus",
+  "is_active": true,
+  "variants": [
+    {
+      "variant_id": "var-1",
+      "name": "Intel i7 RTX 4070",
+      "product_key": "i7-4070",
+      "price": 15000000,
+      "quantity": 50,
+      "discount": 10,
+      "finalPrice": 13500000,
+      "SKU": "ASUS-ROG-G14-001",
+      "GTIN": "1234567890123"
+    },
+    {
+      "variant_id": "var-2",
+      "name": "Intel i9 RTX 4080",
+      "product_key": "i9-4080",
+      "price": 18000000,
+      "quantity": 30,
+      "discount": 15,
+      "finalPrice": 15300000,
+      "SKU": "ASUS-ROG-G14-002",
+      "GTIN": "1234567890124"
+    }
+  ]
+}
+
+### @name CreateProductResponse
+###
+### 7. GET PRODUCT BY ID
+###
+GET {{baseUrl}}/api/products/{{productId}}
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 8. UPDATE PRODUCT
+###
+PATCH {{baseUrl}}/api/products/{{productId}}
+Content-Type: application/json
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+{
+  "name": "Laptop Gaming ASUS ROG Updated",
+  "is_active": true,
+  "variants": [
+    {
+      "variant_id": "var-1",
+      "name": "Intel i7 RTX 4070",
+      "product_key": "i7-4070",
+      "price": 14500000,
+      "quantity": 60,
+      "discount": 12,
+      "finalPrice": 12760000,
+      "SKU": "ASUS-ROG-G14-001"
+    }
+  ]
+}
+
+###
+### 9. BULK UPDATE PRODUCT STATUS
+###
+POST {{baseUrl}}/api/products/bulk-update-status
+Content-Type: application/json
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+{
+  "product_ids": ["productId1", "productId2", "productId3"],
+  "is_active": false
+}
+
+###
+### 10. SOFT DELETE PRODUCT
+###
+DELETE {{baseUrl}}/api/products/{{productId}}
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### 11. RESTORE DELETED PRODUCT
+###
+POST {{baseUrl}}/api/products/{{productId}}/restore
+x-organization-id: {{organizationId}}
+x-store-id: {{storeId}}
+
+###
+### NOTES
+###
+### - Replace {{productId}} with actual product MongoDB ID after create
+### - Replace {{organizationId}} and {{storeId}} with actual IDs
+### - Use REST Client extension for VS Code to run these requests
+### - Each request separated by ### comment
+### - Save response to variables using @name comment

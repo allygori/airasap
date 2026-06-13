@@ -1,4 +1,4 @@
-import { authClient } from '@/lib/auth'; // Better Auth client hook reference
+import { authClient } from '@/lib/auth/auth-client'; // Better Auth client hook reference
 
 export async function tenantFetch(
   url: string,

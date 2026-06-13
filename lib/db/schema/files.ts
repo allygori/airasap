@@ -2,7 +2,11 @@ import mongoose from 'mongoose';
 
 const FileSchema = new mongoose.Schema(
   {
-    filename: { type: String, required: true },
+    filename: {
+      type: String,
+      unique: true,
+      required: true,
+    },
     original_name: { type: String, required: true },
     mime_type: { type: String, required: true },
     file_type: {

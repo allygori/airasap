@@ -7,7 +7,12 @@ import { useAppForm } from '@/components/form/form.hook';
 import { revalidateLogic } from '@tanstack/react-form';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { signIn, signUp } from '@/lib/auth/auth-client';
+import {
+  signIn,
+  signUp,
+  authClient,
+} from '@/lib/auth/auth-client';
+import type { Session } from '@/lib/auth/auth-client';
 import { Spinner } from '@/components/ui/spinner';
 import { FieldDescription } from '@/components/ui/field';
 import RegisterForm from '@/app/(auth)/register/_components/register.form';
@@ -97,6 +102,15 @@ export default function RegisterClient({
           );
           return;
         }
+
+        // await authClient.updateSession({
+        //   theme: 'system',
+        //   // theme: 'dark',
+        //   language: 'en',
+        //   activeStoreId: '113431423',
+        // }); // satisfies Session
+
+        // await authClient.updateUser({})
 
         router.push('/onboarding');
         router.refresh();

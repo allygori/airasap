@@ -34,6 +34,18 @@ const SessionSchema = new Schema(
     },
 
     // Custom fields
+    theme: {
+      type: String,
+    },
+    language: {
+      type: String,
+    },
+    active_store: {
+      type: Schema.Types.ObjectId,
+      ref: 'Store',
+      required: true,
+      alias: 'activeStoreId',
+    },
     deleted_at: { type: Date }, // soft delete
   },
   {

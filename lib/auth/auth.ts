@@ -10,6 +10,7 @@ await client.connect();
 const db = client.db();
 
 export const auth = betterAuth({
+  appName: process.env.NEXT_PUBLIC_APP_NAME || '',
   // database: mongodbAdapter(client),
   database: mongodbAdapter(db, {
     // client,
@@ -24,7 +25,22 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     autoSignIn: true,
   },
-  plugins: [organization(), admin()],
+  plugins: [
+    organization({
+      organizationHooks: {
+        afterCreateOrganization: async ({
+          organization,
+          member,
+          user,
+        }) => {
+          // Run custom logic after organization is created
+          // e.g., create default resources, send notifications
+          // await setupDefaultResources(organization.id);
+        },
+      },
+    }),
+    admin(),
+  ],
   socialProviders: {
     google: {
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -40,18 +56,41 @@ export const auth = betterAuth({
   user: {
     modelName: 'users',
     additionalFields: {
-      timezone: { type: 'string' },
+      timezone: {
+        type: 'string',
+        required: false,
+        defaultValue: 'Asia/Jakarta',
+      },
+      lang: {
+        type: 'string',
+        required: false,
+        defaultValue: 'id',
+      },
+      activeStoreId: {
+        type: 'string',
+        required: true,
+        input: false,
+      },
     },
   },
 
   // docs: https://better-auth.com/docs/concepts/session-management
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
-    updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
+    // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
     deferSessionRefresh: true,
     cookieCache: {
       enabled: true,
-      maxAge: 5 * 60, // Cache duration in seconds
+      maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
+      // strategy: "jwe",
+    },
+    additionalFields: {
+      theme: { type: 'string', required: false },
+      language: { type: 'string', required: false },
+      // activeStoreId: {
+      //   type: 'string',
+      //   required: true,
+      // },
     },
   },
   advanced: {
@@ -60,3 +99,5 @@ export const auth = betterAuth({
     },
   },
 });
+
+type Session = typeof auth.$Infer.Session;

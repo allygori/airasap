@@ -87,41 +87,10 @@ function EditPostFormWrapper({
   const formValues = useMemo(() => {
     return {
       id: initialData._id || initialData.id || '',
-      title: initialData.title || '',
-      slug: initialData.slug || '',
-      excerpt: initialData.excerpt || '',
-      body: {
-        content: initialData.content || '',
-        content_html: initialData.content_html || '',
-        content_blocks:
-          initialData.content_blocks &&
-          initialData.content_blocks.length > 0
-            ? initialData.content_blocks
-            : INITIAL_BLOCK_VALUE,
-      },
-      seo: {
-        metaTitle: initialData.metadata?.title || '',
-        metaDescription:
-          initialData.metadata?.description || '',
-        keywords: '', // Assuming keywords might not exist on metadata yet, fallback to empty string
-      },
-      publishedStatus:
-        initialData.published_status || 'published',
-      publishedAt: initialData.published_at
-        ? new Date(initialData.published_at).toISOString()
-        : undefined,
-      authorId:
-        typeof initialData.author === 'object' &&
-        initialData.author
-          ? initialData.author._id
-          : initialData.author || '',
-      categoryId:
-        typeof initialData.category === 'object' &&
-        initialData.category
-          ? initialData.category._id
-          : initialData.category || '',
-      tags: initialData.tags || [],
-      featuredImage: initialData.featured_image || '',
+      platform: initialData.platform || '',
+      name: initialData.name || '',
+      product_id: initialData.product_id,
+      variants: initialData.variants || [],
     };
   }, [initialData]);
 
@@ -132,48 +101,23 @@ function EditPostFormWrapper({
     },
     onSubmit: async ({ value }) => {
       try {
-        // Map form schema back to API expected schema
         const payload = {
-          title: value.title,
-          slug: value.slug,
-          excerpt: value.excerpt,
-          content: value.body?.content,
-          content_html: value.body?.content_html,
-          content_blocks: value.body?.content_blocks,
-          category:
-            value.categoryId === ''
-              ? undefined
-              : value.categoryId,
-          author:
-            value.authorId === ''
-              ? undefined
-              : value.authorId,
-          featured_image:
-            value.featuredImage === ''
-              ? undefined
-              : value.featuredImage?._id,
-          published_status:
-            value.publishedStatus || 'published',
-          published_at: value.publishedAt
-            ? new Date(value.publishedAt).toISOString()
-            : undefined,
-          metadata: {
-            title: value.seo?.metaTitle || '',
-            description: value.seo?.metaDescription || '',
-          },
-          // Map tags
-          tags: Array.isArray(value.tags)
-            ? value.tags.map((t) => t._id || t)
-            : [],
+          platform: value.platform,
+          name: value.name,
+          product_id: value.product_id,
+          variants: value.variants,
         };
 
-        const response = await fetch(`/api/posts/${id}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
+        const response = await fetch(
+          `/api/products/${id}`,
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          }
+        );
 
         const result = await response.json();
 
@@ -181,44 +125,44 @@ function EditPostFormWrapper({
           throw new Error(
             result.message ||
               result.error?.message ||
-              'Terjadi kesalahan saat menyimpan post'
+              'Terjadi kesalahan saat menyimpan produk'
           );
         }
 
-        toast.success('Post updated successfully', {
-          description: `Post "${value.title}" has been updated.`,
+        toast.success('Product updated successfully', {
+          description: `Product "${value.name}" has been updated.`,
         });
 
-        router.push('/dashboard/posts');
+        router.push('/dashboard/products');
         router.refresh();
       } catch (error: unknown) {
         const message =
           error instanceof Error
             ? error.message
-            : 'Gagal memperbarui post';
-        console.error('Update post error:', error);
+            : 'Gagal memperbarui produk';
+        console.error('Update product error:', error);
         toast.error(message);
       }
     },
   });
 
-  const postTitle = form.getFieldValue('title');
+  const productName = form.getFieldValue('name');
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6">
         <div>
           <h2 className="mb-1 text-xl font-semibold">
-            Edit Post
+            Edit Product
           </h2>
           <p className="text-muted-foreground text-sm font-normal">
-            Ubah rincian post:{' '}
+            Ubah rincian produk:{' '}
             <span className="text-foreground font-medium">
-              {postTitle || initialData.title}
+              {productName || initialData.name}
             </span>
           </p>
         </div>
-        <ProductForm form={form} title="Informasi Post" />
+        <ProductForm form={form} title="Informasi Produk" />
       </div>
     </div>
   );
