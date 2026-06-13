@@ -3,15 +3,6 @@ import { PLATFORMS } from '../constant';
 
 const ObjectId = Schema.Types.ObjectId;
 
-// export interface IProduct extends Document {
-//   organizationId: string;
-//   storeId: string;
-//   name: string;
-//   price: number;
-//   stock: number;
-//   createdAt: Date;
-// }
-
 const platforms = [...PLATFORMS] as const;
 
 export type TVariant = {
@@ -37,19 +28,6 @@ export type TProduct = Document & {
   is_active: boolean;
   deleted_at: Date;
 };
-
-// const ProductSchema = new Schema<TProduct>({
-//   organizationId: {
-//     type: String,
-//     required: true,
-//     index: true,
-//   },
-//   storeId: { type: String, required: true, index: true },
-//   name: { type: String, required: true },
-//   price: { type: Number, required: true },
-//   stock: { type: Number, required: true },
-//   createdAt: { type: Date, default: Date.now },
-// });
 
 const ProductSchema = new Schema<TProduct>(
   {
@@ -85,7 +63,6 @@ const ProductSchema = new Schema<TProduct>(
         GTIN: { type: String, required: false },
       },
     ],
-    // variation_name: { type: String },
     is_active: { type: Boolean, default: true },
 
     // Custom fields
