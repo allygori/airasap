@@ -7,7 +7,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import mongoose from 'mongoose';
 import { db } from '@/lib/db';
-import FileModel from '@/lib/db/schema/files';
+import { FileModel } from '@/modules/files/file.model';
 import {
   calculateCRC32,
   calculateSHA256,

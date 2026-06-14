@@ -79,6 +79,6 @@ ProductSchema.index({
 
 const Product =
   models.Product ||
-  model('Product', ProductSchema, 'Products');
+  model('Product', ProductSchema, 'products');
 
 export default Product;

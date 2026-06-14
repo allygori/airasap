@@ -112,6 +112,12 @@ export default function RegisterClient({
 
         // await authClient.updateUser({})
 
+        // await authClient.updateSession({
+        //   activeStoreId: '111111',
+        //   language: 'id',
+        //   theme: 'system',
+        // });
+
         router.push('/onboarding');
         router.refresh();
       } catch (err) {

@@ -1,7 +1,7 @@
 // proxy.ts
 import { NextRequest, NextResponse } from 'next/server';
 
-const protectedPaths = ['/dashboard'];
+const protectedPaths = ['/dashboard', '/onboarding'];
 const authPaths = ['/login', '/signup', '/forgot-password'];
 
 export default async function proxy(request: NextRequest) {

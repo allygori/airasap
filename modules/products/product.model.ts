@@ -78,4 +78,4 @@ const ProductSchema = new Schema<TProduct>(
 
 export const ProductModel =
   models.Product ||
-  model<TProduct>('Product', ProductSchema);
+  model<TProduct>('Product', ProductSchema, 'products');

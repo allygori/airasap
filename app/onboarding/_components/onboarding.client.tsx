@@ -1,21 +1,17 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAppForm } from '@/components/form/form.hook';
 import { revalidateLogic } from '@tanstack/react-form';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 import { authClient } from '@/lib/auth/auth-client';
-import { Spinner } from '@/components/ui/spinner';
-import { FieldDescription } from '@/components/ui/field';
 import OnboardingForm from '@/app/onboarding/_components/onboarding.form';
 import {
   ZodOnboardingInput,
   ZodOnboardingSchema,
 } from '@/app/onboarding/_components/onboarding.schema';
-import GoogleIcon from '@/components/icons/google';
+import { PLATFORMS_KV } from '@/modules/constant';
 
 type OnboardingClientProps = {
   className?: string;
@@ -33,6 +29,7 @@ export default function OnboardingClient({
       logo: '',
       name: '',
       slug: '',
+      firstStore: '',
       description: '',
     } as ZodOnboardingInput,
     validationLogic: revalidateLogic(),
@@ -43,9 +40,13 @@ export default function OnboardingClient({
       setIsLoading(true);
       setError(null);
 
-      const { logo, name, slug, description } = value;
+      const { logo, name, slug, firstStore, description } =
+        value;
 
       try {
+        /**
+         * Create a organization
+         */
         const { data: newOrg, error: createOrgError } =
           await authClient.organization.create({
             logo,
@@ -76,6 +77,57 @@ export default function OnboardingClient({
           );
         }
 
+        /**
+         * Create store
+         */
+        const response = await fetch(
+          'api/v1/dashboard/stores',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              // organization: newOrg.id,
+              name: firstStore || newOrg.name || '',
+              platform: PLATFORMS_KV.shopee,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || 'Gagal membuat toko'
+          );
+        }
+
+        const {
+          data: newStore,
+          success: successCreateStore,
+        } = await response.json();
+
+        if (!successCreateStore) {
+          throw new Error('Gagal membuat toko');
+        }
+
+        /**
+         * Update session to include activeStoreId
+         */
+        const { error: errorUpdateSession } =
+          await authClient.updateSession({
+            activeStoreId: newStore?._id || newStore?.id,
+            language: 'id',
+            theme: 'system',
+          });
+
+        if (errorUpdateSession) {
+          console.error(
+            'Failed to set update session for activeStoreId',
+            errorUpdateSession
+          );
+        }
+
         router.push('/dashboard');
         router.refresh();
       } catch (err) {
@@ -88,7 +140,9 @@ export default function OnboardingClient({
     },
   });
   return (
-    <div className={cn('grid gap-6', className)}>
+    <div
+      className={cn('grid gap-6 py-8 md:py-16', className)}
+    >
       <OnboardingForm form={form} error={error} />
     </div>
   );

@@ -2,6 +2,7 @@ import { ComponentProps } from 'react';
 import { useFormContext } from '../form.hook';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui/spinner';
 
 type SubmitButtonProps = ComponentProps<typeof Button> & {
   text: string;
@@ -25,6 +26,7 @@ export const SubmitButton = ({
           disabled={isSubmitting}
           className={cn('w-full', props.className)}
         >
+          {isSubmitting && <Spinner className="mr-2" />}
           {text}
         </Button>
       )}

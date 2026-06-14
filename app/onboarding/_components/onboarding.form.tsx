@@ -14,6 +14,7 @@ const OnboardingForm = withForm({
     logo: '',
     name: '',
     slug: '',
+    firstStore: '',
     description: '',
   } as ZodOnboardingInput,
   props: {
@@ -36,7 +37,7 @@ const OnboardingForm = withForm({
           </Alert>
         )}
 
-        <FieldGroup className="gap-5">
+        <FieldGroup className="gap-6">
           <form.AppField
             name="logo"
             children={(field) => {
@@ -64,6 +65,19 @@ const OnboardingForm = withForm({
                   label="Slug"
                   placeholder="acme-inc"
                   // disabled={true}
+                />
+              );
+            }}
+          />
+
+          <form.AppField
+            name="firstStore"
+            children={(field) => {
+              return (
+                <field.TextField
+                  label="Nama Toko"
+                  placeholder="Toserba 88"
+                  description="Satu organisasi dapat memiliki lebih dari satu toko"
                 />
               );
             }}

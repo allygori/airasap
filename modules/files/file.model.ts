@@ -1,23 +1,25 @@
 import { Schema, model, models, Document } from 'mongoose';
+import {
+  FILE_TYPES,
+  STORAGE_PROVIDERS,
+} from './file.constant';
 
 const ObjectId = Schema.Types.ObjectId;
+const fileTypes = [...FILE_TYPES] as const;
+const storageProviders = [...STORAGE_PROVIDERS] as const;
 
 export type TFile = Document & {
   filename: string;
   original_name: string;
   mime_type: string;
-  file_type: 'xlsx' | 'image' | 'docs' | 'ppt' | 'other';
+  file_type: (typeof fileTypes)[number];
   size: number;
   url: string;
   alt_text?: string;
   caption?: string;
   credits?: string;
-  checksum?: string;
-  storage_provider:
-    | 'cloudflare-r2'
-    | 'vercel-blob'
-    | 'aws-s3'
-    | 'local';
+  checksum: string; // ?
+  storage_provider: (typeof storageProviders)[number];
   storage_path?: string;
   uploaded_by?: typeof ObjectId;
   deleted_at?: Date;
@@ -42,7 +44,8 @@ const FileSchema = new Schema<TFile>(
     },
     file_type: {
       type: String,
-      enum: ['xlsx', 'image', 'docs', 'ppt', 'other'],
+      enum: FILE_TYPES,
+      default: 'other',
       required: true,
       alias: 'fileType',
     },
@@ -66,16 +69,12 @@ const FileSchema = new Schema<TFile>(
     },
     checksum: {
       type: String,
+      required: true,
       index: true,
     },
     storage_provider: {
       type: String,
-      enum: [
-        'cloudflare-r2',
-        'vercel-blob',
-        'aws-s3',
-        'local',
-      ],
+      enum: STORAGE_PROVIDERS,
       default: 'local',
       alias: 'storageProvider',
     },

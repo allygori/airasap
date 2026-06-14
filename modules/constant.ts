@@ -6,6 +6,14 @@ export const PLATFORMS = [
   'blibli',
 ];
 
+export const PLATFORMS_KV = {
+  shopee: 'shopee',
+  tokopedia: 'tokopedia',
+  tiktok: 'tiktok-shop',
+  lazada: 'lazada',
+  blibli: 'blibli',
+};
+
 export const SHOPEE_PAYMENT_METHODS = [
   'ShopeePay',
   'Kartu Kredit/Debit',

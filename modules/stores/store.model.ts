@@ -21,12 +21,12 @@ const StoreSchema = new Schema<TStore>(
       required: true,
       alias: 'organizationId',
     },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-      required: true,
-      alias: 'userId',
-    },
+    // user: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'User',
+    //   required: true,
+    //   alias: 'userId',
+    // },
     platform: {
       type: String,
       enum: PLATFORMS,
@@ -56,4 +56,4 @@ const StoreSchema = new Schema<TStore>(
 
 export const StoreModel =
   models.Store ||
-  model<TStore>('Store', StoreSchema, 'Stores');
+  model<TStore>('Store', StoreSchema, 'stores');

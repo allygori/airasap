@@ -3,6 +3,10 @@ import { organization } from 'better-auth/plugins';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { admin } from 'better-auth/plugins';
 import { MongoClient } from 'mongodb';
+// import { StoreService } from '@/modules/stores/store.service';
+// import { CreateStoreDTO } from '@/modules/stores/store.dto';
+// import { PLATFORMS } from '../db/constant';
+// import { PLATFORMS_KV } from '@/modules/constant';
 
 // Ensure your Mongoose connection is established first
 const client = new MongoClient(process.env.MONGODB_URI!);
@@ -36,6 +40,30 @@ export const auth = betterAuth({
           // Run custom logic after organization is created
           // e.g., create default resources, send notifications
           // await setupDefaultResources(organization.id);
+          // create store and update session
+          // try {
+          //   const validatedBody = {
+          //     organization: organization.id,
+          //     name: organization.name,
+          //     platform: PLATFORMS_KV.shopee,
+          //   };
+          //   const storeService = new StoreService({
+          //     organizationId: organization.id,
+          //   });
+          //   const body = validatedBody as CreateStoreDTO;
+          //   const newStore =
+          //     await storeService.create(body);
+          //   //   await auth.api.updateSession({
+          //   //   body: {
+          //   //     store: 'dark',
+          //   //   },
+          //   //   // headers: await headers(), // headers containing the user's session token
+          //   // });
+          // } catch (err) {
+          //   console.error(
+          //     `[afterCreateOrganization] Gagal membuat toko: ${organization.name}`
+          //   );
+          // }
         },
       },
     }),
@@ -66,16 +94,17 @@ export const auth = betterAuth({
         required: false,
         defaultValue: 'id',
       },
-      activeStoreId: {
-        type: 'string',
-        required: true,
-        input: false,
-      },
+      // activeStoreId: {
+      //   type: 'string',
+      //   required: true,
+      //   input: false,
+      // },
     },
   },
 
   // docs: https://better-auth.com/docs/concepts/session-management
   session: {
+    modelName: 'sessions',
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
     deferSessionRefresh: true,
@@ -87,10 +116,10 @@ export const auth = betterAuth({
     additionalFields: {
       theme: { type: 'string', required: false },
       language: { type: 'string', required: false },
-      // activeStoreId: {
-      //   type: 'string',
-      //   required: true,
-      // },
+      activeStoreId: {
+        type: 'string',
+        required: true,
+      },
     },
   },
   advanced: {
