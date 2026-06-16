@@ -47,9 +47,7 @@ export const GET = withValidation(
       context.validatedQuery as FileFilterDTO;
 
     const result =
-      await fileService.getFilesWithPagination(
-        validatedFilter
-      );
+      await fileService.getWithPagination(validatedFilter);
 
     return apiSuccess(result.data, {
       page: result.pagination.page,
@@ -76,7 +74,7 @@ export const POST = withValidation(
 
       const fileService = new FileService(tenantContext);
       const body = validatedBody as CreateFileDTO;
-      const newProduct = await fileService.createFile(body);
+      const newProduct = await fileService.create(body);
 
       return apiSuccess(newProduct, undefined, 201);
     } catch (error: any) {

@@ -9,10 +9,6 @@ import { ProductBaseDTO } from './product.dto';
 import { PLATFORMS } from '../constant';
 import { Data } from '@dnd-kit/core';
 
-const ObjectId = Schema.Types.ObjectId;
-
-const platforms = [...PLATFORMS] as const;
-
 export type TProduct = Document &
   ProductBaseDTO & {
     organization: Types.ObjectId;
@@ -21,30 +17,6 @@ export type TProduct = Document &
     created_at?: Date;
     updated_at?: Data;
   };
-
-// export type TVariant = {
-//   variant_id: string;
-//   name: string;
-//   key: string;
-//   price: number;
-//   quantity: number;
-//   discount: number;
-//   finalPrice: number;
-//   SKU?: string;
-//   GTIN?: string;
-// };
-
-// export type TProduct = Document & {
-//   organization: typeof ObjectId;
-//   store: typeof ObjectId;
-//   platform: (typeof platforms)[number];
-//   name: string;
-//   product_id: string;
-//   key: string;
-//   variants?: TVariant[];
-//   is_active: boolean;
-//   deleted_at: Date;
-// };
 
 const ProductSchema = new Schema<TProduct>(
   {

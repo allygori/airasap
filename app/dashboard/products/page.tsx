@@ -3,35 +3,17 @@
 import * as React from 'react';
 import { CollectionShell } from '@/components/dashboard/collection/shell';
 import { ColumnDef } from '@tanstack/react-table';
-// import { BlogPostType } from '@/components/blog/types';
 import { getProductsColumn } from './_components/columns';
 import { ProductResponseDTO } from '@/modules/products/product.dto';
 import { FileSpreadsheet, FileText } from 'lucide-react';
-import {
-  Button,
-  buttonVariants,
-} from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import Link from 'next/link';
-
-// type ProductType = {
-//   organization: string;
-//   store: string;
-//   platform: (typeof platforms)[number];
-//   name: string;
-//   product_id: string;
-//   key: string;
-//   variants?: TVariant[];
-//   is_active: boolean;
-//   deleted_at: Date;
-// };
 
 export default function PostIndexPage() {
   const columns = React.useMemo(
     () => getProductsColumn(false),
     []
-    // ) as ColumnDef<BlogPostType>[];
   ) as ColumnDef<ProductResponseDTO>[];
-  // ) as ColumnDef<Record<string, any>>[];
 
   return (
     <>

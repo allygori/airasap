@@ -81,20 +81,41 @@ export const getProductsColumn = (
       accessorKey: 'name',
       header: 'Nama',
       cell: ({ row }) => (
-        <ViewDrawer
-          item={row.original}
-          editUrl="/dashboard/posts"
-          viewUrl="/posts"
-        >
-          <Button
-            variant="link"
-            className="text-foreground w-fit px-0 text-left font-semibold underline-offset-4 hover:underline"
+        <div>
+          <ViewDrawer
+            item={row.original}
+            editUrl="/dashboard/posts"
+            viewUrl="/posts"
           >
-            {row.original.name}
-          </Button>
-        </ViewDrawer>
+            <Button
+              variant="link"
+              className="text-foreground block h-10 w-fit px-0 text-left font-semibold underline-offset-4 hover:underline"
+            >
+              {row.original.name}
+            </Button>
+          </ViewDrawer>
+          <p className="text-sm">
+            {row.original.product_id}
+          </p>
+        </div>
       ),
       enableHiding: false,
+    },
+    {
+      accessorKey: 'variant',
+      header: 'Total Variants',
+      cell: ({ row }) => (
+        <div className="w-32">
+          <Badge
+            variant="outline"
+            className="text-muted-foreground px-1.5"
+          >
+            {row.original.variants.length > 1
+              ? row.original.variants.length
+              : 0}
+          </Badge>
+        </div>
+      ),
     },
     // {
     //   accessorKey: 'category.name',
