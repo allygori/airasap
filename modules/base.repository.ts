@@ -25,9 +25,9 @@ export abstract class BaseRepository<T extends Document> {
 
   protected getTenantFilter(): QueryFilter<T> {
     return {
-      organizationId: this.tenantContext.organizationId,
+      organization: this.tenantContext.organizationId,
       ...(this.tenantContext.storeId && {
-        storeId: this.tenantContext.storeId,
+        store: this.tenantContext.storeId,
       }),
     } as QueryFilter<T>;
   }
@@ -35,6 +35,12 @@ export abstract class BaseRepository<T extends Document> {
   async findById(id: string) {
     return this.model
       .findOne({ _id: id, ...this.getTenantFilter() })
+      .lean();
+  }
+
+  async findOne(filter: QueryFilter<T> = {}) {
+    return this.model
+      .findOne({ ...filter, ...this.getTenantFilter() })
       .lean();
   }
 

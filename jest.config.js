@@ -155,7 +155,8 @@ const config = {
   // snapshotSerializers: [],
 
   // The test environment that will be used for testing
-  testEnvironment: 'jsdom',
+  // testEnvironment: 'jsdom',
+  testEnvironment: 'node',
 
   // Options that will be passed to the testEnvironment
   // testEnvironmentOptions: {},
@@ -191,6 +192,17 @@ const config = {
   //   "\\\\node_modules\\\\",
   //   "\\.pnp\\.[^\\\\]+$"
   // ],
+
+  // transformIgnorePatterns: [
+  //   'node_modules/(?!(bson|mongodb|mongoose)/)',
+  // ],
+
+  transformIgnorePatterns: [
+    // Allow Jest to transform ESM files inside the pnpm virtual store
+    'node_modules/\\.pnpm/(?!(bson|mongodb|mongoose)@)',
+    // Fallback for standard node_modules structure
+    'node_modules/(?!(bson|mongodb|mongoose)/)',
+  ],
 
   // An array of regexp pattern strings that are matched against all modules before the module loader will automatically return a mock for them
   // unmockedModulePathPatterns: undefined,

@@ -23,7 +23,7 @@ export class FileService {
   /**
    * Get all files
    */
-  async getAllFiles() {
+  async getAll() {
     try {
       return await this.repository.findAll({
         deleted_at: null,
@@ -38,7 +38,7 @@ export class FileService {
   /**
    * Get files with pagination and filtering
    */
-  async getFilesWithPagination(filter: FileFilterDTO) {
+  async getWithPagination(filter: FileFilterDTO) {
     try {
       const queryFilter: any = { deleted_at: null };
 
@@ -76,7 +76,7 @@ export class FileService {
   /**
    * Get file by ID
    */
-  async getFileById(id: string) {
+  async getById(id: string) {
     try {
       const file = await this.repository.findById(id);
       if (!file) {
@@ -91,9 +91,45 @@ export class FileService {
   }
 
   /**
+   * Get file by filename (hash SHA-256)
+   */
+  async getByFilename(filename: string) {
+    try {
+      return await this.repository.findOne({
+        filename,
+      });
+    } catch (error: any) {
+      throw new Error(
+        `Gagal mengambil detail file: ${error.message}`
+      );
+    }
+  }
+
+  /**
    * Create new file
    */
-  async createFile(dto: CreateFileDTO) {
+  async create(dto: CreateFileDTO) {
+    try {
+      // Validasi filename unik
+      const existingFile = await this.repository.findOne({
+        filename: dto.filename,
+      });
+      if (existingFile) {
+        throw new Error(
+          `File dengan filename '${dto.filename}' sudah ada`
+        );
+      }
+
+      const newFile = await this.repository.create({
+        ...dto,
+      });
+      return newFile;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal membuat file: ${error.message}`
+      );
+    }
+
     /** @TODO implement */
     // try {
     //   // Validasi product_id unik
@@ -128,7 +164,7 @@ export class FileService {
   /**
    * Update file
    */
-  async updateFile(id: string, dto: UpdateFileDTO) {
+  async update(id: string, dto: UpdateFileDTO) {
     /** @TODO implement */
     // try {
     //   const file = await this.repository.findById(id);
@@ -182,7 +218,7 @@ export class FileService {
   /**
    * Soft delete file
    */
-  async deleteFile(id: string) {
+  async remove(id: string) {
     try {
       const file = await this.repository.findById(id);
       if (!file) {
@@ -209,7 +245,7 @@ export class FileService {
   /**
    * Restore soft-deleted file
    */
-  async restoreFile(id: string) {
+  async restore(id: string) {
     try {
       const file = await this.repository.findById(id);
       if (!file) {
@@ -234,7 +270,7 @@ export class FileService {
   /**
    * Get active files only
    */
-  async getActiveFiles() {
+  async getActive() {
     try {
       return await this.repository.findActive();
     } catch (error: any) {

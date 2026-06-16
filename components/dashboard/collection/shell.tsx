@@ -47,7 +47,7 @@ export function CollectionShell<
   onRowClick,
   onDataUpdate,
 }: CollectionShellProps<TData>) {
-  const { data: session } = authClient.useSession();
+  // const { data: session } = authClient.useSession();
 
   const [data, setData] = React.useState<TData[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -72,12 +72,13 @@ export function CollectionShell<
       setIsLoading(true);
       // Build URL with search/filters if needed in future
       // For now, simple fetch as current implementation does
-      const res = await fetch(endpoint, {
-        // method: 'GET',
-        // headers: {
-        //   'X-Organization-ID': session?.session?.activeOrganizationId
-        // }
-      });
+      const res = await fetch(endpoint);
+      // const res = await fetch(endpoint, {
+      //   // method: 'GET',
+      //   // headers: {
+      //   //   'X-Organization-ID': session?.session?.activeOrganizationId
+      //   // }
+      // });
       if (!res.ok)
         throw new Error(
           `Failed to fetch ${title.toLowerCase()}`

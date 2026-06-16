@@ -8,6 +8,16 @@ export const FILE_TYPES = [
   'other',
 ];
 
+export const FILE_TYPES_KV = {
+  image: 'image',
+  doc: 'document',
+  audio: 'audio',
+  video: 'video',
+  archive: 'archive',
+  exe: 'executable',
+  other: 'other',
+};
+
 export const STORAGE_PROVIDERS = [
   'cloudflare-r2',
   'vercel-blob',

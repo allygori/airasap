@@ -101,7 +101,6 @@ export const auth = betterAuth({
       // },
     },
   },
-
   // docs: https://better-auth.com/docs/concepts/session-management
   session: {
     modelName: 'sessions',
@@ -121,6 +120,15 @@ export const auth = betterAuth({
         required: true,
       },
     },
+  },
+  organization: {
+    modelName: 'organizations',
+  },
+  member: {
+    modelName: 'members',
+  },
+  account: {
+    modelName: 'accounts',
   },
   advanced: {
     database: {

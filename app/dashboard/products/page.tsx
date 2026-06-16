@@ -4,19 +4,38 @@ import * as React from 'react';
 import { CollectionShell } from '@/components/dashboard/collection/shell';
 import { ColumnDef } from '@tanstack/react-table';
 // import { BlogPostType } from '@/components/blog/types';
-import { getPostColumns } from './_components/columns';
-import { FileText } from 'lucide-react';
+import { getProductsColumn } from './_components/columns';
+import { ProductResponseDTO } from '@/modules/products/product.dto';
+import { FileSpreadsheet, FileText } from 'lucide-react';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
+import Link from 'next/link';
+
+// type ProductType = {
+//   organization: string;
+//   store: string;
+//   platform: (typeof platforms)[number];
+//   name: string;
+//   product_id: string;
+//   key: string;
+//   variants?: TVariant[];
+//   is_active: boolean;
+//   deleted_at: Date;
+// };
 
 export default function PostIndexPage() {
   const columns = React.useMemo(
-    () => getPostColumns(false),
+    () => getProductsColumn(false),
     []
     // ) as ColumnDef<BlogPostType>[];
-  ) as ColumnDef<Record<string, any>>[];
+  ) as ColumnDef<ProductResponseDTO>[];
+  // ) as ColumnDef<Record<string, any>>[];
 
   return (
     <>
-      <div className="animate-in fade-in flex flex-1 flex-col space-y-8 p-4 duration-700 md:p-6">
+      <div className="animate-in fade-in flex flex-1 flex-row justify-between space-y-4 p-4 duration-700 md:p-6">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="space-y-1.5">
             <div className="text-primary animate-in slide-in-from-left-4 flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase duration-500">
@@ -31,12 +50,27 @@ export default function PostIndexPage() {
             </p>
           </div>
         </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/dashboard/products/mass-upload"
+            className={buttonVariants({
+              variant: 'secondary',
+              size: 'lg',
+            })}
+          >
+            <FileSpreadsheet
+              className="size-4 text-green-600"
+              data-icon="inline-start"
+            />
+            <span className="inline">Upload Massal</span>
+          </Link>
+        </div>
       </div>
 
       <CollectionShell
         title="Products"
-        endpoint="/api/dashboard/products?sort=-created_at"
-        columns={[]}
+        endpoint="/api/v1/dashboard/products?sort=created_at"
+        columns={columns}
         searchFields={['name']}
         primarySearchField="name"
         createUrl="/dashboard/products/create"

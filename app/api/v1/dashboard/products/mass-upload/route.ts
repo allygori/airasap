@@ -5,9 +5,9 @@
 
 import path from 'path';
 import fs from 'fs/promises';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 import { db } from '@/lib/db';
-import { FileModel } from '@/modules/files/file.model';
+// import { FileModel } from '@/modules/files/file.model';
 import {
   calculateCRC32,
   calculateSHA256,
@@ -19,24 +19,26 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-
-function getTenantContext(req: Request) {
-  return {
-    organizationId:
-      req.headers.get('x-organization-id') || '',
-    storeId: req.headers.get('x-store-id') || undefined,
-    userId: req.headers.get('x-user-id') || undefined,
-  };
-}
+import { getTenantContext } from '@/lib/api/tenant-context';
+import { FileService } from '@/modules/files/file.service';
+import { FILE_TYPES_KV } from '@/modules/files/file.constant';
 
 export const POST = withValidation({}, async (request) => {
   try {
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(
         ErrorCodes.BAD_REQUEST,
-        'Organization ID wajib diisi dalam header (x-organization-id)',
+        'Organization ID tidak ditemukan',
+        400
+      );
+    }
+
+    if (!tenantContext.storeId) {
+      return apiError(
+        ErrorCodes.BAD_REQUEST,
+        'Store ID tidak ditemukan.',
         400
       );
     }
@@ -68,29 +70,51 @@ export const POST = withValidation({}, async (request) => {
 
     await fs.writeFile(storagePath, Buffer.from(buffer));
 
-    let fileDoc = await FileModel.findOne({
-      filename: sha256Filename,
-    });
+    const fileService = new FileService(tenantContext);
+    let fileDoc =
+      await fileService.getByFilename(sha256Filename);
+
+    // let fileDoc = await fileService FileModel.findOne({
+    //   filename: sha256Filename,
+    // });
 
     if (!fileDoc) {
-      fileDoc = await FileModel.create({
+      fileDoc = await fileService.create({
+        // organization: tenantContext.organizationId,
+        // store: tenantContext.storeId,
         filename: sha256Filename,
         original_name: file.name,
         mime_type:
           file.type ||
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        file_type: 'xlsx',
+        file_type: FILE_TYPES_KV.doc,
         size: file.size,
         url: `/upload/${diskFilename}`,
         checksum: crc32Checksum,
         storage_provider: 'local',
         storage_path: storagePath,
-        uploaded_by: tenantContext.userId
-          ? new mongoose.Types.ObjectId(
-              tenantContext.userId
-            )
-          : undefined,
+        uploaded_by: tenantContext.userId,
       });
+      // fileDoc = await FileModel.create({
+      //   organization: tenantContext.organizationId,
+      //   store: tenantContext.storeId,
+      //   filename: sha256Filename,
+      //   original_name: file.name,
+      //   mime_type:
+      //     file.type ||
+      //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      //   file_type: 'xlsx',
+      //   size: file.size,
+      //   url: `/upload/${diskFilename}`,
+      //   checksum: crc32Checksum,
+      //   storage_provider: 'local',
+      //   storage_path: storagePath,
+      //   uploaded_by: tenantContext.userId
+      //     ? new mongoose.Types.ObjectId(
+      //         tenantContext.userId
+      //       )
+      //     : undefined,
+      // });
     }
 
     const productService = new ProductService(

@@ -9,6 +9,8 @@ const fileTypes = [...FILE_TYPES] as const;
 const storageProviders = [...STORAGE_PROVIDERS] as const;
 
 export type TFile = Document & {
+  organization: typeof ObjectId;
+  store: typeof ObjectId;
   filename: string;
   original_name: string;
   mime_type: string;
@@ -27,6 +29,18 @@ export type TFile = Document & {
 
 const FileSchema = new Schema<TFile>(
   {
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: 'Organization',
+      required: true,
+      alias: 'organizationId',
+    },
+    store: {
+      type: Schema.Types.ObjectId,
+      ref: 'Store',
+      required: true,
+      alias: 'storeId',
+    },
     filename: {
       type: String,
       unique: true,
@@ -85,7 +99,8 @@ const FileSchema = new Schema<TFile>(
     uploaded_by: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      alias: 'uploadedBy',
+      required: false,
+      alias: 'userId',
     },
     deleted_at: {
       type: Date,

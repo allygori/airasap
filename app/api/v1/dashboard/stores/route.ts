@@ -4,8 +4,6 @@
  * POST /api/v1/dashboard/stores - Create new store
  */
 
-import { NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { StoreService } from '@/modules/stores/store.service';
 import {
   CreateStoreSchema,
@@ -19,38 +17,28 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-import { auth } from '@/lib/auth/auth';
 import { db } from '@/lib/db/connection';
-
-async function getTenantContext(req: Request) {
-  // return {
-  //   organizationId:
-  //     req.headers.get('x-organization-id') || '',
-  //   storeId: req.headers.get('x-store-id') || undefined,
-  // };
-
-  const session = await auth.api.getSession({
-    headers: await headers(), // Forward Next.js headers to Better Auth
-  });
-
-  return {
-    organizationId:
-      session?.session?.activeOrganizationId || '',
-    // storeId: req.headers.get('x-store-id') || undefined,
-  };
-}
+import { getTenantContext } from '@/lib/api/tenant-context';
 
 export const GET = withValidation(
   {
     query: StoreFilterSchema,
   },
   async (request, context) => {
-    const tenantContext = await getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(
         ErrorCodes.BAD_REQUEST,
-        'Organization ID wajib diisi dalam header (x-organization-id)',
+        'Organization ID tidak ditemukan',
+        400
+      );
+    }
+
+    if (!tenantContext.storeId) {
+      return apiError(
+        ErrorCodes.BAD_REQUEST,
+        'Store ID tidak ditemukan',
         400
       );
     }
@@ -75,12 +63,12 @@ export const POST = withValidation(
   CreateStoreSchema,
   async (request, { validatedBody }) => {
     try {
-      const tenantContext = await getTenantContext(request);
+      const tenantContext = await getTenantContext();
 
       if (!tenantContext.organizationId) {
         return apiError(
           ErrorCodes.BAD_REQUEST,
-          'Organization ID wajib diisi dalam header (x-organization-id)',
+          'Organization ID tidak ditemukan',
           400
         );
       }

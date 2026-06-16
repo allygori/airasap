@@ -131,21 +131,44 @@ export class ProductRepository extends BaseRepository<TProduct> {
   ) {
     const skip = (page - 1) * limit;
 
+    // console.log('findWithPagination: ', {
+    //   $or: [
+    //     { deleted_at: { $eq: null } },
+    //     { deleted_at: { $exists: false } },
+    //   ],
+    //   ...filter,
+    //   ...this.getTenantFilter(),
+    // });
+
+    // const tenant = this.getTenantFilter();
+    // const tenantFilter = {
+    //   organization: tenant.organizationId,
+    //   store: tenant.storeId,
+    // };
+
     const [data, total] = await Promise.all([
       this.model
         .find({
-          ...this.getTenantFilter(),
-          deleted_at: null,
+          $or: [
+            { deleted_at: { $eq: null } },
+            { deleted_at: { $exists: false } },
+          ],
           ...filter,
+          ...this.getTenantFilter(),
+          // ...tenantFilter,
         })
         .sort({ created_at: -1 })
         .skip(skip)
         .limit(limit)
         .lean(),
       this.model.countDocuments({
-        ...this.getTenantFilter(),
-        deleted_at: null,
+        $or: [
+          { deleted_at: { $eq: null } },
+          { deleted_at: { $exists: false } },
+        ],
         ...filter,
+        ...this.getTenantFilter(),
+        // ...tenantFilter,
       }),
     ]);
 

@@ -4,7 +4,7 @@
  * POST /api/v1/dashboard/products - Create new product
  */
 
-import { NextRequest } from 'next/server';
+// import { NextRequest } from 'next/server';
 import { ProductService } from '@/modules/products/product.service';
 import {
   CreateProductSchema,
@@ -18,29 +18,33 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-
-function getTenantContext(req: Request) {
-  return {
-    organizationId:
-      req.headers.get('x-organization-id') || '',
-    storeId: req.headers.get('x-store-id') || undefined,
-  };
-}
+import { getTenantContext } from '@/lib/api/tenant-context';
+import { db } from '@/lib/db/connection';
 
 export const GET = withValidation(
   {
     query: ProductFilterSchema,
   },
   async (request, context) => {
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(
         ErrorCodes.BAD_REQUEST,
-        'Organization ID wajib diisi dalam header (x-organization-id)',
+        'Organization ID tidak ditemukan',
         400
       );
     }
+
+    if (!tenantContext.storeId) {
+      return apiError(
+        ErrorCodes.BAD_REQUEST,
+        'Store ID tidak ditemukan',
+        400
+      );
+    }
+
+    await db.connect();
 
     const productService = new ProductService(
       tenantContext
@@ -66,15 +70,25 @@ export const POST = withValidation(
   CreateProductSchema,
   async (request, { validatedBody }) => {
     try {
-      const tenantContext = getTenantContext(request);
+      const tenantContext = await getTenantContext();
 
       if (!tenantContext.organizationId) {
         return apiError(
           ErrorCodes.BAD_REQUEST,
-          'Organization ID wajib diisi dalam header (x-organization-id)',
+          'Organization ID tidak ditemukan',
           400
         );
       }
+
+      if (!tenantContext.storeId) {
+        return apiError(
+          ErrorCodes.BAD_REQUEST,
+          'Store ID tidak ditemukan',
+          400
+        );
+      }
+
+      await db.connect();
 
       const productService = new ProductService(
         tenantContext

@@ -42,7 +42,7 @@ function DragHandle({ id }: { id: string }) {
   );
 }
 
-export const getPostColumns = (
+export const getProductsColumn = (
   isSortable: boolean = false
 ): ColumnDef<Record<string, any>>[] => {
   const baseColumns: ColumnDef<Record<string, any>>[] = [

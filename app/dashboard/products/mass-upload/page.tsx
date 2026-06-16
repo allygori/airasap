@@ -110,7 +110,7 @@ export default function MassUploadPage() {
 
     try {
       const response = await fetch(
-        '/api/dashboard/products/mass-upload',
+        '/api/v1/dashboard/products/mass-upload',
         {
           method: 'POST',
           body: formData,
@@ -145,7 +145,7 @@ export default function MassUploadPage() {
       {/* Header */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-indigo-600 uppercase dark:text-indigo-400">
+          {/* <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-indigo-600 uppercase dark:text-indigo-400">
             <Link
               href="/dashboard/products"
               className="flex items-center gap-1 hover:underline"
@@ -154,13 +154,13 @@ export default function MassUploadPage() {
             </Link>
             <ChevronRight className="text-muted-foreground h-3 w-3" />
             <span>Mass Upload</span>
-          </div>
+          </div> */}
           <h1 className="bg-gradient-to-r from-slate-900 to-indigo-950 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent dark:from-white dark:to-indigo-200">
-            Mass Upload Products
+            Upload Massal
           </h1>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Upload Shopee Excel files to bulk import or
-            update your product catalog.
+            Upload file excel dari hasil export produk
+            Shopee untuk memperbaharui katalog produk
           </p>
         </div>
       </div>
