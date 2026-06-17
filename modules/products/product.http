@@ -1,52 +1,49 @@
 ### Product API - HTTP Client Test File
 ### Use this with REST Client VS Code extension
 
-@baseUrl = http://localhost:3000
-@organizationId = org-test-123
-@storeId = store-test-456
 @productId = 
 
 ###
 ### 1. GET ALL PRODUCTS WITH PAGINATION
 ###
-GET {{baseUrl}}/api/products?page=1&limit=10
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+GET {{baseUrl}}/api/v1/dashboard/products?page=1&limit=10
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### 2. GET PRODUCTS WITH FILTERS (platform & search)
 ###
-GET {{baseUrl}}/api/products?page=1&limit=10&platform=shopee&is_active=true&search=laptop
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+GET {{baseUrl}}/api/v1/dashboard/products?page=1&limit=10&platform=shopee&is_active=true&search=laptop
+Accept: application/json
+Cookie: {{cookie}}
+
 
 ###
 ### 3. SEARCH PRODUCTS
 ###
-GET {{baseUrl}}/api/products/search?q=gaming
-x-organization-id: {{organizationId}}
+GET {{baseUrl}}/api/v1/dashboard/products/search?q=gaming
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### 4. GET ACTIVE PRODUCTS ONLY
 ###
-GET {{baseUrl}}/api/products/active
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
-
+GET {{baseUrl}}/api/v1/dashboard/products/active
+Accept: application/json
+Cookie: {{cookie}}
 ###
 ### 5. GET PRODUCTS BY PLATFORM
 ###
-GET {{baseUrl}}/api/products/platform/shopee
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+GET {{baseUrl}}/api/v1/dashboard/products/platform/shopee
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### 6. CREATE PRODUCT
 ###
-POST {{baseUrl}}/api/products
+POST {{baseUrl}}/api/v1/dashboard/products
 Content-Type: application/json
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+Cookie: {{cookie}}
 
 {
   "name": "Laptop Gaming ASUS ROG",
@@ -84,17 +81,16 @@ x-store-id: {{storeId}}
 ###
 ### 7. GET PRODUCT BY ID
 ###
-GET {{baseUrl}}/api/products/{{productId}}
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+GET {{baseUrl}}/api/v1/dashboard/products/{{productId}}
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### 8. UPDATE PRODUCT
 ###
-PATCH {{baseUrl}}/api/products/{{productId}}
+PATCH {{baseUrl}}/api/v1/dashboard/products/{{productId}}
 Content-Type: application/json
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+Cookie: {{cookie}}
 
 {
   "name": "Laptop Gaming ASUS ROG Updated",
@@ -116,10 +112,9 @@ x-store-id: {{storeId}}
 ###
 ### 9. BULK UPDATE PRODUCT STATUS
 ###
-POST {{baseUrl}}/api/products/bulk-update-status
+POST {{baseUrl}}/api/v1/dashboard/products/bulk-update-status
 Content-Type: application/json
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+Cookie: {{cookie}}
 
 {
   "product_ids": ["productId1", "productId2", "productId3"],
@@ -129,16 +124,16 @@ x-store-id: {{storeId}}
 ###
 ### 10. SOFT DELETE PRODUCT
 ###
-DELETE {{baseUrl}}/api/products/{{productId}}
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+DELETE {{baseUrl}}/api/v1/dashboard/products/{{productId}}
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### 11. RESTORE DELETED PRODUCT
 ###
-POST {{baseUrl}}/api/products/{{productId}}/restore
-x-organization-id: {{organizationId}}
-x-store-id: {{storeId}}
+POST {{baseUrl}}/api/v1/dashboard/products/{{productId}}/restore
+Accept: application/json
+Cookie: {{cookie}}
 
 ###
 ### NOTES

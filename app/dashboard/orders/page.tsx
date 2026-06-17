@@ -1,31 +1,31 @@
 'use client';
 
-import * as React from 'react';
+import { useMemo } from 'react';
+import Link from 'next/link';
 import { CollectionShell } from '@/components/dashboard/collection/shell';
 import { ColumnDef } from '@tanstack/react-table';
 import { getProductsColumn } from './_components/columns';
-import { ProductResponseDTO } from '@/modules/products/product.dto';
+import { OrderResponseDTO } from '@/modules/orders/order.dto';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
-import Link from 'next/link';
 
-export default function ProductIndexPage() {
-  const columns = React.useMemo(
+export default function OrderIndexPage() {
+  const columns = useMemo(
     () => getProductsColumn(false),
     []
-  ) as ColumnDef<ProductResponseDTO>[];
+  ) as ColumnDef<OrderResponseDTO>[];
 
   return (
     <>
       <div className="animate-in fade-in flex flex-1 flex-row justify-between space-y-4 p-4 duration-700 md:p-6">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="space-y-1.5">
-            <div className="text-primary animate-in slide-in-from-left-4 flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase duration-500">
+            {/* <div className="text-primary animate-in slide-in-from-left-4 flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase duration-500">
               <FileText className="h-4 w-4" />
               Goods
-            </div>
+            </div> */}
             <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 md:text-4xl dark:text-white">
-              Products
+              Orders
             </h1>
             <p className="max-w-lg font-medium text-slate-500 dark:text-slate-400">
               Manage Title, COGS and many.
@@ -34,7 +34,7 @@ export default function ProductIndexPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/products/mass-upload"
+            href="/dashboard/orders/mass-upload"
             className={buttonVariants({
               variant: 'secondary',
               size: 'lg',
@@ -50,13 +50,13 @@ export default function ProductIndexPage() {
       </div>
 
       <CollectionShell
-        title="Products"
-        endpoint="/api/v1/dashboard/products?sort=created_at"
+        title="Orders"
+        endpoint="/api/v1/dashboard/orders?sort=created_at"
         columns={columns}
         searchFields={['name']}
         primarySearchField="name"
-        createUrl="/dashboard/products/create"
-        createText="Create Product"
+        createUrl="/dashboard/orders/create"
+        createText="Create Order"
         isSortable={false}
       />
     </>

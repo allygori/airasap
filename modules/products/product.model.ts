@@ -7,7 +7,6 @@ import {
 } from 'mongoose';
 import { ProductBaseDTO } from './product.dto';
 import { PLATFORMS } from '../constant';
-import { Data } from '@dnd-kit/core';
 
 export type TProduct = Document &
   ProductBaseDTO & {
@@ -15,7 +14,7 @@ export type TProduct = Document &
     store: Types.ObjectId;
     deleted_at?: Date | null;
     created_at?: Date;
-    updated_at?: Data;
+    updated_at?: Date;
   };
 
 const ProductSchema = new Schema<TProduct>(
@@ -70,6 +69,26 @@ const ProductSchema = new Schema<TProduct>(
     },
   }
 );
+
+ProductSchema.index({
+  organization: 1,
+  store: 1,
+});
+
+ProductSchema.index(
+  {
+    organization: 1,
+    store: 1,
+    product_id: 1,
+  },
+  { unique: true }
+);
+
+ProductSchema.index({
+  organization: 1,
+  store: 1,
+  platform: 1,
+});
 
 export const ProductModel =
   models.Product ||

@@ -103,34 +103,18 @@ export function ViewDrawer<T extends Record<string, any>>({
         <div className="flex max-w-full min-w-0 flex-1 flex-col overflow-hidden">
           <DrawerHeader className="min-w-0 shrink-0 gap-1 border-b pb-4">
             <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
-              {isPost && (
-                <FileText className="size-4 shrink-0 text-blue-500" />
-              )}
-              {isMedia && (
-                <ImageIcon className="size-4 shrink-0 text-purple-500" />
-              )}
-              {(isCategory || isTag) && (
-                <Tag className="size-4 shrink-0 text-emerald-500" />
-              )}
+              <FileText className="size-4 shrink-0 text-blue-500" />
               <Badge
                 variant="outline"
                 className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter uppercase"
               >
-                {isPost
-                  ? 'Post'
-                  : isMedia
-                    ? 'Media'
-                    : isCategory
-                      ? 'Category'
-                      : isTag
-                        ? 'Tag'
-                        : 'Item'}
+                Product
               </Badge>
             </div>
-            <DrawerTitle className="text-xl leading-tight font-bold break-words">
+            <DrawerTitle className="text-xl leading-tight font-bold wrap-break-word">
               {title}
             </DrawerTitle>
-            <DrawerDescription className="text-sm break-words">
+            <DrawerDescription className="text-sm wrap-break-word">
               {description}
             </DrawerDescription>
           </DrawerHeader>
@@ -168,7 +152,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                     <FileText className="size-3" />
                     Summary / Description
                   </h4>
-                  <p className="text-foreground/80 text-sm leading-relaxed break-words italic">
+                  <p className="text-foreground/80 text-sm leading-relaxed wrap-break-word italic">
                     &ldquo;
                     {item.excerpt || item.description}
                     &rdquo;

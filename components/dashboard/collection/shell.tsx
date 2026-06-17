@@ -70,15 +70,8 @@ export function CollectionShell<
   const fetchData = React.useCallback(async () => {
     try {
       setIsLoading(true);
-      // Build URL with search/filters if needed in future
-      // For now, simple fetch as current implementation does
       const res = await fetch(endpoint);
-      // const res = await fetch(endpoint, {
-      //   // method: 'GET',
-      //   // headers: {
-      //   //   'X-Organization-ID': session?.session?.activeOrganizationId
-      //   // }
-      // });
+
       if (!res.ok)
         throw new Error(
           `Failed to fetch ${title.toLowerCase()}`

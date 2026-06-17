@@ -1,0 +1,145 @@
+### Order API - HTTP Client Test File
+### Use this with REST Client VS Code extension
+
+@productId = 
+
+###
+### 1. GET ALL ORDERS WITH PAGINATION
+###
+GET {{baseUrl}}/api/v1/dashboard/orders?page=1&limit=10
+Content-Type: application/json
+Cookie: {{cookie}}
+
+###
+### 2. GET ORDERS WITH FILTERS (platform & search)
+###
+GET {{baseUrl}}/api/v1/dashboard/orders?page=1&limit=10&platform=shopee&is_active=true&search=laptop
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 3. SEARCH ORDERS
+###
+GET {{baseUrl}}/api/v1/dashboard/orders/search?q=gaming
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 4. GET ACTIVE ORDERS ONLY
+###
+GET {{baseUrl}}/api/v1/dashboard/orders/active
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 5. GET ORDERS BY PLATFORM
+###
+GET {{baseUrl}}/api/v1/dashboard/orders/platform/shopee
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 6. CREATE ORDER
+###
+POST {{baseUrl}}/api/v1/dashboard/orders
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "name": "Laptop Gaming ASUS ROG",
+  "product_id": "asus-rog-g14-2024",
+  "platform": "shopee",
+  "key": "laptop-gaming-asus",
+  "is_active": true,
+  "variants": [
+    {
+      "variant_id": "var-1",
+      "name": "Intel i7 RTX 4070",
+      "product_key": "i7-4070",
+      "price": 15000000,
+      "quantity": 50,
+      "discount": 10,
+      "finalPrice": 13500000,
+      "SKU": "ASUS-ROG-G14-001",
+      "GTIN": "1234567890123"
+    },
+    {
+      "variant_id": "var-2",
+      "name": "Intel i9 RTX 4080",
+      "product_key": "i9-4080",
+      "price": 18000000,
+      "quantity": 30,
+      "discount": 15,
+      "finalPrice": 15300000,
+      "SKU": "ASUS-ROG-G14-002",
+      "GTIN": "1234567890124"
+    }
+  ]
+}
+
+### @name CreateOrderResponse
+###
+### 7. GET ORDER BY ID
+###
+GET {{baseUrl}}/api/v1/dashboard/orders/{{productId}}
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 8. UPDATE ORDER
+###
+PATCH {{baseUrl}}/api/v1/dashboard/orders/{{productId}}
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "name": "Laptop Gaming ASUS ROG Updated",
+  "is_active": true,
+  "variants": [
+    {
+      "variant_id": "var-1",
+      "name": "Intel i7 RTX 4070",
+      "product_key": "i7-4070",
+      "price": 14500000,
+      "quantity": 60,
+      "discount": 12,
+      "finalPrice": 12760000,
+      "SKU": "ASUS-ROG-G14-001"
+    }
+  ]
+}
+
+###
+### 9. BULK UPDATE ORDER STATUS
+###
+POST {{baseUrl}}/api/v1/dashboard/orders/bulk-update-status
+Content-Type: application/json
+Cookie: {{cookie}}
+
+{
+  "product_ids": ["productId1", "productId2", "productId3"],
+  "is_active": false
+}
+
+###
+### 10. SOFT DELETE ORDER
+###
+DELETE {{baseUrl}}/api/v1/dashboard/orders/{{productId}}
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### 11. RESTORE DELETED ORDER
+###
+POST {{baseUrl}}/api/v1/dashboard/orders/{{productId}}/restore
+Accept: application/json
+Cookie: {{cookie}}
+
+###
+### NOTES
+###
+### - Replace {{productId}} with actual product MongoDB ID after create
+### - Replace {{organizationId}} and {{storeId}} with actual IDs
+### - Use REST Client extension for VS Code to run these requests
+### - Each request separated by ### comment
+### - Save response to variables using @name comment

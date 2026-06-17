@@ -1,0 +1,178 @@
+/**
+ * Order Repository
+ * Handles all order database operations with multi-tenancy support
+ * Using Mongoose v9
+ */
+
+import { BaseRepository } from '../base.repository';
+import { OrderModel, TOrder } from './order.model';
+import { QueryFilter } from 'mongoose';
+
+export class OrderRepository extends BaseRepository<TOrder> {
+  constructor(tenantContext: {
+    organizationId: string;
+    storeId?: string;
+  }) {
+    super(OrderModel, tenantContext);
+  }
+
+  /**
+   * Find orders by platform
+   */
+  async findByPlatform(platform: string) {
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        platform,
+        deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
+   * Find active orders only
+   */
+  async findActive() {
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        is_active: true,
+        deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
+   * Search orders by name or order_id
+   */
+  async search(query: string) {
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        $or: [
+          { name: { $regex: query, $options: 'i' } },
+          { order_id: { $regex: query, $options: 'i' } },
+        ],
+        deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
+   * Find order by order_id (unique identifier)
+   */
+  async findById(orderId: string) {
+    return await this.model
+      .findOne({
+        ...this.getTenantFilter(),
+        order_id: orderId,
+        deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
+   * Soft delete order by setting deleted_at
+   */
+  async softDelete(id: string) {
+    return await this.model
+      .findOneAndUpdate(
+        {
+          _id: id,
+          ...this.getTenantFilter(),
+        },
+        { $set: { deleted_at: new Date() } },
+        { new: true }
+      )
+      .lean();
+  }
+
+  /**
+   * Restore soft-deleted order
+   */
+  async restore(id: string) {
+    return await this.model
+      .findOneAndUpdate(
+        {
+          _id: id,
+          ...this.getTenantFilter(),
+        },
+        { $set: { deleted_at: null } },
+        { new: true }
+      )
+      .lean();
+  }
+
+  /**
+   * Bulk update order status
+   */
+  async bulkUpdateStatus(
+    orderIds: string[],
+    isActive: boolean
+  ) {
+    return await this.model.updateMany(
+      {
+        _id: { $in: orderIds },
+        ...this.getTenantFilter(),
+        deleted_at: null,
+      },
+      { $set: { is_active: isActive } }
+    );
+  }
+
+  /**
+   * Get orders with pagination
+   */
+  async findWithPagination(
+    page: number = 1,
+    limit: number = 10,
+    filter?: QueryFilter<TOrder>
+  ) {
+    const skip = (page - 1) * limit;
+
+    const [data, total] = await Promise.all([
+      this.model
+        .find({
+          // $or: [
+          //   { deleted_at: { $eq: null } },
+          //   { deleted_at: { $exists: false } },
+          // ],
+          ...filter,
+          ...this.getTenantFilter(),
+        })
+        // .sort({ created_at: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.model.countDocuments({
+        $or: [
+          { deleted_at: { $eq: null } },
+          { deleted_at: { $exists: false } },
+        ],
+        ...filter,
+        ...this.getTenantFilter(),
+      }),
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Count orders by platform
+   */
+  async countByPlatform(platform: string) {
+    return await this.model.countDocuments({
+      ...this.getTenantFilter(),
+      platform,
+      deleted_at: null,
+    });
+  }
+}
