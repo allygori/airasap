@@ -101,7 +101,7 @@ export const OrderResponseSchema = OrderBaseSchema.extend({
 export const OrderFilterSchema = z.object({
   platform: z.string().optional(),
   status: z.string().optional(),
-  // q: z.string().optional(),
+  q: z.string().optional(),
   search: z.string().optional(),
   page: z.preprocess((v) => {
     if (typeof v === 'string' && v.length) {

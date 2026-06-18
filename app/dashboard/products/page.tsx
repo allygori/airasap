@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CollectionShell } from '@/components/dashboard/collection/shell';
+import { DataTableShell } from '@/components/data-table/shell';
 import { ColumnDef } from '@tanstack/react-table';
 import { getProductsColumn } from './_components/columns';
 import { ProductResponseDTO } from '@/modules/products/product.dto';
@@ -49,7 +49,7 @@ export default function ProductIndexPage() {
         </div>
       </div>
 
-      <CollectionShell
+      <DataTableShell
         title="Products"
         endpoint="/api/v1/dashboard/products?sort=created_at"
         columns={columns}

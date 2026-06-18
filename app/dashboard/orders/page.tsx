@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
-import { CollectionShell } from '@/components/dashboard/collection/shell';
+import { DataTableShell } from '@/components/data-table/shell';
 import { ColumnDef } from '@tanstack/react-table';
 import { getProductsColumn } from './_components/columns';
 import { OrderResponseDTO } from '@/modules/orders/order.dto';
@@ -49,7 +49,7 @@ export default function OrderIndexPage() {
         </div>
       </div>
 
-      <CollectionShell
+      <DataTableShell
         title="Orders"
         endpoint="/api/v1/dashboard/orders?sort=created_at"
         columns={columns}

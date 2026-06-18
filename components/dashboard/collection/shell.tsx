@@ -18,12 +18,11 @@ import { toast } from 'sonner';
 
 import { CollectionHeader } from './header';
 import { CollectionTable } from './table';
-import { authClient } from '@/lib/auth/auth-client';
 
 type CollectionShellProps<TData extends { _id: string }> = {
   title: string;
   endpoint: string;
-  columns: ColumnDef<TData, any>[];
+  columns: ColumnDef<TData, unknown>[];
   searchFields?: string[];
   primarySearchField?: string;
   createUrl?: string;
