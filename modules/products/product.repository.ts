@@ -17,6 +17,19 @@ export class ProductRepository extends BaseRepository<TProduct> {
   }
 
   /**
+   * Find products by names
+   */
+  async findByNames(names: string[]) {
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        name: { $in: names },
+        // deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
    * Find products by platform
    */
   async findByPlatform(platform: string) {

@@ -170,12 +170,12 @@ export default function MassUploadPage() {
         <Card className="border-border/50 bg-white/70 shadow-md backdrop-blur-sm lg:col-span-2 dark:bg-slate-900/70">
           <CardHeader>
             <CardTitle className="text-xl font-bold">
-              Upload Shopee Sales Info Template
+              Upload Shopee Order
             </CardTitle>
-            <CardDescription>
+            {/* <CardDescription>
               Select your store and drag your Shopee sales
               info export file below.
-            </CardDescription>
+            </CardDescription> */}
           </CardHeader>
           <CardContent>
             <form
@@ -252,8 +252,7 @@ export default function MassUploadPage() {
                       Click to browse file
                     </p>
                     <p className="mt-1 text-xs text-slate-400">
-                      Supports Shopee Sales Info template
-                      (.xlsx)
+                      Supports Shopee Order template (.xlsx)
                     </p>
                   </div>
                 )}

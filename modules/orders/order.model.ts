@@ -98,7 +98,7 @@ const OrderItemSchema = new Schema<TOrderItem>(
     product: {
       type: Types.ObjectId,
       ref: 'Product',
-      required: true,
+      required: false, // Not required because there are possibility user rename product name and can't find and match product by name, solution is user select the right product
       alias: 'productId',
     },
     parent_sku: {
@@ -113,6 +113,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: String,
       alias: 'productName',
     },
+    // variation_id: {
+    //   type: String,
+    //   alias: 'variationId',
+    // },
     variation_name: {
       type: String,
       alias: 'variationName',
@@ -392,4 +396,4 @@ OrderSchema.index(
 
 export const OrderModel =
   models.Order ||
-  model<TOrder>('Order', OrderSchema, 'Orders');
+  model<TOrder>('Order', OrderSchema, 'orders');

@@ -278,6 +278,19 @@ export class ProductService {
   }
 
   /**
+   * Get products by names
+   */
+  async getProductsByNames(names: string[]) {
+    try {
+      return await this.repository.findByNames(names);
+    } catch (error: any) {
+      throw new Error(
+        `Gagal mengambil produk dari nama: ${error.message}`
+      );
+    }
+  }
+
+  /**
    * Get active products only
    */
   async getActiveProducts() {

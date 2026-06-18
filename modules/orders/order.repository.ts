@@ -58,10 +58,24 @@ export class OrderRepository extends BaseRepository<TOrder> {
       .lean();
   }
 
+  // /**
+  //  * Find order by _id (mongodb identifier)
+  //  * @TODO enable
+  //  */
+  // async findById(id: string) {
+  //   return await this.model
+  //     .findOne({
+  //       ...this.getTenantFilter(),
+  //       _id: id,
+  //       deleted_at: null,
+  //     })
+  //     .lean();
+  // }
+
   /**
    * Find order by order_id (unique identifier)
    */
-  async findById(orderId: string) {
+  async findByOrderId(orderId: string) {
     return await this.model
       .findOne({
         ...this.getTenantFilter(),

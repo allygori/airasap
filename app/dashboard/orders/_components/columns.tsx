@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 // import { BlogPostType, CategoryType, UserType } from "@/components/blog/types"
 import { CollectionRowActions } from '@/components/dashboard/collection/row-actions';
 // import { ViewDrawer } from '@/components/dashboard/collection/view-drawer';
-import { ViewDrawer } from '@/app/dashboard/products/_components/view-drawer';
+import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
+import { formatIDR } from '@/lib/formatter';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 
@@ -79,42 +80,62 @@ export const getProductsColumn = (
       enableHiding: false,
     },
     {
-      accessorKey: 'name',
-      header: 'Nama',
+      accessorKey: 'order_id',
+      header: 'No Pesanan',
       cell: ({ row }) => (
         <div>
           <ViewDrawer
             item={row.original}
-            editUrl="/dashboard/products"
-            viewUrl="/products"
+            editUrl="/dashboard/orders"
+            viewUrl="/orders"
           >
             <Button
               variant="link"
               className="text-foreground block h-10 w-fit px-0 text-left font-semibold underline-offset-4 hover:underline"
             >
-              {row.original.name}
+              {row.original.order_id}
             </Button>
           </ViewDrawer>
-          <p className="text-sm">
+          {/* <p className="text-sm">
             {row.original.product_id}
-          </p>
+          </p> */}
         </div>
       ),
       enableHiding: false,
     },
     {
-      accessorKey: 'variant',
-      header: 'Total Variants',
+      accessorKey: 'username',
+      header: 'Pembeli',
       cell: ({ row }) => (
-        <div className="w-32">
-          <Badge
-            variant="outline"
-            className="text-muted-foreground px-1.5"
-          >
-            {row.original.variants.length > 1
-              ? row.original.variants.length
-              : 0}
-          </Badge>
+        <div className="text-sm font-medium">
+          {row.original.username || '-'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'Jumlah Item',
+      header: 'Item',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {row.original.number_of_products_ordered || '-'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: 'Status',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {row.original.status || '-'}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'Subtotal',
+      header: 'Subtotal',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {formatIDR(row.original.order_subtotal ?? 0)}
         </div>
       ),
     },
@@ -163,12 +184,23 @@ export const getProductsColumn = (
     //   ),
     // },
     {
-      accessorKey: 'created_at',
-      header: 'Date Created',
+      accessorKey: 'Tanggal dibuat',
+      header: 'Dibuat',
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">
           {new Date(
-            row.original.created_at
+            row.original.order_created_at
+          ).toLocaleDateString()}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'Tanggal selesai',
+      header: 'Selesai',
+      cell: ({ row }) => (
+        <div className="text-muted-foreground text-sm">
+          {new Date(
+            row.original.order_completed_at
           ).toLocaleDateString()}
         </div>
       ),

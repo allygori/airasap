@@ -53,8 +53,8 @@ export default function OrderIndexPage() {
         title="Orders"
         endpoint="/api/v1/dashboard/orders?sort=created_at"
         columns={columns}
-        searchFields={['name']}
-        primarySearchField="name"
+        searchFields={['order_id']}
+        primarySearchField="order_id"
         createUrl="/dashboard/orders/create"
         createText="Create Order"
         isSortable={false}

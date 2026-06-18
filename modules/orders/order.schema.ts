@@ -7,6 +7,7 @@ export const OrderItemSchema = z.object({
   // product: z.string().min(1, 'Product ID wajib diisi'),
   product: z
     .string()
+    .optional()
     .refine((val) => mongoose.isValidObjectId(val), {
       message: 'Mongoose ObjectId tidak valid',
     })
