@@ -6,7 +6,10 @@
 
 import { BaseRepository } from '../base.repository';
 import { OrderModel, TOrder } from './order.model';
-import { QueryFilter } from 'mongoose';
+import {
+  QueryFilter,
+  AnyBulkWriteOperation,
+} from 'mongoose';
 
 export class OrderRepository extends BaseRepository<TOrder> {
   constructor(tenantContext: {
@@ -189,4 +192,101 @@ export class OrderRepository extends BaseRepository<TOrder> {
       deleted_at: null,
     });
   }
+
+  /**
+   * Enrich order data with released income data from shopee xlsx
+   */
+  async enrichWithReleasedIncome(
+    // operations: AnyBulkWriteOperation<(typeof OrderModel)[]>
+    orders: any[]
+  ) {
+    const operations: AnyBulkWriteOperation<
+      typeof OrderModel
+    >[] = orders.map((item) => {
+      const itemsMap = (item.items || []).reduce(
+        (acc: any, n: any, idx: number) => {
+          const { product } = n;
+          acc[`items.${idx}.product`] = product._id;
+          return acc;
+        },
+        {}
+      );
+
+      return {
+        updateOne: {
+          filter: { order_id: item.orderId },
+          update: {
+            $set: {
+              fee: {
+                admin_fee: item.adminFee,
+                processing_fee: item.orderProcessingFee,
+                affiliate_fee: item.amsCommissionFee,
+                service_fee: item.serviceFee,
+                shipping_saver_program_fee:
+                  item.shippingSaverProgramFee,
+                transaction_fee: item.transactionFee,
+                campaign_fee: item.campaignFee,
+                auto_top_up_fee_from_income:
+                  item.autoTopUpFeeFromIncome,
+                return_shipping_fee: item.returnShippingFee,
+                return_to_sender_shipping_fee:
+                  item.returnToSenderShippingFee,
+                shipping_fee_refund: item.shippingFeeRefund,
+              },
+              released_amount: item.totalIncome,
+              shipping_fee_paid_by_buyer:
+                item.shippingFeePaidByBuyer || 0,
+              shipping_fee_discount_by_logistics:
+                item.shippingFeeDiscountByLogistics || 0,
+              shipping_fee_forwarded_by_shopee:
+                item.shippingFeeForwardedByShopee || 0,
+              free_shipping_promo_from_seller:
+                item.freeShippingPromoFromSeller || 0,
+              compensation: item.compensation || 0,
+              ...itemsMap,
+
+              // admin_fee: item.adminFee,
+              // order_process_fee: item.orderProcessingFee,
+              // affiliate_fee: item.amsCommissionFee,
+              // campaign_fee: item.campaignFee,
+              // voucher_fee: {
+              //   type: Number,
+              //   alias: 'voucherFee',
+              // },
+              // shipping_fee: {
+              //   type: Number,
+              //   alias: 'shippingFee',
+              // },
+              // other_fee: {
+              //   type: Number,
+              //   alias: 'otherFee',
+              // },
+              // return_shipping_fee: {
+              //   type: Number,
+              //   alias: 'returnShippingFee',
+              // },
+              // released_amount: {
+              //   type: Number,
+              //   alias: 'releasedAmount',
+              // },
+              // net_amount: {
+              //   type: Number,
+              //   alias: 'netAmount',
+              // },
+            },
+          },
+          upsert: true,
+        },
+      };
+    });
+
+    return await this.model.bulkWrite(operations);
+  }
+
+  // /**
+  //  * Bulk write
+  //  */
+  // async bulkWrite(operations) {
+  //   return await this.model.bulkWrite(operations);
+  // }
 }

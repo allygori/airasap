@@ -23,12 +23,14 @@ const ProductSchema = new Schema<TProduct>(
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
+      select: false,
       alias: 'organizationId',
     },
     store: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
       required: true,
+      select: false,
       alias: 'storeId',
     },
     platform: {

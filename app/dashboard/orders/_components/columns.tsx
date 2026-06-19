@@ -139,6 +139,16 @@ export const getProductsColumn = (
         </div>
       ),
     },
+    {
+      accessorKey: 'released_amount',
+      header: 'Income',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {formatIDR(row.original.released_amount ?? 0)}
+        </div>
+      ),
+    },
+
     // {
     //   accessorKey: 'category.name',
     //   header: 'Category',

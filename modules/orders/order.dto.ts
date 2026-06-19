@@ -4,6 +4,7 @@ import { z } from 'zod';
 import {
   OrderItemSchema,
   OrderAddressSchema,
+  OrderFeeSchema,
   OrderBaseSchema,
   CreateOrderSchema,
   UpdateOrderSchema,
@@ -19,6 +20,7 @@ export type OrderItemDTO = z.infer<typeof OrderItemSchema>;
 export type OrderAddressDTO = z.infer<
   typeof OrderAddressSchema
 >;
+export type OrderFeeDTO = z.infer<typeof OrderFeeSchema>;
 export type OrderBaseDTO = z.infer<typeof OrderBaseSchema>;
 export type CreateOrderDTO = z.infer<
   typeof CreateOrderSchema

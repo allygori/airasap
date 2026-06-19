@@ -21,6 +21,7 @@ export const OrderItemSchema = z.object({
   price_after_discount: z.number().optional(),
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
+  processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedIncome
   cogs: z.number().optional(),
 });
 
@@ -28,6 +29,57 @@ export const OrderAddressSchema = z.object({
   street: z.string().optional(),
   city: z.string().optional(),
   province: z.string().optional(),
+});
+
+export const OrderFeeSchema = z.object({
+  admin_fee: z.number().int().optional().default(0),
+  processing_fee: z.number().int().optional().default(0),
+  affiliate_fee: z.number().int().optional().default(0), // shopee: AMS program, tokped: ?
+  service_fee: z.number().int().optional().default(0),
+  shipping_saver_program_fee: z
+    .number()
+    .int()
+    .optional()
+    .default(0), // shopee: gratis ongkir xtra/xtra+ program ??
+  transaction_fee: z.number().int().optional().default(0),
+  campaign_fee: z.number().int().optional().default(0),
+  auto_top_up_fee_from_income: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
+
+  // shipping_fee_paid_by_buyer: z
+  //   .number().int()
+  //   .optional()
+  //   .default(0),
+  // shipping_fee_discount_by_logistics: z
+  //   .number().int()
+  //   .optional()
+  //   .default(0),
+  // shipping_fee_forwarded_by_shopee: z
+  //   .number().int()
+  //   .optional()
+  //   .default(0),
+
+  // return
+  return_shipping_fee: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
+  return_to_sender_shipping_fee: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
+
+  // over charge shipping fee refund
+  shipping_fee_refund: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
 });
 
 export const OrderBaseSchema = z.object({
@@ -41,42 +93,67 @@ export const OrderBaseSchema = z.object({
   status: z.string().optional(),
   cancellation_return_status: z.string().optional(),
   username: z.string().optional(),
-  number_of_products_ordered: z.number().optional(),
-  total_payment: z.number().optional(),
+  number_of_products_ordered: z.number().int().optional(),
+  total_payment: z.number().int().optional(),
   payment_method: z.string().optional(),
   paid_at: z.string().optional(),
-  order_subtotal: z.number().optional(),
-  total_discount: z.number().optional(),
-  discount_from_seller: z.number().optional(),
-  discount_from_shopee: z.number().optional(),
-  voucher_borne_by_seller: z.number().optional(),
-  voucher_borne_by_shopee: z.number().optional(),
-  coin_cashback: z.number().optional(),
+  order_subtotal: z.number().int().optional(),
+  total_discount: z.number().int().optional(),
+  discount_from_seller: z.number().int().optional(),
+  discount_from_shopee: z.number().int().optional(),
+  voucher_borne_by_seller: z.number().int().optional(),
+  voucher_borne_by_shopee: z.number().int().optional(),
+  coin_cashback: z.number().int().optional(),
   bundle_deal: z.boolean().optional(),
-  bundle_deal_discount_from_shopee: z.number().optional(),
-  bundle_deal_discount_from_seller: z.number().optional(),
-  shopee_coin_offset: z.number().optional(),
-  credit_card_discount: z.number().optional(),
+  bundle_deal_discount_from_shopee: z
+    .number()
+    .int()
+    .optional(),
+  bundle_deal_discount_from_seller: z
+    .number()
+    .int()
+    .optional(),
+  shopee_coin_offset: z.number().int().optional(),
+  credit_card_discount: z.number().int().optional(),
   shipping_option: z.string().optional(),
-  estimated_shipping_fee: z.number().optional(),
-  shipping_fee_paid_by_buyer: z.number().optional(),
-  estimated_shipping_fee_discount: z.number().optional(),
+  estimated_shipping_fee: z.number().int().optional(),
+  free_shipping_from_shopee: z.number().int().optional(),
+  shipping_fee_paid_by_buyer: z.number().int().optional(),
+  shipping_fee_discount_by_logistics: z
+    .number()
+    .optional()
+    .default(0),
+  shipping_fee_forwarded_by_shopee: z
+    .number()
+    .optional()
+    .default(0),
+  estimated_shipping_fee_discount: z
+    .number()
+    .int()
+    .optional(),
   product_weight: z.number().optional(),
   total_weight: z.number().optional(),
   receiver_name: z.string().optional(),
   phone_number: z.string().optional(),
   address: OrderAddressSchema.optional(),
+  fee: OrderFeeSchema.optional(),
   buyer_note: z.string().optional(),
   note: z.string().optional(),
   items: z.array(OrderItemSchema).optional(),
-  admin_fee: z.number().optional(),
-  order_process_fee: z.number().optional(),
-  affiliate_fee: z.number().optional(),
-  campaign_fee: z.number().optional(),
-  voucher_fee: z.number().optional(),
-  shipping_fee: z.number().optional(),
-  other_fee: z.number().optional(),
-  return_shipping_fee: z.number().optional(),
+  free_shipping_promo_from_seller: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
+  compensation: z.number().int().optional().default(0),
+  // admin_fee: z.number().optional(),
+  // order_process_fee: z.number().optional(),
+  // affiliate_fee: z.number().optional(),
+  // campaign_fee: z.number().optional(),
+  // voucher_fee: z.number().optional(),
+  // shipping_fee: z.number().optional(),
+  // other_fee: z.number().optional(),
+  // return_shipping_fee: z.number().optional(),
   released_amount: z.number().optional(),
   net_amount: z.number().optional(),
   shipping_arranged_at: z.string().optional(),

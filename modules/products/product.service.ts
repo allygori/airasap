@@ -278,6 +278,19 @@ export class ProductService {
   }
 
   /**
+   * Get products by multiple ids
+   */
+  async getByMultipleIds(ids: string[]) {
+    try {
+      return await this.repository.findByMultipleIds(ids);
+    } catch (error: any) {
+      throw new Error(
+        `Gagal mengambil produk dari nama: ${error.message}`
+      );
+    }
+  }
+
+  /**
    * Get products by names
    */
   async getProductsByNames(names: string[]) {

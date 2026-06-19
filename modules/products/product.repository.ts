@@ -17,6 +17,19 @@ export class ProductRepository extends BaseRepository<TProduct> {
   }
 
   /**
+   * Find products by multiple product ids
+   */
+  async findByMultipleIds(ids: string[]) {
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        product_id: { $in: ids },
+        // deleted_at: null,
+      })
+      .lean();
+  }
+
+  /**
    * Find products by names
    */
   async findByNames(names: string[]) {

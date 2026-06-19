@@ -7,9 +7,10 @@ import {
 } from 'mongoose';
 import { PLATFORMS } from '../constant';
 import {
-  OrderAddressDTO,
-  OrderBaseDTO,
   OrderItemDTO,
+  OrderAddressDTO,
+  OrderFeeDTO,
+  OrderBaseDTO,
 } from './order.dto';
 
 const platforms = [...PLATFORMS] as const;
@@ -30,6 +31,7 @@ const platforms = [...PLATFORMS] as const;
 
 export type TOrderItem = OrderItemDTO;
 export type TOrderAddress = OrderAddressDTO;
+export type TOrderFee = OrderFeeDTO;
 
 // export type TOrder = Document & {
 //   organization: typeof ObjectId;
@@ -162,18 +164,84 @@ const OrderAddressSchema = new Schema<TOrderAddress>(
   { _id: false }
 );
 
+const OrderFeeSchema = new Schema<TOrderFee>(
+  {
+    admin_fee: {
+      type: Number,
+      required: false,
+      alias: 'adminFee',
+    },
+    processing_fee: {
+      type: Number,
+      required: false,
+      alias: 'processingFee',
+    },
+    affiliate_fee: {
+      type: Number,
+      required: false,
+      alias: 'affiliateFee',
+    }, // shopee: AMS program, tokped: ?
+    service_fee: {
+      type: Number,
+      required: false,
+      alias: 'serviceFee',
+    },
+    shipping_saver_program_fee: {
+      type: Number,
+      required: false,
+      alias: 'shippingSaverProgramFee',
+    }, // shopee: gratis ongkir xtra/xtra+ program
+    transaction_fee: {
+      type: Number,
+      required: false,
+      alias: 'transactionFee',
+    },
+    campaign_fee: {
+      type: Number,
+      required: false,
+      alias: 'campaignFee',
+    },
+    auto_top_up_fee_from_income: {
+      type: Number,
+      required: false,
+      alias: 'autoTopUpFeeFromIncome',
+    },
+
+    // return
+    return_shipping_fee: {
+      type: Number,
+      required: false,
+      alias: 'returnShippingFee',
+    },
+    return_to_sender_shipping_fee: {
+      type: Number,
+      required: false,
+      alias: 'returnToSenderShippingFee',
+    },
+    // over charge shipping fee refund
+    shipping_fee_refund: {
+      type: Number,
+      required: false,
+      alias: 'shippingFeeRefund',
+    },
+  },
+  { _id: false }
+);
+
 const OrderSchema = new Schema<TOrder>(
   {
     organization: {
       type: Types.ObjectId,
       ref: 'Organization',
       required: true,
+      select: false,
       alias: 'organizationId',
     },
     store: {
       type: Types.ObjectId,
       ref: 'Store',
       required: true,
+      select: false,
       alias: 'storeId',
     },
     platform: {
@@ -272,9 +340,32 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       alias: 'shippingFeePaidByBuyer',
     },
+    shipping_fee_discount_by_logistics: {
+      type: Number,
+      required: false,
+      alias: 'shippingFeeDiscountByLogistics',
+    },
+    shipping_fee_forwarded_by_shopee: {
+      type: Number,
+      required: false,
+      alias: 'shippingFeeForwardedByShopee',
+    },
+    free_shipping_from_shopee: {
+      type: Number,
+      required: false,
+      alias: 'freeShippingFromShopee',
+    },
     estimated_shipping_fee_discount: {
       type: Number,
       alias: 'estimatedShippingFeeDiscount',
+    },
+    free_shipping_promo_from_seller: {
+      type: Number,
+      alias: 'freeShippingPromoFromSeller',
+    },
+    compensation: {
+      type: Number,
+      alias: 'freeShippingPromoFromSeller',
     },
     product_weight: {
       type: Number,
@@ -305,38 +396,41 @@ const OrderSchema = new Schema<TOrder>(
     items: {
       type: [OrderItemSchema],
     },
-    admin_fee: {
-      type: Number,
-      alias: 'adminFee',
+    fee: {
+      type: OrderFeeSchema,
     },
-    order_process_fee: {
-      type: Number,
-      alias: 'orderProcessFee',
-    },
-    affiliate_fee: {
-      type: Number,
-      alias: 'affiliateFee',
-    },
-    campaign_fee: {
-      type: Number,
-      alias: 'campaignFee',
-    },
-    voucher_fee: {
-      type: Number,
-      alias: 'voucherFee',
-    },
-    shipping_fee: {
-      type: Number,
-      alias: 'shippingFee',
-    },
-    other_fee: {
-      type: Number,
-      alias: 'otherFee',
-    },
-    return_shipping_fee: {
-      type: Number,
-      alias: 'returnShippingFee',
-    },
+    // admin_fee: {
+    //   type: Number,
+    //   alias: 'adminFee',
+    // },
+    // processing_fee: {
+    //   type: Number,
+    //   alias: 'orderProcessFee',
+    // },
+    // affiliate_fee: {
+    //   type: Number,
+    //   alias: 'affiliateFee',
+    // },
+    // campaign_fee: {
+    //   type: Number,
+    //   alias: 'campaignFee',
+    // },
+    // voucher_fee: {
+    //   type: Number,
+    //   alias: 'voucherFee',
+    // },
+    // shipping_fee: {
+    //   type: Number,
+    //   alias: 'shippingFee',
+    // },
+    // other_fee: {
+    //   type: Number,
+    //   alias: 'otherFee',
+    // },
+    // return_shipping_fee: {
+    //   type: Number,
+    //   alias: 'returnShippingFee',
+    // },
     released_amount: {
       type: Number,
       alias: 'releasedAmount',
