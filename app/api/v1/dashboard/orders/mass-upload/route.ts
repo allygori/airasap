@@ -5,9 +5,7 @@
 
 import path from 'path';
 import fs from 'fs/promises';
-// import mongoose from 'mongoose';
 import { db } from '@/lib/db';
-// import { FileModel } from '@/modules/files/file.model';
 import {
   calculateCRC32,
   calculateSHA256,
@@ -80,8 +78,6 @@ export const POST = withValidation({}, async (request) => {
 
     if (!fileDoc) {
       fileDoc = await fileService.create({
-        // organization: tenantContext.organizationId,
-        // store: tenantContext.storeId,
         filename: sha256Filename,
         original_name: file.name,
         mime_type:
@@ -95,26 +91,6 @@ export const POST = withValidation({}, async (request) => {
         storage_path: storagePath,
         uploaded_by: tenantContext.userId,
       });
-      // fileDoc = await FileModel.create({
-      //   organization: tenantContext.organizationId,
-      //   store: tenantContext.storeId,
-      //   filename: sha256Filename,
-      //   original_name: file.name,
-      //   mime_type:
-      //     file.type ||
-      //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      //   file_type: 'xlsx',
-      //   size: file.size,
-      //   url: `/upload/${diskFilename}`,
-      //   checksum: crc32Checksum,
-      //   storage_provider: 'local',
-      //   storage_path: storagePath,
-      //   uploaded_by: tenantContext.userId
-      //     ? new mongoose.Types.ObjectId(
-      //         tenantContext.userId
-      //       )
-      //     : undefined,
-      // });
     }
 
     const orderService = new OrderService(tenantContext);

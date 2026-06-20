@@ -184,7 +184,7 @@ export default function RegisterClient({
         ) : (
           <GoogleIcon className="mr-2 h-4 w-4" />
         )}
-        Google
+        Daftar dengan Google
       </Button>
 
       <FieldDescription className="px-6 text-center">

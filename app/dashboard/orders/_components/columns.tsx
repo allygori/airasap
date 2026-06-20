@@ -96,6 +96,9 @@ export const getProductsColumn = (
               {row.original.order_id}
             </Button>
           </ViewDrawer>
+          <div className="text-sm font-medium">
+            {row.original.username || '-'}
+          </div>
           {/* <p className="text-sm">
             {row.original.product_id}
           </p> */}

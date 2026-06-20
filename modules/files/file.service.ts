@@ -279,4 +279,11 @@ export class FileService {
       );
     }
   }
+
+  /**
+   * Get or create file
+   */
+  async getOrCreate() {
+    /** @TODO implement */
+  }
 }

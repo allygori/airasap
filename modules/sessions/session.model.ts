@@ -1,30 +1,47 @@
-import { Schema, model, models, Document } from 'mongoose';
+import {
+  Schema,
+  model,
+  models,
+  Document,
+  Types,
+} from 'mongoose';
+import { SessionDTO } from './session.dto';
 
-const ObjectId = Schema.Types.ObjectId;
+// const ObjectId = Schema.Types.ObjectId;
 
-export type TSession = Document & {
-  active_organization: typeof ObjectId;
-  user: typeof ObjectId;
-  token: string;
-  ip_address?: string;
-  user_agent?: string;
-  expires_at?: Date;
-  theme?: string;
-  language?: string;
-  active_store: typeof ObjectId;
-  deleted_at?: Date;
-};
+// export type TSession = Document & {
+//   active_organization: typeof ObjectId;
+//   user: typeof ObjectId;
+//   token: string;
+//   ip_address?: string;
+//   user_agent?: string;
+//   expires_at?: Date;
+//   theme?: string;
+//   language?: string;
+//   active_store: typeof ObjectId;
+//   deleted_at?: Date;
+// };
+
+export type TSession = Document &
+  SessionDTO & {
+    active_store: Types.ObjectId;
+    theme?: string;
+    language?: string;
+    deleted_at?: Date | null;
+    created_at?: Date;
+    updated_at?: Date;
+  };
 
 const SessionSchema = new Schema<TSession>(
   {
     active_organization: {
-      type: Schema.Types.ObjectId,
+      type: Types.ObjectId,
       ref: 'Organization',
       required: true,
       alias: 'activeOrganizationId',
     },
     user: {
-      type: Schema.Types.ObjectId,
+      type: Types.ObjectId,
       ref: 'User',
       required: true,
       index: true,
@@ -49,7 +66,7 @@ const SessionSchema = new Schema<TSession>(
 
     // Custom fields
     active_store: {
-      type: Schema.Types.ObjectId,
+      type: Types.ObjectId,
       ref: 'Store',
       required: true,
       alias: 'activeStoreId',

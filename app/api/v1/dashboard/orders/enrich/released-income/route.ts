@@ -5,9 +5,7 @@
 
 import path from 'path';
 import fs from 'fs/promises';
-// import mongoose from 'mongoose';
 import { db } from '@/lib/db';
-// import { FileModel } from '@/modules/files/file.model';
 import {
   calculateCRC32,
   calculateSHA256,
@@ -75,20 +73,20 @@ export const POST = withValidation({}, async (request) => {
       await fileService.getByFilename(sha256Filename);
 
     if (!fileDoc) {
-      // fileDoc = await fileService.create({
-      //   filename: sha256Filename,
-      //   original_name: file.name,
-      //   mime_type:
-      //     file.type ||
-      //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      //   file_type: FILE_TYPES_KV.doc,
-      //   size: file.size,
-      //   url: `/upload/${diskFilename}`,
-      //   checksum: crc32Checksum,
-      //   storage_provider: 'local',
-      //   storage_path: storagePath,
-      //   uploaded_by: tenantContext.userId,
-      // });
+      fileDoc = await fileService.create({
+        filename: sha256Filename,
+        original_name: file.name,
+        mime_type:
+          file.type ||
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        file_type: FILE_TYPES_KV.doc,
+        size: file.size,
+        url: `/upload/${diskFilename}`,
+        checksum: crc32Checksum,
+        storage_provider: 'local',
+        storage_path: storagePath,
+        uploaded_by: tenantContext.userId,
+      });
     }
 
     const orderService = new OrderService(tenantContext);
@@ -99,6 +97,7 @@ export const POST = withValidation({}, async (request) => {
       {
         // fileId: fileDoc._id.toString(),
         // ...result,
+        result,
       },
       undefined,
       201

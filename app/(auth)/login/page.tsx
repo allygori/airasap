@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 import { FieldDescription } from '@/components/ui/field';
-import LoginForm from '@/app/(auth)/login/_components/login-form';
+import LoginClient from './_components/login.client';
 import { GalleryVerticalEnd } from 'lucide-react';
 
 export const metadata: Metadata = {
@@ -84,27 +84,10 @@ export default function AuthenticationPage() {
               Masuk ke Akun
             </h1>
             <p className="text-muted-foreground text-sm">
-              Masukkan email Anda di bawah ini untuk masuk
+              Masukkan email Anda di bawah ini untuk memulai
             </p>
           </div>
-          <LoginForm />
-          <FieldDescription className="px-6 text-center">
-            Dengan mengklik lanjut, Anda menyetujui{' '}
-            <Link
-              href="/terms"
-              className="hover:text-primary underline underline-offset-4"
-            >
-              Ketentuan Layanan
-            </Link>{' '}
-            dan{' '}
-            <Link
-              href="/privacy"
-              className="hover:text-primary underline underline-offset-4"
-            >
-              Kebijakan Privasi
-            </Link>{' '}
-            kami.
-          </FieldDescription>
+          <LoginClient />
         </div>
       </div>
     </div>

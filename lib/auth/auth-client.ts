@@ -2,6 +2,7 @@ import { createAuthClient } from 'better-auth/react';
 import { organizationClient } from 'better-auth/client/plugins';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
 import type { auth } from './auth';
+import { storeClient } from './plugins/store';
 
 export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
@@ -9,6 +10,7 @@ export const authClient = createAuthClient({
   plugins: [
     organizationClient(),
     inferAdditionalFields<typeof auth>(),
+    storeClient(),
     // inferAdditionalFields({
     //   session: {
     //     theme: {

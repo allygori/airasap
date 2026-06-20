@@ -21,10 +21,10 @@ import mongoose from 'mongoose';
 
 import '@/modules/users/users.model';
 import '@/modules/accounts/accounts.model';
-import '@/modules/organizations/organizations.model';
-import '@/modules/members/members.model';
+import '@/modules/organizations/organization.model';
+import '@/modules/members/member.model';
 import '@/modules/invitations/invitations.model';
-import '@/modules/sessions/sessions.model';
+import '@/modules/sessions/session.model';
 import '@/modules/verifications/verifications.model';
 import '@/modules/files/file.model';
 import '@/modules/stores/store.model';

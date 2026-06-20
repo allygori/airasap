@@ -3,6 +3,8 @@ import { organization } from 'better-auth/plugins';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { admin } from 'better-auth/plugins';
 import { MongoClient } from 'mongodb';
+import { databaseHooks } from './hooks';
+import { store } from './plugins/store';
 // import { StoreService } from '@/modules/stores/store.service';
 // import { CreateStoreDTO } from '@/modules/stores/store.dto';
 // import { PLATFORMS } from '../db/constant';
@@ -31,6 +33,11 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
+      schema: {
+        organization: {
+          modelName: 'organizations',
+        },
+      },
       organizationHooks: {
         afterCreateOrganization: async ({
           organization,
@@ -68,6 +75,7 @@ export const auth = betterAuth({
       },
     }),
     admin(),
+    store(),
   ],
   socialProviders: {
     google: {
@@ -104,6 +112,13 @@ export const auth = betterAuth({
   // docs: https://better-auth.com/docs/concepts/session-management
   session: {
     modelName: 'sessions',
+    fields: {
+      activeOrganizationId: 'active_organization',
+      userId: 'user',
+      expiresAt: 'expires_at',
+      ipAddress: 'ip_address',
+      userAgent: 'user_agent',
+    },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
     deferSessionRefresh: true,
@@ -115,15 +130,19 @@ export const auth = betterAuth({
     additionalFields: {
       theme: { type: 'string', required: false },
       language: { type: 'string', required: false },
-      activeStoreId: {
+      // activeStoreId: {
+      //   type: 'string',
+      //   required: true,
+      // },
+      active_store: {
         type: 'string',
         required: true,
       },
     },
   },
-  organization: {
-    modelName: 'organizations',
-  },
+  // organization: {
+  //   modelName: 'organizations',
+  // },
   member: {
     modelName: 'members',
   },
@@ -135,6 +154,8 @@ export const auth = betterAuth({
       generateId: false,
     },
   },
+
+  databaseHooks,
 });
 
 type Session = typeof auth.$Infer.Session;
