@@ -83,6 +83,13 @@ export default function RegisterClient({
           storeId: null,
         });
 
+        // Force a database re-fetch and refresh the cookie cache
+        await authClient.getSession({
+          query: {
+            disableCookieCache: true,
+          },
+        });
+
         /**
          * @TODO implement
          */

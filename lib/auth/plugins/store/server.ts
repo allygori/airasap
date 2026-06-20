@@ -1,14 +1,12 @@
 // plugins/store.ts
 import { z } from 'zod';
 import {
-  createAuthMiddleware,
   createAuthEndpoint,
   sessionMiddleware,
 } from 'better-auth/api';
 import { type BetterAuthPlugin } from 'better-auth';
 import { APIError } from 'better-auth/api';
-import { ObjectId } from 'mongodb';
-import { db } from '@/lib/db/connection';
+// import { ObjectId } from 'mongodb';
 
 // import mongoose from 'mongoose';
 // import { SessionModel } from '@/modules/sessions/session.model';
@@ -25,6 +23,10 @@ export const storePlugin = () => {
           organization: {
             type: 'string',
             required: true,
+            references: {
+              model: 'organization',
+              field: 'id',
+            },
           },
           platform: {
             type: 'string',
@@ -46,9 +48,14 @@ export const storePlugin = () => {
       },
       session: {
         fields: {
-          active_store: {
+          activeStoreId: {
             type: 'string',
             required: false,
+            fieldName: 'active_store',
+            references: {
+              model: 'store',
+              field: 'id',
+            },
           },
         },
       },
@@ -59,7 +66,7 @@ export const storePlugin = () => {
         '/store/set-active',
         {
           method: 'POST',
-          use: [createAuthMiddleware, sessionMiddleware], // Requires an active session // createAuthMiddleware,
+          use: [sessionMiddleware],
           body: z.object({
             organizationId: z.string(),
             storeId: z.string().optional().nullable(),
@@ -94,39 +101,32 @@ export const storePlugin = () => {
           activeStoreId = storeId;
 
           if (!activeStoreId) {
+            // if (!ObjectId.isValid(organizationId)) {
+            //   throw new APIError('BAD_REQUEST', {
+            //     message: 'Invalid organizationId',
+            //   });
+            // }
+
             const stores =
               await ctx.context.adapter.findMany({
-                model: 'stores',
+                model: 'store',
                 where: [
                   {
                     field: 'organization',
                     operator: 'eq',
                     value: organizationId,
                   },
-                  // {
-                  //   field: 'organization',
-                  //   operator: 'eq',
-                  //   value: new ObjectId(organizationId),
-                  // },
+                  {
+                    field: 'is_active',
+                    operator: 'eq',
+                    value: true,
+                  },
                 ],
-                limit: 10,
-                // sortBy: {
-                //   field: 'createdAt',
-                //   direction: 'desc',
-                // },
+                limit: 1,
               });
 
-            // const mongoClient = await db.getClient();
-            // const stores = await mongoClient
-            //   .collection('sessions')
-            //   .find({ organization: organizationId });
-
-            // const stores = await ctx.context.adapter.
-
-            console.log({ organizationId, stores });
-
-            activeStoreId = (stores[0] as { _id: string })
-              ?._id;
+            activeStoreId = (stores[0] as { id?: string })
+              ?.id;
           }
 
           if (!activeStoreId) {
@@ -149,12 +149,13 @@ export const storePlugin = () => {
 
           const updatedDoc =
             await ctx.context.adapter.update({
-              model: 'sessions',
+              model: 'session',
               where: [
                 { field: 'token', value: sessionToken },
               ],
               update: {
                 activeOrganizationId: organizationId,
+                // active_store: activeStoreId,
                 activeStoreId: activeStoreId,
               },
             });

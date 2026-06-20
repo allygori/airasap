@@ -1,4 +1,4 @@
-import { MemberService } from '@/modules/members/member.service';
+// import { MemberService } from '@/modules/members/member.service';
 import { OrganizationService } from '@/modules/organizations/organization.service';
 import { SessionBaseDTO } from '@/modules/sessions/session.dto';
 import { SessionService } from '@/modules/sessions/session.service';

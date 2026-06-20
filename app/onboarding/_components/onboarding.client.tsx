@@ -116,6 +116,7 @@ export default function OnboardingClient({
          */
         const { error: errorUpdateSession } =
           await authClient.updateSession({
+            // active_store: newStore?._id || newStore?.id,
             activeStoreId: newStore?._id || newStore?.id,
             language: 'id',
             theme: 'system',

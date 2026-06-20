@@ -118,6 +118,8 @@ export const auth = betterAuth({
       expiresAt: 'expires_at',
       ipAddress: 'ip_address',
       userAgent: 'user_agent',
+      createdAt: 'created_at',
+      updatedAt: 'updated_at',
     },
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
@@ -130,14 +132,15 @@ export const auth = betterAuth({
     additionalFields: {
       theme: { type: 'string', required: false },
       language: { type: 'string', required: false },
-      // activeStoreId: {
+      activeStoreId: {
+        type: 'string',
+        required: true,
+        fieldName: 'active_store',
+      },
+      // active_store: {
       //   type: 'string',
       //   required: true,
       // },
-      active_store: {
-        type: 'string',
-        required: true,
-      },
     },
   },
   // organization: {

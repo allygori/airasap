@@ -9,6 +9,7 @@ export const getTenantContext = async () => {
   return {
     organizationId:
       session?.session?.activeOrganizationId || '',
+    // storeId: session?.session?.active_store || '',
     storeId: session?.session?.activeStoreId || '',
     userId: session?.session?.userId || '',
   };
