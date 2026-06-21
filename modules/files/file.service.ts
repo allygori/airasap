@@ -6,7 +6,7 @@
 import { FileRepository } from './file.repository';
 import {
   CreateFileDTO,
-  FileFilterDTO,
+  QueryFilterFileDTO,
   UpdateFileDTO,
 } from './file.dto';
 
@@ -38,7 +38,7 @@ export class FileService {
   /**
    * Get files with pagination and filtering
    */
-  async getWithPagination(filter: FileFilterDTO) {
+  async getWithPagination(filter: QueryFilterFileDTO) {
     try {
       const queryFilter: any = { deleted_at: null };
 

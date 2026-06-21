@@ -87,7 +87,7 @@ export const POST = withValidation({}, async (request) => {
         mime_type:
           file.type ||
           'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        file_type: FILE_TYPES_KV.doc,
+        file_type: FILE_TYPES_KV.DOC,
         size: file.size,
         url: `/upload/${diskFilename}`,
         checksum: crc32Checksum,

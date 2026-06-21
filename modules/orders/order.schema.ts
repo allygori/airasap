@@ -160,6 +160,21 @@ export const OrderBaseSchema = z.object({
   order_created_at: z.string().optional(),
   order_released_at: z.string().optional(),
   order_completed_at: z.string().optional(),
+
+  // additional fields
+  /**
+   * @TODO implement
+   */
+  // enrichments: z.array(z.object({
+  //   file: z
+  //   .string()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
+  //   enriched_by: z.string(),
+  //   enriched_at: z.string(),
+  // })),
   deleted_at: z.string().nullable().optional(),
 });
 

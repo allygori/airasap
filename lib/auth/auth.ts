@@ -158,7 +158,7 @@ export const auth = betterAuth({
     },
   },
 
-  databaseHooks,
+  // databaseHooks,
 });
 
 type Session = typeof auth.$Infer.Session;

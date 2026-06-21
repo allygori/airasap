@@ -455,6 +455,16 @@ const OrderSchema = new Schema<TOrder>(
       type: Date,
       alias: 'orderCompletedAt',
     },
+
+    // additional fields
+    /**
+     * @TODO implement
+     */
+    // enrichments: [
+    //   {
+
+    //   }
+    // ],
     deleted_at: {
       type: Date,
       alias: 'deletedAt',

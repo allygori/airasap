@@ -9,8 +9,8 @@ import { FileService } from '@/modules/files/file.service';
 import {
   CreateFileSchema,
   CreateFileDTO,
-  FileFilterSchema,
-  FileFilterDTO,
+  QueryFilterFileSchema,
+  QueryFilterFileDTO,
 } from '@/modules/files/file.dto';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -29,7 +29,7 @@ function getTenantContext(req: Request) {
 
 export const GET = withValidation(
   {
-    query: FileFilterSchema,
+    query: QueryFilterFileSchema,
   },
   async (request, context) => {
     const tenantContext = getTenantContext(request);
@@ -44,7 +44,7 @@ export const GET = withValidation(
 
     const fileService = new FileService(tenantContext);
     const validatedFilter =
-      context.validatedQuery as FileFilterDTO;
+      context.validatedQuery as QueryFilterFileDTO;
 
     const result =
       await fileService.getWithPagination(validatedFilter);

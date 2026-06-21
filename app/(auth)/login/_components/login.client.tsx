@@ -72,48 +72,18 @@ export default function RegisterClient({
           return;
         }
 
-        console.log({ orgs });
-
-        // await authClient.organization.setActive({
-        //   organizationId: orgs[0].id,
-        // });
-
+        // 2. Update active org and store
         await authClient.store.setActive({
           organizationId: orgs[0].id,
           storeId: null,
         });
 
-        // Force a database re-fetch and refresh the cookie cache
+        // 3. Force a database re-fetch and refresh the cookie cache
         await authClient.getSession({
           query: {
             disableCookieCache: true,
           },
         });
-
-        /**
-         * @TODO implement
-         */
-        // authClient.store.setActive({
-        //   organizationId: org.id
-        //   storeId: store.id
-        // })
-
-        /**
-         * Update session to include  activeOrganizationId and activeStoreId
-         */
-        // const { error: errorUpdateSession } =
-        //   await authClient.updateSession({
-        //     activeStoreId: newStore?._id || newStore?.id,
-        //     language: 'id',
-        //     theme: 'system',
-        //   });
-
-        // if (errorUpdateSession) {
-        //   console.error(
-        //     'Failed to set update session for activeStoreId',
-        //     errorUpdateSession
-        //   );
-        // }
 
         router.push('/dashboard');
         router.refresh();

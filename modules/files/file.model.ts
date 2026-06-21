@@ -1,12 +1,16 @@
 import { Schema, model, models, Document } from 'mongoose';
 import {
-  FILE_TYPES,
-  STORAGE_PROVIDERS,
+  FILE_TYPES_KV,
+  STORAGE_PROVIDERS_KV,
 } from './file.constant';
 
 const ObjectId = Schema.Types.ObjectId;
-const fileTypes = [...FILE_TYPES] as const;
-const storageProviders = [...STORAGE_PROVIDERS] as const;
+const fileTypes = [
+  ...Object.values(FILE_TYPES_KV),
+] as const;
+const storageProviders = [
+  ...Object.values(STORAGE_PROVIDERS_KV),
+] as const;
 
 export type TFile = Document & {
   organization: typeof ObjectId;
@@ -58,7 +62,7 @@ const FileSchema = new Schema<TFile>(
     },
     file_type: {
       type: String,
-      enum: FILE_TYPES,
+      enum: Object.values(FILE_TYPES_KV),
       default: 'other',
       required: true,
       alias: 'fileType',
@@ -88,7 +92,7 @@ const FileSchema = new Schema<TFile>(
     },
     storage_provider: {
       type: String,
-      enum: STORAGE_PROVIDERS,
+      enum: Object.values(STORAGE_PROVIDERS_KV),
       default: 'local',
       alias: 'storageProvider',
     },
