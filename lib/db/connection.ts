@@ -20,7 +20,7 @@ import mongoose from 'mongoose';
 // import '@/lib/db/schema/stores';
 
 import '@/modules/users/users.model';
-import '@/modules/accounts/accounts.model';
+import '@/modules/accounts/account.model';
 import '@/modules/organizations/organization.model';
 import '@/modules/members/member.model';
 import '@/modules/invitations/invitations.model';

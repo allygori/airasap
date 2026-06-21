@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  BaseFileSchema,
   CreateFileSchema,
   UpdateFileSchema,
   QueryFilterFileSchema,
@@ -10,6 +11,8 @@ export * from './file.schema';
 /**
  * Inferred TypeScript types from Zod
  */
+
+export type BaseFileDTO = z.infer<typeof BaseFileSchema>;
 export type CreateFileDTO = z.infer<
   typeof CreateFileSchema
 >;

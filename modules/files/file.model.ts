@@ -1,48 +1,64 @@
-import { Schema, model, models, Document } from 'mongoose';
+import {
+  Schema,
+  model,
+  models,
+  Document,
+  Types,
+} from 'mongoose';
 import {
   FILE_TYPES_KV,
   STORAGE_PROVIDERS_KV,
 } from './file.constant';
+import { BaseFileDTO } from './file.dto';
 
-const ObjectId = Schema.Types.ObjectId;
-const fileTypes = [
-  ...Object.values(FILE_TYPES_KV),
-] as const;
-const storageProviders = [
-  ...Object.values(STORAGE_PROVIDERS_KV),
-] as const;
+// const ObjectId = Schema.Types.ObjectId;
+// const fileTypes = [
+//   ...Object.values(FILE_TYPES_KV),
+// ] as const;
+// const storageProviders = [
+//   ...Object.values(STORAGE_PROVIDERS_KV),
+// ] as const;
 
-export type TFile = Document & {
-  organization: typeof ObjectId;
-  store: typeof ObjectId;
-  filename: string;
-  original_name: string;
-  mime_type: string;
-  file_type: (typeof fileTypes)[number];
-  size: number;
-  url: string;
-  alt_text?: string;
-  caption?: string;
-  credits?: string;
-  checksum: string; // ?
-  storage_provider: (typeof storageProviders)[number];
-  storage_path?: string;
-  uploaded_by?: typeof ObjectId;
-  deleted_at?: Date;
-};
+export type TFile = Document &
+  BaseFileDTO & {
+    organization: Types.ObjectId;
+    store: Types.ObjectId;
+    deleted_at?: Date | null;
+    created_at?: Date;
+    updated_at?: Date;
+  };
+
+// export type TFile = Document & {
+//   organization: typeof ObjectId;
+//   store: typeof ObjectId;
+//   filename: string;
+//   original_name: string;
+//   mime_type: string;
+//   file_type: (typeof fileTypes)[number];
+//   size: number;
+//   url: string;
+//   alt_text?: string;
+//   caption?: string;
+//   credits?: string;
+//   checksum: string; // ?
+//   storage_provider: (typeof storageProviders)[number];
+//   storage_path?: string;
+//   uploaded_by?: typeof ObjectId;
+//   deleted_at?: Date;
+// };
 
 const FileSchema = new Schema<TFile>(
   {
     organization: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
-      required: true,
+      required: false,
       alias: 'organizationId',
     },
     store: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
-      required: true,
+      required: false,
       alias: 'storeId',
     },
     filename: {

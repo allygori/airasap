@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Loader2,
   GripVertical,
+  CheckCircleIcon,
 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 
@@ -16,6 +17,7 @@ import { CollectionRowActions } from '@/components/dashboard/collection/row-acti
 // import { ViewDrawer } from '@/components/dashboard/collection/view-drawer';
 import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { formatIDR } from '@/lib/formatter';
+import { cn } from '@/lib/utils';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 
@@ -106,15 +108,15 @@ export const getProductsColumn = (
       ),
       enableHiding: false,
     },
-    {
-      accessorKey: 'username',
-      header: 'Pembeli',
-      cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          {row.original.username || '-'}
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: 'username',
+    //   header: 'Pembeli',
+    //   cell: ({ row }) => (
+    //     <div className="text-sm font-medium">
+    //       {row.original.username || '-'}
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: 'Jumlah Item',
       header: 'Item',
@@ -144,10 +146,26 @@ export const getProductsColumn = (
     },
     {
       accessorKey: 'released_amount',
-      header: 'Income',
+      header: 'Pendapatan',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
           {formatIDR(row.original.released_amount ?? 0)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'enriched_at',
+      header: 'Dilengkapi',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          <CheckCircleIcon
+            className={cn(
+              'text-muted-foreground size-3',
+              row.original.enriched_at
+                ? 'text-green-500 dark:text-green-400'
+                : 'text-gray-500'
+            )}
+          />
         </div>
       ),
     },

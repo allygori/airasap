@@ -892,7 +892,7 @@ export class OrderService {
       //   }
       // }
 
-      return true;
+      return result;
     } catch (error: any) {
       throw new Error(
         `Gagal memproses enrich order data: ${error.message}`

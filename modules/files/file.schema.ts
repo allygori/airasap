@@ -8,6 +8,20 @@ import {
  * Base file schema
  */
 export const BaseFileSchema = z.object({
+  // organization: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
+  // store: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
   filename: z.string().min(1, 'Filename wajib diisi'),
   original_name: z
     .string()

@@ -3,6 +3,7 @@ import { organization } from 'better-auth/plugins';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { admin } from 'better-auth/plugins';
 import { MongoClient } from 'mongodb';
+import { configs } from './configs';
 import { databaseHooks } from './hooks';
 import { store } from './plugins/store';
 // import { StoreService } from '@/modules/stores/store.service';
@@ -89,69 +90,73 @@ export const auth = betterAuth({
       },
     },
   },
-  user: {
-    modelName: 'users',
-    additionalFields: {
-      timezone: {
-        type: 'string',
-        required: false,
-        defaultValue: 'Asia/Jakarta',
-      },
-      lang: {
-        type: 'string',
-        required: false,
-        defaultValue: 'id',
-      },
-      // activeStoreId: {
-      //   type: 'string',
-      //   required: true,
-      //   input: false,
-      // },
-    },
-  },
+  // user: {
+  //   modelName: 'users',
+  //   additionalFields: {
+  //     timezone: {
+  //       type: 'string',
+  //       required: false,
+  //       defaultValue: 'Asia/Jakarta',
+  //     },
+  //     lang: {
+  //       type: 'string',
+  //       required: false,
+  //       defaultValue: 'id',
+  //     },
+  //     // activeStoreId: {
+  //     //   type: 'string',
+  //     //   required: true,
+  //     //   input: false,
+  //     // },
+  //   },
+  // },
   // docs: https://better-auth.com/docs/concepts/session-management
-  session: {
-    modelName: 'sessions',
-    fields: {
-      activeOrganizationId: 'active_organization',
-      userId: 'user',
-      expiresAt: 'expires_at',
-      ipAddress: 'ip_address',
-      userAgent: 'user_agent',
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
-    },
-    expiresIn: 60 * 60 * 24 * 7, // 7 days
-    // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
-    deferSessionRefresh: true,
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
-      // strategy: "jwe",
-    },
-    additionalFields: {
-      theme: { type: 'string', required: false },
-      language: { type: 'string', required: false },
-      activeStoreId: {
-        type: 'string',
-        required: true,
-        fieldName: 'active_store',
-      },
-      // active_store: {
-      //   type: 'string',
-      //   required: true,
-      // },
-    },
-  },
+  // session: {
+  //   modelName: 'sessions',
+  //   fields: {
+  //     activeOrganizationId: 'active_organization',
+  //     userId: 'user',
+  //     expiresAt: 'expires_at',
+  //     ipAddress: 'ip_address',
+  //     userAgent: 'user_agent',
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  //   expiresIn: 60 * 60 * 24 * 7, // 7 days
+  //   // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
+  //   deferSessionRefresh: true,
+  //   cookieCache: {
+  //     enabled: true,
+  //     maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
+  //     // strategy: "jwe",
+  //   },
+  //   additionalFields: {
+  //     theme: { type: 'string', required: false },
+  //     language: { type: 'string', required: false },
+  //     activeStoreId: {
+  //       type: 'string',
+  //       required: true,
+  //       fieldName: 'active_store',
+  //     },
+  //     // active_store: {
+  //     //   type: 'string',
+  //     //   required: true,
+  //     // },
+  //   },
+  // },
   // organization: {
   //   modelName: 'organizations',
   // },
-  member: {
-    modelName: 'members',
-  },
-  account: {
-    modelName: 'accounts',
-  },
+  // member: {
+  //   modelName: 'members',
+  // },
+  // account: {
+  //   modelName: 'accounts',
+  //   accountLinking
+  // },
+
+  ...configs,
+
   advanced: {
     database: {
       generateId: false,

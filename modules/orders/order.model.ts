@@ -457,6 +457,10 @@ const OrderSchema = new Schema<TOrder>(
     },
 
     // additional fields
+    enriched_at: {
+      type: Date,
+      alias: 'enrichedAt',
+    },
     /**
      * @TODO implement
      */

@@ -162,6 +162,7 @@ export const OrderBaseSchema = z.object({
   order_completed_at: z.string().optional(),
 
   // additional fields
+  enriched_at: z.string().nullable().optional(),
   /**
    * @TODO implement
    */

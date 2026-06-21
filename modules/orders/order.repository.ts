@@ -243,6 +243,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
               free_shipping_promo_from_seller:
                 item.freeShippingPromoFromSeller || 0,
               compensation: item.compensation || 0,
+              enriched_at: new Date().toISOString(),
               ...itemsMap,
 
               // admin_fee: item.adminFee,
