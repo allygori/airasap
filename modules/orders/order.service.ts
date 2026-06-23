@@ -66,7 +66,8 @@ export class OrderService {
       return await this.repository.findWithPagination(
         filter.page || 1,
         filter.limit || 10,
-        queryFilter
+        queryFilter,
+        filter.populate
       );
     } catch (error: any) {
       throw new Error(
@@ -78,9 +79,12 @@ export class OrderService {
   /**
    * Get order by ID
    */
-  async getById(id: string) {
+  async getById(id: string, populate?: string) {
     try {
-      const order = await this.repository.findById(id);
+      const order = await this.repository.findById(
+        id,
+        populate
+      );
       if (!order) {
         throw new Error('Order tidak ditemukan');
       }
@@ -93,12 +97,14 @@ export class OrderService {
   }
 
   /**
-   * Get order by order_id (unique identifier)
+   * Get order by order_id (unique identifier from marketplace platform)
    */
-  async getByOrderId(orderId: string) {
+  async getByOrderId(orderId: string, populate?: string) {
     try {
-      const order =
-        await this.repository.findByOrderId(orderId);
+      const order = await this.repository.findByOrderId(
+        orderId,
+        populate
+      );
       if (!order) {
         throw new Error(
           `Order dengan ID ${orderId} tidak ditemukan`

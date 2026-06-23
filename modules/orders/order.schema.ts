@@ -204,6 +204,7 @@ export const OrderFilterSchema = z.object({
   status: z.string().optional(),
   q: z.string().optional(),
   search: z.string().optional(),
+  populate: z.string().optional(),
   page: z.preprocess((v) => {
     if (typeof v === 'string' && v.length) {
       const n = Number(v);
@@ -226,6 +227,12 @@ export const OrderSearchQuerySchema = z.object({
 
 export const OrderIdParamsSchema = z.object({
   id: z.string().min(1, 'Order ID tidak valid'),
+});
+
+export const PlatformOrderIdParamsSchema = z.object({
+  order_id: z
+    .string()
+    .min(1, 'Platform Order ID tidak valid'),
 });
 
 export const BulkUpdateStatusSchema = z.object({

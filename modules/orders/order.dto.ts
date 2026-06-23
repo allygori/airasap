@@ -1,5 +1,3 @@
-export * from './order.schema';
-
 import { z } from 'zod';
 import {
   OrderItemSchema,
@@ -14,7 +12,10 @@ import {
   MassUploadResponseSchema,
   OrderSearchQuerySchema,
   OrderIdParamsSchema,
+  PlatformOrderIdParamsSchema,
 } from './order.schema';
+
+export * from './order.schema';
 
 export type OrderItemDTO = z.infer<typeof OrderItemSchema>;
 export type OrderAddressDTO = z.infer<
@@ -39,6 +40,9 @@ export type OrderSearchQueryDTO = z.infer<
 >;
 export type OrderIdParamsDTO = z.infer<
   typeof OrderIdParamsSchema
+>;
+export type PlatformOrderIdParamsDTO = z.infer<
+  typeof PlatformOrderIdParamsSchema
 >;
 export type BulkUpdateStatusDTO = z.infer<
   typeof BulkUpdateStatusSchema

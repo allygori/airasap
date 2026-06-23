@@ -78,14 +78,23 @@ export class OrderRepository extends BaseRepository<TOrder> {
   /**
    * Find order by order_id (unique identifier)
    */
-  async findByOrderId(orderId: string) {
-    return await this.model
-      .findOne({
-        ...this.getTenantFilter(),
-        order_id: orderId,
-        deleted_at: null,
-      })
-      .lean();
+  async findByOrderId(orderId: string, populate?: string) {
+    let query = this.model.findOne({
+      ...this.getTenantFilter(),
+      order_id: orderId,
+      deleted_at: null,
+    });
+
+    if (populate) {
+      const fields = populate
+        .split(',')
+        .map((f) => f.trim());
+      fields.forEach((field) => {
+        query = query.populate(field) as any;
+      });
+    }
+
+    return await query.lean();
   }
 
   /**
@@ -143,24 +152,27 @@ export class OrderRepository extends BaseRepository<TOrder> {
   async findWithPagination(
     page: number = 1,
     limit: number = 10,
-    filter?: QueryFilter<TOrder>
+    filter?: QueryFilter<TOrder>,
+    populate?: string
   ) {
     const skip = (page - 1) * limit;
 
+    let query = this.model.find({
+      ...filter,
+      ...this.getTenantFilter(),
+    });
+
+    if (populate) {
+      const fields = populate
+        .split(',')
+        .map((f) => f.trim());
+      fields.forEach((field) => {
+        query = query.populate(field) as any;
+      });
+    }
+
     const [data, total] = await Promise.all([
-      this.model
-        .find({
-          // $or: [
-          //   { deleted_at: { $eq: null } },
-          //   { deleted_at: { $exists: false } },
-          // ],
-          ...filter,
-          ...this.getTenantFilter(),
-        })
-        // .sort({ created_at: -1 })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
+      query.skip(skip).limit(limit).lean(),
       this.model.countDocuments({
         $or: [
           { deleted_at: { $eq: null } },

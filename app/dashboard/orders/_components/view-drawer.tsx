@@ -556,16 +556,11 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <Button
                   className="h-11 w-full rounded-xl shadow-sm"
                   onClick={() =>
-                    (window.location.href = `${editUrl}/${item._id}`)
+                    (window.location.href = `${editUrl}/${item.order_id}`)
                   }
                 >
                   <Edit2 className="mr-2 size-4" />
-                  Edit{' '}
-                  {isPost
-                    ? 'Content'
-                    : isMedia
-                      ? 'Asset'
-                      : 'Details'}
+                  Edit Order
                 </Button>
               )}
               {viewUrl && item.slug && (

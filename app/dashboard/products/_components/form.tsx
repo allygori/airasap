@@ -15,25 +15,25 @@ import { X } from 'lucide-react';
 import { formSchema } from './form.schema';
 import { PLATFORMS } from '@/lib/db/constant';
 
-type OrderFormProps = {
+type ProductFormProps = {
   title?: string;
 };
 
-export const OrderForm = withForm({
+export const ProductForm = withForm({
   defaultValues: {
     id: '',
     platform: '',
     name: '',
-    order_id: undefined,
+    product_id: undefined,
     variants: [],
   } as unknown as z.input<typeof formSchema>,
   props: {
     title: undefined,
-  } as OrderFormProps,
+  } as ProductFormProps,
   render: function Render({ form, title }) {
     return (
       <form
-        id="order-form"
+        id="product-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -46,10 +46,10 @@ export const OrderForm = withForm({
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">
-                Order Details
+                Product Details
               </CardTitle>
               <CardDescription>
-                Basic information about the order.
+                Basic information about the product.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -58,7 +58,7 @@ export const OrderForm = withForm({
                   name="name"
                   children={(field) => (
                     <field.TextField
-                      label="Order Name"
+                      label="Product Name"
                       autoComplete="off"
                       className="h-10 text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
                     />
@@ -80,11 +80,11 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="order_id"
+                  name="product_id"
                   children={(field) => (
                     <field.TextField
                       type="number"
-                      label="Order ID"
+                      label="Product ID"
                     />
                   )}
                 />
@@ -319,7 +319,7 @@ export const OrderForm = withForm({
         <div className="flex w-full shrink-0 flex-col gap-6 lg:sticky lg:top-8 lg:w-80">
           <FieldGroup className="flex flex-col gap-6">
             <form.AppForm>
-              <form.SubmitButton text="Save Order" />
+              <form.SubmitButton text="Save Product" />
             </form.AppForm>
           </FieldGroup>
         </div>

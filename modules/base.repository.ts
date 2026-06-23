@@ -32,10 +32,20 @@ export abstract class BaseRepository<T extends Document> {
     } as QueryFilter<T>;
   }
 
-  async findById(id: string) {
-    return this.model
-      .findOne({ _id: id, ...this.getTenantFilter() })
-      .lean();
+  async findById(id: string, populate?: string) {
+    let query = this.model.findOne({
+      _id: id,
+      ...this.getTenantFilter(),
+    });
+    if (populate) {
+      const fields = populate
+        .split(',')
+        .map((f) => f.trim());
+      fields.forEach((field) => {
+        query = query.populate(field) as any;
+      });
+    }
+    return query.lean();
   }
 
   async findOne(filter: QueryFilter<T> = {}) {
