@@ -28,7 +28,7 @@ export type TAccount = Document &
 
 const AccountSchema = new Schema<TAccount>(
   {
-    account_id: {
+    account: {
       type: Types.ObjectId,
       required: true,
       unique: true,

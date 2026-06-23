@@ -19,17 +19,18 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
+import { getTenantContext } from '@/lib/api/tenant-context';
 
 /**
  * Extract tenant context from request headers
  */
-function getTenantContext(req: Request) {
-  return {
-    organizationId:
-      req.headers.get('x-organization-id') || '',
-    storeId: req.headers.get('x-store-id') || undefined,
-  };
-}
+// function getTenantContext(req: Request) {
+//   return {
+//     organizationId:
+//       req.headers.get('x-organization-id') || '',
+//     storeId: req.headers.get('x-store-id') || undefined,
+//   };
+// }
 
 /**
  * GET /api/v1/dashboard/products/[id]
@@ -42,7 +43,7 @@ export const GET = withValidation(
   async (request, context) => {
     const validatedParams =
       context.validatedParams as ProductIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(
@@ -77,7 +78,7 @@ export const PATCH = withValidation(
       context.validatedBody as UpdateProductDTO;
     const validatedParams =
       context.validatedParams as ProductIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     const productService = new ProductService(
       tenantContext
@@ -109,7 +110,7 @@ export const DELETE = withValidation(
   async (request, context) => {
     const validatedParams =
       context.validatedParams as ProductIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     const productService = new ProductService(
       tenantContext

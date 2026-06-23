@@ -13,7 +13,7 @@ import {
   OrderBaseDTO,
 } from './order.dto';
 
-const platforms = [...PLATFORMS] as const;
+// const platforms = [...PLATFORMS] as const;
 
 // export type TOrderItem = {
 //   product: typeof ObjectId;
@@ -103,14 +103,7 @@ const OrderItemSchema = new Schema<TOrderItem>(
       required: false, // Not required because there are possibility user rename product name and can't find and match product by name, solution is user select the right product
       alias: 'productId',
     },
-    parent_sku: {
-      type: String,
-      alias: 'parentSku',
-    },
-    sku_reference_number: {
-      type: String,
-      alias: 'skuReferenceNumber',
-    },
+
     product_name: {
       type: String,
       alias: 'productName',
@@ -126,6 +119,14 @@ const OrderItemSchema = new Schema<TOrderItem>(
     product_key: {
       type: String,
       alias: 'productKey',
+    },
+    parent_sku: {
+      type: String,
+      alias: 'parentSku',
+    },
+    sku_reference_number: {
+      type: String,
+      alias: 'skuReferenceNumber',
     },
     original_price: {
       type: Number,
@@ -143,7 +144,17 @@ const OrderItemSchema = new Schema<TOrderItem>(
       alias: 'returnedQuantity',
     },
     cogs: {
+      // replaced with product_cost_amount
       type: Number,
+    },
+    product_cost: {
+      type: Types.ObjectId,
+      ref: 'ProductCost',
+      required: false,
+    },
+    product_cost_amount: {
+      type: Number,
+      required: false,
     },
   },
   { _id: false }
@@ -212,6 +223,7 @@ const OrderFeeSchema = new Schema<TOrderFee>(
       type: Number,
       required: false,
       alias: 'returnShippingFee',
+      default: 0,
     },
     return_to_sender_shipping_fee: {
       type: Number,
@@ -344,11 +356,13 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       required: false,
       alias: 'shippingFeeDiscountByLogistics',
+      default: 0,
     },
     shipping_fee_forwarded_by_shopee: {
       type: Number,
       required: false,
       alias: 'shippingFeeForwardedByShopee',
+      default: 0,
     },
     free_shipping_from_shopee: {
       type: Number,
@@ -362,10 +376,12 @@ const OrderSchema = new Schema<TOrder>(
     free_shipping_promo_from_seller: {
       type: Number,
       alias: 'freeShippingPromoFromSeller',
+      default: 0,
     },
     compensation: {
       type: Number,
       alias: 'freeShippingPromoFromSeller',
+      default: 0,
     },
     product_weight: {
       type: Number,
@@ -434,6 +450,7 @@ const OrderSchema = new Schema<TOrder>(
     released_amount: {
       type: Number,
       alias: 'releasedAmount',
+      default: 0,
     },
     net_amount: {
       type: Number,
@@ -460,6 +477,7 @@ const OrderSchema = new Schema<TOrder>(
     enriched_at: {
       type: Date,
       alias: 'enrichedAt',
+      default: null,
     },
     /**
      * @TODO implement

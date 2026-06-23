@@ -22,7 +22,15 @@ export const OrderItemSchema = z.object({
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
   processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedIncome
-  cogs: z.number().optional(),
+  cogs: z.number().optional(), // replaced with product_cost_amount
+  product_cost: z
+    .string()
+    .optional()
+    .refine((val) => mongoose.isValidObjectId(val), {
+      message: 'Mongoose ObjectId tidak valid',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+  product_cost_amount: z.number().optional(),
 });
 
 export const OrderAddressSchema = z.object({

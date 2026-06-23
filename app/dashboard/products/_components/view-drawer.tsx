@@ -67,20 +67,8 @@ export function ViewDrawer<T extends Record<string, any>>({
   const isTag =
     'name' in item && 'slug' in item && !('parent' in item);
 
-  const title =
-    item.title ||
-    item.name ||
-    item.filename ||
-    'Item Details';
-  const description = isPost
-    ? 'Article Preview & Details'
-    : isMedia
-      ? 'Media Asset Details'
-      : isCategory
-        ? 'Category Information'
-        : isTag
-          ? 'Tag Configuration'
-          : 'General Information';
+  const title = 'Product Details';
+  const description = 'Informasi produk';
 
   return (
     <Drawer

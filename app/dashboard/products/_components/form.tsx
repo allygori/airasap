@@ -15,25 +15,25 @@ import { X } from 'lucide-react';
 import { formSchema } from './form.schema';
 import { PLATFORMS } from '@/lib/db/constant';
 
-type ProductFormProps = {
+type OrderFormProps = {
   title?: string;
 };
 
-export const ProductForm = withForm({
+export const OrderForm = withForm({
   defaultValues: {
     id: '',
     platform: '',
     name: '',
-    product_id: undefined,
+    order_id: undefined,
     variants: [],
   } as unknown as z.input<typeof formSchema>,
   props: {
     title: undefined,
-  } as ProductFormProps,
+  } as OrderFormProps,
   render: function Render({ form, title }) {
     return (
       <form
-        id="product-form"
+        id="order-form"
         onSubmit={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -46,10 +46,10 @@ export const ProductForm = withForm({
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">
-                Product Details
+                Order Details
               </CardTitle>
               <CardDescription>
-                Basic information about the product.
+                Basic information about the order.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -58,7 +58,7 @@ export const ProductForm = withForm({
                   name="name"
                   children={(field) => (
                     <field.TextField
-                      label="Product Name"
+                      label="Order Name"
                       autoComplete="off"
                       className="h-10 text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
                     />
@@ -80,11 +80,11 @@ export const ProductForm = withForm({
                 />
 
                 <form.AppField
-                  name="product_id"
+                  name="order_id"
                   children={(field) => (
                     <field.TextField
                       type="number"
-                      label="Product ID"
+                      label="Order ID"
                     />
                   )}
                 />
@@ -98,7 +98,7 @@ export const ProductForm = withForm({
                 Variants
               </CardTitle>
               <CardDescription>
-                Manage product variants.
+                Manage order variants.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -319,7 +319,7 @@ export const ProductForm = withForm({
         <div className="flex w-full shrink-0 flex-col gap-6 lg:sticky lg:top-8 lg:w-80">
           <FieldGroup className="flex flex-col gap-6">
             <form.AppForm>
-              <form.SubmitButton text="Save Product" />
+              <form.SubmitButton text="Save Order" />
             </form.AppForm>
           </FieldGroup>
         </div>

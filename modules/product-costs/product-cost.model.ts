@@ -1,16 +1,30 @@
-import { Schema, model, models, Document } from 'mongoose';
+import {
+  Schema,
+  model,
+  models,
+  Document,
+  Types,
+} from 'mongoose';
+import { BaseProductCostDTO } from './product-cost.dto';
 
-const ObjectId = Schema.Types.ObjectId;
+// export type TProductCost = Document & {
+//   organization: typeof ObjectId;
+//   store: typeof ObjectId;
+//   product: typeof ObjectId;
+//   effective_from?: Date;
+//   cogs_unit?: number;
+//   notes?: string;
+//   deleted_at?: Date;
+// };
 
-export type TProductCost = Document & {
-  organization: typeof ObjectId;
-  store: typeof ObjectId;
-  product: typeof ObjectId;
-  effective_from?: Date;
-  cogs?: number;
-  notes?: string;
-  deleted_at?: Date;
-};
+export type TProductCost = Document &
+  BaseProductCostDTO & {
+    organization: Types.ObjectId;
+    store: Types.ObjectId;
+    deleted_at?: Date | null;
+    created_at?: Date;
+    updated_at?: Date;
+  };
 
 const ProductCostSchema = new Schema<TProductCost>(
   {
@@ -36,7 +50,7 @@ const ProductCostSchema = new Schema<TProductCost>(
       type: Date,
       alias: 'effectiveFrom',
     },
-    cogs: {
+    cogs_unit: {
       type: Number,
     },
     notes: {
@@ -70,5 +84,5 @@ export const ProductCostModel =
   model<TProductCost>(
     'ProductCost',
     ProductCostSchema,
-    'ProductCosts'
+    'product-costs'
   );

@@ -24,8 +24,13 @@ import {
   Edit2,
   FileText,
   Image as ImageIcon,
+  ShoppingBagIcon,
+  HashIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import { cn } from '@/lib/utils';
+import { formatIDR } from '@/lib/formatter';
+import { formatDate } from '@/lib/formatter/date';
 
 type MediaType = {
   url: string;
@@ -48,6 +53,27 @@ interface ViewDrawerProps<T = any> {
 
 const snapPoints = ['148px', '355px', 1];
 
+const StatLine = ({
+  label,
+  value,
+  valueClass,
+}: {
+  label: string;
+  value: string;
+  valueClass?: string;
+}) => {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b py-2 last:border-0">
+      <span className="text-muted-foreground">{label}</span>
+      <span
+        className={cn('text-right font-medium', valueClass)}
+      >
+        {value}
+      </span>
+    </div>
+  );
+};
+
 export function ViewDrawer<T extends Record<string, any>>({
   item,
   children,
@@ -67,20 +93,8 @@ export function ViewDrawer<T extends Record<string, any>>({
   const isTag =
     'name' in item && 'slug' in item && !('parent' in item);
 
-  const title =
-    item.title ||
-    item.name ||
-    item.filename ||
-    'Item Details';
-  const description = isPost
-    ? 'Article Preview & Details'
-    : isMedia
-      ? 'Media Asset Details'
-      : isCategory
-        ? 'Category Information'
-        : isTag
-          ? 'Tag Configuration'
-          : 'General Information';
+  const title = 'Order Details';
+  const description = 'Informasi detail tentang order';
 
   return (
     <Drawer
@@ -103,12 +117,13 @@ export function ViewDrawer<T extends Record<string, any>>({
         <div className="flex max-w-full min-w-0 flex-1 flex-col overflow-hidden">
           <DrawerHeader className="min-w-0 shrink-0 gap-1 border-b pb-4">
             <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
-              <FileText className="size-4 shrink-0 text-blue-500" />
+              <ShoppingBagIcon className="size-4 shrink-0 text-[#EE4D2D]" />
               <Badge
                 variant="outline"
-                className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter uppercase"
+                className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter text-[#EE4D2D] uppercase"
               >
-                Product
+                {/* Order */}
+                {item.platform}
               </Badge>
             </div>
             <DrawerTitle className="text-xl leading-tight font-bold wrap-break-word">
@@ -121,7 +136,7 @@ export function ViewDrawer<T extends Record<string, any>>({
 
           <div className="scrollbar-hide min-h-0 min-w-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto p-4">
             {/* Visual Preview for Post or Media */}
-            {(isPost || isMedia) && (
+            {/* {(isPost || isMedia) && (
               <div className="bg-muted group relative aspect-video w-full overflow-hidden rounded-xl border shadow-sm">
                 <Image
                   src={
@@ -141,10 +156,231 @@ export function ViewDrawer<T extends Record<string, any>>({
                   </div>
                 )}
               </div>
-            )}
+            )} */}
 
             {/* Core Details Grid */}
             <div className="grid gap-6">
+              <section className="bg-muted/30 border-muted-foreground/20 flex min-w-0 flex-row items-center justify-between rounded-xl border border-dashed p-4">
+                <h2 className="text-muted-foreground/90 text-tiny mb-2 flex items-center gap-1.5 leading-relaxed font-bold tracking-widest uppercase">
+                  <HashIcon className="size-3" />
+                  {item.order_id}
+                </h2>
+                <p className="text-foreground/80 text-sm leading-relaxed wrap-break-word">
+                  {item.username}
+                </p>
+              </section>
+
+              <section>
+                <StatLine
+                  label="Pendapatan"
+                  value={formatIDR(item.released_amount)}
+                />
+                <StatLine
+                  label="Profit"
+                  value={formatIDR(item.released_amount)}
+                  valueClass={
+                    item.released_amount !== undefined &&
+                    item.released_amount !== 0
+                      ? item.released_amount < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Dibuat"
+                  value={formatDate(item.order_created_at)}
+                />
+                <StatLine
+                  label="Selesai"
+                  value={formatDate(
+                    item.order_completed_at
+                  )}
+                />
+                <StatLine
+                  label="Pembayaran"
+                  value={item.payment_method || '-'}
+                />
+                <StatLine
+                  label="Jasa Kirim"
+                  value={item.shipping_option || '-'}
+                />
+                <StatLine
+                  label="Total Pembayaran Buyer"
+                  value={formatIDR(item.total_payment)}
+                />
+                <StatLine
+                  label="Total Pembayaran Buyer"
+                  value={formatIDR(item.total_payment)}
+                />
+                <StatLine
+                  label="Biaya Admin"
+                  value={formatIDR(item.fee?.admin_fee)}
+                  valueClass={
+                    item.fee?.admin_fee !== undefined &&
+                    item.fee?.admin_fee !== 0
+                      ? item.fee?.admin_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Proses Pesanan"
+                  value={formatIDR(
+                    item.fee?.processing_fee
+                  )}
+                  valueClass={
+                    item.fee?.processing_fee !==
+                      undefined &&
+                    item.fee?.processing_fee !== 0
+                      ? item.fee?.processing_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Affiliate"
+                  value={formatIDR(item.fee?.affiliate_fee)}
+                  valueClass={
+                    item.fee?.affiliate_fee !== undefined &&
+                    item.fee?.affiliate_fee !== 0
+                      ? item.fee?.affiliate_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Kampanye"
+                  value={formatIDR(item.fee?.campaign_fee)}
+                  valueClass={
+                    item.fee?.campaign_fee !== undefined &&
+                    item.fee?.campaign_fee !== 0
+                      ? item.fee?.campaign_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Gratis Ongkir"
+                  value={formatIDR(
+                    item.fee?.shipping_saver_program_fee
+                  )}
+                  valueClass={
+                    item.fee?.shipping_saver_program_fee !==
+                      undefined &&
+                    item.fee?.shipping_saver_program_fee !==
+                      0
+                      ? item.fee
+                          ?.shipping_saver_program_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Transaksi"
+                  value={formatIDR(
+                    item.fee?.transaction_fee
+                  )}
+                  valueClass={
+                    item.fee?.transaction_fee !==
+                      undefined &&
+                    item.fee?.transaction_fee !== 0
+                      ? item.fee?.transaction_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Auto Top Up Iklan"
+                  value={formatIDR(
+                    item.fee?.auto_top_up_fee_from_income
+                  )}
+                  valueClass={
+                    item.fee
+                      ?.auto_top_up_fee_from_income !==
+                      undefined &&
+                    item.fee
+                      ?.auto_top_up_fee_from_income !== 0
+                      ? item.fee
+                          ?.auto_top_up_fee_from_income < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Biaya Layanan"
+                  value={formatIDR(item.fee?.service_fee)}
+                  valueClass={
+                    item.fee?.service_fee !== undefined &&
+                    item.fee?.service_fee !== 0
+                      ? item.fee?.service_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Ongkos Kirim Pengembalian Barang"
+                  value={formatIDR(
+                    item.fee?.return_shipping_fee
+                  )}
+                  valueClass={
+                    item.fee?.return_shipping_fee !==
+                      undefined &&
+                    item.fee?.return_shipping_fee !== 0
+                      ? item.fee?.return_shipping_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Kembali ke Biaya Pengiriman Pengirim"
+                  value={formatIDR(
+                    item.fee?.return_to_sender_shipping_fee
+                  )}
+                  valueClass={
+                    item.fee
+                      ?.return_to_sender_shipping_fee !==
+                      undefined &&
+                    item.fee
+                      ?.return_to_sender_shipping_fee !== 0
+                      ? item.fee
+                          ?.return_to_sender_shipping_fee <
+                        0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
+                  label="Refund Biaya Kirim"
+                  value={formatIDR(
+                    item.fee?.shipping_fee_refund
+                  )}
+                  valueClass={
+                    item.fee?.shipping_fee_refund !==
+                      undefined &&
+                    item.fee?.shipping_fee_refund !== 0
+                      ? item.fee?.shipping_fee_refund < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                {/* service_fee */}
+                {/* return_shipping_fee */}
+                {/* return_to_sender_shipping_fee */}
+                {/* shipping_fee_refund */}
+              </section>
+
               {/* Excerpt/Description Section */}
               {(item.excerpt || item.description) && (
                 <section className="bg-muted/30 border-muted-foreground/20 min-w-0 rounded-xl border border-dashed p-4">

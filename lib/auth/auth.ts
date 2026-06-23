@@ -6,6 +6,10 @@ import { MongoClient } from 'mongodb';
 import { configs } from './configs';
 import { databaseHooks } from './hooks';
 import { store } from './plugins/store';
+import { accountConfig } from './configs/account';
+import { userConfig } from './configs/user';
+import { sessionConfig } from './configs/session';
+import { verificationConfig } from './configs/verification';
 // import { StoreService } from '@/modules/stores/store.service';
 // import { CreateStoreDTO } from '@/modules/stores/store.dto';
 // import { PLATFORMS } from '../db/constant';
@@ -37,6 +41,9 @@ export const auth = betterAuth({
       schema: {
         organization: {
           modelName: 'organizations',
+        },
+        member: {
+          modelName: 'members',
         },
       },
       organizationHooks: {
@@ -155,13 +162,16 @@ export const auth = betterAuth({
   //   accountLinking
   // },
 
-  ...configs,
-
   advanced: {
     database: {
       generateId: false,
     },
   },
+  // ...configs,
+  user: userConfig,
+  session: sessionConfig,
+  account: accountConfig,
+  verification: verificationConfig,
 
   // databaseHooks,
 });

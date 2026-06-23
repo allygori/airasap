@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useMemo } from 'react';
-import { ProductForm } from '@/app/dashboard/products/_components/form';
+import { OrderForm } from '@/app/dashboard/products/_components/form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
@@ -9,22 +9,26 @@ import { useRouter } from 'next/navigation';
 import { INITIAL_BLOCK_VALUE } from '../_components/form.constant';
 // import { TagType } from '@/components/blog/types';
 import { formSchema } from '../_components/form.schema';
+import { OrderResponseDTO } from '@/modules/orders/order.dto';
 
-type PostData = any; // You can use ZodPostSchema to infer this if preferred
+// type OrderData = any; // You can use ZodPostSchema to infer this if preferred
+type OrderData = OrderResponseDTO;
 
-const EditPostPage = ({
+const EditPage = ({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) => {
   const { id } = use(params);
-  const [data, setData] = useState<PostData | null>(null);
+  const [data, setData] = useState<OrderData | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/posts/${id}`);
+        const response = await fetch(
+          `/api/v1/dashboard/orders/${id}`
+        );
         const result = await response.json();
         if (!response.ok)
           throw new Error(
@@ -50,7 +54,7 @@ const EditPostPage = ({
         <div className="flex flex-col items-center gap-2">
           <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
           <p className="text-muted-foreground animate-pulse font-medium">
-            Memuat data post...
+            Memuat data order...
           </p>
         </div>
       </div>
@@ -62,24 +66,24 @@ const EditPostPage = ({
       <div className="flex min-h-100 flex-1 items-center justify-center">
         <div className="text-center">
           <h3 className="text-destructive text-lg font-semibold">
-            Post tidak ditemukan
+            Order tidak ditemukan
           </h3>
           <p className="text-muted-foreground">
-            ID post mungkin salah atau telah dihapus.
+            ID order mungkin salah atau telah dihapus.
           </p>
         </div>
       </div>
     );
   }
 
-  return <EditPostFormWrapper initialData={data} id={id} />;
+  return <EditFormWrapper initialData={data} id={id} />;
 };
 
-function EditPostFormWrapper({
+function EditFormWrapper({
   initialData,
   id,
 }: {
-  initialData: PostData;
+  initialData: OrderData;
   id: string;
 }) {
   const router = useRouter();
@@ -109,7 +113,7 @@ function EditPostFormWrapper({
         };
 
         const response = await fetch(
-          `/api/products/${id}`,
+          `/api/v1/dashboard/orders/${id}`,
           {
             method: 'PATCH',
             headers: {
@@ -125,21 +129,21 @@ function EditPostFormWrapper({
           throw new Error(
             result.message ||
               result.error?.message ||
-              'Terjadi kesalahan saat menyimpan produk'
+              'Terjadi kesalahan saat menyimpan order'
           );
         }
 
-        toast.success('Product updated successfully', {
-          description: `Product "${value.name}" has been updated.`,
+        toast.success('Order updated successfully', {
+          description: `Order "${value.name}" has been updated.`,
         });
 
-        router.push('/dashboard/products');
+        router.push('/dashboard/orders');
         router.refresh();
       } catch (error: unknown) {
         const message =
           error instanceof Error
             ? error.message
-            : 'Gagal memperbarui produk';
+            : 'Gagal memperbarui order';
         console.error('Update product error:', error);
         toast.error(message);
       }
@@ -153,19 +157,19 @@ function EditPostFormWrapper({
       <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6">
         <div>
           <h2 className="mb-1 text-xl font-semibold">
-            Edit Product
+            Edit Order
           </h2>
           <p className="text-muted-foreground text-sm font-normal">
-            Ubah rincian produk:{' '}
+            Ubah rincian order:{' '}
             <span className="text-foreground font-medium">
               {productName || initialData.name}
             </span>
           </p>
         </div>
-        <ProductForm form={form} title="Informasi Produk" />
+        <OrderForm form={form} title="Informasi Order" />
       </div>
     </div>
   );
 }
 
-export default EditPostPage;
+export default EditPage;

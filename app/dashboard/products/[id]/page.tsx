@@ -24,7 +24,9 @@ const EditPostPage = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`/api/posts/${id}`);
+        const response = await fetch(
+          `/api/v1/dashboard/products/${id}`
+        );
         const result = await response.json();
         if (!response.ok)
           throw new Error(
@@ -109,7 +111,7 @@ function EditPostFormWrapper({
         };
 
         const response = await fetch(
-          `/api/products/${id}`,
+          `/api/v1/dashboard/products/${id}`,
           {
             method: 'PATCH',
             headers: {

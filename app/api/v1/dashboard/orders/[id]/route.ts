@@ -19,17 +19,7 @@ import {
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-
-/**
- * Extract tenant context from request headers
- */
-function getTenantContext(req: Request) {
-  return {
-    organizationId:
-      req.headers.get('x-organization-id') || '',
-    storeId: req.headers.get('x-store-id') || undefined,
-  };
-}
+import { getTenantContext } from '@/lib/api/tenant-context';
 
 /**
  * GET /api/v1/dashboard/orders/[id]
@@ -42,7 +32,7 @@ export const GET = withValidation(
   async (request, context) => {
     const validatedParams =
       context.validatedParams as OrderIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(
@@ -75,7 +65,7 @@ export const PATCH = withValidation(
       context.validatedBody as UpdateOrderDTO;
     const validatedParams =
       context.validatedParams as OrderIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     const orderService = new OrderService(tenantContext);
     const updatedOrder = await orderService.update(
@@ -104,7 +94,7 @@ export const DELETE = withValidation(
   async (request, context) => {
     const validatedParams =
       context.validatedParams as OrderIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     const orderService = new OrderService(tenantContext);
     const deletedOrder = await orderService.remove(

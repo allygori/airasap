@@ -3,7 +3,8 @@ import { BetterAuthOptions } from 'better-auth';
 export const accountConfig = {
   modelName: 'accounts',
   fields: {
-    accountId: 'account_id',
+    // accountId: 'account',
+    accountId: '_id',
     userId: 'user',
     providerId: 'provider',
     password: 'password',
