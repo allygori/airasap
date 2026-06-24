@@ -1,20 +1,30 @@
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { PLATFORMS } from '../constant';
+import { Types } from 'mongoose';
 
 const platforms = [...PLATFORMS] as const;
+
+const ObjectIdSchema = z.union([
+  z.instanceof(Types.ObjectId),
+  z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .transform((val) => new Types.ObjectId(val)),
+]);
 
 export const VariantSchema = z.object({
   variant_id: z.string().min(1, 'Variant ID wajib diisi'),
   name: z.string().min(1, 'Nama variant wajib diisi'),
-  key: z.string().min(1, 'Variant key wajib diisi'),
+  // key: z.string().min(1, 'Variant key wajib diisi'),
   price: z
     .number()
     .positive('Harga variant harus lebih besar dari 0'),
-  quantity: z
-    .number()
-    .int()
-    .nonnegative('Jumlah tidak boleh minus')
-    .default(0),
+  // quantity: z
+  //   .number()
+  //   .int()
+  //   .nonnegative('Jumlah tidak boleh minus')
+  //   .default(0),
   discount: z
     .number()
     .int()
@@ -27,13 +37,29 @@ export const VariantSchema = z.object({
   parent_sku: z.string().optional(),
   sku: z.string().optional(),
   gtin: z.string().optional(),
+  is_default: z.boolean(), // https://share.google/aimode/LIpXWTeE9qAGrqCxZ
+  product: ObjectIdSchema,
+  product_cost: ObjectIdSchema,
+  // product_cost: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
 });
 
 export const ProductBaseSchema = z.object({
   platform: z.enum(platforms, 'Platform tidak valid'),
   name: z.string().min(3, 'Nama minimal 3 karakter'),
   product_id: z.string().min(1, 'Product ID wajib diisi'),
-  key: z.string().optional(),
+  // key: z.string().optional(),
+  options: z.array(
+    z.object({
+      name: z.string(),
+      values: z.array(z.string()),
+    })
+  ),
   variants: z.array(VariantSchema).optional(),
   is_active: z.boolean().default(true),
 });
@@ -46,8 +72,8 @@ export const UpdateProductSchema =
 export const ProductResponseSchema =
   ProductBaseSchema.extend({
     _id: z.string(),
-    organization: z.string().optional(),
-    store: z.string().optional(),
+    // organization: z.string().optional(),
+    // store: z.string().optional(),
     created_at: z.string().optional(),
     updated_at: z.string().optional(),
     deleted_at: z.string().nullable().optional(),

@@ -39,17 +39,23 @@ const ProductSchema = new Schema<TProduct>(
       required: true,
     },
     name: { type: String, required: true },
-    key: { type: String },
+    // key: { type: String },
     product_id: {
       type: String,
       required: true,
       unique: true,
     },
+    options: [
+      {
+        name: { type: String },
+        values: [String],
+      },
+    ],
     variants: [
       {
         variant_id: { type: String, unique: true }, // variation id
         name: { type: String, required: true },
-        key: { type: String }, // product_id::variation name
+        // key: { type: String }, // product_id::variation name
         price: { type: Number, required: true },
         // quantity: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
@@ -57,6 +63,21 @@ const ProductSchema = new Schema<TProduct>(
         parent_sku: { type: String, required: false },
         sku: { type: String, required: false },
         gtin: { type: String, required: false },
+        is_default: {
+          type: Boolean,
+          required: true,
+          default: true,
+        },
+        product: {
+          type: Types.ObjectId,
+          ref: 'Product',
+          required: false,
+        },
+        product_cost: {
+          type: Types.ObjectId,
+          ref: 'ProductCost',
+          required: false,
+        },
       },
     ],
     is_active: { type: Boolean, default: true },

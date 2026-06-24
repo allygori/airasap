@@ -58,6 +58,7 @@ export const GET = withValidation(
     );
     const product = await productService.getProductById(
       validatedParams.id
+      // 'variants.product_cost'
     );
 
     return apiSuccess(product);

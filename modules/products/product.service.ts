@@ -80,6 +80,23 @@ export class ProductService {
     }
   }
 
+  // /**
+  //  * Get product by ID
+  //  */
+  // async getProductById(id: string, populate?: string) {
+  //   try {
+  //     const product = await this.repository.findById(id, populate);
+  //     if (!product) {
+  //       throw new Error('Produk tidak ditemukan');
+  //     }
+  //     return product;
+  //   } catch (error: any) {
+  //     throw new Error(
+  //       `Gagal mengambil detail produk: ${error.message}`
+  //     );
+  //   }
+  // }
+
   /**
    * Get product by ID
    */

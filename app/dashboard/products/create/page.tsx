@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { revalidateLogic } from '@tanstack/react-form';
 
 import { useAppForm } from '@/components/form/form.hook';
-import { ProductForm } from '@/app/dashboard/products/_components/form';
+import { ProductForm } from '@/app/dashboard/products/_components/product.form';
 // import { TagType } from '@/components/blog/types';
 import { INITIAL_BLOCK_VALUE } from '../_components/form.constant';
 import { formSchema } from '../_components/form.schema';

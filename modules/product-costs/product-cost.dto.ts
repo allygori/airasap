@@ -4,6 +4,7 @@ import {
   CreateProductCostSchema,
   UpdateProductCostSchema,
   QueryFilterProductCostSchema,
+  ProductCostResponseSchema,
 } from './product-cost.schema';
 
 export * from './product-cost.schema';
@@ -19,4 +20,7 @@ export type UpdateProductCostDTO = z.infer<
 >;
 export type QueryFilterProductCostDTO = z.infer<
   typeof QueryFilterProductCostSchema
+>;
+export type ProductCostResponseDTO = z.infer<
+  typeof ProductCostResponseSchema
 >;

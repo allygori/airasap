@@ -9,6 +9,7 @@ export const variantSchema = z.object({
   finalPrice: z.number().optional(),
   SKU: z.string().optional(),
   GTIN: z.string().optional(),
+  product_cost: z.any().optional(),
 });
 
 export const formSchema = z.object({

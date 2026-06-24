@@ -81,28 +81,36 @@ export class ProductCostService {
 
   /**
    * Create new product cost
-   * @TODO implement
    */
   async create(dto: CreateProductCostDTO) {
-    // try {
-    //   // Validasi filename unik
-    //   const existingProductCost = await this.repository.findOne({
-    //     filename: dto.filename,
-    //   });
-    //   if (existingProductCost) {
-    //     throw new Error(
-    //       `ProductCost dengan filename '${dto.filename}' sudah ada`
-    //     );
-    //   }
-    //   const newProductCost = await this.repository.create({
-    //     ...dto,
-    //   });
-    //   return newProductCost;
-    // } catch (error: any) {
-    //   throw new Error(
-    //     `Gagal membuat product cost: ${error.message}`
-    //   );
-    // }
+    try {
+      const newProductCost = await this.repository.create({
+        ...dto,
+      });
+      return newProductCost;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal membuat product cost: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Update product cost
+   */
+  async update(id: string, dto: UpdateProductCostDTO) {
+    try {
+      const updatedProductCost =
+        await this.repository.update(id, dto);
+      if (!updatedProductCost) {
+        throw new Error('Gagal memperbarui product cost');
+      }
+      return updatedProductCost;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal memperbarui product cost: ${error.message}`
+      );
+    }
   }
 
   /**

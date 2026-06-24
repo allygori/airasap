@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useMemo } from 'react';
-import { ProductForm } from '@/app/dashboard/products/_components/form';
+import { ProductForm } from '@/app/dashboard/products/_components/product.form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
@@ -52,7 +52,7 @@ const EditPostPage = ({
         <div className="flex flex-col items-center gap-2">
           <div className="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"></div>
           <p className="text-muted-foreground animate-pulse font-medium">
-            Memuat data post...
+            Memuat data produk...
           </p>
         </div>
       </div>
@@ -64,10 +64,10 @@ const EditPostPage = ({
       <div className="flex min-h-100 flex-1 items-center justify-center">
         <div className="text-center">
           <h3 className="text-destructive text-lg font-semibold">
-            Post tidak ditemukan
+            Produk tidak ditemukan
           </h3>
           <p className="text-muted-foreground">
-            ID post mungkin salah atau telah dihapus.
+            ID produk mungkin salah atau telah dihapus.
           </p>
         </div>
       </div>
@@ -164,7 +164,11 @@ function EditPostFormWrapper({
             </span>
           </p>
         </div>
-        <ProductForm form={form} title="Informasi Produk" />
+        <ProductForm
+          form={form}
+          title="Informasi Produk"
+          productId={id}
+        />
       </div>
     </div>
   );
