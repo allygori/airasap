@@ -39,7 +39,7 @@ export const VariantSchema = z.object({
   costs: z
     .array(
       z.object({
-        effective_from: z.coerce.date(),
+        // effective_from: z.coerce.date(),
         cogs_unit: z.number().int().nonnegative(),
         notes: z.string().nullable().optional(),
       })
@@ -72,6 +72,7 @@ export const ProductBaseSchema = z.object({
     .optional()
     .default([]),
   variants: z.array(VariantSchema).optional(),
+  default_cost: z.number().optional(),
   is_active: z.boolean().default(true),
 });
 

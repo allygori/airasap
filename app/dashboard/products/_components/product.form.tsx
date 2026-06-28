@@ -11,7 +11,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
-import { PLATFORMS } from '@/lib/db/constant';
+// import { PLATFORMS } from '@/lib/db/constant';
+import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
 import { formSchema } from './form.schema';
 import { VariantsSubForm } from './variants.subform';
 
@@ -54,14 +55,14 @@ export const ProductForm = withForm({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <FieldGroup className="flex flex-col gap-6">
+              <FieldGroup className="grid grid-cols-2 gap-6">
                 <form.AppField
                   name="name"
                   children={(field) => (
                     <field.TextField
                       label="Product Name"
                       autoComplete="off"
-                      className="h-10 text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
+                      className="col-span-full text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
                     />
                   )}
                 />
@@ -72,9 +73,13 @@ export const ProductForm = withForm({
                     <field.SelectField
                       label="Platform"
                       multiple={false}
-                      items={PLATFORMS.map((p) => ({
-                        label: p,
-                        value: p,
+                      className="col-span-1"
+                      disabled={true}
+                      items={Object.values(
+                        PLATFORMS_KV_WITH_LABEL
+                      ).map((p) => ({
+                        label: p.label.toUpperCase(),
+                        value: p.value,
                       }))}
                     />
                   )}
@@ -86,6 +91,7 @@ export const ProductForm = withForm({
                     <field.TextField
                       type="text"
                       label="Product ID"
+                      disabled={true}
                     />
                   )}
                 />

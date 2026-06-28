@@ -14,6 +14,29 @@ export const PLATFORMS_KV = {
   blibli: 'blibli',
 };
 
+export const PLATFORMS_KV_WITH_LABEL = {
+  shopee: {
+    label: 'Shopee',
+    value: 'shopee',
+  },
+  tokopedia: {
+    label: 'Tokopedia',
+    value: 'tokopedia',
+  },
+  tiktok: {
+    label: 'Tiktok Shop',
+    value: 'tiktok-shop',
+  },
+  lazada: {
+    label: 'Lazada',
+    value: 'lazada',
+  },
+  blibli: {
+    label: 'Blibli',
+    value: 'blibli',
+  },
+};
+
 export const SHOPEE_PAYMENT_METHODS = [
   'ShopeePay',
   'Kartu Kredit/Debit',

@@ -86,12 +86,12 @@ export function ViewDrawer<T extends Record<string, any>>({
   );
 
   // Detection logic
-  const isPost = 'title' in item && 'content' in item;
-  const isMedia = 'filename' in item && 'url' in item;
-  const isCategory =
-    'name' in item && 'slug' in item && 'parent' in item;
-  const isTag =
-    'name' in item && 'slug' in item && !('parent' in item);
+  // const isPost = 'title' in item && 'content' in item;
+  // const isMedia = 'filename' in item && 'url' in item;
+  // const isCategory =
+  //   'name' in item && 'slug' in item && 'parent' in item;
+  // const isTag =
+  //   'name' in item && 'slug' in item && !('parent' in item);
 
   const title = 'Order Details';
   const description = 'Informasi detail tentang order';
@@ -397,7 +397,7 @@ export function ViewDrawer<T extends Record<string, any>>({
               )}
 
               {/* Status & Metadata (Post specific) */}
-              {isPost && (
+              {/* {isPost && (
                 <div className="grid min-w-0 grid-cols-2 gap-4">
                   <DetailBox
                     label="Status"
@@ -452,10 +452,10 @@ export function ViewDrawer<T extends Record<string, any>>({
                     </span>
                   </DetailBox>
                 </div>
-              )}
+              )} */}
 
               {/* Media Specific Details */}
-              {isMedia && (
+              {/* {isMedia && (
                 <div className="grid min-w-0 grid-cols-2 gap-4">
                   <DetailBox
                     label="File Size"
@@ -478,10 +478,10 @@ export function ViewDrawer<T extends Record<string, any>>({
                     </span>
                   </DetailBox>
                 </div>
-              )}
+              )} */}
 
               {/* Category Specific */}
-              {isCategory && item.parent && (
+              {/* {isCategory && item.parent && (
                 <DetailBox
                   label="Parent Category"
                   icon={<MapPin className="size-3" />}
@@ -495,10 +495,10 @@ export function ViewDrawer<T extends Record<string, any>>({
                     )?.name || 'N/A'}
                   </Badge>
                 </DetailBox>
-              )}
+              )} */}
 
               {/* URLs Section */}
-              {(item.slug || isMedia) && (
+              {/* {(item.slug || isMedia) && (
                 <section className="min-w-0">
                   <h4 className="text-muted-foreground/60 text-tiny mb-2 font-bold tracking-widest uppercase">
                     Permanent URL
@@ -528,7 +528,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                     </div>
                   </div>
                 </section>
-              )}
+              )} */}
 
               {/* Timestamps */}
               <div className="text-muted-foreground/60 text-tiny flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-4">

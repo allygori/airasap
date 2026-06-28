@@ -24,10 +24,11 @@ import {
 } from '@/components/ui/dialog';
 
 import { formSchema } from './form.schema';
-import { PLATFORMS } from '@/lib/db/constant';
+// import { PLATFORMS } from '@/lib/db/constant';
 import { AddressFields } from './address-fields';
 import { FeeFields } from './fee-fields';
 import { OrderItemsSection } from './order-items-section';
+import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
 
 type OrderFormProps = {
   title?: string;
@@ -149,6 +150,7 @@ export const OrderForm = withForm({
                     <field.TextField
                       label="Order ID"
                       value={field.state.value ?? ''}
+                      disabled={true}
                       onChange={(e) =>
                         field.handleChange(e.target.value)
                       }
@@ -162,9 +164,12 @@ export const OrderForm = withForm({
                     <field.SelectField
                       label="Platform"
                       multiple={false}
-                      items={PLATFORMS.map((p) => ({
-                        label: p.toUpperCase(),
-                        value: p,
+                      disabled={true}
+                      items={Object.values(
+                        PLATFORMS_KV_WITH_LABEL
+                      ).map((p) => ({
+                        label: p.label.toUpperCase(),
+                        value: p.value,
                       }))}
                     />
                   )}
@@ -176,6 +181,7 @@ export const OrderForm = withForm({
                     <field.TextField
                       label="Status Order"
                       value={field.state.value ?? ''}
+                      disabled={true}
                       onChange={(e) =>
                         field.handleChange(e.target.value)
                       }
@@ -189,6 +195,7 @@ export const OrderForm = withForm({
                     <field.TextField
                       label="Status Pembatalan / Return"
                       value={field.state.value ?? ''}
+                      disabled={true}
                       onChange={(e) =>
                         field.handleChange(e.target.value)
                       }
@@ -202,6 +209,7 @@ export const OrderForm = withForm({
                     <field.TextField
                       label="Username Pembeli"
                       value={field.state.value ?? ''}
+                      disabled={true}
                       onChange={(e) =>
                         field.handleChange(e.target.value)
                       }

@@ -119,10 +119,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: String,
       alias: 'variationName',
     },
-    product_key: {
-      type: String,
-      alias: 'productKey',
-    },
+    // product_key: {
+    //   type: String,
+    //   alias: 'productKey',
+    // },
     parent_sku: {
       type: String,
       alias: 'parentSku',

@@ -70,12 +70,13 @@ const ProductSchema = new Schema<TProduct>(
           {
             // apakah perlu flag mana harga yang saat ini sedang aktif?
             // apakah `effective_from` tetap diperlukan?
-            effective_from: {
-              type: Date,
-              alias: 'effectiveFrom',
-            },
+            // effective_from: {
+            //   type: Date,
+            //   alias: 'effectiveFrom',
+            // },
             cogs_unit: {
               type: Number,
+              unique: true, // unique price
             },
             notes: {
               type: String,
@@ -94,6 +95,7 @@ const ProductSchema = new Schema<TProduct>(
         // },
       },
     ],
+    default_cost: { type: Number, required: false },
     is_active: { type: Boolean, default: true },
 
     // Custom fields

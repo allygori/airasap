@@ -24,6 +24,8 @@ import {
   Edit2,
   FileText,
   Image as ImageIcon,
+  ShoppingBagIcon,
+  HashIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -68,7 +70,7 @@ export function ViewDrawer<T extends Record<string, any>>({
     'name' in item && 'slug' in item && !('parent' in item);
 
   const title = 'Product Details';
-  const description = 'Informasi produk';
+  const description = 'Informasi detail tentang produk';
 
   return (
     <Drawer
@@ -90,13 +92,23 @@ export function ViewDrawer<T extends Record<string, any>>({
       >
         <div className="flex max-w-full min-w-0 flex-1 flex-col overflow-hidden">
           <DrawerHeader className="min-w-0 shrink-0 gap-1 border-b pb-4">
-            <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
+            {/* <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
               <FileText className="size-4 shrink-0 text-blue-500" />
               <Badge
                 variant="outline"
                 className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter uppercase"
               >
                 Product
+              </Badge>
+            </div> */}
+            <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
+              <ShoppingBagIcon className="size-4 shrink-0 text-[#EE4D2D]" />
+              <Badge
+                variant="outline"
+                className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter text-[#EE4D2D] uppercase"
+              >
+                {/* Order */}
+                {item.platform}
               </Badge>
             </div>
             <DrawerTitle className="text-xl leading-tight font-bold wrap-break-word">
@@ -109,7 +121,7 @@ export function ViewDrawer<T extends Record<string, any>>({
 
           <div className="scrollbar-hide min-h-0 min-w-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto p-4">
             {/* Visual Preview for Post or Media */}
-            {(isPost || isMedia) && (
+            {/* {(isPost || isMedia) && (
               <div className="bg-muted group relative aspect-video w-full overflow-hidden rounded-xl border shadow-sm">
                 <Image
                   src={
@@ -129,177 +141,55 @@ export function ViewDrawer<T extends Record<string, any>>({
                   </div>
                 )}
               </div>
-            )}
+            )} */}
 
-            {/* Core Details Grid */}
-            <div className="grid gap-6">
-              {/* Excerpt/Description Section */}
-              {(item.excerpt || item.description) && (
-                <section className="bg-muted/30 border-muted-foreground/20 min-w-0 rounded-xl border border-dashed p-4">
-                  <h4 className="text-muted-foreground/60 text-tiny mb-2 flex items-center gap-1.5 font-bold tracking-widest uppercase">
-                    <FileText className="size-3" />
-                    Summary / Description
-                  </h4>
-                  <p className="text-foreground/80 text-sm leading-relaxed wrap-break-word italic">
-                    &ldquo;
-                    {item.excerpt || item.description}
-                    &rdquo;
+            <section className="bg-muted/30 border-muted-foreground/20 flex min-w-0 flex-col rounded-xl border border-dashed px-3 py-4">
+              <h2 className="text-foreground/80 flex items-center gap-1.5 text-xs leading-normal font-bold tracking-widest uppercase">
+                {/* <HashIcon className="size-3" /> */}
+                {item.name}
+              </h2>
+              <p className="text-muted-foreground/90 text-sm leading-relaxed wrap-break-word">
+                {item.product_id}
+              </p>
+            </section>
+
+            <section>
+              <DetailBox label="Options / variants:">
+                {(item.options || []).length === 0 ? (
+                  <p className="text-foreground/80 mb-2 flex min-w-0 items-center gap-1 text-xs font-bold">
+                    Tidak Ada
                   </p>
-                </section>
-              )}
-
-              {/* Status & Metadata (Post specific) */}
-              {isPost && (
-                <div className="grid min-w-0 grid-cols-2 gap-4">
-                  <DetailBox
-                    label="Status"
-                    icon={
-                      <CheckCircle
-                        isPublished={
-                          item.published_status ===
-                          'published'
-                        }
-                      />
-                    }
-                  >
-                    <Badge
-                      variant={
-                        item.published_status ===
-                        'published'
-                          ? 'default'
-                          : 'outline'
+                ) : (
+                  <div className="flex flex-col">
+                    {(item.options || []).map(
+                      (option: string[], idx: number) => {
+                        return (
+                          <div key={idx} className="mb-4">
+                            <p className="text-muted-foreground/50 mb-2 flex min-w-0 items-center gap-1 text-xs font-bold">
+                              Opsi &nbsp; {idx + 1}:
+                            </p>
+                            <ul className="flex flex-1 flex-row flex-wrap gap-2">
+                              {(option || []).map(
+                                (opt, idx2) => {
+                                  return (
+                                    <li key={idx2}>
+                                      <Badge>{opt}</Badge>
+                                    </li>
+                                  );
+                                }
+                              )}
+                            </ul>
+                          </div>
+                        );
                       }
-                      className="text-tiny capitalize"
-                    >
-                      {item.published_status}
-                    </Badge>
-                  </DetailBox>
-                  <DetailBox
-                    label="Read Time"
-                    icon={
-                      <div className="size-1.5 rounded-full bg-blue-500" />
-                    }
-                  >
-                    <span className="font-medium">
-                      {item.reading_time || 0} minutes
-                    </span>
-                  </DetailBox>
-                  <DetailBox
-                    label="Author"
-                    icon={<User className="size-3" />}
-                  >
-                    <span className="truncate">
-                      {(item.author as unknown as UserType)
-                        ?.name || 'Unknown'}
-                    </span>
-                  </DetailBox>
-                  <DetailBox
-                    label="Nano ID"
-                    icon={
-                      <div className="bg-muted-foreground size-1.5 rounded-full" />
-                    }
-                  >
-                    <span className="text-tiny font-mono tracking-widest uppercase">
-                      {item.nid}
-                    </span>
-                  </DetailBox>
-                </div>
-              )}
-
-              {/* Media Specific Details */}
-              {isMedia && (
-                <div className="grid min-w-0 grid-cols-2 gap-4">
-                  <DetailBox
-                    label="File Size"
-                    icon={
-                      <div className="size-1.5 rounded-full bg-amber-500" />
-                    }
-                  >
-                    <span>
-                      {(item.size / 1024).toFixed(1)} KB
-                    </span>
-                  </DetailBox>
-                  <DetailBox
-                    label="Type"
-                    icon={
-                      <div className="size-1.5 rounded-full bg-blue-500" />
-                    }
-                  >
-                    <span className="truncate">
-                      {item.mime_type}
-                    </span>
-                  </DetailBox>
-                </div>
-              )}
-
-              {/* Category Specific */}
-              {isCategory && item.parent && (
-                <DetailBox
-                  label="Parent Category"
-                  icon={<MapPin className="size-3" />}
-                >
-                  <Badge
-                    variant="secondary"
-                    className="text-tiny"
-                  >
-                    {(
-                      item.parent as unknown as CategoryType
-                    )?.name || 'N/A'}
-                  </Badge>
-                </DetailBox>
-              )}
-
-              {/* URLs Section */}
-              {(item.slug || isMedia) && (
-                <section className="min-w-0">
-                  <h4 className="text-muted-foreground/60 text-tiny mb-2 font-bold tracking-widest uppercase">
-                    Permanent URL
-                  </h4>
-                  <div className="flex min-w-0 flex-col gap-2">
-                    <div className="group relative min-w-0">
-                      <p className="bg-muted/50 truncate rounded-lg border p-3 pr-16 font-mono text-[11px] leading-none select-all">
-                        {isMedia
-                          ? item.url
-                          : `/blog/${item.slug}`}
-                      </p>
-                      <button
-                        onClick={() => {
-                          const url = isMedia
-                            ? item.url
-                            : `${window.location.origin}/blog/${item.slug}`;
-                          if (!isMobile) {
-                            navigator.clipboard.writeText(
-                              url
-                            );
-                          }
-                        }}
-                        className="bg-background absolute top-1/2 right-2 -translate-y-1/2 rounded border px-2 py-1 text-[9px] font-bold opacity-0 transition-opacity group-hover:opacity-100"
-                      >
-                        Copy
-                      </button>
-                    </div>
+                    )}
                   </div>
-                </section>
-              )}
-
-              {/* Timestamps */}
-              <div className="text-muted-foreground/60 text-tiny flex min-w-0 flex-wrap items-center justify-between gap-2 border-t pt-4">
-                <span className="flex items-center gap-1">
-                  <Calendar className="size-3" /> Added{' '}
-                  {new Date(
-                    item.created_at
-                  ).toLocaleDateString()}
-                </span>
-                {item.updated_at && (
-                  <span>
-                    Updated{' '}
-                    {new Date(
-                      item.updated_at
-                    ).toLocaleDateString()}
-                  </span>
                 )}
-              </div>
-            </div>
+                {/* <pre>
+                  {JSON.stringify(item.options, null, 2)}
+                </pre> */}
+              </DetailBox>
+            </section>
           </div>
 
           <DrawerFooter className="bg-muted/10 shrink-0 border-t">
@@ -353,17 +243,14 @@ export function ViewDrawer<T extends Record<string, any>>({
 
 function DetailBox({
   label,
-  icon,
   children,
 }: {
   label: string;
-  icon: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-background flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
       <span className="text-muted-foreground/50 flex min-w-0 items-center gap-1 text-[9px] font-bold tracking-widest uppercase">
-        <span className="shrink-0">{icon}</span>
         <span className="truncate">{label}</span>
       </span>
       <div className="min-w-0 truncate py-0.5 text-sm leading-none font-semibold">

@@ -24,6 +24,7 @@ import {
 } from '@/components/ui/combobox';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
 type SelectValueType = {
   label: string;
@@ -46,6 +47,7 @@ type SelectFieldProps = Omit<
   label?: string;
   description?: string;
   placeholder?: string;
+  className?: string;
   items?: SelectValueType[];
   remote?: RemoteDataConfig;
 };
@@ -56,6 +58,8 @@ export function SelectField({
   placeholder = 'Select an option...',
   items: staticItems = [],
   remote,
+  disabled,
+  className,
   ...props
 }: SelectFieldProps) {
   const field = useFieldContext<
@@ -171,7 +175,13 @@ export function SelectField({
   }, [selectedItem, searchValue]);
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field
+      data-invalid={isInvalid}
+      className={cn(
+        className,
+        disabled ? 'cursor-not-allowed' : ''
+      )}
+    >
       {label && (
         <FieldLabel htmlFor={field.name}>
           {label}
@@ -188,6 +198,7 @@ export function SelectField({
             setSearchValue(typedItem.label);
           }
         }}
+        disabled={disabled}
         inputValue={searchValue}
         onInputValueChange={setSearchValue}
         {...props}

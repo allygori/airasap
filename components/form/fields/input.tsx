@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { FieldInfo } from '../partials/field-info';
+import { cn } from '@/lib/utils';
 // import { cn } from '@/lib/utils';
 
 type InputFieldProps = ComponentProps<'input'> & {
@@ -34,6 +35,7 @@ export function InputField({
   label,
   description,
   className,
+  disabled,
   ...props
 }: InputFieldProps) {
   const field = useFieldContext<string>();
@@ -43,7 +45,13 @@ export function InputField({
   // const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <Field data-invalid={isInvalid} className={className}>
+    <Field
+      data-invalid={isInvalid}
+      className={cn(
+        className,
+        disabled ? 'cursor-not-allowed' : ''
+      )}
+    >
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
         id={field.name}
@@ -51,6 +59,7 @@ export function InputField({
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
         onBlur={field.handleBlur}
+        disabled={disabled}
         {...props}
         // className={cn(
         //   props.className,

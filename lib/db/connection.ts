@@ -29,7 +29,7 @@ import '@/modules/verifications/verifications.model';
 import '@/modules/files/file.model';
 import '@/modules/stores/store.model';
 import '@/modules/products/product.model';
-import '@/modules/product-costs/product-cost.model';
+// import '@/modules/product-costs/product-cost.model';
 import '@/modules/orders/order.model';
 import '@/lib/db/schema/tool-marketplace-income-reports';
 import { multiTenancyPlugin } from './plugins/multi-tenancy';

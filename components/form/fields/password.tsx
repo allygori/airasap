@@ -11,6 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { FieldInfo } from '../partials/field-info';
 import { Eye, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 type PasswordFieldProps = ComponentProps<'input'> & {
   label?: string;
@@ -21,6 +22,8 @@ type PasswordFieldProps = ComponentProps<'input'> & {
 export function PasswordField({
   label,
   description,
+  disabled,
+  className,
   ...props
 }: PasswordFieldProps) {
   const field = useFieldContext<string>();
@@ -32,7 +35,13 @@ export function PasswordField({
   // const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field
+      data-invalid={isInvalid}
+      className={cn(
+        className,
+        disabled ? 'cursor-not-allowed' : ''
+      )}
+    >
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <div className="relative">
         <Input
@@ -45,6 +54,7 @@ export function PasswordField({
           }}
           onBlur={field.handleBlur}
           placeholder="••••••••"
+          disabled={disabled}
           {...props}
           type={showPassword ? 'text' : 'password'}
         />
