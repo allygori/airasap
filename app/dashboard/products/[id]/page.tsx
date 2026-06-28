@@ -6,8 +6,6 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
-import { INITIAL_BLOCK_VALUE } from '../_components/form.constant';
-// import { TagType } from '@/components/blog/types';
 import { formSchema } from '../_components/form.schema';
 
 type PostData = any; // You can use ZodPostSchema to infer this if preferred
@@ -91,8 +89,27 @@ function EditPostFormWrapper({
       id: initialData._id || initialData.id || '',
       platform: initialData.platform || '',
       name: initialData.name || '',
-      product_id: initialData.product_id,
-      variants: initialData.variants || [],
+      product_id: String(initialData.product_id || ''),
+      variants: (initialData.variants || []).map(
+        (variant: any) => ({
+          variant_id: variant.variant_id || '',
+          name: variant.name || '',
+          price: Number(variant.price || 0),
+          discount: Number(variant.discount || 0),
+          final_price: Number(variant.final_price || 0),
+          parent_sku: variant.parent_sku || '',
+          sku: variant.sku || '',
+          gtin: variant.gtin || '',
+          is_default: Boolean(variant.is_default),
+          costs: (variant.costs || []).map((cost: any) => ({
+            effective_from: cost.effective_from
+              ? String(cost.effective_from).substring(0, 10)
+              : new Date().toISOString().substring(0, 10),
+            cogs_unit: Number(cost.cogs_unit || 0),
+            notes: cost.notes || '',
+          })),
+        })
+      ),
     };
   }, [initialData]);
 

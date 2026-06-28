@@ -8,14 +8,13 @@ import { revalidateLogic } from '@tanstack/react-form';
 import { useAppForm } from '@/components/form/form.hook';
 import { ProductForm } from '@/app/dashboard/products/_components/product.form';
 // import { TagType } from '@/components/blog/types';
-import { INITIAL_BLOCK_VALUE } from '../_components/form.constant';
 import { formSchema } from '../_components/form.schema';
 
 const defaultValues: z.input<typeof formSchema> = {
   id: '',
   platform: '',
   name: '',
-  product_id: undefined,
+  product_id: '',
   variants: [],
 };
 
@@ -29,7 +28,50 @@ const CreatePage = () => {
       onDynamic: formSchema,
     },
     onSubmit: async ({ value }) => {
-      // Logic for saving product goes here
+      try {
+        const payload = {
+          platform: value.platform,
+          name: value.name,
+          product_id: value.product_id,
+          variants: value.variants,
+          is_active: true,
+        };
+
+        const response = await fetch(
+          '/api/v1/dashboard/products',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+          }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(
+            result.message ||
+              result.error?.message ||
+              'Terjadi kesalahan saat menyimpan produk'
+          );
+        }
+
+        toast.success('Product created successfully', {
+          description: `Product "${value.name}" has been created.`,
+        });
+
+        router.push('/dashboard/products');
+        router.refresh();
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Gagal membuat produk';
+        console.error('Create product error:', error);
+        toast.error(message);
+      }
     },
   });
 

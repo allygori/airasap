@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { revalidateLogic } from '@tanstack/react-form';
 
 import { useAppForm } from '@/components/form/form.hook';
-import { OrderForm } from '../_components/form';
+import { OrderForm } from '../_components/order.form';
 import { formSchema } from '../_components/form.schema';
 
 const defaultValues: z.input<typeof formSchema> = {

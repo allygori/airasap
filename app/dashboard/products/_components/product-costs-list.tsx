@@ -121,9 +121,9 @@ const ProductCostsList = ({
               </TableCell>
               <TableCell
                 className="max-w-50 truncate font-medium"
-                title={cost.product}
+                // title={cost.product}
               >
-                {cost.product}
+                {/* {cost.product} */}
                 {/* <div className="text-muted-foreground text-xs">
                   {cost.variationName ? (
                     <span>

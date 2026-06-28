@@ -31,15 +31,22 @@ export const VariantSchema = z.object({
     .min(0, 'Diskon tidak boleh minus')
     .max(100, 'Diskon maksimal 100%')
     .default(0),
-  final_price: z
-    .number()
-    .positive('Final price harus lebih besar dari 0'),
+  final_price: z.number().nonnegative().optional(),
   parent_sku: z.string().optional(),
   sku: z.string().optional(),
   gtin: z.string().optional(),
   is_default: z.boolean(), // https://share.google/aimode/LIpXWTeE9qAGrqCxZ
-  product: ObjectIdSchema,
-  product_cost: ObjectIdSchema,
+  costs: z
+    .array(
+      z.object({
+        effective_from: z.coerce.date(),
+        cogs_unit: z.number().int().nonnegative(),
+        notes: z.string().nullable().optional(),
+      })
+    )
+    .optional()
+    .default([]),
+  // product_cost: ObjectIdSchema,
   // product_cost: z
   //   .string()
   //   .optional()
@@ -54,12 +61,16 @@ export const ProductBaseSchema = z.object({
   name: z.string().min(3, 'Nama minimal 3 karakter'),
   product_id: z.string().min(1, 'Product ID wajib diisi'),
   // key: z.string().optional(),
-  options: z.array(
-    z.object({
-      name: z.string(),
-      values: z.array(z.string()),
-    })
-  ),
+  // options: z.array(
+  //   z.object({
+  //     name: z.string(),
+  //     values: z.array(z.string()),
+  //   })
+  // ).optional().default([]),
+  options: z
+    .array(z.array(z.string()))
+    .optional()
+    .default([]),
   variants: z.array(VariantSchema).optional(),
   is_active: z.boolean().default(true),
 });

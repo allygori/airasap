@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useEffect, useState, useMemo } from 'react';
-import { OrderForm } from '../_components/form';
+import { OrderForm } from '../_components/order.form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
@@ -24,7 +24,7 @@ const EditPage = ({
     const fetchData = async () => {
       try {
         const response = await fetch(
-          `/api/v1/dashboard/orders/marketplace/${order_id}?populate=items.product,items.product_cost`
+          `/api/v1/dashboard/orders/marketplace/${order_id}?populate=items.product`
         );
         const result = await response.json();
         if (!response.ok)
@@ -195,7 +195,7 @@ function EditFormWrapper({
         quantity: item.quantity ?? 1,
         returned_quantity: item.returned_quantity ?? 0,
         processing_fee: item.processing_fee ?? 0,
-        product_cost_amount: item.product_cost_amount ?? 0,
+        // product_cost_amount: item.product_cost_amount ?? 0,
       })),
     };
   }, [initialData]);

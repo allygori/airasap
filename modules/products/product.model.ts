@@ -45,12 +45,10 @@ const ProductSchema = new Schema<TProduct>(
       required: true,
       unique: true,
     },
-    options: [
-      {
-        name: { type: String },
-        values: [String],
-      },
-    ],
+    options: {
+      type: [[String]],
+      required: false,
+    },
     variants: [
       {
         variant_id: { type: String, unique: true }, // variation id
@@ -68,16 +66,32 @@ const ProductSchema = new Schema<TProduct>(
           required: true,
           default: true,
         },
-        product: {
-          type: Types.ObjectId,
-          ref: 'Product',
-          required: false,
-        },
-        product_cost: {
-          type: Types.ObjectId,
-          ref: 'ProductCost',
-          required: false,
-        },
+        costs: [
+          {
+            // apakah perlu flag mana harga yang saat ini sedang aktif?
+            // apakah `effective_from` tetap diperlukan?
+            effective_from: {
+              type: Date,
+              alias: 'effectiveFrom',
+            },
+            cogs_unit: {
+              type: Number,
+            },
+            notes: {
+              type: String,
+            },
+          },
+        ],
+        // product: {
+        //   type: Types.ObjectId,
+        //   ref: 'Product',
+        //   required: false,
+        // },
+        // product_cost: {
+        //   type: Types.ObjectId,
+        //   ref: 'ProductCost',
+        //   required: false,
+        // },
       },
     ],
     is_active: { type: Boolean, default: true },

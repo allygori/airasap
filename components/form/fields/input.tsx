@@ -33,6 +33,7 @@ type InputFieldProps = ComponentProps<'input'> & {
 export function InputField({
   label,
   description,
+  className,
   ...props
 }: InputFieldProps) {
   const field = useFieldContext<string>();
@@ -42,7 +43,7 @@ export function InputField({
   // const errors = useStore(field.store, (state) => state.meta.errors)
 
   return (
-    <Field data-invalid={isInvalid}>
+    <Field data-invalid={isInvalid} className={className}>
       <FieldLabel htmlFor={field.name}>{label}</FieldLabel>
       <Input
         id={field.name}

@@ -103,7 +103,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
       required: false, // Not required because there are possibility user rename product name and can't find and match product by name, solution is user select the right product
       alias: 'productId',
     },
-
+    product_cost: {
+      type: Number,
+      required: false,
+    },
     product_name: {
       type: String,
       alias: 'productName',
@@ -143,19 +146,19 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: Number,
       alias: 'returnedQuantity',
     },
-    cogs: {
-      // replaced with product_cost_amount
-      type: Number,
-    },
-    product_cost: {
-      type: Types.ObjectId,
-      ref: 'ProductCost',
-      required: false,
-    },
-    product_cost_amount: {
-      type: Number,
-      required: false,
-    },
+    // cogs: {
+    //   // replaced with product_cost_amount
+    //   type: Number,
+    // },
+    // product_cost: {
+    //   type: Types.ObjectId,
+    //   ref: 'ProductCost',
+    //   required: false,
+    // },
+    // product_cost_amount: {
+    //   type: Number,
+    //   required: false,
+    // },
   },
   { _id: false }
 );

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Card,
   CardContent,
@@ -8,8 +8,38 @@ import {
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { X, Plus } from 'lucide-react';
+import { useStore } from '@tanstack/react-form';
+import { formatDate } from '@/lib/formatter/date';
+import { formatIDR } from '@/lib/formatter';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
 export function OrderItemsSection({ form }: { form: any }) {
+  const items = useStore(
+    form.store,
+    (state: any) => state.values.items
+  );
+
+  const getCosts = useMemo(() => {
+    return (index: number, variantName?: string) => {
+      return items[index].product?.variants?.length === 1
+        ? items[index].product?.variants[0]?.costs || []
+        : items[index].product?.variants?.find(
+            (item: { name: string }) =>
+              item.name === variantName
+          )?.costs || [];
+    };
+  }, [
+    // field.state.value[i]?.product?.variants,
+    items,
+  ]);
+
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -34,7 +64,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                     key={i}
                     className="border-border relative flex flex-col gap-6 rounded-lg border p-5 shadow-sm"
                   >
-                    <Button
+                    {/* <Button
                       type="button"
                       variant="ghost"
                       size="icon"
@@ -42,14 +72,14 @@ export function OrderItemsSection({ form }: { form: any }) {
                       onClick={() => field.removeValue(i)}
                     >
                       <X className="h-4 w-4" />
-                    </Button>
+                    </Button> */}
 
                     <h4 className="text-muted-foreground text-sm font-semibold">
                       Item #{i + 1}
                     </h4>
 
                     <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3">
-                      <form.AppField
+                      {/* <form.AppField
                         name={`items[${i}].product`}
                         children={(subField: any) => (
                           <subField.TextField
@@ -64,13 +94,14 @@ export function OrderItemsSection({ form }: { form: any }) {
                             }
                           />
                         )}
-                      />
+                      /> */}
 
                       <form.AppField
                         name={`items[${i}].product_name`}
                         children={(subField: any) => (
                           <subField.TextField
                             label="Nama Produk"
+                            className="col-span-3"
                             value={
                               subField.state.value ?? ''
                             }
@@ -252,11 +283,11 @@ export function OrderItemsSection({ form }: { form: any }) {
                       />
 
                       <form.AppField
-                        name={`items[${i}].product_cost_amount`}
+                        name={`items[${i}].product_cost`}
                         children={(subField: any) => (
                           <subField.TextField
                             type="number"
-                            label="Product Cost Amount"
+                            label="HPP"
                             value={
                               subField.state.value ?? ''
                             }
@@ -270,12 +301,113 @@ export function OrderItemsSection({ form }: { form: any }) {
                           />
                         )}
                       />
+
+                      <pre>
+                        {JSON.stringify(
+                          // field.state.value[i].product,
+                          // items,
+                          getCosts(
+                            0,
+                            field.state.value[i]
+                              .variation_name
+                          ),
+                          null,
+                          2
+                        )}
+                      </pre>
+
+                      <div className="col-span-full">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              <TableHead>
+                                Efektif Sejak
+                              </TableHead>
+                              <TableHead>HPP</TableHead>
+                              <TableHead>Catatan</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {(
+                              getCosts(
+                                0,
+                                field.state.value[i]
+                                  .variation_name
+                              ) || []
+                            ).map(
+                              (
+                                cost: {
+                                  effective_from: string;
+                                  cogs_unit: number;
+                                  notes: string;
+                                },
+                                idx: number
+                              ) => {
+                                return (
+                                  <TableRow key={idx}>
+                                    <TableCell>
+                                      {formatDate(
+                                        cost.effective_from
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      {formatIDR(
+                                        cost.cogs_unit
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      {cost.notes}
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              }
+                            )}
+                          </TableBody>
+                        </Table>
+                      </div>
+
+                      {/* <ul className="col-span-full">
+                        {(
+                          getCosts(
+                            0,
+                            field.state.value[i]
+                              .variation_name
+                          ) || []
+                        ).map(
+                          (
+                            cost: {
+                              effective_from: string;
+                              cogs_unit: number;
+                              notes: string;
+                            },
+                            idx: number
+                          ) => {
+                            return (
+                              <li key={idx}>
+                                <div className="flex w-full flex-row items-center justify-between gap-2">
+                                  <p>
+                                    {formatDate(
+                                      cost.effective_from
+                                    )}
+                                  </p>
+                                  <p>
+                                    {formatIDR(
+                                      cost.cogs_unit
+                                    )}
+                                  </p>
+                                  <p>{cost.notes}</p>
+                                </div>
+                              </li>
+                            );
+                          }
+                        )}
+                      </ul> */}
                     </div>
                   </div>
                 )
               )}
 
-              <Button
+              {/* <Button
                 type="button"
                 variant="outline"
                 onClick={() =>
@@ -298,7 +430,7 @@ export function OrderItemsSection({ form }: { form: any }) {
               >
                 <Plus className="mr-2 h-4 w-4" /> Tambah
                 Item Produk
-              </Button>
+              </Button> */}
             </div>
           )}
         />

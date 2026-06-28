@@ -153,7 +153,7 @@ export class ProductService {
       // Hitung finalPrice untuk setiap variant jika ada
       const variants = dto.variants?.map((variant) => ({
         ...variant,
-        finalPrice:
+        final_price:
           variant.price -
           (variant.price * variant.discount) / 100,
       }));
@@ -205,7 +205,7 @@ export class ProductService {
         dataToUpdate.variants = dataToUpdate.variants.map(
           (variant) => ({
             ...variant,
-            finalPrice:
+            final_price:
               variant.price -
               (variant.price * variant.discount) / 100,
           })
@@ -412,22 +412,83 @@ export class ProductService {
       let createdCount = 0;
       let updatedCount = 0;
 
+      // const nameToOptionObject = (nameString: string) => {
+      //   return nameString
+      //     .split(',')
+      //     .map((v) => v.trim())
+      //     .reduce(
+      //       (
+      //         acc: Record<string, string>,
+      //         currentVariant: string,
+      //         index: number
+      //       ) => {
+      //         // Creates keys dynamically: option1, option2, etc.
+      //         acc[`option${index + 1}`] = currentVariant;
+      //         return acc;
+      //       },
+      //       {}
+      //     );
+      // };
+
+      const addVariantToMatrix = (
+        nameString: string,
+        matrix: any[] = []
+      ) => {
+        const parts = nameString
+          .split(',')
+          .map((v) => v.trim());
+
+        parts.forEach((variant, index) => {
+          // 1. Initialize the nested array for this position if it doesn't exist
+          if (!matrix[index]) {
+            matrix[index] = [];
+          }
+          // 2. Only add the variant if it isn't already in this position's array
+          if (!matrix[index].includes(variant)) {
+            matrix[index].push(variant);
+          }
+        });
+
+        return matrix;
+      };
+
+      let options: string[][] = [];
       for (const [
         productId,
         group,
       ] of productsMap.entries()) {
-        const variants = group.map((item) => ({
-          variant_id: item.variantId,
-          name: item.variantName || item.productName || '-',
-          key: `${productId}::${item.variantId || '-'}`,
-          price: item.price,
-          // quantity: item.quantity ?? 0,
-          discount: 0,
-          finalPrice: 0,
-          parent_sku: item.parentSKU,
-          sku: item.SKU,
-          gtin: item.GTIN,
-        }));
+        const variants = group.map((item) => {
+          if (item.variantName) {
+            // options.push(
+            //   // nameToOptionObject(String(item.variantName))
+            //   addVariantToMatrix(
+            //     String(item.variantName),
+            //     options
+            //   )
+            // );
+            options = addVariantToMatrix(
+              String(item.variantName),
+              options
+            );
+          }
+
+          return {
+            variant_id: item.variantId,
+            name:
+              item.variantName || item.productName || '-',
+            key: `${productId}::${item.variantId || '-'}`,
+            price: item.price,
+            // quantity: item.quantity ?? 0,
+            discount: 0,
+            final_price: item.price,
+            parent_sku: item.parentSKU,
+            sku: item.SKU,
+            gtin: item.GTIN,
+            is_default: group.length === 1,
+            costs: [],
+          };
+        });
+        console.log(options);
         const existingProduct =
           await this.repository.findByProductId(productId);
         const payload = {
@@ -435,6 +496,7 @@ export class ProductService {
           name: group[0]?.productName || '',
           product_id: productId,
           key: productId,
+          options,
           variants,
           is_active: true,
         };
@@ -448,6 +510,8 @@ export class ProductService {
           await this.repository.create(payload);
           createdCount++;
         }
+
+        options = [];
       }
 
       return {

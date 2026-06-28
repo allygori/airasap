@@ -73,7 +73,8 @@ export abstract class BaseRepository<T extends Document> {
       .findOneAndUpdate(
         { _id: id, ...this.getTenantFilter() },
         { $set: data },
-        { new: true } // Mengembalikan data terbaru setelah di-update
+        // { new: true } // Mengembalikan data terbaru setelah di-update
+        { returnDocument: 'after' }
       )
       .lean();
   }

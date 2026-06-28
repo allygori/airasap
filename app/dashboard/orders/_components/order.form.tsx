@@ -109,7 +109,8 @@ export const OrderForm = withForm({
       if (form.state.isDirty) {
         setShowDiscardDialog(true);
       } else {
-        router.push('/dashboard/orders');
+        // router.push('/dashboard/orders');
+        router.back();
       }
     };
 
@@ -239,7 +240,10 @@ export const OrderForm = withForm({
             </CardContent>
           </Card>
 
-          {/* SECTION 2: Pengiriman & Logistik */}
+          {/* SECTION 2: Daftar Produk (Items) */}
+          <OrderItemsSection form={form} />
+
+          {/* SECTION 3: Pengiriman & Logistik */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">
@@ -386,10 +390,10 @@ export const OrderForm = withForm({
             </CardContent>
           </Card>
 
-          {/* SECTION 3: Alamat Pengiriman */}
+          {/* SECTION 4: Alamat Pengiriman */}
           <AddressFields form={form} />
 
-          {/* SECTION 4: Pembayaran & Finansial */}
+          {/* SECTION 5: Pembayaran & Finansial */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">
@@ -716,7 +720,7 @@ export const OrderForm = withForm({
             </CardContent>
           </Card>
 
-          {/* SECTION 5: Rincian Pengiriman & Diskon Tambahan */}
+          {/* SECTION 6: Rincian Pengiriman & Diskon Tambahan */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader>
               <CardTitle className="text-lg">
@@ -876,11 +880,8 @@ export const OrderForm = withForm({
             </CardContent>
           </Card>
 
-          {/* SECTION 6: Rincian Biaya (Fees) */}
+          {/* SECTION 7: Rincian Biaya (Fees) */}
           <FeeFields form={form} />
-
-          {/* SECTION 7: Daftar Produk (Items) */}
-          <OrderItemsSection form={form} />
 
           {/* STICKY FOOTER */}
           {/* <div className="sticky bottom-0 z-40 -mx-4 -mb-4 mt-6 border-t bg-background/95 p-4 shadow-lg backdrop-blur-xs md:-mx-6 md:-mb-6 flex justify-between items-center rounded-b-lg"> */}
