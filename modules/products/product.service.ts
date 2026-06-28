@@ -205,12 +205,17 @@ export class ProductService {
         dataToUpdate.variants = dataToUpdate.variants.map(
           (variant) => ({
             ...variant,
+            default_cost: variant.default_cost || 0,
             final_price:
               variant.price -
               (variant.price * variant.discount) / 100,
           })
         );
+
+        // dataToUpdate.markModified('variants')
       }
+
+      console.log(JSON.stringify(dataToUpdate, null, 2));
 
       const updatedProduct = await this.repository.update(
         id,

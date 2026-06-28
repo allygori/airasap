@@ -1,7 +1,7 @@
 import z from 'zod';
 
 export const productCostHistorySchema = z.object({
-  effective_from: z.coerce.date(),
+  // effective_from: z.coerce.date(),
   cogs_unit: z.number().int().nonnegative(),
   notes: z.string().nullable().optional(),
 });
@@ -20,6 +20,7 @@ export const variantSchema = z.object({
     .array(productCostHistorySchema)
     .optional()
     .default([]),
+  default_cost: z.number().optional(),
 });
 
 export const formSchema = z.object({

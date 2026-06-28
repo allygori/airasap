@@ -1,19 +1,30 @@
 import { Button } from '@/components/ui/button';
-import { FieldGroup } from '@/components/ui/field';
+import {
+  Field,
+  FieldGroup,
+  FieldLabel,
+} from '@/components/ui/field';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { Plus, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Plus,
+  X,
+  CircleCheck,
+  Circle,
+  Layers,
+} from 'lucide-react';
 import { useStore } from '@tanstack/react-form';
-
-const today = () =>
-  new Date().toISOString().substring(0, 10);
+import { useState } from 'react';
+import { cn } from '@/lib/utils';
 
 const newCost = () => ({
-  effective_from: today(),
   cogs_unit: 0,
   notes: '',
 });
@@ -28,6 +39,7 @@ const newVariant = () => ({
   sku: '',
   gtin: '',
   is_default: false,
+  default_cost: 0,
   costs: [newCost()],
 });
 
@@ -37,118 +49,166 @@ export function VariantsSubForm({ form }: { form: any }) {
     (state: any) => state.values.variants
   );
 
+  // Bulk update local state
+  const [bulkCogsUnit, setBulkCogsUnit] =
+    useState<number>(0);
+  const [bulkNotes, setBulkNotes] = useState<string>('');
+  const [bulkSetAsDefault, setBulkSetAsDefault] =
+    useState<boolean>(false);
+  const [bulkResult, setBulkResult] = useState<
+    string | null
+  >(null);
+
+  const handleBulkApply = () => {
+    if (bulkCogsUnit <= 0) return;
+
+    const currentVariants: any[] =
+      form.getFieldValue('variants') ?? [];
+    let applied = 0;
+    let skipped = 0;
+
+    currentVariants.forEach((_: any, i: number) => {
+      const existingCosts: any[] =
+        form.getFieldValue(`variants[${i}].costs`) ?? [];
+
+      // Check uniqueness: skip if cogs_unit already exists in this variant
+      const alreadyExists = existingCosts.some(
+        (c: any) => c.cogs_unit === bulkCogsUnit
+      );
+
+      if (alreadyExists) {
+        skipped++;
+        // Even if skipped, set as default if requested
+        if (bulkSetAsDefault) {
+          form.setFieldValue(
+            `variants[${i}].default_cost`,
+            bulkCogsUnit
+          );
+        }
+        return;
+      }
+
+      // Push new cost to this variant
+      form.pushFieldValue(`variants[${i}].costs`, {
+        cogs_unit: bulkCogsUnit,
+        notes: bulkNotes,
+      });
+
+      // Optionally set as default
+      if (bulkSetAsDefault) {
+        form.setFieldValue(
+          `variants[${i}].default_cost`,
+          bulkCogsUnit
+        );
+      }
+
+      applied++;
+    });
+
+    setBulkResult(
+      `${applied} varian diperbarui${skipped > 0 ? `, ${skipped} dilewati (HPP sudah ada)` : ''}`
+    );
+
+    // Auto-clear result after 4 seconds
+    setTimeout(() => setBulkResult(null), 4000);
+  };
+
   return (
-    <>
-      <div className="bg-muted/30 grid grid-cols-1 items-end gap-3 rounded-md p-3 md:grid-cols-[1fr_1fr_1.5fr_auto]">
-        <form.AppField
-          name={'global'}
-          children={(subField: any) => (
-            <subField.TextField
-              type="date"
-              label="Mulai Berlaku"
-              value={
-                subField.state.value
-                  ? String(subField.state.value).substring(
-                      0,
-                      10
-                    )
-                  : ''
-              }
-              onChange={(e: any) =>
-                subField.handleChange(e.target.value)
-              }
-            />
-          )}
-        />
-        <form.AppField
-          name={'global'}
-          children={(subField: any) => (
-            <subField.TextField
+    <div className="flex flex-col gap-4">
+      {/* Bulk update section */}
+      <div className="border-muted-foreground/30 bg-muted/20 rounded-md border border-dashed p-4">
+        <div className="mb-3 flex items-center gap-2">
+          <Layers className="text-muted-foreground h-4 w-4" />
+          <h5 className="text-sm font-medium">
+            Update Massal HPP
+          </h5>
+          <span className="text-muted-foreground text-xs">
+            — Terapkan ke semua varian
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 items-end gap-3 md:grid-cols-[1fr_1.5fr_auto]">
+          <Field>
+            <FieldLabel>HPP / Unit</FieldLabel>
+            <Input
               type="number"
-              label="HPP / Unit"
-              value={subField.state.value ?? ''}
-              onChange={(e: any) =>
-                subField.handleChange(
+              min={0}
+              value={bulkCogsUnit || ''}
+              onChange={(e) =>
+                setBulkCogsUnit(
                   e.target.value === ''
                     ? 0
                     : Number(e.target.value)
                 )
               }
+              placeholder="Masukkan HPP..."
             />
-          )}
-        />
-        <form.AppField
-          name={'global'}
-          children={(subField: any) => (
-            <subField.TextField
-              label="Catatan"
-              value={subField.state.value ?? ''}
-              onChange={(e: any) =>
-                subField.handleChange(e.target.value)
-              }
+          </Field>
+          <Field>
+            <FieldLabel>Catatan</FieldLabel>
+            <Input
+              value={bulkNotes}
+              onChange={(e) => setBulkNotes(e.target.value)}
+              placeholder="Catatan opsional..."
             />
-          )}
-        />
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="text-destructive hover:bg-destructive/10"
-          onClick={() =>
-            // costField.removeValue(
-            //   costIndex
-            // )
-            () => {}}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
+          </Field>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleBulkApply}
+            disabled={bulkCogsUnit <= 0}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Terapkan
+          </Button>
+        </div>
 
+        <div className="mt-3 flex items-center gap-2">
+          <Checkbox
+            id="bulk-set-default"
+            checked={bulkSetAsDefault}
+            onCheckedChange={(checked: boolean) =>
+              setBulkSetAsDefault(checked)
+            }
+          />
+          <label
+            htmlFor="bulk-set-default"
+            className="text-muted-foreground cursor-pointer text-xs"
+          >
+            Jadikan HPP aktif untuk semua varian
+          </label>
+        </div>
+
+        {bulkResult && (
+          <p className="text-muted-foreground mt-2 text-xs">
+            ✓ {bulkResult}
+          </p>
+        )}
+      </div>
       <form.AppField
         name="variants"
         mode="array"
         children={(field: any) => (
-          // <div className="flex flex-col gap-5">
           <Accordion
             multiple
-            // defaultValue={['summary']}
             className="rounded-md border bg-white px-4 dark:bg-gray-950"
           >
-            {/* <pre>{JSON.stringify(variants, null, 2)}</pre> */}
-
             {field.state.value?.map((_: any, i: number) => {
-              // <pre>TES: {JSON.stringify(_, null, 0)}</pre>;
+              const currentDefaultCost =
+                variants[i]?.default_cost;
+
               return (
                 <AccordionItem
                   key={i}
                   value={variants[i]?.variant_id ?? i}
                   className="border-0"
                 >
-                  {/* <div
-                  key={i}
-                  className="border-border relative rounded-lg border p-4"
-                > */}
                   <AccordionTrigger className="py-4 hover:no-underline">
                     <div className="mb-4 flex items-start justify-between gap-3">
-                      {/* <div> */}
                       <h4 className="text-sm font-semibold">
                         Variant #{i + 1} —{' '}
                         {variants[i]?.name}
                       </h4>
-                      {/* <p className="text-muted-foreground text-xs">
-                        Harga jual dan riwayat HPP untuk
-                        variant ini.
-                      </p> */}
-                      {/* </div> */}
-                      {/* <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => field.removeValue(i)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button> */}
                     </div>
                   </AccordionTrigger>
 
@@ -221,7 +281,6 @@ export function VariantsSubForm({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
-                            // disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value === ''
@@ -239,7 +298,6 @@ export function VariantsSubForm({ form }: { form: any }) {
                             type="number"
                             label="Harga Jual (Final)"
                             value={
-                              // subField.state.value ?? ''
                               form.getFieldValue(
                                 `variants[${i}].price`
                               ) *
@@ -342,121 +400,158 @@ export function VariantsSubForm({ form }: { form: any }) {
                             (
                               _cost: any,
                               costIndex: number
-                            ) => (
-                              <div
-                                key={costIndex}
-                                className="bg-muted/30 grid grid-cols-1 items-end gap-3 rounded-md p-3 md:grid-cols-[1fr_1fr_1.5fr_auto]"
-                              >
-                                <form.AppField
-                                  name={`variants[${i}].costs[${costIndex}].effective_from`}
-                                  children={(
-                                    subField: any
-                                  ) => (
-                                    <subField.TextField
-                                      type="date"
-                                      label="Mulai Berlaku"
-                                      value={
-                                        subField.state.value
-                                          ? String(
-                                              subField.state
-                                                .value
-                                            ).substring(
-                                              0,
-                                              10
-                                            )
-                                          : ''
-                                      }
-                                      onChange={(e: any) =>
-                                        subField.handleChange(
-                                          e.target.value
-                                        )
-                                      }
-                                    />
+                            ) => {
+                              const isActive =
+                                currentDefaultCost ===
+                                  _cost.cogs_unit &&
+                                _cost.cogs_unit !== 0;
+
+                              return (
+                                <div
+                                  key={costIndex}
+                                  role="button"
+                                  tabIndex={0}
+                                  className={cn(
+                                    'grid cursor-pointer grid-cols-1 items-end gap-3 rounded-md border p-3 transition-all md:grid-cols-[auto_1fr_1.5fr_auto]',
+                                    isActive
+                                      ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
+                                      : 'border-border bg-muted/30 hover:border-muted-foreground/30'
                                   )}
-                                />
-                                <form.AppField
-                                  name={`variants[${i}].costs[${costIndex}].cogs_unit`}
-                                  children={(
-                                    subField: any
-                                  ) => (
-                                    <subField.TextField
-                                      type="number"
-                                      label="HPP / Unit"
-                                      value={
-                                        subField.state
-                                          .value ?? ''
-                                      }
-                                      onChange={(e: any) =>
-                                        subField.handleChange(
-                                          e.target.value ===
-                                            ''
-                                            ? 0
-                                            : Number(
-                                                e.target
-                                                  .value
-                                              )
-                                        )
-                                      }
-                                    />
-                                  )}
-                                />
-                                <form.AppField
-                                  name={`variants[${i}].costs[${costIndex}].notes`}
-                                  children={(
-                                    subField: any
-                                  ) => (
-                                    <subField.TextField
-                                      label="Catatan"
-                                      value={
-                                        subField.state
-                                          .value ?? ''
-                                      }
-                                      onChange={(e: any) =>
-                                        subField.handleChange(
-                                          e.target.value
-                                        )
-                                      }
-                                    />
-                                  )}
-                                />
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="icon"
-                                  className="text-destructive hover:bg-destructive/10"
-                                  onClick={() =>
-                                    costField.removeValue(
-                                      costIndex
-                                    )
-                                  }
+                                  onClick={() => {
+                                    form.setFieldValue(
+                                      `variants[${i}].default_cost`,
+                                      _cost.cogs_unit
+                                    );
+                                  }}
+                                  onKeyDown={(e: any) => {
+                                    if (
+                                      e.key === 'Enter' ||
+                                      e.key === ' '
+                                    ) {
+                                      e.preventDefault();
+                                      form.setFieldValue(
+                                        `variants[${i}].default_cost`,
+                                        _cost.cogs_unit
+                                      );
+                                    }
+                                  }}
                                 >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            )
+                                  {/* Radio indicator + badge */}
+                                  <div className="flex flex-col items-center justify-center gap-1.5 pt-5">
+                                    {isActive ? (
+                                      <CircleCheck className="text-primary h-5 w-5" />
+                                    ) : (
+                                      <Circle className="text-muted-foreground/40 h-5 w-5" />
+                                    )}
+                                    {isActive && (
+                                      <Badge
+                                        variant="default"
+                                        className="text-[10px]"
+                                      >
+                                        Aktif
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <form.AppField
+                                    name={`variants[${i}].costs[${costIndex}].cogs_unit`}
+                                    children={(
+                                      subField: any
+                                    ) => (
+                                      <subField.TextField
+                                        type="number"
+                                        label="HPP / Unit"
+                                        value={
+                                          subField.state
+                                            .value ?? ''
+                                        }
+                                        onChange={(
+                                          e: any
+                                        ) => {
+                                          const newValue =
+                                            e.target
+                                              .value === ''
+                                              ? 0
+                                              : Number(
+                                                  e.target
+                                                    .value
+                                                );
+                                          // If this cost was the active default, update default_cost to new value
+                                          if (isActive) {
+                                            form.setFieldValue(
+                                              `variants[${i}].default_cost`,
+                                              newValue
+                                            );
+                                          }
+                                          subField.handleChange(
+                                            newValue
+                                          );
+                                        }}
+                                        onClick={(e: any) =>
+                                          e.stopPropagation()
+                                        }
+                                      />
+                                    )}
+                                  />
+                                  <form.AppField
+                                    name={`variants[${i}].costs[${costIndex}].notes`}
+                                    children={(
+                                      subField: any
+                                    ) => (
+                                      <subField.TextField
+                                        label="Catatan"
+                                        value={
+                                          subField.state
+                                            .value ?? ''
+                                        }
+                                        onChange={(
+                                          e: any
+                                        ) =>
+                                          subField.handleChange(
+                                            e.target.value
+                                          )
+                                        }
+                                        onClick={(e: any) =>
+                                          e.stopPropagation()
+                                        }
+                                      />
+                                    )}
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    className="text-destructive hover:bg-destructive/10"
+                                    onClick={(e: any) => {
+                                      e.stopPropagation();
+                                      // If deleting the active cost, reset default_cost
+                                      if (isActive) {
+                                        form.setFieldValue(
+                                          `variants[${i}].default_cost`,
+                                          0
+                                        );
+                                      }
+                                      costField.removeValue(
+                                        costIndex
+                                      );
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              );
+                            }
                           )}
                         </div>
                       )}
                     />
                   </AccordionContent>
-                  {/* </div> */}
                 </AccordionItem>
               );
             })}
-
-            {/* <Button
-              type="button"
-              variant="outline"
-              onClick={() => field.pushValue(newVariant())}
-              className="w-full border-dashed"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Tambah Variant
-            </Button> */}
           </Accordion>
-          // </div>
         )}
       />
-    </>
+    </div>
   );
 }

@@ -66,6 +66,7 @@ const ProductSchema = new Schema<TProduct>(
           required: true,
           default: true,
         },
+        default_cost: { type: Number, required: false },
         costs: [
           {
             // apakah perlu flag mana harga yang saat ini sedang aktif?
@@ -95,7 +96,6 @@ const ProductSchema = new Schema<TProduct>(
         // },
       },
     ],
-    default_cost: { type: Number, required: false },
     is_active: { type: Boolean, default: true },
 
     // Custom fields

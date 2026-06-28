@@ -7,6 +7,11 @@ import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
 import { formSchema } from '../_components/form.schema';
+import {
+  ProductResponseDTO,
+  ProductResponseSchema,
+  UpdateProductSchema,
+} from '@/modules/products/product.dto';
 
 type PostData = any; // You can use ZodPostSchema to infer this if preferred
 
@@ -108,15 +113,20 @@ function EditPostFormWrapper({
             cogs_unit: Number(cost.cogs_unit || 0),
             notes: cost.notes || '',
           })),
+          default_cost: Number(variant.default_cost) || 0,
         })
       ),
     };
   }, [initialData]);
 
   const form = useAppForm({
-    defaultValues: formValues as z.input<typeof formSchema>,
+    defaultValues:
+      formValues as unknown as ProductResponseDTO,
     validators: {
-      onDynamic: formSchema,
+      // onDynamic: UpdateProductSchema,
+      // onDynamic: ProductResponseSchema,
+      // cast to any to satisfy expected validator type
+      onDynamic: formSchema as any,
     },
     onSubmit: async ({ value }) => {
       try {

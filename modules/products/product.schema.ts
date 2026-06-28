@@ -46,6 +46,7 @@ export const VariantSchema = z.object({
     )
     .optional()
     .default([]),
+  default_cost: z.number().optional(),
   // product_cost: ObjectIdSchema,
   // product_cost: z
   //   .string()
@@ -72,7 +73,6 @@ export const ProductBaseSchema = z.object({
     .optional()
     .default([]),
   variants: z.array(VariantSchema).optional(),
-  default_cost: z.number().optional(),
   is_active: z.boolean().default(true),
 });
 

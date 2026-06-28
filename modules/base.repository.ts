@@ -74,7 +74,7 @@ export abstract class BaseRepository<T extends Document> {
         { _id: id, ...this.getTenantFilter() },
         { $set: data },
         // { new: true } // Mengembalikan data terbaru setelah di-update
-        { returnDocument: 'after' }
+        { returnDocument: 'after', upsert: true }
       )
       .lean();
   }
