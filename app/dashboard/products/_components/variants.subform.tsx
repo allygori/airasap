@@ -446,7 +446,7 @@ export function VariantsSubForm({ form }: { form: any }) {
                                     {isActive && (
                                       <Badge
                                         variant="default"
-                                        className="text-[10px]"
+                                        className="text-tiny"
                                       >
                                         Aktif
                                       </Badge>

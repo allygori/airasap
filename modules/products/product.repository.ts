@@ -32,14 +32,22 @@ export class ProductRepository extends BaseRepository<TProduct> {
   /**
    * Find products by names
    */
-  async findByNames(names: string[]) {
-    return await this.model
-      .find({
-        ...this.getTenantFilter(),
-        name: { $in: names },
-        // deleted_at: null,
-      })
-      .lean();
+  async findByNames(names: string[], populate?: string) {
+    let query = this.model.find({
+      ...this.getTenantFilter(),
+      name: { $in: names },
+    });
+
+    if (populate) {
+      const fields = populate
+        .split(',')
+        .map((f) => f.trim());
+      fields.forEach((field) => {
+        query = query.populate(field) as any;
+      });
+    }
+
+    return await query.lean();
   }
 
   /**

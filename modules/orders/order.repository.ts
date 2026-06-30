@@ -4,6 +4,7 @@
  * Using Mongoose v9
  */
 
+import { saveJson } from '@/lib/file/save-json';
 import { BaseRepository } from '../base.repository';
 import { OrderModel, TOrder } from './order.model';
 import {
@@ -212,16 +213,34 @@ export class OrderRepository extends BaseRepository<TOrder> {
     // operations: AnyBulkWriteOperation<(typeof OrderModel)[]>
     orders: any[]
   ) {
+    // console.log(
+    //   'Repository enrichWithReleasedIncome orders:',
+    //   JSON.stringify(orders, null, 2)
+    // );
+
+    saveJson(
+      `.data/json-logs/enrich-with-released-fund.json`,
+      orders
+    );
+
     const operations: AnyBulkWriteOperation<
       typeof OrderModel
     >[] = orders.map((item) => {
       const itemsMap = (item.items || []).reduce(
         (acc: any, n: any, idx: number) => {
+          console.log({ acc, n, idx });
           const { product } = n;
           acc[`items.${idx}.product`] = product._id;
+          acc[`items.${idx}.processing_fee`] =
+            n.orderProcessingFee;
           return acc;
         },
         {}
+      );
+
+      console.log(
+        'Repository enrichWithReleasedIncome itemsMap:',
+        JSON.stringify(itemsMap, null, 2)
       );
 
       return {
@@ -296,10 +315,23 @@ export class OrderRepository extends BaseRepository<TOrder> {
     return await this.model.bulkWrite(operations);
   }
 
-  // /**
-  //  * Bulk write
-  //  */
-  // async bulkWrite(operations) {
-  //   return await this.model.bulkWrite(operations);
-  // }
+  /**
+   * Enrich order data with released income data from shopee xlsx
+   */
+  async enrichWithReleasedIncome2(
+    operations: AnyBulkWriteOperation<(typeof OrderModel)[]>
+    // orders: any[]
+    // items: any[]
+  ) {
+    return await this.model.bulkWrite(operations);
+  }
+
+  /**
+   * Bulk write
+   */
+  async bulkWrite(
+    operations: AnyBulkWriteOperation<typeof OrderModel>[]
+  ) {
+    return await this.model.bulkWrite(operations);
+  }
 }

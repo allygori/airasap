@@ -31,8 +31,8 @@ export default function parse(buffer: ArrayBuffer) {
       productIds.add(String(item.productId));
     }
   }
-  console.log(JSON.stringify([...ordersMap], null, 2));
-  console.log(JSON.stringify([...productIds], null, 2));
+  // console.log(JSON.stringify([...ordersMap], null, 2));
+  // console.log(JSON.stringify([...productIds], null, 2));
 
   const orders = [];
   for (const order of income) {
@@ -47,7 +47,7 @@ export default function parse(buffer: ArrayBuffer) {
     });
   }
 
-  console.log(JSON.stringify(orders, null, 2));
+  // console.log(JSON.stringify(orders, null, 2));
 
   // console.log({ summary, income, sellerFee });
 

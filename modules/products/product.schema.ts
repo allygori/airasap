@@ -99,6 +99,7 @@ export const ProductFilterSchema = z.object({
     return undefined;
   }, z.boolean().optional()),
   search: z.string().optional(),
+  populate: z.string().optional(),
   page: z.preprocess((value) => {
     if (typeof value === 'string' && value.length) {
       const parsed = Number(value);

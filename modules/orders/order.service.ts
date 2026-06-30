@@ -17,6 +17,9 @@ import parseMassOrdersExcel, {
 import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/released-income';
 import { ProductService } from '../products/product.service';
 import { PLATFORMS_KV } from '../constant';
+import { saveJson } from '@/lib/file/save-json';
+import { AnyBulkWriteOperation } from 'mongoose';
+import { OrderModel } from './order.model';
 
 export class OrderService {
   private repository: OrderRepository;
@@ -423,7 +426,7 @@ export class OrderService {
       }
 
       const ordersMap = new Map<string, ParsedOrderRow[]>();
-      const productNames = new Set<string>();
+      // const productNames = new Set<string>();
       for (const order of orders) {
         const orderId = String(order.orderId);
 
@@ -431,43 +434,70 @@ export class OrderService {
           ordersMap.set(orderId, []);
         }
         ordersMap.get(orderId)!.push(order);
-        productNames.add(String(order.productName));
+        // productNames.add(String(order.productName));
       }
 
-      const products =
-        await this.productService.getProductsByNames([
-          ...productNames,
-        ]);
+      // const products =
+      //   await this.productService.getProductsByNames([
+      //     ...productNames,
+      //   ]);
+
+      // console.log(JSON.stringify(products, null, 2));
 
       let createdCount = 0;
       let updatedCount = 0;
-
       for (const [orderId, group] of ordersMap.entries()) {
         const order = group[0] || {};
 
-        const orderItems = group.map((item) => ({
-          // product: {
-          //   type: Types.ObjectId,
-          //   ref: 'Product',
-          //   required: true,
-          //   alias: 'productId',
-          // },
-          parent_sku: item.parentSku,
-          sku_reference_number: item.skuReferenceNumber,
-          product_name: item.productName,
-          variation_name: item.variationName,
-          // product_key: {
-          //   type: String,
-          //   alias: 'productKey',
-          // },
-          original_price: item.originalPrice,
-          price_after_discount: item.priceAfterDiscount,
-          quantity: item.quantity,
-          returned_quantity: item.returnedQuantity,
-          // cogs: {
-          //   type: Number,
-          // },
-        }));
+        const orderItems = group.map((item) => {
+          // const product = products.find((p: { variants: [] }) => p.variants.find((variant)))
+          // const product = products.find((prd) => prd.product_id === order.product)
+
+          const originalPrice = item.originalPrice
+            ? Number(item.originalPrice)
+            : 0;
+          const priceAfterDiscount = item.priceAfterDiscount
+            ? Number(item.priceAfterDiscount)
+            : 0;
+          const discount =
+            (priceAfterDiscount / originalPrice) * 100;
+
+          console.log({
+            originalPrice,
+            priceAfterDiscount,
+            discount,
+          });
+
+          return {
+            // product: {
+            //   type: Types.ObjectId,
+            //   ref: 'Product',
+            //   required: true,
+            //   alias: 'productId',
+            // },
+            // product_cost: {
+            //   type: Number,
+            //   unique: true
+            // },
+            parent_sku: item.parentSku,
+            sku_reference_number: item.skuReferenceNumber,
+            product_name: item.productName,
+            variation_name: item.variationName,
+            // product_key: {
+            //   type: String,
+            //   alias: 'productKey',
+            // },
+            product_cost: 0,
+            original_price: originalPrice,
+            discount: discount,
+            price_after_discount: priceAfterDiscount,
+            quantity: item.quantity,
+            returned_quantity: item.returnedQuantity,
+            // cogs: {
+            //   type: Number,
+            // },
+          };
+        });
 
         const existingOrder =
           await this.repository.findByOrderId(orderId);
@@ -630,273 +660,230 @@ export class OrderService {
 
       // console.log({ products });
 
-      const temp = [];
-      for (const order of orders) {
-        // const orderId = order.orderId;
-        // for (let j = 0; j < (order.items || []).length; j++)
-        for (const item of order.items || []) {
-          const items = [];
+      const operations: AnyBulkWriteOperation<
+        typeof OrderModel
+      >[] = [];
+      let operation: AnyBulkWriteOperation<
+        typeof OrderModel
+      > = {
+        updateOne: {
+          filter: {},
+          update: {
+            $set: {
+              // items: [],
+              // fee: {},
+            },
+          },
+          upsert: true,
+        },
+      };
+      for await (const order of orders) {
+        const orderObj =
+          await this.repository.findByOrderId(
+            order.orderId
+          );
+
+        if (!orderObj) {
+          console.warn(
+            `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`
+          );
+          continue;
+        }
+
+        operation.updateOne.filter = {
+          order_id: order.orderId,
+        };
+
+        // operation = {
+        //   updateOne: {
+        //     filter: {
+        //       order_id: order.orderId,
+        //     },
+        //     update: {
+        //       $set: {}
+        //     },
+        //     upsert: true,
+        //   }
+        // }
+
+        // Apa yang perlu di update?
+        // - items[x].product
+        // - items[x].product_cost
+        // - items[x].processing_fee
+        // - items[x].fee {
+        //
+        //   }
+
+        // console.log(`order.orderId: ${order.orderId}`);
+
+        const orderObjItems = orderObj?.items || [];
+        const $set: UpdateOrderDTO = {};
+        const items = [];
+        for (let i = 0; i < order.items.length; i++) {
+          const item = order.items[i];
+          const orderObjItem = orderObjItems[i];
           const product = products.find(
             (p) => p.product_id === item.productId
           );
-          if (product) {
-            items.push({
-              ...item,
-              product,
-              // product: product._id.toString(),
-            });
-          }
 
-          temp.push({ ...order, items });
+          orderObjItem.processing_fee =
+            item.orderProcessFee;
+          orderObjItem.product = product?.product_id;
+          // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+          items.push(orderObjItem);
         }
+
+        $set.items = items;
+        $set.fee = {
+          admin_fee: order.adminFee,
+          processing_fee: order.orderProcessingFee,
+          affiliate_fee: order.amsCommissionFee,
+          service_fee: order.serviceFee,
+          shipping_saver_program_fee:
+            order.shippingSaverProgramFee,
+          transaction_fee: order.transactionFee,
+          campaign_fee: order.campaignFee,
+          auto_top_up_fee_from_income:
+            order.autoTopUpFeeFromIncome,
+          return_shipping_fee: order.returnShippingFee,
+          return_to_sender_shipping_fee:
+            order.returnToSenderShippingFee,
+          shipping_fee_refund: order.shippingFeeRefund,
+        };
+        $set.released_amount = order.totalIncome;
+        $set.shipping_fee_paid_by_buyer =
+          order.shippingFeePaidByBuyer || 0;
+        $set.shipping_fee_discount_by_logistics =
+          order.shippingFeeDiscountByLogistics || 0;
+        $set.shipping_fee_forwarded_by_shopee =
+          order.shippingFeeForwardedByShopee || 0;
+        $set.free_shipping_promo_from_seller =
+          order.freeShippingPromoFromSeller || 0;
+        $set.compensation = order.compensation || 0;
+        $set.enriched_at = new Date().toISOString();
+
+        operation.updateOne.update.$set = $set;
+        operations.push({ ...operation });
       }
 
-      // const operations = orders.map((item) => ({
-      //   updateOne: {
-      //     filter: { externalId: item.id },
-      //     update: {
-      //       $set: {
-      //         // name: item.name,
-      //         // updatedAt: new Date()
-      //         fee: {
-      //           admin_fee: item.adminFee,
-      //           order_processing_fee:
-      //             item.orderProcessingFee,
-      //           affiliate_fee: item.amsCommissionFee,
-      //           service_fee: item.serviceFee,
-      //           shipping_saver_program_fee:
-      //             item.shippingSaverProgramFee,
-      //           transaction_fee: item.transactionFee,
-      //           campaign_fee: item.campaignFee,
-      //           auto_top_up_fee_from_income:
-      //             item.autoTopUpFeeFromIncome,
-      //           return_shipping_fee: item.returnShippingFee,
-      //           return_to_sender_shipping_fee:
-      //             item.returnToSenderShippingFee,
-      //           shipping_fee_refund: item.shippingFeeRefund,
-      //         },
-
-      //         // admin_fee: item.adminFee,
-      //         // order_process_fee: item.orderProcessingFee,
-      //         // affiliate_fee: item.amsCommissionFee,
-      //         // campaign_fee: item.campaignFee,
-      //         // voucher_fee: {
-      //         //   type: Number,
-      //         //   alias: 'voucherFee',
-      //         // },
-      //         // shipping_fee: {
-      //         //   type: Number,
-      //         //   alias: 'shippingFee',
-      //         // },
-      //         // other_fee: {
-      //         //   type: Number,
-      //         //   alias: 'otherFee',
-      //         // },
-      //         // return_shipping_fee: {
-      //         //   type: Number,
-      //         //   alias: 'returnShippingFee',
-      //         // },
-      //         // released_amount: {
-      //         //   type: Number,
-      //         //   alias: 'releasedAmount',
-      //         // },
-      //         // net_amount: {
-      //         //   type: Number,
-      //         //   alias: 'netAmount',
-      //         // },
-      //       },
-      //     },
-      //     upsert: true,
-      //   },
-      // }));
-
       const result =
-        await this.repository.enrichWithReleasedIncome(
-          // operations
-          temp
+        await this.repository.enrichWithReleasedIncome2(
+          operations
         );
 
-      // const result = await MyModel.bulkWrite(operations);
+      return result;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal memproses enrich order data: ${error.message}`
+      );
+    }
+  }
 
-      // if (orders.length === 0) {
-      //   throw new Error(
-      //     'Tidak ada data order yang valid di file Excel.'
-      //   );
-      // }
+  /**
+   * Enrich order data with released income data from shopee xlsx
+   */
+  async enrichWithReleasedIncome1(fileBuffer: ArrayBuffer) {
+    try {
+      const { orders, productIds } =
+        await parseReleasedIncomeExcel(fileBuffer);
 
-      // const ordersMap = new Map<string, ParsedOrderRow[]>();
-      // const productNames = new Set<string>();
-      // for (const order of orders) {
-      //   const orderId = String(order.orderId);
+      if ((orders || []).length === 0) {
+        throw new Error(
+          'Tidak ada data order yang valid di file Excel.'
+        );
+      }
 
-      //   if (!ordersMap.has(orderId)) {
-      //     ordersMap.set(orderId, []);
-      //   }
-      //   ordersMap.get(orderId)!.push(order);
-      //   productNames.add(String(order.productName));
-      // }
+      const products =
+        await this.productService.getByMultipleIds(
+          productIds
+        );
 
-      // const products =
-      //   await this.productService.getProductsByNames([
-      //     ...productNames,
-      //   ]);
+      // console.log({ products });
 
-      // let createdCount = 0;
-      // let updatedCount = 0;
+      const operations = [];
+      for await (const order of orders) {
+        const orderObj =
+          await this.repository.findByOrderId(
+            order.orderId
+          );
 
-      // for (const [orderId, group] of ordersMap.entries()) {
-      //   const order = group[0] || {};
+        if (!orderObj) {
+          console.warn(
+            `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`
+          );
+          continue;
+        }
 
-      //   const orderItems = group.map((item) => ({
-      //     // product: {
-      //     //   type: Types.ObjectId,
-      //     //   ref: 'Product',
-      //     //   required: true,
-      //     //   alias: 'productId',
-      //     // },
-      //     parent_sku: item.parentSku,
-      //     sku_reference_number: item.skuReferenceNumber,
-      //     product_name: item.productName,
-      //     variation_name: item.variationName,
-      //     // product_key: {
-      //     //   type: String,
-      //     //   alias: 'productKey',
-      //     // },
-      //     original_price: item.originalPrice,
-      //     price_after_discount: item.priceAfterDiscount,
-      //     quantity: item.quantity,
-      //     returned_quantity: item.returnedQuantity,
-      //     // cogs: {
-      //     //   type: Number,
-      //     // },
-      //   }));
+        // Apa yang perlu di update?
+        // - items[x].product
+        // - items[x].product_cost
+        // - items[x].processing_fee
+        // - items[x].fee {
+        //
+        //   }
 
-      //   const existingOrder =
-      //     await this.repository.findByOrderId(orderId);
+        // console.log(`order.orderId: ${order.orderId}`);
 
-      //   const payload = {
-      //     // organization: {
-      //     //   type: Types.ObjectId,
-      //     //   ref: 'Organization',
-      //     //   required: true,
-      //     //   alias: 'organizationId',
-      //     // },
-      //     // store: {
-      //     //   type: Types.ObjectId,
-      //     //   ref: 'Store',
-      //     //   required: true,
-      //     //   alias: 'storeId',
-      //     // },
-      //     platform: PLATFORMS_KV.shopee,
-      //     order_id: orderId,
-      //     status: order.orderStatus,
-      //     cancellation_return_status:
-      //       order.cancellationReturnStatus,
-      //     username: order.buyerUsername,
-      //     number_of_products_ordered:
-      //       order.numberOfProductsOrdered,
-      //     total_payment: order.totalPayment,
-      //     payment_method: order.paymentMethod,
-      //     paid_at: order.paymentTimeCompleted,
-      //     order_subtotal: order.orderSubtotal,
-      //     total_discount: order.totalDiscount,
-      //     discount_from_seller: order.discountFromSeller,
-      //     discount_from_shopee: order.discountFromShopee,
-      //     voucher_borne_by_seller:
-      //       order.voucherBorneBySeller,
-      //     voucher_borne_by_shopee:
-      //       order.voucherBorneByShopee,
-      //     coin_cashback: order.coinCashback,
-      //     bundle_deal: order.bundleDeal,
-      //     bundle_deal_discount_from_shopee:
-      //       order.bundleDealDiscountFromShopee,
-      //     bundle_deal_discount_from_seller:
-      //       order.bundleDealDiscountFromSeller,
-      //     shopee_coin_offset: order.shopeeCoinOffset,
-      //     credit_card_discount: order.creditCardDiscount,
-      //     shipping_option: order.shippingOption,
-      //     estimated_shipping_fee:
-      //       order.estimatedShippingFee,
-      //     shipping_fee_paid_by_buyer:
-      //       order.shippingFeePaidByBuyer,
-      //     estimated_shipping_fee_discount:
-      //       order.estimatedShippingFeeDiscount,
-      //     product_weight: order.productWeight,
-      //     total_weight: order.totalWeight,
-      //     receiver_name: order.receiverName,
-      //     phone_number: order.phoneNumber,
-      //     address: {
-      //       street: order.deliveryAddress,
-      //       city: order.cityRegency,
-      //       province: order.province,
-      //     },
-      //     buyer_note: order.buyerNote,
-      //     note: order.note,
-      //     items: orderItems,
-      //     // admin_fee: {
-      //     //   type: Number,
-      //     //   alias: 'adminFee',
-      //     // },
-      //     // order_process_fee: {
-      //     //   type: Number,
-      //     //   alias: 'orderProcessFee',
-      //     // },
-      //     // affiliate_fee: {
-      //     //   type: Number,
-      //     //   alias: 'affiliateFee',
-      //     // },
-      //     // campaign_fee: {
-      //     //   type: Number,
-      //     //   alias: 'campaignFee',
-      //     // },
-      //     // voucher_fee: {
-      //     //   type: Number,
-      //     //   alias: 'voucherFee',
-      //     // },
-      //     // shipping_fee: {
-      //     //   type: Number,
-      //     //   alias: 'shippingFee',
-      //     // },
-      //     // other_fee: {
-      //     //   type: Number,
-      //     //   alias: 'otherFee',
-      //     // },
-      //     // return_shipping_fee: {
-      //     //   type: Number,
-      //     //   alias: 'returnShippingFee',
-      //     // },
-      //     // released_amount: {
-      //     //   type: Number,
-      //     //   alias: 'releasedAmount',
-      //     // },
-      //     // net_amount: {
-      //     //   type: Number,
-      //     //   alias: 'netAmount',
-      //     // },
-      //     shipping_arranged_at: order.shippingTimeArranged,
-      //     order_created_at: order.orderCreationTime,
-      //     // order_released_at: {
-      //     //   type: Date,
-      //     //   alias: 'orderReleasedAt',
-      //     // },
-      //     order_completed_at: order.orderCompletionTime,
-      //     // deleted_at: {
-      //     //   type: Date,
-      //     //   alias: 'deletedAt',
-      //     // },
-      //   };
+        const orderObjItems = orderObj?.items || [];
+        // const $set = {};
+        const items = [];
+        for (let i = 0; i < order.items.length; i++) {
+          const item = order.items[i];
+          const orderObjItem = orderObjItems[i];
+          const product = products.find(
+            (p) => p.product_id === item.productId
+          );
 
-      //   if (existingOrder) {
-      //     await this.repository.update(
-      //       existingOrder._id.toString(),
-      //       payload
-      //     );
-      //     updatedCount++;
-      //   } else {
-      //     await this.repository.create(payload);
-      //     createdCount++;
-      //   }
-      // }
+          orderObjItem.processing_fee =
+            item.orderProcessFee;
+          orderObjItem.product = product?.product_id;
+          // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+          items.push(orderObjItem);
+        }
+
+        // orderObj.product =
+        orderObj.items = items;
+        orderObj.fee = {
+          admin_fee: order.adminFee,
+          processing_fee: order.orderProcessingFee,
+          affiliate_fee: order.amsCommissionFee,
+          service_fee: order.serviceFee,
+          shipping_saver_program_fee:
+            order.shippingSaverProgramFee,
+          transaction_fee: order.transactionFee,
+          campaign_fee: order.campaignFee,
+          auto_top_up_fee_from_income:
+            order.autoTopUpFeeFromIncome,
+          return_shipping_fee: order.returnShippingFee,
+          return_to_sender_shipping_fee:
+            order.returnToSenderShippingFee,
+          shipping_fee_refund: order.shippingFeeRefund,
+        };
+        orderObj.released_amount = order.totalIncome;
+        orderObj.shipping_fee_paid_by_buyer =
+          order.shippingFeePaidByBuyer || 0;
+        orderObj.shipping_fee_discount_by_logistics =
+          order.shippingFeeDiscountByLogistics || 0;
+        orderObj.shipping_fee_forwarded_by_shopee =
+          order.shippingFeeForwardedByShopee || 0;
+        orderObj.free_shipping_promo_from_seller =
+          order.freeShippingPromoFromSeller || 0;
+        orderObj.compensation = order.compensation || 0;
+        orderObj.enriched_at = new Date().toISOString();
+
+        // operations.push({ ...order, items });
+        operations.push({ ...orderObj });
+      }
+
+      const result =
+        await this.repository.enrichWithReleasedIncome2(
+          operations
+        );
+
+      // const result =
+      //   await this.repository.bulkWrite(operations);
 
       return result;
     } catch (error: any) {

@@ -18,8 +18,9 @@ export const OrderItemSchema = z.object({
   product_name: z.string().optional(),
   variation_name: z.string().optional(),
   // product_key: z.string().optional(),
-  original_price: z.number().optional(),
-  price_after_discount: z.number().optional(),
+  original_price: z.number().int().optional(),
+  discount: z.number().optional(),
+  price_after_discount: z.number().int().optional(),
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
   processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedIncome

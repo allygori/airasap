@@ -304,8 +304,6 @@ export function OrderItemsSection({ form }: { form: any }) {
 
                       <pre>
                         {JSON.stringify(
-                          // field.state.value[i].product,
-                          // items,
                           getCosts(
                             0,
                             field.state.value[i]
@@ -316,92 +314,143 @@ export function OrderItemsSection({ form }: { form: any }) {
                         )}
                       </pre>
 
-                      <div className="col-span-full">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>
-                                Efektif Sejak
-                              </TableHead>
-                              <TableHead>HPP</TableHead>
-                              <TableHead>Catatan</TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {(
-                              getCosts(
-                                0,
-                                field.state.value[i]
-                                  .variation_name
-                              ) || []
-                            ).map(
-                              (
-                                cost: {
-                                  effective_from: string;
-                                  cogs_unit: number;
-                                  notes: string;
-                                },
-                                idx: number
-                              ) => {
-                                return (
-                                  <TableRow key={idx}>
-                                    <TableCell>
-                                      {formatDate(
-                                        cost.effective_from
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      {formatIDR(
-                                        cost.cogs_unit
-                                      )}
-                                    </TableCell>
-                                    <TableCell>
-                                      {cost.notes}
-                                    </TableCell>
-                                  </TableRow>
-                                );
-                              }
-                            )}
-                          </TableBody>
-                        </Table>
-                      </div>
+                      {/* {costField.state.value?.map(
+                        (_cost: any, costIndex: number) => {
+                          const isActive =
+                            currentDefaultCost ===
+                              _cost.cogs_unit &&
+                            _cost.cogs_unit !== 0;
 
-                      {/* <ul className="col-span-full">
-                        {(
-                          getCosts(
-                            0,
-                            field.state.value[i]
-                              .variation_name
-                          ) || []
-                        ).map(
-                          (
-                            cost: {
-                              effective_from: string;
-                              cogs_unit: number;
-                              notes: string;
-                            },
-                            idx: number
-                          ) => {
-                            return (
-                              <li key={idx}>
-                                <div className="flex w-full flex-row items-center justify-between gap-2">
-                                  <p>
-                                    {formatDate(
-                                      cost.effective_from
-                                    )}
-                                  </p>
-                                  <p>
-                                    {formatIDR(
-                                      cost.cogs_unit
-                                    )}
-                                  </p>
-                                  <p>{cost.notes}</p>
-                                </div>
-                              </li>
-                            );
-                          }
-                        )}
-                      </ul> */}
+                          return (
+                            <div
+                              key={costIndex}
+                              role="button"
+                              tabIndex={0}
+                              className={cn(
+                                'grid cursor-pointer grid-cols-1 items-end gap-3 rounded-md border p-3 transition-all md:grid-cols-[auto_1fr_1.5fr_auto]',
+                                isActive
+                                  ? 'border-primary bg-primary/5 ring-primary/20 ring-1'
+                                  : 'border-border bg-muted/30 hover:border-muted-foreground/30'
+                              )}
+                              onClick={() => {
+                                form.setFieldValue(
+                                  `variants[${i}].default_cost`,
+                                  _cost.cogs_unit
+                                );
+                              }}
+                              onKeyDown={(e: any) => {
+                                if (
+                                  e.key === 'Enter' ||
+                                  e.key === ' '
+                                ) {
+                                  e.preventDefault();
+                                  form.setFieldValue(
+                                    `variants[${i}].default_cost`,
+                                    _cost.cogs_unit
+                                  );
+                                }
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center gap-1.5 pt-5">
+                                {isActive ? (
+                                  <CircleCheck className="text-primary h-5 w-5" />
+                                ) : (
+                                  <Circle className="text-muted-foreground/40 h-5 w-5" />
+                                )}
+                                {isActive && (
+                                  <Badge
+                                    variant="default"
+                                    className="text-tiny"
+                                  >
+                                    Aktif
+                                  </Badge>
+                                )}
+                              </div>
+
+                              <form.AppField
+                                name={`variants[${i}].costs[${costIndex}].cogs_unit`}
+                                children={(
+                                  subField: any
+                                ) => (
+                                  <subField.TextField
+                                    type="number"
+                                    label="HPP / Unit"
+                                    value={
+                                      subField.state
+                                        .value ?? ''
+                                    }
+                                    onChange={(e: any) => {
+                                      const newValue =
+                                        e.target.value ===
+                                        ''
+                                          ? 0
+                                          : Number(
+                                              e.target.value
+                                            );
+                                      // If this cost was the active default, update default_cost to new value
+                                      if (isActive) {
+                                        form.setFieldValue(
+                                          `variants[${i}].default_cost`,
+                                          newValue
+                                        );
+                                      }
+                                      subField.handleChange(
+                                        newValue
+                                      );
+                                    }}
+                                    onClick={(e: any) =>
+                                      e.stopPropagation()
+                                    }
+                                  />
+                                )}
+                              />
+                              <form.AppField
+                                name={`variants[${i}].costs[${costIndex}].notes`}
+                                children={(
+                                  subField: any
+                                ) => (
+                                  <subField.TextField
+                                    label="Catatan"
+                                    value={
+                                      subField.state
+                                        .value ?? ''
+                                    }
+                                    onChange={(e: any) =>
+                                      subField.handleChange(
+                                        e.target.value
+                                      )
+                                    }
+                                    onClick={(e: any) =>
+                                      e.stopPropagation()
+                                    }
+                                  />
+                                )}
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="text-destructive hover:bg-destructive/10"
+                                onClick={(e: any) => {
+                                  e.stopPropagation();
+                                  // If deleting the active cost, reset default_cost
+                                  if (isActive) {
+                                    form.setFieldValue(
+                                      `variants[${i}].default_cost`,
+                                      0
+                                    );
+                                  }
+                                  costField.removeValue(
+                                    costIndex
+                                  );
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        }
+                      )} */}
                     </div>
                   </div>
                 )

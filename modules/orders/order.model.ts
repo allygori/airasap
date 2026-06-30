@@ -135,6 +135,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: Number,
       alias: 'originalPrice',
     },
+    discount: {
+      type: Number,
+      default: 0,
+    },
     price_after_discount: {
       type: Number,
       alias: 'priceAfterDiscount',
@@ -183,41 +187,49 @@ const OrderFeeSchema = new Schema<TOrderFee>(
     admin_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'adminFee',
     },
     processing_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'processingFee',
     },
     affiliate_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'affiliateFee',
     }, // shopee: AMS program, tokped: ?
     service_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'serviceFee',
     },
     shipping_saver_program_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'shippingSaverProgramFee',
     }, // shopee: gratis ongkir xtra/xtra+ program
     transaction_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'transactionFee',
     },
     campaign_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'campaignFee',
     },
     auto_top_up_fee_from_income: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'autoTopUpFeeFromIncome',
     },
 
@@ -225,18 +237,20 @@ const OrderFeeSchema = new Schema<TOrderFee>(
     return_shipping_fee: {
       type: Number,
       required: false,
-      alias: 'returnShippingFee',
       default: 0,
+      alias: 'returnShippingFee',
     },
     return_to_sender_shipping_fee: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'returnToSenderShippingFee',
     },
     // over charge shipping fee refund
     shipping_fee_refund: {
       type: Number,
       required: false,
+      default: 0,
       alias: 'shippingFeeRefund',
     },
   },

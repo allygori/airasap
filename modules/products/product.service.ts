@@ -315,7 +315,10 @@ export class ProductService {
   /**
    * Get products by names
    */
-  async getProductsByNames(names: string[]) {
+  async getProductsByNames(
+    names: string[],
+    filter?: ProductFilterDTO
+  ) {
     try {
       return await this.repository.findByNames(names);
     } catch (error: any) {
@@ -481,7 +484,7 @@ export class ProductService {
             variant_id: item.variantId,
             name:
               item.variantName || item.productName || '-',
-            key: `${productId}::${item.variantId || '-'}`,
+            // key: `${productId}::${item.variantId || '-'}`,
             price: item.price,
             // quantity: item.quantity ?? 0,
             discount: 0,
@@ -500,7 +503,7 @@ export class ProductService {
           platform: PLATFORMS_KV.shopee,
           name: group[0]?.productName || '',
           product_id: productId,
-          key: productId,
+          // key: productId,
           options,
           variants,
           is_active: true,

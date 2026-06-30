@@ -210,10 +210,6 @@ export function ViewDrawer<T extends Record<string, any>>({
                   value={formatIDR(item.total_payment)}
                 />
                 <StatLine
-                  label="Total Pembayaran Buyer"
-                  value={formatIDR(item.total_payment)}
-                />
-                <StatLine
                   label="Biaya Admin"
                   value={formatIDR(item.fee?.admin_fee)}
                   valueClass={
