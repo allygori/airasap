@@ -28,17 +28,17 @@ export type TAccount = Document &
 
 const AccountSchema = new Schema<TAccount>(
   {
-    account: {
-      type: Types.ObjectId,
-      required: true,
-      unique: true,
-      alias: 'accountId',
-    },
+    // account: {
+    //   type: Types.ObjectId,
+    //   required: true,
+    //   unique: true,
+    //   alias: 'accountId',
+    // },
     user: {
       type: Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
+      // index: true,
       alias: 'userId',
     },
     provider: {

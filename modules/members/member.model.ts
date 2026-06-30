@@ -15,21 +15,28 @@ const MemberSchema = new Schema<TMember>(
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
-      index: true,
+      // index: true,
       alias: 'organizationId',
     },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true,
+      // index: true,
       alias: 'userId',
     },
+    // organization: {
+    //   type: String,
+    //   required: true,
+    // },
+
     role: {
       type: String,
       enum: ['owner', 'admin'],
       default: 'owner',
     },
+
+    // additional fields
     deleted_at: {
       type: Date,
       alias: 'deletedAt',

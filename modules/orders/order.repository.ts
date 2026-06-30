@@ -319,9 +319,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
    * Enrich order data with released income data from shopee xlsx
    */
   async enrichWithReleasedIncome2(
-    operations: AnyBulkWriteOperation<(typeof OrderModel)[]>
-    // orders: any[]
-    // items: any[]
+    operations: AnyBulkWriteOperation<TOrder>[]
   ) {
     return await this.model.bulkWrite(operations);
   }

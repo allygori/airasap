@@ -4,10 +4,11 @@ export const accountConfig = {
   modelName: 'accounts',
   fields: {
     // accountId: 'account',
+
     accountId: '_id',
     userId: 'user',
     providerId: 'provider',
-    password: 'password',
+    // password: 'password',
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },

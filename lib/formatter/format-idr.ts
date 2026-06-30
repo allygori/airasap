@@ -1,5 +1,6 @@
 type Options = {
   showSymbol?: boolean;
+  fallback?: number;
 };
 
 export const formatIDR = (
@@ -25,5 +26,9 @@ export const formatIDR = (
     return filtered;
   }
 
-  return formatter.format(num);
+  return num !== undefined && num !== null
+    ? formatter.format(num)
+    : Number.isFinite(options.fallback)
+      ? formatter.format(Number(options.fallback))
+      : '-';
 };

@@ -21,13 +21,13 @@ import { cn } from '@/lib/utils';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 
-type CategoryType = {
-  name: string;
-};
+// type CategoryType = {
+//   name: string;
+// };
 
-type UserType = {
-  name: string;
-};
+// type UserType = {
+//   name: string;
+// };
 
 // Drag handle component for sortable columns
 function DragHandle({ id }: { id: string }) {
@@ -136,11 +136,20 @@ export const getProductsColumn = (
       ),
     },
     {
-      accessorKey: 'Subtotal',
-      header: 'Subtotal',
+      accessorKey: 'order_subtotal',
+      header: 'Pembayaran Pembeli',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
           {formatIDR(row.original.order_subtotal ?? 0)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'total_product_cost',
+      header: 'HPP',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {formatIDR(row.original.total_product_cost ?? 0)}
         </div>
       ),
     },
@@ -150,6 +159,24 @@ export const getProductsColumn = (
       cell: ({ row }) => (
         <div className="text-sm font-medium">
           {formatIDR(row.original.released_amount ?? 0)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'total_profit',
+      header: 'Profit',
+      cell: ({ row }) => (
+        <div
+          className={cn(
+            'text-base font-medium',
+            row.original.total_profit > 0
+              ? 'text-green-400'
+              : row.original.total_profit < 0
+                ? 'text-red-400'
+                : ''
+          )}
+        >
+          {formatIDR(row.original.total_profit ?? 0)}
         </div>
       ),
     },

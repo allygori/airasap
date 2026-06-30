@@ -105,6 +105,12 @@ const OrderItemSchema = new Schema<TOrderItem>(
     },
     product_cost: {
       type: Number,
+      default: 0,
+      required: false,
+    },
+    profit: {
+      type: Number,
+      default: 0,
       required: false,
     },
     product_name: {
@@ -491,6 +497,14 @@ const OrderSchema = new Schema<TOrder>(
     },
 
     // additional fields
+    total_product_cost: {
+      type: Number,
+      default: 0,
+    },
+    total_profit: {
+      type: Number,
+      default: 0,
+    },
     enriched_at: {
       type: Date,
       alias: 'enrichedAt',

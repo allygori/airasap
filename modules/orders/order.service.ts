@@ -19,7 +19,7 @@ import { ProductService } from '../products/product.service';
 import { PLATFORMS_KV } from '../constant';
 import { saveJson } from '@/lib/file/save-json';
 import { AnyBulkWriteOperation } from 'mongoose';
-import { OrderModel } from './order.model';
+import { OrderModel, TOrder } from './order.model';
 
 export class OrderService {
   private repository: OrderRepository;
@@ -660,23 +660,8 @@ export class OrderService {
 
       // console.log({ products });
 
-      const operations: AnyBulkWriteOperation<
-        typeof OrderModel
-      >[] = [];
-      let operation: AnyBulkWriteOperation<
-        typeof OrderModel
-      > = {
-        updateOne: {
-          filter: {},
-          update: {
-            $set: {
-              // items: [],
-              // fee: {},
-            },
-          },
-          upsert: true,
-        },
-      };
+      const operations: AnyBulkWriteOperation<TOrder>[] =
+        [];
       for await (const order of orders) {
         const orderObj =
           await this.repository.findByOrderId(
@@ -690,46 +675,49 @@ export class OrderService {
           continue;
         }
 
-        operation.updateOne.filter = {
-          order_id: order.orderId,
-        };
-
-        // operation = {
-        //   updateOne: {
-        //     filter: {
-        //       order_id: order.orderId,
-        //     },
-        //     update: {
-        //       $set: {}
-        //     },
-        //     upsert: true,
-        //   }
-        // }
-
-        // Apa yang perlu di update?
-        // - items[x].product
-        // - items[x].product_cost
-        // - items[x].processing_fee
-        // - items[x].fee {
-        //
-        //   }
-
-        // console.log(`order.orderId: ${order.orderId}`);
-
         const orderObjItems = orderObj?.items || [];
-        const $set: UpdateOrderDTO = {};
+        const $set: Record<string, any> = {};
         const items = [];
+        let totalProductCost = 0;
         for (let i = 0; i < order.items.length; i++) {
           const item = order.items[i];
           const orderObjItem = orderObjItems[i];
           const product = products.find(
             (p) => p.product_id === item.productId
           );
+          const name =
+            orderObjItem?.variation_name ||
+            orderObjItem?.product_name;
+          const variantCost = (
+            product?.variants || []
+          ).find((v) => v.name === name);
+          const productCost =
+            product?.variants?.length === 1
+              ? product?.variants[0]?.default_cost || 0
+              : variantCost?.default_cost || 0;
 
+          console.log({
+            orderId: order.orderId,
+            name,
+            // variantCost,
+            productCost,
+            totalProductCost,
+          });
+
+          orderObjItem.product = product?._id;
+          orderObjItem.product_cost =
+            productCost * (orderObjItem?.quantity || 1);
+          orderObjItem.profit =
+            (orderObjItem?.price_after_discount || 0) -
+            productCost; // price_after_discount not included fees, remove?
+          // orderObjItem.product_cost =
+          //   defaultCost?.default_cost || 0;
           orderObjItem.processing_fee =
             item.orderProcessFee;
-          orderObjItem.product = product?.product_id;
           // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+          totalProductCost =
+            totalProductCost + orderObjItem.product_cost;
 
           items.push(orderObjItem);
         }
@@ -751,7 +739,7 @@ export class OrderService {
             order.returnToSenderShippingFee,
           shipping_fee_refund: order.shippingFeeRefund,
         };
-        $set.released_amount = order.totalIncome;
+        $set.released_amount = order.totalIncome || 0;
         $set.shipping_fee_paid_by_buyer =
           order.shippingFeePaidByBuyer || 0;
         $set.shipping_fee_discount_by_logistics =
@@ -761,10 +749,22 @@ export class OrderService {
         $set.free_shipping_promo_from_seller =
           order.freeShippingPromoFromSeller || 0;
         $set.compensation = order.compensation || 0;
+        $set.total_product_cost = totalProductCost || 0;
+        $set.total_profit =
+          $set.released_amount - $set.total_product_cost;
         $set.enriched_at = new Date().toISOString();
 
-        operation.updateOne.update.$set = $set;
-        operations.push({ ...operation });
+        // console.log(JSON.stringify($set, null, 2));
+
+        operations.push({
+          updateOne: {
+            filter: { order_id: order.orderId },
+            update: { $set },
+            upsert: true,
+          },
+        });
+
+        totalProductCost = 0;
       }
 
       const result =
@@ -801,7 +801,7 @@ export class OrderService {
 
       // console.log({ products });
 
-      const operations = [];
+      const operations: any[] = [];
       for await (const order of orders) {
         const orderObj =
           await this.repository.findByOrderId(

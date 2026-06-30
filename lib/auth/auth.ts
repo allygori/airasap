@@ -31,6 +31,9 @@ export const auth = betterAuth({
     process.env.BETTER_AUTH_URL || 'http://localhost:3000',
   basePath: '/api/auth',
   secret: process.env.BETTER_AUTH_SECRET,
+  experimental: {
+    joins: false,
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
@@ -38,12 +41,31 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
+      // 1. Plan for error when mapping fields to snake_case,
+      // create store client plugin to set active organization id
       schema: {
         organization: {
           modelName: 'organizations',
+          // fields: {
+          //   id: '_id',
+          //   createdAt: 'created_at',
+          // },
         },
         member: {
           modelName: 'members',
+          // fields: {
+          //   id: '_id',
+          //   organizationId: 'organization',
+          //   userId: 'user',
+          //   createdAt: 'created_at',
+          //   updatedAt: 'updated_at',
+          // },
+        },
+        session: {
+          fields: {
+            // id: '_id',
+            // activeOrganizationId: 'active_organization',
+          },
         },
       },
       organizationHooks: {
@@ -176,4 +198,4 @@ export const auth = betterAuth({
   // databaseHooks,
 });
 
-type Session = typeof auth.$Infer.Session;
+// type Session = typeof auth.$Infer.Session;

@@ -21,13 +21,11 @@ import GoogleIcon from '@/components/icons/google';
 import LoginForm from './login.form';
 import { auth } from '@/lib/auth/auth';
 
-type RegisterClientProps = {
+type LoginProps = {
   className?: string;
 };
 
-export default function RegisterClient({
-  className,
-}: RegisterClientProps) {
+export default function Login({ className }: LoginProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -58,7 +56,7 @@ export default function RegisterClient({
         if (authError) {
           setError(
             authError.message ||
-              'Gagal membuat akun. Silakan coba lagi.'
+              'Gagal masuk ke akun. Silakan coba lagi.'
           );
           return;
         }

@@ -22,6 +22,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { Button } from '../ui/button';
+import { authClient } from '@/lib/auth/auth-client';
+import { useRouter } from 'next/navigation';
 
 type UserType = {
   name: string;
@@ -34,6 +37,7 @@ type NavUserProps = {
 };
 
 export function NavUser({ user }: NavUserProps) {
+  const router = useRouter();
   const { isMobile } = useSidebar();
 
   const {
@@ -54,6 +58,12 @@ export function NavUser({ user }: NavUserProps) {
         : words[0].charAt(0);
 
     return initials.toUpperCase();
+  };
+
+  const handleLogout = async () => {
+    await authClient.signOut();
+
+    router.replace('/login');
   };
 
   return (
@@ -131,8 +141,16 @@ export function NavUser({ user }: NavUserProps) {
             </DropdownMenuGroup> */}
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
-              Log out
+              <Button
+                variant="ghost"
+                className="cursor-pointer"
+                onClick={async () => {
+                  await handleLogout();
+                }}
+              >
+                <LogOut />
+                Log out
+              </Button>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

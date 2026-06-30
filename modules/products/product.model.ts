@@ -77,7 +77,7 @@ const ProductSchema = new Schema<TProduct>(
             // },
             cogs_unit: {
               type: Number,
-              unique: true, // unique price
+              // unique: true, // unique price
               // default: 0,
             },
             notes: {

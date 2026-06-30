@@ -171,17 +171,75 @@ export function ViewDrawer<T extends Record<string, any>>({
               </section>
 
               <section>
+                <DetailBox
+                  label="Daftar Produk"
+                  // icon={
+                  //   <div className="size-1.5 rounded-full bg-blue-500" />
+                  // }
+                >
+                  <ul className="flex flex-row flex-wrap space-y-2">
+                    {(item.items || []).map(
+                      (
+                        n: {
+                          product_name: string;
+                          variation_name: string;
+                          quantity: number;
+                        },
+                        idx: number
+                      ) => {
+                        return (
+                          <li
+                            className="border-b-foreground/30 grid grid-cols-12 items-center justify-between gap-2 border-b pb-2 text-xs leading-normal text-wrap last:border-b-0"
+                            key={idx}
+                          >
+                            <div className="col-span-10 pr-8">
+                              <span className="font-semibold">
+                                {n.product_name}
+                              </span>
+                              {n.variation_name && (
+                                <span className="pl-2 font-medium">
+                                  ({n.variation_name})
+                                </span>
+                              )}
+                            </div>
+                            <div className="col-span-2 text-left font-light">
+                              <span>x&nbsp;</span>
+                              <span>{n.quantity}</span>
+                            </div>
+                            {/* <p className="leading-normal font-light text-wrap">
+                              <span className="pr-8 font-medium">
+                                {n.product_name}
+                              </span>
+                              <span>x&nbsp;</span>
+                              <span>{n.quantity}</span>
+                            </p> */}
+                          </li>
+                        );
+                      }
+                    )}
+                  </ul>
+                  {/* <span className="font-medium">
+                    {item.reading_time || 0} minutes
+                  </span> */}
+                </DetailBox>
+              </section>
+
+              <section>
                 <StatLine
                   label="Pendapatan"
-                  value={formatIDR(item.released_amount)}
+                  value={formatIDR(item.released_amount, {
+                    fallback: 0,
+                  })}
                 />
                 <StatLine
                   label="Profit"
-                  value={formatIDR(item.released_amount)}
+                  value={formatIDR(item.total_profit, {
+                    fallback: 0,
+                  })}
                   valueClass={
-                    item.released_amount !== undefined &&
-                    item.released_amount !== 0
-                      ? item.released_amount < 0
+                    item.total_profit !== undefined &&
+                    item.total_profit !== 0
+                      ? item.total_profit < 0
                         ? 'text-destructive'
                         : 'text-green-600'
                       : ''
@@ -207,11 +265,15 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Total Pembayaran Buyer"
-                  value={formatIDR(item.total_payment)}
+                  value={formatIDR(item.total_payment, {
+                    fallback: 0,
+                  })}
                 />
                 <StatLine
                   label="Biaya Admin"
-                  value={formatIDR(item.fee?.admin_fee)}
+                  value={formatIDR(item.fee?.admin_fee, {
+                    fallback: 0,
+                  })}
                   valueClass={
                     item.fee?.admin_fee !== undefined &&
                     item.fee?.admin_fee !== 0
@@ -224,7 +286,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Biaya Proses Pesanan"
                   value={formatIDR(
-                    item.fee?.processing_fee
+                    item.fee?.processing_fee,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee?.processing_fee !==
@@ -238,7 +301,10 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Biaya Affiliate"
-                  value={formatIDR(item.fee?.affiliate_fee)}
+                  value={formatIDR(
+                    item.fee?.affiliate_fee,
+                    { fallback: 0 }
+                  )}
                   valueClass={
                     item.fee?.affiliate_fee !== undefined &&
                     item.fee?.affiliate_fee !== 0
@@ -250,7 +316,9 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Biaya Kampanye"
-                  value={formatIDR(item.fee?.campaign_fee)}
+                  value={formatIDR(item.fee?.campaign_fee, {
+                    fallback: 0,
+                  })}
                   valueClass={
                     item.fee?.campaign_fee !== undefined &&
                     item.fee?.campaign_fee !== 0
@@ -263,7 +331,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Biaya Gratis Ongkir"
                   value={formatIDR(
-                    item.fee?.shipping_saver_program_fee
+                    item.fee?.shipping_saver_program_fee,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee?.shipping_saver_program_fee !==
@@ -280,7 +349,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Biaya Transaksi"
                   value={formatIDR(
-                    item.fee?.transaction_fee
+                    item.fee?.transaction_fee,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee?.transaction_fee !==
@@ -295,7 +365,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Biaya Auto Top Up Iklan"
                   value={formatIDR(
-                    item.fee?.auto_top_up_fee_from_income
+                    item.fee?.auto_top_up_fee_from_income,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee
@@ -312,7 +383,9 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Biaya Layanan"
-                  value={formatIDR(item.fee?.service_fee)}
+                  value={formatIDR(item.fee?.service_fee, {
+                    fallback: 0,
+                  })}
                   valueClass={
                     item.fee?.service_fee !== undefined &&
                     item.fee?.service_fee !== 0
@@ -325,7 +398,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Ongkos Kirim Pengembalian Barang"
                   value={formatIDR(
-                    item.fee?.return_shipping_fee
+                    item.fee?.return_shipping_fee,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee?.return_shipping_fee !==
@@ -340,7 +414,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Kembali ke Biaya Pengiriman Pengirim"
                   value={formatIDR(
-                    item.fee?.return_to_sender_shipping_fee
+                    item.fee?.return_to_sender_shipping_fee,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee
@@ -359,7 +434,8 @@ export function ViewDrawer<T extends Record<string, any>>({
                 <StatLine
                   label="Refund Biaya Kirim"
                   value={formatIDR(
-                    item.fee?.shipping_fee_refund
+                    item.fee?.shipping_fee_refund,
+                    { fallback: 0 }
                   )}
                   valueClass={
                     item.fee?.shipping_fee_refund !==
@@ -596,13 +672,13 @@ function DetailBox({
   children,
 }: {
   label: string;
-  icon: React.ReactNode;
+  icon?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="bg-background flex min-w-0 flex-col gap-1.5 rounded-xl border p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-      <span className="text-muted-foreground/50 flex min-w-0 items-center gap-1 text-[9px] font-bold tracking-widest uppercase">
-        <span className="shrink-0">{icon}</span>
+      <span className="text-muted-foreground/70 flex min-w-0 items-center gap-1 text-[9px] font-bold tracking-widest uppercase">
+        {icon && <span className="shrink-0">{icon}</span>}
         <span className="truncate">{label}</span>
       </span>
       <div className="min-w-0 truncate py-0.5 text-sm leading-none font-semibold">

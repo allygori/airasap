@@ -1,5 +1,8 @@
 import { createAuthClient } from 'better-auth/react';
-import { organizationClient } from 'better-auth/client/plugins';
+import {
+  inferOrgAdditionalFields,
+  organizationClient,
+} from 'better-auth/client/plugins';
 import { inferAdditionalFields } from 'better-auth/client/plugins';
 import type { auth } from './auth';
 import { storeClient } from './plugins/store';
@@ -8,7 +11,15 @@ export const authClient = createAuthClient({
   /** The base URL of the server (optional if you're using the same domain) */
   // baseURL: "http://localhost:3000"
   plugins: [
-    organizationClient(),
+    organizationClient({
+      // schema: {
+      //   organization: {
+      //   },
+      //   member: {
+      //   },
+      // }
+      schema: inferOrgAdditionalFields<typeof auth>(),
+    }),
     inferAdditionalFields<typeof auth>(),
     storeClient(),
     // inferAdditionalFields({
@@ -28,6 +39,8 @@ export const authClient = createAuthClient({
 });
 
 export type Session = typeof authClient.$Infer.Session;
+
+// const test = authClient.organization.setActive
 
 export const {
   signIn,

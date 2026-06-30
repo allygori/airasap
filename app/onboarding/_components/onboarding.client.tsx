@@ -12,6 +12,7 @@ import {
   ZodOnboardingSchema,
 } from '@/app/onboarding/_components/onboarding.schema';
 import { PLATFORMS_KV } from '@/modules/constant';
+import { create } from 'domain';
 
 type OnboardingClientProps = {
   className?: string;
@@ -40,6 +41,7 @@ export default function OnboardingClient({
       setIsLoading(true);
       setError(null);
 
+      let activeOrgId;
       const { logo, name, slug, firstStore, description } =
         value;
 
@@ -47,6 +49,7 @@ export default function OnboardingClient({
         /**
          * Create a organization
          */
+
         const { data: newOrg, error: createOrgError } =
           await authClient.organization.create({
             logo,
@@ -57,7 +60,15 @@ export default function OnboardingClient({
             },
           });
 
-        if (createOrgError) {
+        activeOrgId = newOrg?.id;
+
+        console.log({ activeOrgId });
+
+        if (
+          createOrgError &&
+          createOrgError.code !==
+            'ORGANIZATION_ALREADY_EXISTS'
+        ) {
           setError(
             createOrgError.message ||
               'Gagal membuat organisasi. Silakan coba lagi.'
@@ -65,15 +76,43 @@ export default function OnboardingClient({
           return;
         }
 
+        if (
+          createOrgError?.code ===
+            'ORGANIZATION_ALREADY_EXISTS' &&
+          !!activeOrgId
+        ) {
+          const { data, error } =
+            await authClient.organization.list();
+
+          activeOrgId =
+            data && data.length > 0 ? data[0]?.id : null;
+
+          if (error) {
+            console.error(
+              'Failed to fetch organizations:',
+              error
+            );
+            return;
+          }
+        }
+
         const { error } =
           await authClient.organization.setActive({
-            organizationId: newOrg.id,
+            organizationId: activeOrgId,
+            // organization: newOrg.id,
           });
+
+        // const { error } = await authClient.updateSession({
+        //   activeStoreId
+        // })
 
         if (error) {
           console.error(
             'Failed to set active organization',
             error
+          );
+          throw new Error(
+            'Failed to set active organization'
           );
         }
 
@@ -89,7 +128,7 @@ export default function OnboardingClient({
             },
             body: JSON.stringify({
               // organization: newOrg.id,
-              name: firstStore || newOrg.name || '',
+              name: firstStore || newOrg?.name || '',
               platform: PLATFORMS_KV.shopee,
             }),
           }

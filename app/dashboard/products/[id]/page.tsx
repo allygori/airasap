@@ -15,7 +15,7 @@ import {
 
 type PostData = any; // You can use ZodPostSchema to infer this if preferred
 
-const EditPostPage = ({
+const EditProductPage = ({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -162,7 +162,8 @@ function EditPostFormWrapper({
           description: `Product "${value.name}" has been updated.`,
         });
 
-        router.push('/dashboard/products');
+        // router.push('/dashboard/products');
+        router.back();
         router.refresh();
       } catch (error: unknown) {
         const message =
@@ -201,4 +202,4 @@ function EditPostFormWrapper({
   );
 }
 
-export default EditPostPage;
+export default EditProductPage;

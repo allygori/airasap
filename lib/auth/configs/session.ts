@@ -14,7 +14,7 @@ export const sessionConfig = {
   },
   expiresIn: 60 * 60 * 24 * 7, // 7 days
   // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
-  deferSessionRefresh: true,
+  // deferSessionRefresh: true,
   cookieCache: {
     enabled: true,
     maxAge: 5 * 60, // Cache duration in seconds (5 minutes)
