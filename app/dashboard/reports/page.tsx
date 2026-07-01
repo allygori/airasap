@@ -1,5 +1,7 @@
+import ReportClient from './_components/report.client';
+
 const ReportsPage = () => {
-  return <div>ReportsPage</div>;
+  return <ReportClient />;
 };
 
 export default ReportsPage;

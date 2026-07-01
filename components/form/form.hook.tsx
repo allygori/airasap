@@ -39,6 +39,11 @@ const DateTimeField = lazy(() =>
     default: m.DateTimeField,
   }))
 );
+const DateRangePresetsField = lazy(() =>
+  import('./fields/date-range-presets').then((m) => ({
+    default: m.DateRangePresetsField,
+  }))
+);
 const AvatarField = lazy(() =>
   import('./fields/avatar').then((m) => ({
     default: m.AvatarField,
@@ -60,6 +65,7 @@ export const { useAppForm, withForm, withFieldGroup } =
       SelectField,
       MultiselectField,
       DateTimeField,
+      DateRangePresetsField,
       AvatarField,
     },
     formComponents: {
