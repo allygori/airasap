@@ -154,6 +154,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
     page: number = 1,
     limit: number = 10,
     filter?: QueryFilter<TOrder>,
+    sort?: string,
     populate?: string
   ) {
     const skip = (page - 1) * limit;
@@ -162,6 +163,31 @@ export class OrderRepository extends BaseRepository<TOrder> {
       ...filter,
       ...this.getTenantFilter(),
     });
+
+    // if (sort) {
+    //   const sorts = sort
+    //     .split(',')
+    //     .map((f) => f.trim());
+    //   sorts.forEach((field) => {
+    //     query = query.sort(field) as any;
+    //   });
+    // }
+
+    const sortObj: Record<string, 1 | -1> = {};
+    if (sort) {
+      for (const field of sort.split(',')) {
+        const trimmed = field.trim();
+        if (trimmed.startsWith('-')) {
+          sortObj[trimmed.slice(1)] = -1;
+        } else {
+          sortObj[trimmed] = 1;
+        }
+      }
+
+      // console.log(JSON.stringify(sortObj, null, 2));
+
+      query.sort(sortObj);
+    }
 
     if (populate) {
       const fields = populate
@@ -228,7 +254,6 @@ export class OrderRepository extends BaseRepository<TOrder> {
     >[] = orders.map((item) => {
       const itemsMap = (item.items || []).reduce(
         (acc: any, n: any, idx: number) => {
-          console.log({ acc, n, idx });
           const { product } = n;
           acc[`items.${idx}.product`] = product._id;
           acc[`items.${idx}.processing_fee`] =
@@ -238,10 +263,10 @@ export class OrderRepository extends BaseRepository<TOrder> {
         {}
       );
 
-      console.log(
-        'Repository enrichWithReleasedIncome itemsMap:',
-        JSON.stringify(itemsMap, null, 2)
-      );
+      // console.log(
+      //   'Repository enrichWithReleasedIncome itemsMap:',
+      //   JSON.stringify(itemsMap, null, 2)
+      // );
 
       return {
         updateOne: {

@@ -136,11 +136,11 @@ export const getProductsColumn = (
       ),
     },
     {
-      accessorKey: 'order_subtotal',
+      accessorKey: 'total_payment',
       header: 'Pembayaran Pembeli',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
-          {formatIDR(row.original.order_subtotal ?? 0)}
+          {formatIDR(row.original.total_payment ?? 0)}
         </div>
       ),
     },

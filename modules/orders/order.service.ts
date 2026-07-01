@@ -3,6 +3,7 @@
  * Handles business logic for order operations
  */
 
+import Fuse from 'fuse.js';
 import { OrderRepository } from './order.repository';
 import {
   CreateOrderDTO,
@@ -53,7 +54,10 @@ export class OrderService {
    */
   async getWithPagination(filter: OrderFilterDTO) {
     try {
-      const queryFilter: any = { deleted_at: null };
+      const queryFilter: any = {
+        // ...filter,
+        deleted_at: null,
+      };
 
       if (filter.search) {
         const searchRegex = {
@@ -66,10 +70,16 @@ export class OrderService {
         ];
       }
 
+      // if (filter.sort) {
+      //   // queryFilter.sort = (filter.sort.slice(',').)
+      //   queryFilter.sort = filter.sort;
+      // }
+
       return await this.repository.findWithPagination(
         filter.page || 1,
         filter.limit || 10,
         queryFilter,
+        filter.sort,
         filter.populate
       );
     } catch (error: any) {
@@ -462,11 +472,11 @@ export class OrderService {
           const discount =
             (priceAfterDiscount / originalPrice) * 100;
 
-          console.log({
-            originalPrice,
-            priceAfterDiscount,
-            discount,
-          });
+          // console.log({
+          //   originalPrice,
+          //   priceAfterDiscount,
+          //   discount,
+          // });
 
           return {
             // product: {
@@ -658,7 +668,185 @@ export class OrderService {
           productIds
         );
 
-      // console.log({ products });
+      const operations: AnyBulkWriteOperation<TOrder>[] =
+        [];
+      for await (const order of orders) {
+        const orderObj =
+          await this.repository.findByOrderId(
+            order.orderId
+          );
+
+        if (!orderObj) {
+          console.warn(
+            `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`
+          );
+          continue;
+        }
+
+        const orderObjItems = orderObj?.items || [];
+        const $set: Record<string, any> = {};
+        const items = [];
+        let totalProductCost = 0;
+
+        for (let i = 0; i < orderObjItems.length; i++) {
+          const orderObjItem = orderObjItems[i];
+          const productName = (
+            orderObjItem.product_name || ''
+          ).trim();
+
+          // let item: { productId: string, orderProcessingFee: number};
+          // let item: Record<string, string | number>;
+          type ItemFromExcel = {
+            number: number;
+            rowType: string;
+            orderId: string;
+            productId: string;
+            productName: string;
+            orderProcessingFee: number;
+          };
+          let item: ItemFromExcel | undefined;
+          if (productName !== '') {
+            const fuseResult = new Fuse(order.items, {
+              keys: ['productName'],
+              includeScore: true,
+            }).search(productName);
+
+            if (fuseResult.length > 0) {
+              item = fuseResult[0].item as ItemFromExcel;
+            } else {
+              console.warn(
+                `[OrderService.enrichWithReleasedIncome] fuse result for ${productName} not found`
+              );
+            }
+          } else {
+            console.warn(
+              `[OrderService.enrichWithReleasedIncome] fuse search cancelled, orderObjItem.productName is empty`
+            );
+          }
+
+          const product = products.find(
+            (p) => p.product_id === item?.productId
+          );
+
+          // if (order.orderId === '2606142928J5U4') {
+          //   saveJson(
+          //     `.data/json-logs/debug-${order.orderId}.json`,
+          //     { item, orderObjItem, product }
+          //   );
+          // }
+
+          // if (order.orderId === '260623TTEVN47Y') {
+          //   saveJson(
+          //     `.data/json-logs/debug-${order.orderId}.json`,
+          //     { item, orderObjItem, product }
+          //   );
+          // }
+
+          const name =
+            orderObjItem?.variation_name ||
+            orderObjItem?.product_name;
+          const variantCost = (
+            product?.variants || []
+          ).find((v) => v.name === name);
+          const productCost =
+            product?.variants?.length === 1
+              ? product?.variants[0]?.default_cost || 0
+              : variantCost?.default_cost || 0;
+
+          orderObjItem.product = product?._id;
+          orderObjItem.product_cost =
+            productCost * (orderObjItem?.quantity || 1);
+          orderObjItem.profit =
+            (orderObjItem?.price_after_discount || 0) -
+            productCost; // price_after_discount not included fees, remove?
+          // orderObjItem.product_cost =
+          //   defaultCost?.default_cost || 0;
+          orderObjItem.processing_fee =
+            item?.orderProcessingFee || 0;
+          // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+          totalProductCost =
+            totalProductCost + orderObjItem.product_cost;
+
+          items.push(orderObjItem);
+        }
+
+        $set.items = items;
+        $set.fee = {
+          admin_fee: order.adminFee,
+          processing_fee: order.orderProcessingFee,
+          affiliate_fee: order.amsCommissionFee,
+          service_fee: order.serviceFee,
+          shipping_saver_program_fee:
+            order.shippingSaverProgramFee,
+          transaction_fee: order.transactionFee,
+          campaign_fee: order.campaignFee,
+          auto_top_up_fee_from_income:
+            order.autoTopUpFeeFromIncome,
+          return_shipping_fee: order.returnShippingFee,
+          return_to_sender_shipping_fee:
+            order.returnToSenderShippingFee,
+          shipping_fee_refund: order.shippingFeeRefund,
+        };
+        $set.released_amount = order.totalIncome || 0;
+        $set.shipping_fee_paid_by_buyer =
+          order.shippingFeePaidByBuyer || 0;
+        $set.shipping_fee_discount_by_logistics =
+          order.shippingFeeDiscountByLogistics || 0;
+        $set.shipping_fee_forwarded_by_shopee =
+          order.shippingFeeForwardedByShopee || 0;
+        $set.free_shipping_promo_from_seller =
+          order.freeShippingPromoFromSeller || 0;
+        $set.compensation = order.compensation || 0;
+        $set.total_product_cost = totalProductCost || 0;
+        $set.total_profit =
+          $set.released_amount - $set.total_product_cost;
+        $set.enriched_at = new Date().toISOString();
+
+        // console.log(JSON.stringify($set, null, 2));
+
+        operations.push({
+          updateOne: {
+            filter: { order_id: order.orderId },
+            update: { $set },
+            upsert: true,
+          },
+        });
+
+        totalProductCost = 0;
+      }
+
+      const result =
+        await this.repository.enrichWithReleasedIncome2(
+          operations
+        );
+
+      return result;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal memproses enrich order data: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Enrich order data with released income data from shopee xlsx
+   */
+  async enrichWithReleasedIncome3(fileBuffer: ArrayBuffer) {
+    try {
+      const { orders, productIds } =
+        await parseReleasedIncomeExcel(fileBuffer);
+
+      if ((orders || []).length === 0) {
+        throw new Error(
+          'Tidak ada data order yang valid di file Excel.'
+        );
+      }
+
+      const products =
+        await this.productService.getByMultipleIds(
+          productIds
+        );
 
       const operations: AnyBulkWriteOperation<TOrder>[] =
         [];
@@ -680,11 +868,48 @@ export class OrderService {
         const items = [];
         let totalProductCost = 0;
         for (let i = 0; i < order.items.length; i++) {
+          // ada yang salah ketika get right order item dari excel atau dari database
+          // mempengaruhi kalkulasi HPP/productCost/product_cost dan assigned product_id
+          // Contoh:
+          // orderId: 2606142928J5U4
+          // username: fatmawatymadjid
           const item = order.items[i];
-          const orderObjItem = orderObjItems[i];
+          const productName = (
+            item.productName || ''
+          ).trim();
+          // const orderObjItem = orderObjItems[i];
+
+          let orderObjItem = orderObjItems[i];
+          if (productName !== '') {
+            const fuseResult = new Fuse(orderObjItems, {
+              keys: ['product_name', 'variation_name'],
+              includeScore: true,
+            }).search(productName);
+
+            if (fuseResult.length > 0) {
+              orderObjItem = fuseResult[0].item;
+            } else {
+              console.warn(
+                `[OrderService.enrichWithReleasedIncome] fuse result for ${order.productName} not found`
+              );
+            }
+          } else {
+            console.warn(
+              `[OrderService.enrichWithReleasedIncome] fuse search cancelled, productName is empty`
+            );
+          }
+
           const product = products.find(
             (p) => p.product_id === item.productId
           );
+
+          if (order.orderId === '2606142928J5U4') {
+            saveJson(
+              `.data/json-logs/debug-${order.orderId}.json`,
+              { item, orderObjItem, product }
+            );
+          }
+
           const name =
             orderObjItem?.variation_name ||
             orderObjItem?.product_name;
@@ -695,14 +920,6 @@ export class OrderService {
             product?.variants?.length === 1
               ? product?.variants[0]?.default_cost || 0
               : variantCost?.default_cost || 0;
-
-          console.log({
-            orderId: order.orderId,
-            name,
-            // variantCost,
-            productCost,
-            totalProductCost,
-          });
 
           orderObjItem.product = product?._id;
           orderObjItem.product_cost =

@@ -210,6 +210,7 @@ export const OrderFilterSchema = z.object({
   q: z.string().optional(),
   search: z.string().optional(),
   populate: z.string().optional(),
+  sort: z.string().optional(),
   page: z.preprocess((v) => {
     if (typeof v === 'string' && v.length) {
       const n = Number(v);
