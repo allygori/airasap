@@ -36,13 +36,12 @@ const ReportClient = () => {
     validators: {
       onDynamic: ReportFormSchema,
     },
-    listeners: {
-      onChangeDebounceMs: 1000,
-      onChange: (ctx) => {
-        // console.log({ value: ctx.formApi.value });
-        form.handleSubmit();
-      },
-    },
+    // listeners: {
+    //   onChangeDebounceMs: 1000,
+    //   onChange: (ctx) => {
+    //     form.handleSubmit();
+    //   },
+    // },
     onSubmit: async ({ value }) => {
       console.log('onSubmit value', value);
 
@@ -164,35 +163,40 @@ const ReportClient = () => {
           </h1>
           {/* </div> */}
         </div>
-        {/* <div className="flex items-center gap-2"> */}
-        <div className="border-muted-foreground/20 flex flex-row items-center rounded-sm border px-2 py-1">
-          <p className="text-muted-foreground/90 mr-2 text-xs font-light">
-            Periode Data
-          </p>
+        <div className="w-6/12">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
               form.handleSubmit();
             }}
-            // className="flex flex-col items-start gap-6 lg:flex-row"
+            className="flex w-full flex-row items-center justify-end gap-6 lg:flex-row"
           >
-            {/* <FieldGroup> */}
-            <form.AppField
-              name="date"
-              children={(field) => (
-                <field.DateRangePresetsField
-                  label={undefined}
-                  placeholder="Hari Ini"
-                  // autoComplete="off"
-                  // className="col-span-full text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
-                />
-              )}
-            />
-            {/* </FieldGroup> */}
+            <div className="border-muted-foreground/20 flex flex-row items-center rounded-sm border px-2 py-1">
+              <p className="text-muted-foreground/90 mr-2 w-full text-xs font-light">
+                Periode Data
+              </p>
+              {/* <FieldGroup> */}
+              <form.AppField
+                name="date"
+                children={(field) => (
+                  <field.DateRangePresetsField
+                    label={undefined}
+                    placeholder="Hari Ini"
+                    // autoComplete="off"
+                    // className="col-span-full text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
+                  />
+                )}
+              />
+              {/* </FieldGroup> */}
+            </div>
+            <div>
+              <form.AppForm>
+                <form.SubmitButton text="Generate" />
+              </form.AppForm>
+            </div>
           </form>
         </div>
-        {/* </div> */}
       </header>
 
       <main>

@@ -1,11 +1,12 @@
 import { AggregateBuilder } from './builder';
 import {
-  mergeFilters,
+  // mergeFilters,
   tenantFilter,
   dateFilter,
   orderStatusFilter,
   platformFilter,
 } from './pipelines/filters';
+import { mergeFilters } from './pipelines/filters/_merge';
 import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
 import { baseMetrics } from './pipelines/transforms/metrics';
 import { groupRevenueByDay } from './pipelines/groups/revenue';

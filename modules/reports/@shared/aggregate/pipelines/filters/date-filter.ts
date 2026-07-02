@@ -1,14 +1,14 @@
-export const dateFilter = (
+export const dateFilter = <F extends string>(
   startDate: string | Date,
   endDate: string | Date,
-  field: string
+  field: F
 ) => {
   return {
     $match: {
       [field]: {
-        $gte: new Date(startDate).toISOString(),
-        $lt: new Date(endDate).toISOString(),
+        $gte: new Date(startDate),
+        $lt: new Date(endDate),
       },
     },
-  };
+  } as Record<F, { $gte: string; $lt: string }>;
 };
