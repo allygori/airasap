@@ -35,7 +35,7 @@ export const PLATFORMS_KV_WITH_LABEL = {
     label: 'Blibli',
     value: 'blibli',
   },
-};
+} as const;
 
 export const SHOPEE_PAYMENT_METHODS = [
   'ShopeePay',

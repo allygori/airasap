@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 
 const ReportClient = () => {
   const router = useRouter();
+  const [result, setResult] = useState();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(
@@ -60,21 +61,22 @@ const ReportClient = () => {
 
       try {
         const response = await fetch(
-          '/api/v1/dashboard/reports',
+          '/api/v1/dashboard/reports/sales',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(value.date),
+            body: JSON.stringify({
+              startDate: value.date.from,
+              endDate: value.date.to,
+            }),
             signal: controller.signal,
           }
         );
         const data = await response.json();
 
         if (response.ok && data.success) {
-          // setResult(data.data); // set data
-          // toast.success(
-          //   'File berhasil diunggah dan diproses.'
-          // );
+          setResult(data.data); // set data
+          toast.success('Laporan berhasil dibuat.');
         } else {
           setError(
             data.message ||
@@ -193,7 +195,10 @@ const ReportClient = () => {
         {/* </div> */}
       </header>
 
-      <main>{/* report goes here */}</main>
+      <main>
+        {/* report goes here */}
+        <pre>{JSON.stringify(result, null, 2)}</pre>
+      </main>
     </div>
   );
 };
