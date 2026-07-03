@@ -3,7 +3,14 @@ export const baseMetrics = (
 ) => {
   return {
     $addFields: {
-      revenue: '$total_payment',
+      revenue: '$order_subtotal',
+      // revenue: '$total_payment',
+
+      total_payment: '$total_payment',
+
+      total_cost: '$total_product_cost',
+
+      total_payout: '$released_amount',
 
       order_count: 1,
 

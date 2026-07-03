@@ -1,5 +1,5 @@
 import { AggregateBuilder } from './@shared/aggregate/builder';
-import salesReport from './@shared/aggregate/sales-report';
+import aggregateSalesReport from './@shared/aggregate/sales-report';
 import { ReportRepository } from './report.repository';
 
 export class ReportService {
@@ -22,7 +22,7 @@ export class ReportService {
     endDate: string | Date
   ) {
     try {
-      const pipelines = salesReport({
+      const pipelines = aggregateSalesReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
@@ -48,7 +48,7 @@ export class ReportService {
     endDate: string | Date
   ) {
     try {
-      const pipelines = salesReport({
+      const pipelines = aggregateSalesReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
@@ -57,11 +57,11 @@ export class ReportService {
       const report =
         await this.repository.aggregate(pipelines);
 
-      if (!report) {
+      if (!report || report.length === 0) {
         throw new Error('Laporan tidak ditemukan');
       }
 
-      return report;
+      return report[0] || 0;
     } catch (error: any) {
       throw new Error(
         `Gagal membuat laporan: ${error.message}`

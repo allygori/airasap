@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ZapIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   revalidateLogic,
   useStore,
@@ -12,14 +13,47 @@ import {
   ReportFormSchema,
   type ReportFormInput,
 } from './report.schema';
-import { toast } from 'sonner';
 // import { FieldGroup } from '@/components/ui/field';
+import { Metrics } from './sections/metrics';
+import { SectionCards } from './sections/section-cards';
+
+type TResult = {
+  total_revenue: number;
+  total_payout: number;
+  total_profit: number;
+  total_payment: number;
+  total_cost: number;
+  total_orders: number;
+  daily_reports: [
+    {
+      day: number;
+      month: number;
+      year: number;
+      daily_revenue: number;
+      daily_payout: number;
+      daily_profit: number;
+      daily_payment: number;
+      daily_cost: number;
+      number_of_orders: number;
+      orders: [
+        {
+          order_id: string;
+          total_profit: number;
+          total_payment: number;
+          subtotal: number;
+          status: string;
+        },
+      ];
+    },
+  ];
+};
 
 const ReportClient = () => {
   const router = useRouter();
-  const [result, setResult] = useState();
+  const [result, setResult] = useState<TResult>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // const []
   const abortControllerRef = useRef<AbortController | null>(
     null
   );
@@ -199,8 +233,28 @@ const ReportClient = () => {
         </div>
       </header>
 
-      <main>
+      <main className="@container/main flex flex-1 flex-col gap-2">
         {/* report goes here */}
+        {/* <Metrics
+          revenue={0}
+          netPayout={0}
+          estimateCOGS={0}
+          estimateProfit={0}
+        /> */}
+
+        <SectionCards
+          revenue={result?.total_revenue}
+          payout={result?.total_payout}
+          estimateCOGS={result?.total_cost}
+          estimateProfit={result?.total_profit}
+        />
+        <ul>
+          {(result?.daily_reports || [])
+            .sort((a, b) => a.day - b.day)
+            .map((item, idx) => {
+              return <li key={idx}>{item.day}</li>;
+            })}
+        </ul>
         <pre>{JSON.stringify(result, null, 2)}</pre>
       </main>
     </div>

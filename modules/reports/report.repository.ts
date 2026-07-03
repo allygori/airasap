@@ -34,12 +34,12 @@ export class ReportRepository {
     // aggregate
 
     // Guard
-    const guard = {
-      $match: {
-        organization: this.tenantContext.organizationId,
-        store: this.tenantContext.storeId,
-      },
-    };
+    // const guard = {
+    //   $match: {
+    //     organization: this.tenantContext.organizationId,
+    //     store: this.tenantContext.storeId,
+    //   },
+    // };
 
     return await this.orderModel.aggregate(
       pipeline,

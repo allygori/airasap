@@ -18,6 +18,7 @@ import { CollectionRowActions } from '@/components/dashboard/collection/row-acti
 import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { formatIDR } from '@/lib/formatter';
 import { cn } from '@/lib/utils';
+import { formatDate } from '@/lib/formatter/date';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 
@@ -246,9 +247,7 @@ export const getProductsColumn = (
       header: 'Dibuat',
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">
-          {new Date(
-            row.original.order_created_at
-          ).toLocaleDateString()}
+          {formatDate(row.original.order_created_at)}
         </div>
       ),
     },
@@ -257,9 +256,7 @@ export const getProductsColumn = (
       header: 'Selesai',
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">
-          {new Date(
-            row.original.order_completed_at
-          ).toLocaleDateString()}
+          {formatDate(row.original.order_completed_at)}
         </div>
       ),
     },

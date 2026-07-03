@@ -1,8 +1,14 @@
 import { z } from 'zod';
-import { CreateReportSchema } from './report.schema';
+import {
+  CreateReportSchema,
+  SalesReportResponseSchema,
+} from './report.schema';
 
 export * from './report.schema';
 
 export type CreateReportDTO = z.infer<
   typeof CreateReportSchema
+>;
+export type SalesReportResponseDTO = z.infer<
+  typeof SalesReportResponseSchema
 >;

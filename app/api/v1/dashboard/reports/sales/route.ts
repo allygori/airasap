@@ -7,6 +7,7 @@ import { ReportService } from '@/modules/reports/report.service';
 import {
   CreateReportSchema,
   CreateReportDTO,
+  SalesReportResponseDTO,
 } from '@/modules/reports/report.dto';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -51,7 +52,11 @@ export const POST = withValidation(
           body.endDate
         );
 
-      return apiSuccess(report, undefined, 201);
+      return apiSuccess<SalesReportResponseDTO>(
+        report as unknown as SalesReportResponseDTO,
+        undefined,
+        201
+      );
     } catch (error: any) {
       console.error(
         '[POST /api/v1/dashboard/reports/sales]',
