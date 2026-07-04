@@ -1,6 +1,5 @@
-import { AggregateBuilder } from './@shared/aggregate/builder';
-import aggregateSalesReport from './@shared/aggregate/sales-report';
 import { ReportRepository } from './report.repository';
+import aggregateSalesReport from './@shared/aggregate/sales-report';
 
 export class ReportService {
   private repository: ReportRepository;
@@ -17,31 +16,31 @@ export class ReportService {
     this.tenantContext = tenantContext;
   }
 
-  async generateReport(
-    startDate: string | Date,
-    endDate: string | Date
-  ) {
-    try {
-      const pipelines = aggregateSalesReport({
-        startDate,
-        endDate,
-        tenantContext: this.tenantContext,
-        filterBy: 'order_created_at',
-      });
-      const report =
-        await this.repository.aggregate(pipelines);
+  // async generateReport(
+  //   startDate: string | Date,
+  //   endDate: string | Date
+  // ) {
+  //   try {
+  //     const pipelines = aggregateSalesReport({
+  //       startDate,
+  //       endDate,
+  //       tenantContext: this.tenantContext,
+  //       filterBy: 'order_created_at',
+  //     });
+  //     const report =
+  //       await this.repository.aggregate(pipelines);
 
-      if (!report) {
-        throw new Error('Laporan tidak ditemukan');
-      }
+  //     if (!report) {
+  //       throw new Error('Laporan tidak ditemukan');
+  //     }
 
-      return report;
-    } catch (error: any) {
-      throw new Error(
-        `Gagal membuat laporan: ${error.message}`
-      );
-    }
-  }
+  //     return report;
+  //   } catch (error: any) {
+  //     throw new Error(
+  //       `Gagal membuat laporan: ${error.message}`
+  //     );
+  //   }
+  // }
 
   async generateSalesReport(
     startDate: string | Date,
@@ -52,7 +51,7 @@ export class ReportService {
         startDate,
         endDate,
         tenantContext: this.tenantContext,
-        filterBy: 'order_created_at',
+        filterBy: 'paid_at',
       });
       const report =
         await this.repository.aggregate(pipelines);

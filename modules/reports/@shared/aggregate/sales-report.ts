@@ -12,10 +12,13 @@ import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
 import { baseMetrics } from './pipelines/transforms/metrics';
 import { groupRevenueByDay } from './pipelines/groups/revenue';
 
-const DEFAULT_DATE_FIELD = 'order_created_at';
+const DEFAULT_DATE_FIELD = 'paid_at';
 
 type Args = {
-  filterBy?: 'order_created_at' | 'order_completed_at';
+  filterBy?:
+    | 'order_created_at'
+    | 'order_completed_at'
+    | 'paid_at';
   startDate: string | Date;
   endDate: string | Date;
   tenantContext: {

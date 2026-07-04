@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { toast } from 'sonner';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import {
   Image as ImageIcon,
   ShoppingBagIcon,
   HashIcon,
+  CopyIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -160,11 +162,27 @@ export function ViewDrawer<T extends Record<string, any>>({
 
             {/* Core Details Grid */}
             <div className="grid gap-6">
-              <section className="bg-muted/30 border-muted-foreground/20 flex min-w-0 flex-row items-center justify-between rounded-xl border border-dashed p-4">
-                <h2 className="text-muted-foreground/90 text-tiny mb-2 flex items-center gap-1.5 leading-relaxed font-bold tracking-widest uppercase">
-                  <HashIcon className="size-3" />
-                  {item.order_id}
-                </h2>
+              <section className="bg-muted/30 border-muted-foreground/20 flex min-w-0 flex-col rounded-xl border border-dashed p-4">
+                <div className="relative flex flex-row items-center gap-2">
+                  <h2 className="text-muted-foreground/90 flex items-center gap-1.5 text-base leading-relaxed font-bold tracking-widest uppercase">
+                    <HashIcon className="size-3" />
+                    {item.order_id}
+                  </h2>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(
+                        item.order_id
+                      );
+                      toast.success(
+                        'No. Pesanan berhasil di copy'
+                      );
+                    }}
+                    className="text-tiny bg-background flex cursor-pointer flex-row items-center gap-1 rounded border px-2 py-1"
+                  >
+                    <CopyIcon className="size-3" />
+                    Copy
+                  </button>
+                </div>
                 <p className="text-foreground/80 text-sm leading-relaxed wrap-break-word">
                   {item.username}
                 </p>
@@ -264,7 +282,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                   value={item.shipping_option || '-'}
                 />
                 <StatLine
-                  label="Total Pembayaran Buyer"
+                  label="Pembayaran Buyer"
                   value={formatIDR(item.total_payment, {
                     fallback: 0,
                   })}
