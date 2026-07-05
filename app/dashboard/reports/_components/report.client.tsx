@@ -16,37 +16,46 @@ import {
 // import { FieldGroup } from '@/components/ui/field';
 import { Metrics } from './sections/metrics';
 import { SectionCards } from './sections/section-cards';
+import {
+  SalesReportResponseDTO,
+  SalesReportResponseSchema,
+} from '@/modules/reports/report.dto';
 
-type TResult = {
-  total_revenue: number;
-  total_payout: number;
-  total_profit: number;
-  total_payment: number;
-  total_cost: number;
-  total_orders: number;
-  daily_reports: [
-    {
-      day: number;
-      month: number;
-      year: number;
-      daily_revenue: number;
-      daily_payout: number;
-      daily_profit: number;
-      daily_payment: number;
-      daily_cost: number;
-      number_of_orders: number;
-      orders: [
-        {
-          order_id: string;
-          total_profit: number;
-          total_payment: number;
-          subtotal: number;
-          status: string;
-        },
-      ];
-    },
-  ];
-};
+// type TResult = typeof SalesReportResponseSchema;
+type TResult = SalesReportResponseDTO;
+
+// type TResult = {
+//   total_revenue: number;
+//   total_payout: number;
+//   total_profit: number;
+//   total_payment: number;
+//   total_cost: number;
+//   total_voucher_borne_by_seller: number;
+//   total_orders: number;
+//   total_buyers: number;
+//   daily_reports: [
+//     {
+//       day: number;
+//       month: number;
+//       year: number;
+//       daily_revenue: number;
+//       daily_payout: number;
+//       daily_profit: number;
+//       daily_payment: number;
+//       daily_cost: number;
+//       number_of_orders: number;
+//       orders: [
+//         {
+//           order_id: string;
+//           total_profit: number;
+//           total_payment: number;
+//           subtotal: number;
+//           status: string;
+//         },
+//       ];
+//     },
+//   ];
+// };
 
 const ReportClient = () => {
   const router = useRouter();
@@ -248,6 +257,7 @@ const ReportClient = () => {
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}
+          numberOfBuyers={result?.total_buyers}
           numberOfOrders={result?.total_orders}
         />
         <ul>

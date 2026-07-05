@@ -284,7 +284,7 @@ export default function aggregateSalesReport({
           tenantContext.organizationId,
           tenantContext.storeId
         ).$match || {}),
-        cancelled_by: { $ne: 'buyer' },
+        // cancelled_by: { $ne: 'buyer' },
         platform: 'shopee',
         order_created_wib: {
           $gte: '2026-06-01',
@@ -298,6 +298,8 @@ export default function aggregateSalesReport({
         total_payment: '$total_payment',
         total_cost: '$total_product_cost',
         total_payout: '$released_amount',
+        username: '$username',
+        voucher_borne_by_seller: '$voucher_borne_by_seller',
         total_profit: {
           $subtract: [
             '$released_amount',
@@ -330,6 +332,10 @@ export default function aggregateSalesReport({
         daily_cost: {
           $sum: '$total_cost',
         },
+        daily_voucher_borne_by_seller: {
+          $sum: '$voucher_borne_by_seller',
+        },
+        unique_buyers: { $addToSet: '$username' },
         daily_orders_count: {
           $sum: 1,
         },
@@ -356,6 +362,11 @@ export default function aggregateSalesReport({
         total_orders: {
           $sum: '$daily_orders_count',
         },
+        total_voucher_borne_by_seller: {
+          $sum: '$daily_voucher_borne_by_seller',
+        },
+        // unique_buyers: { $first: '$unique_buyers' },
+        daily_buyers: { $push: '$unique_buyers' },
         daily_reports: {
           $push: {
             day: '$_id.day',
@@ -367,6 +378,7 @@ export default function aggregateSalesReport({
             daily_payment: '$daily_payment',
             daily_cost: '$daily_cost',
             number_of_orders: '$daily_orders_count',
+            username: '$username',
             orders: '$daily_orders',
           },
         },
@@ -381,6 +393,20 @@ export default function aggregateSalesReport({
         total_payment: 1,
         total_cost: 1,
         total_orders: 1,
+        total_voucher_borne_by_seller: 1,
+        // total_buyers: 1,
+        // total_buyers: {
+        //   $size: '$unique_buyers',
+        // },
+        total_buyers: {
+          $size: {
+            $reduce: {
+              input: '$daily_buyers',
+              initialValue: [],
+              in: { $setUnion: ['$$value', '$$this'] },
+            },
+          },
+        },
         daily_reports: 1,
       },
     },

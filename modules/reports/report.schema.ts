@@ -11,7 +11,9 @@ export const SalesReportResponseSchema = z.object({
   total_profit: z.number(),
   total_payment: z.number(),
   total_cost: z.number(),
+  total_voucher_borne_by_seller: z.number(),
   total_orders: z.number(),
+  total_buyers: z.number(),
   daily_reports: z.array(
     z.object({
       day: z.number(),
