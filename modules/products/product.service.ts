@@ -235,6 +235,79 @@ export class ProductService {
   }
 
   /**
+   * Update product
+   */
+  async update(id: string, dto: UpdateProductDTO) {
+    console.log({ dto });
+
+    try {
+      const product = await this.repository.findById(id);
+
+      if (!product) {
+        throw new Error(
+          'Produk yang ingin diperbaharui tidak ditemukan.'
+        );
+      }
+
+      // Jika product_id diubah, validasi keunikan
+      if (
+        dto.product_id &&
+        dto.product_id !== product.product_id
+      ) {
+        const existingProduct =
+          await this.repository.findByProductId(
+            dto.product_id
+          );
+
+        if (existingProduct) {
+          throw new Error(
+            `Produk dengan ID '${dto.product_id}' sudah ada`
+          );
+        }
+      }
+
+      // Hitung finalPrice untuk setiap variant jika ada
+      const dataToUpdate = { ...dto };
+      if (dataToUpdate.variants) {
+        dataToUpdate.variants = dataToUpdate.variants.map(
+          (variant) => ({
+            ...variant,
+            default_cost: variant.default_cost || 0,
+            final_price:
+              variant.price -
+              (variant.price * variant.discount) / 100,
+          })
+        );
+
+        // dataToUpdate.markModified('variants')
+      }
+
+      console.log(JSON.stringify(dataToUpdate, null, 2));
+
+      // const updatedProduct = await this.repository.update(
+      //   id,
+      //   // { ...product, ...dataToUpdate }
+      //   dataToUpdate
+      // );
+
+      const updatedProduct = await this.repository.save(
+        product,
+        dataToUpdate
+      );
+
+      if (!updatedProduct) {
+        throw new Error('Gagal memperbarui produk');
+      }
+
+      return updatedProduct;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal memperbarui produk: ${error.message}`
+      );
+    }
+  }
+
+  /**
    * Soft delete product
    */
   async deleteProduct(id: string) {

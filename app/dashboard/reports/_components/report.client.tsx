@@ -247,12 +247,30 @@ const ReportClient = () => {
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}
+          numberOfOrders={result?.total_orders}
         />
         <ul>
           {(result?.daily_reports || [])
             .sort((a, b) => a.day - b.day)
             .map((item, idx) => {
-              return <li key={idx}>{item.day}</li>;
+              return (
+                <li key={idx}>
+                  <p>
+                    {item.day}: {item.number_of_orders}
+                  </p>
+                  {/* <div>
+                    {(item.orders || []).map(
+                      (order: { order_id: string }) => {
+                        return (
+                          <span key={order.order_id}>
+                            {order.order_id} {','}
+                          </span>
+                        );
+                      }
+                    )}
+                  </div> */}
+                </li>
+              );
             })}
         </ul>
         <pre>{JSON.stringify(result, null, 2)}</pre>

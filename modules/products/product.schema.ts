@@ -1,17 +1,17 @@
 import { z } from 'zod';
-import mongoose from 'mongoose';
+// import mongoose from 'mongoose';
 import { PLATFORMS } from '../constant';
 import { Types } from 'mongoose';
 
 const platforms = [...PLATFORMS] as const;
 
-const ObjectIdSchema = z.union([
-  z.instanceof(Types.ObjectId),
-  z
-    .string()
-    .regex(/^[0-9a-fA-F]{24}$/)
-    .transform((val) => new Types.ObjectId(val)),
-]);
+// const ObjectIdSchema = z.union([
+//   z.instanceof(Types.ObjectId),
+//   z
+//     .string()
+//     .regex(/^[0-9a-fA-F]{24}$/)
+//     .transform((val) => new Types.ObjectId(val)),
+// ]);
 
 export const VariantSchema = z.object({
   variant_id: z.string().min(1, 'Variant ID wajib diisi'),
@@ -73,6 +73,8 @@ export const ProductBaseSchema = z.object({
     .optional()
     .default([]),
   variants: z.array(VariantSchema).optional(),
+  // total_options: z.number().int().optional().default(0),
+  // total_variant: z.number().int().optional().default(0),
   is_active: z.boolean().default(true),
 });
 
@@ -84,6 +86,7 @@ export const UpdateProductSchema =
 export const ProductResponseSchema =
   ProductBaseSchema.extend({
     _id: z.string(),
+    id: z.string(),
     // organization: z.string().optional(),
     // store: z.string().optional(),
     created_at: z.string().optional(),

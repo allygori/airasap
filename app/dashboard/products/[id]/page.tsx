@@ -8,9 +8,10 @@ import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
 import { formSchema } from '../_components/form.schema';
 import {
-  ProductResponseDTO,
   ProductResponseSchema,
+  ProductResponseDTO,
   UpdateProductSchema,
+  UpdateProductDTO,
 } from '@/modules/products/product.dto';
 
 type PostData = any; // You can use ZodPostSchema to infer this if preferred
@@ -21,7 +22,8 @@ const EditProductPage = ({
   params: Promise<{ id: string }>;
 }) => {
   const { id } = use(params);
-  const [data, setData] = useState<PostData | null>(null);
+  const [data, setData] =
+    useState<ProductResponseDTO | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -84,7 +86,7 @@ function EditPostFormWrapper({
   initialData,
   id,
 }: {
-  initialData: PostData;
+  initialData: ProductResponseDTO;
   id: string;
 }) {
   const router = useRouter();
@@ -95,6 +97,7 @@ function EditPostFormWrapper({
       platform: initialData.platform || '',
       name: initialData.name || '',
       product_id: String(initialData.product_id || ''),
+      options: initialData.options || [],
       variants: (initialData.variants || []).map(
         (variant: any) => ({
           variant_id: variant.variant_id || '',
@@ -123,10 +126,10 @@ function EditPostFormWrapper({
     defaultValues:
       formValues as unknown as ProductResponseDTO,
     validators: {
-      // onDynamic: UpdateProductSchema,
+      onDynamic: UpdateProductSchema as any,
       // onDynamic: ProductResponseSchema,
       // cast to any to satisfy expected validator type
-      onDynamic: formSchema as any,
+      // onDynamic: formSchema as any,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -135,6 +138,7 @@ function EditPostFormWrapper({
           name: value.name,
           product_id: value.product_id,
           variants: value.variants,
+          options: value.options,
         };
 
         const response = await fetch(

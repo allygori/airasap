@@ -51,7 +51,7 @@ export class ReportService {
         startDate,
         endDate,
         tenantContext: this.tenantContext,
-        filterBy: 'paid_at',
+        filterBy: 'order_created_at',
       });
       const report =
         await this.repository.aggregate(pipelines);
@@ -60,7 +60,7 @@ export class ReportService {
         throw new Error('Laporan tidak ditemukan');
       }
 
-      return report[0] || 0;
+      return report[0] || null;
     } catch (error: any) {
       throw new Error(
         `Gagal membuat laporan: ${error.message}`

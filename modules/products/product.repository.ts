@@ -6,7 +6,7 @@
 
 import { BaseRepository } from '../base.repository';
 import { ProductModel, TProduct } from './product.model';
-import { QueryFilter } from 'mongoose';
+import { QueryFilter, UpdateQuery } from 'mongoose';
 
 export class ProductRepository extends BaseRepository<TProduct> {
   constructor(tenantContext: {
@@ -135,6 +135,21 @@ export class ProductRepository extends BaseRepository<TProduct> {
         { new: true }
       )
       .lean();
+  }
+
+  /**
+   * @TODO Need Fix!
+   * @param original
+   * @param dataToUpdate
+   * @returns
+   */
+  async save(
+    original: TProduct,
+    dataToUpdate: UpdateQuery<TProduct>
+  ) {
+    const mergedData = { ...original, ...dataToUpdate };
+
+    return await mergedData.save();
   }
 
   /**

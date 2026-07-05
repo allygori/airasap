@@ -45,10 +45,11 @@ export const POST = withValidation(
         tenantContext
       );
       const body = validatedBody as CreateReportDTO;
-      const report = await reportService.generateReport(
-        body.startDate,
-        body.endDate
-      );
+      const report =
+        await reportService.generateSalesReport(
+          body.startDate,
+          body.endDate
+        );
 
       return apiSuccess(report, undefined, 201);
     } catch (error: any) {

@@ -55,3 +55,30 @@ export const SHOPEE_PAYMENT_METHODS = [
   'Alfamart',
   'Indomaret',
 ];
+
+export const SHOPEE_ORDER_STATUS = {
+  completed: {
+    label: 'Selesai',
+    value: 'selesai',
+  },
+  toShip: {
+    label: 'Sedang Dikirim',
+    value: 'sedang-dikirim',
+  },
+  toReceive: {
+    label: 'Telah dikirim',
+    value: 'telah-dikirim',
+  },
+  cancelled: {
+    label: 'Batal',
+    value: 'batal',
+  },
+  return: {
+    label: 'Pengembalian',
+    value: 'pengembalian',
+  },
+  refund: {
+    label: 'Pengembalian Dana',
+    value: 'pengembalian-dana',
+  },
+} as const;

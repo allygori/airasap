@@ -84,6 +84,10 @@ export const PATCH = withValidation(
     const productService = new ProductService(
       tenantContext
     );
+
+    console.log('Update product by id, validatedBody: ', {
+      validatedBody,
+    });
     const updatedProduct =
       await productService.updateProduct(
         validatedParams.id,

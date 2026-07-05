@@ -724,7 +724,7 @@ export class OrderService {
       return result;
     } catch (error: any) {
       throw new Error(
-        `Gagal memproses enrich order data: ${error.message}`
+        `Gagal melengkapi data order: ${error.message}`
       );
     }
   }

@@ -1,9 +1,9 @@
 export const orderStatusFilter = (
-  status: string = 'Selesai'
+  status: string | string[] = 'Selesai'
 ) => {
   return {
     $match: {
-      status: status,
+      // status: status,
     },
   };
 };
