@@ -28,7 +28,7 @@ type Store = {
   platform: string;
 };
 
-export default function MassUploadOrderCompletedPage() {
+export default function MassUploadAllOrderPage() {
   const router = useRouter();
   const [stores, setStores] = React.useState<Store[]>([]);
   const [selectedStore, setSelectedStore] =

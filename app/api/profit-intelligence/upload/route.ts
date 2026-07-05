@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import ToolMarketplaceIncomeReport from '@/lib/mongoose/schema/tool-marketplace-income-report';
-import generateProfitIntelligenceReport from '@/lib/xlsx/shopee/profit-intelligence/v1';
+import generateProfitIntelligenceReport from '@/lib/xlsx/shopee/v1/profit-intelligence/v1';
 
 import { calculateCRC32 } from '@/lib/file';
 

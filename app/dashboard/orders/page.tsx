@@ -46,6 +46,36 @@ export default function OrderIndexPage() {
             />
             <span className="inline">Upload Massal</span>
           </Link>
+          <Link
+            href="/dashboard/orders/mass-upload/enrich/order-completed"
+            className={buttonVariants({
+              variant: 'secondary',
+              size: 'lg',
+            })}
+          >
+            <FileSpreadsheet
+              className="size-4 text-green-600"
+              data-icon="inline-start"
+            />
+            <span className="inline">
+              Perkaya dengan Laporan Order Selesai
+            </span>
+          </Link>
+          <Link
+            href="/dashboard/orders/mass-upload/enrich/released-funds"
+            className={buttonVariants({
+              variant: 'secondary',
+              size: 'lg',
+            })}
+          >
+            <FileSpreadsheet
+              className="size-4 text-green-600"
+              data-icon="inline-start"
+            />
+            <span className="inline">
+              Perkaya dengan Laporan Dana Dilepas
+            </span>
+          </Link>
         </div>
       </div>
 

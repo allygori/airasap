@@ -24,6 +24,7 @@ export const OrderItemSchema = z.object({
   price_after_discount: z.number().int().optional(),
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
+  subtotal: z.number().int().optional(),
   processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedIncome
   // cogs: z.number().optional(), // replaced with product_cost_amount
   // product_cost: z
@@ -102,6 +103,8 @@ export const OrderBaseSchema = z.object({
   platform: z.enum(platforms, 'Platform tidak valid'),
   // order_id: z.string().optional(),
   status: z.string().optional(),
+  cancelled_by: z.string().optional(),
+  cancellation_reason: z.string().optional(),
   cancellation_return_status: z.string().optional(),
   username: z.string().optional(),
   number_of_products_ordered: z.number().int().optional(),

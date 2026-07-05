@@ -244,6 +244,7 @@ const ReportClient = () => {
 
         <SectionCards
           revenue={result?.total_revenue}
+          payment={result?.total_payment}
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}

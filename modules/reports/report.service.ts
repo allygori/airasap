@@ -43,8 +43,8 @@ export class ReportService {
   // }
 
   async generateSalesReport(
-    startDate: string | Date,
-    endDate: string | Date
+    startDate: string,
+    endDate: string
   ) {
     try {
       const pipelines = aggregateSalesReport({
@@ -53,14 +53,26 @@ export class ReportService {
         tenantContext: this.tenantContext,
         filterBy: 'order_created_at',
       });
+
+      console.log(
+        'OrderService.generateSalesReport pipelines: ',
+        JSON.stringify(pipelines, null, 2)
+      );
+
       const report =
         await this.repository.aggregate(pipelines);
 
+      console.log(
+        'OrderService.generateSalesReport report: ',
+        JSON.stringify(report, null, 2)
+      );
       if (!report || report.length === 0) {
         throw new Error('Laporan tidak ditemukan');
       }
 
       return report[0] || null;
+
+      return report;
     } catch (error: any) {
       throw new Error(
         `Gagal membuat laporan: ${error.message}`

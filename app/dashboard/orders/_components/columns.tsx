@@ -19,6 +19,7 @@ import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { formatIDR } from '@/lib/formatter';
 import { cn } from '@/lib/utils';
 import { formatDate } from '@/lib/formatter/date';
+import { SHOPEE_ORDER_STATUS } from '@/modules/constant';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 
@@ -132,7 +133,10 @@ export const getProductsColumn = (
       header: 'Status',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
-          {row.original.status || '-'}
+          {Object.values(SHOPEE_ORDER_STATUS).find(
+            (s: { value: string }) =>
+              s.value === row.original.status
+          )?.label ?? '-'}
         </div>
       ),
     },

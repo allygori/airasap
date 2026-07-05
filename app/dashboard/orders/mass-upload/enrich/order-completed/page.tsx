@@ -28,7 +28,7 @@ type Store = {
   platform: string;
 };
 
-export default function MassUploadEnrichWithReleasedFundsPage() {
+export default function MassUploadEnrichWithOrderCompletedPage() {
   const router = useRouter();
   const [stores, setStores] = React.useState<Store[]>([]);
   const [selectedStore, setSelectedStore] =
@@ -80,10 +80,11 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
 
     const formData = new FormData();
     formData.append('file', file);
+    // formData.append('storeId', selectedStore);
 
     try {
       const response = await fetch(
-        '/api/v1/dashboard/orders/mass-upload/enrich/released-funds',
+        '/api/v1/dashboard/orders/mass-upload/enrich/order-completed',
         {
           method: 'POST',
           body: formData,
@@ -129,11 +130,11 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
             <span>Mass Upload</span>
           </div> */}
           <h1 className="bg-gradient-to-r from-slate-900 to-indigo-950 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent dark:from-white dark:to-indigo-200">
-            Perkaya Data dengan Laporan Dana Dilepas
+            Perkaya Data dengan Laporan Order Selesai
           </h1>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-            Upload file excel dari hasil export dana dilepas
-            di dashboard seller center Shopee untuk
+            Upload file excel dari hasil export order
+            selesai di dashboard seller center Shopee untuk
             melengkapi data order
           </p>
         </div>
@@ -144,7 +145,7 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
         <Card className="border-border/50 bg-white/70 shadow-md backdrop-blur-sm lg:col-span-2 dark:bg-slate-900/70">
           <CardHeader>
             <CardTitle className="text-xl font-bold">
-              Upload Shopee Order
+              {/* Upload Shopee Order */}
             </CardTitle>
             {/* <CardDescription>
               Select your store and drag your Shopee sales
@@ -156,38 +157,6 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
               onSubmit={handleUpload}
               className="space-y-6"
             >
-              {/* Store Selector */}
-              {/* <div className="space-y-2">
-                <label
-                  htmlFor="store-select"
-                  className="text-sm font-semibold text-slate-700 dark:text-slate-300"
-                >
-                  Target Store
-                </label>
-                <select
-                  id="store-select"
-                  value={selectedStore}
-                  onChange={(e) =>
-                    setSelectedStore(e.target.value)
-                  }
-                  className="border-input bg-background ring-offset-background focus:ring-ring h-10 w-full rounded-md border px-3 text-sm focus:ring-2 focus:outline-none"
-                  required
-                >
-                  {stores.length === 0 ? (
-                    <option value="">
-                      No stores available. Please create a
-                      store first.
-                    </option>
-                  ) : (
-                    stores.map((s) => (
-                      <option key={s._id} value={s._id}>
-                        {s.name} ({s.platform})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div> */}
-
               {/* File Upload Dropzone */}
               <div
                 onClick={() =>

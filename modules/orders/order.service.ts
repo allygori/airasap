@@ -12,12 +12,20 @@ import {
   BulkUpdateStatusDTO,
   MassUploadResponseDTO,
 } from './order.dto';
-import parseMassOrdersExcel, {
+import {
+  shopeeV1OrderCompletedParser,
   ParsedOrderRow,
-} from '@/lib/xlsx/shopee/order';
-import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/released-income';
+} from '@/lib/xlsx/shopee/v1/order/completed';
+import {
+  shopeeV1AllOrderParser,
+  type ParsedAllOrderRow,
+} from '@/lib/xlsx/shopee/v1/order/all';
+import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/released-funds';
 import { ProductService } from '../products/product.service';
-import { PLATFORMS_KV } from '../constant';
+import {
+  PLATFORMS_KV_WITH_LABEL,
+  SHOPEE_ORDER_STATUS,
+} from '../constant';
 // import { saveJson } from '@/lib/file/save-json';
 import { AnyBulkWriteOperation } from 'mongoose';
 import { TOrder } from './order.model';
@@ -32,6 +40,26 @@ export class OrderService {
   }) {
     this.repository = new OrderRepository(tenantContext);
     this.productService = new ProductService(tenantContext);
+  }
+
+  /**
+   * HELPERS
+   */
+
+  private getCancelledBy(text: string) {
+    if (text.includes('Dibatalkan oleh Pembeli')) {
+      return 'buyer';
+    } else if (
+      text.includes(
+        'Dibatalkan secara otomatis oleh sistem Shopee'
+      )
+    ) {
+      return 'system';
+    } else if (text.toLowerCase().includes('penjual')) {
+      return 'seller';
+    } else {
+      return 'unknown';
+    }
   }
 
   /**
@@ -333,16 +361,456 @@ export class OrderService {
     }
   }
 
+  // /**
+  //  * Mass upload shopee orders
+  //  * @param fileBuffer
+  //  * @returns
+  //  */
+  // async massUploadShopeeOrders(
+  //   fileBuffer: ArrayBuffer
+  // ): Promise<MassUploadResponseDTO> {
+  //   try {
+  //     const orders = await parseMassOrdersExcel(fileBuffer);
+
+  //     if (orders.length === 0) {
+  //       throw new Error(
+  //         'Tidak ada data order yang valid di file Excel.'
+  //       );
+  //     }
+
+  //     const ordersMap = new Map<string, ParsedOrderRow[]>();
+  //     // const productNames = new Set<string>();
+  //     for (const order of orders) {
+  //       const orderId = String(order.orderId);
+
+  //       if (!ordersMap.has(orderId)) {
+  //         ordersMap.set(orderId, []);
+  //       }
+  //       ordersMap.get(orderId)!.push(order);
+  //       // productNames.add(String(order.productName));
+  //     }
+
+  //     let createdCount = 0;
+  //     let updatedCount = 0;
+  //     for (const [orderId, group] of ordersMap.entries()) {
+  //       const order = group[0] || {};
+
+  //       const orderItems = group.map((item) => {
+  //         // const product = products.find((p: { variants: [] }) => p.variants.find((variant)))
+  //         // const product = products.find((prd) => prd.product_id === order.product)
+
+  //         const originalPrice = item.originalPrice
+  //           ? Number(item.originalPrice)
+  //           : 0;
+  //         const priceAfterDiscount = item.priceAfterDiscount
+  //           ? Number(item.priceAfterDiscount)
+  //           : 0;
+  //         const discount =
+  //           (priceAfterDiscount / originalPrice) * 100;
+
+  //         return {
+  //           // product: {
+  //           //   type: Types.ObjectId,
+  //           //   ref: 'Product',
+  //           //   required: true,
+  //           //   alias: 'productId',
+  //           // },
+  //           // product_cost: {
+  //           //   type: Number,
+  //           //   unique: true
+  //           // },
+  //           parent_sku: item.parentSku,
+  //           sku_reference_number: item.skuReferenceNumber,
+  //           product_name: item.productName,
+  //           variation_name: item.variationName,
+  //           // product_key: {
+  //           //   type: String,
+  //           //   alias: 'productKey',
+  //           // },
+  //           product_cost: 0,
+  //           original_price: originalPrice,
+  //           discount: discount,
+  //           price_after_discount: priceAfterDiscount,
+  //           quantity: item.quantity,
+  //           returned_quantity: item.returnedQuantity,
+  //           // cogs: {
+  //           //   type: Number,
+  //           // },
+  //         };
+  //       });
+
+  //       const existingOrder =
+  //         await this.repository.findByOrderId(orderId);
+
+  //       const payload = {
+  //         // organization: {
+  //         //   type: Types.ObjectId,
+  //         //   ref: 'Organization',
+  //         //   required: true,
+  //         //   alias: 'organizationId',
+  //         // },
+  //         // store: {
+  //         //   type: Types.ObjectId,
+  //         //   ref: 'Store',
+  //         //   required: true,
+  //         //   alias: 'storeId',
+  //         // },
+  //         platform: PLATFORMS_KV_WITH_LABEL.shopee.value,
+  //         order_id: orderId,
+  //         status: order.orderStatus,
+  //         cancellation_return_status:
+  //           order.cancellationReturnStatus,
+  //         username: order.buyerUsername,
+  //         number_of_products_ordered:
+  //           order.numberOfProductsOrdered,
+  //         total_payment: order.totalPayment,
+  //         payment_method: order.paymentMethod,
+  //         paid_at: order.paymentTimeCompleted,
+  //         order_subtotal: order.orderSubtotal,
+  //         total_discount: order.totalDiscount,
+  //         discount_from_seller: order.discountFromSeller,
+  //         discount_from_shopee: order.discountFromShopee,
+  //         voucher_borne_by_seller:
+  //           order.voucherBorneBySeller,
+  //         voucher_borne_by_shopee:
+  //           order.voucherBorneByShopee,
+  //         coin_cashback: order.coinCashback,
+  //         bundle_deal: order.bundleDeal,
+  //         bundle_deal_discount_from_shopee:
+  //           order.bundleDealDiscountFromShopee,
+  //         bundle_deal_discount_from_seller:
+  //           order.bundleDealDiscountFromSeller,
+  //         shopee_coin_offset: order.shopeeCoinOffset,
+  //         credit_card_discount: order.creditCardDiscount,
+  //         shipping_option: order.shippingOption,
+  //         estimated_shipping_fee:
+  //           order.estimatedShippingFee,
+  //         shipping_fee_paid_by_buyer:
+  //           order.shippingFeePaidByBuyer,
+  //         estimated_shipping_fee_discount:
+  //           order.estimatedShippingFeeDiscount,
+  //         product_weight: order.productWeight,
+  //         total_weight: order.totalWeight,
+  //         receiver_name: order.receiverName,
+  //         phone_number: order.phoneNumber,
+  //         address: {
+  //           street: order.deliveryAddress,
+  //           city: order.cityRegency,
+  //           province: order.province,
+  //         },
+  //         buyer_note: order.buyerNote,
+  //         note: order.note,
+  //         items: orderItems,
+  //         // admin_fee: {
+  //         //   type: Number,
+  //         //   alias: 'adminFee',
+  //         // },
+  //         // order_process_fee: {
+  //         //   type: Number,
+  //         //   alias: 'orderProcessFee',
+  //         // },
+  //         // affiliate_fee: {
+  //         //   type: Number,
+  //         //   alias: 'affiliateFee',
+  //         // },
+  //         // campaign_fee: {
+  //         //   type: Number,
+  //         //   alias: 'campaignFee',
+  //         // },
+  //         // voucher_fee: {
+  //         //   type: Number,
+  //         //   alias: 'voucherFee',
+  //         // },
+  //         // shipping_fee: {
+  //         //   type: Number,
+  //         //   alias: 'shippingFee',
+  //         // },
+  //         // other_fee: {
+  //         //   type: Number,
+  //         //   alias: 'otherFee',
+  //         // },
+  //         // return_shipping_fee: {
+  //         //   type: Number,
+  //         //   alias: 'returnShippingFee',
+  //         // },
+  //         // released_amount: {
+  //         //   type: Number,
+  //         //   alias: 'releasedAmount',
+  //         // },
+  //         // net_amount: {
+  //         //   type: Number,
+  //         //   alias: 'netAmount',
+  //         // },
+  //         shipping_arranged_at: order.shippingTimeArranged,
+  //         order_created_at: order.orderCreationTime,
+  //         // order_released_at: {
+  //         //   type: Date,
+  //         //   alias: 'orderReleasedAt',
+  //         // },
+  //         order_completed_at: order.orderCompletionTime,
+  //         // deleted_at: {
+  //         //   type: Date,
+  //         //   alias: 'deletedAt',
+  //         // },
+  //       };
+
+  //       if (existingOrder) {
+  //         await this.repository.update(
+  //           existingOrder._id.toString(),
+  //           payload
+  //         );
+  //         updatedCount++;
+  //       } else {
+  //         await this.repository.create(payload);
+  //         createdCount++;
+  //       }
+  //     }
+
+  //     return {
+  //       created_count: createdCount,
+  //       updated_count: updatedCount,
+  //       total_rows: orders.length,
+  //       total_orders: ordersMap.size,
+  //     };
+  //   } catch (error: any) {
+  //     throw new Error(
+  //       `Gagal memproses mass upload order: ${error.message}`
+  //     );
+  //   }
+  // }
+
   /**
-   * Mass upload shopee orders
+   * Mass upload all order from shopee
    * @param fileBuffer
    * @returns
    */
-  async massUploadShopeeOrders(
+  async massUploadAllOrderShopeeV1(
     fileBuffer: ArrayBuffer
   ): Promise<MassUploadResponseDTO> {
     try {
-      const orders = await parseMassOrdersExcel(fileBuffer);
+      const orders =
+        await shopeeV1AllOrderParser(fileBuffer);
+
+      if (orders.length === 0) {
+        throw new Error(
+          'Tidak ada data order yang valid di file Excel.'
+        );
+      }
+
+      const ordersMap = new Map<
+        string,
+        ParsedAllOrderRow[]
+      >();
+      for (const order of orders) {
+        const orderId = String(order.id);
+
+        if (!ordersMap.has(orderId)) {
+          ordersMap.set(orderId, []);
+        }
+        ordersMap.get(orderId)!.push(order);
+      }
+
+      let createdCount = 0;
+      let updatedCount = 0;
+      for (const [orderId, group] of ordersMap.entries()) {
+        const order = group[0] || {};
+
+        const orderItems = group.map((item) => {
+          const originalPrice = item.originalPrice
+            ? Number(item.originalPrice)
+            : 0;
+          const priceAfterDiscount = item.priceAfterDiscount
+            ? Number(item.priceAfterDiscount)
+            : 0;
+          const discount =
+            (priceAfterDiscount / originalPrice) * 100;
+
+          return {
+            // product: {
+            //   type: Types.ObjectId,
+            //   ref: 'Product',
+            //   required: true,
+            //   alias: 'productId',
+            // },
+            // product_cost: {
+            //   type: Number,
+            //   unique: true
+            // },
+            parent_sku: item.parentSku,
+            sku_reference_number: item.skuReferenceNumber,
+            product_name: item.productName,
+            variation_name: item.variationName,
+            // product_key: {
+            //   type: String,
+            //   alias: 'productKey',
+            // },
+            product_cost: 0,
+            original_price: originalPrice,
+            discount: discount,
+            price_after_discount: priceAfterDiscount,
+            quantity: item.quantity,
+            subtotal: item.orderSubtotal,
+            returned_quantity: item.returnedQuantity,
+            // cogs: {
+            //   type: Number,
+            // },
+          };
+        });
+
+        const existingOrder =
+          await this.repository.findByOrderId(orderId);
+
+        const orderSubtotal = orderItems.reduce(
+          (acc: number, curr) => {
+            return acc + Number(curr.subtotal);
+          },
+          0
+        );
+
+        const payload = {
+          platform: PLATFORMS_KV_WITH_LABEL.shopee.value,
+          order_id: orderId,
+          status:
+            Object.values(SHOPEE_ORDER_STATUS).find(
+              (s: { label: string }) =>
+                s.label === order.status
+            )?.value ?? null,
+          cancelled_by: this.getCancelledBy(
+            String(order.cancellationReason)
+          ),
+          cancellation_reason: order.cancellationReason,
+          cancellation_return_status:
+            order.cancellationReturnStatus,
+          username: order.buyerUsername,
+          number_of_products_ordered:
+            order.numberOfProductsOrdered,
+          total_payment: order.totalPayment,
+          payment_method: order.paymentMethod,
+          paid_at: order.paymentTimeCompleted,
+          order_subtotal: orderSubtotal,
+          total_discount: order.totalDiscount,
+          discount_from_seller: order.discountFromSeller,
+          discount_from_shopee: order.discountFromShopee,
+          voucher_borne_by_seller:
+            order.voucherBorneBySeller,
+          voucher_borne_by_shopee:
+            order.voucherBorneByShopee,
+          coin_cashback: order.coinCashback,
+          bundle_deal: order.bundleDeal,
+          bundle_deal_discount_from_shopee:
+            order.bundleDealDiscountFromShopee,
+          bundle_deal_discount_from_seller:
+            order.bundleDealDiscountFromSeller,
+          shopee_coin_offset: order.shopeeCoinOffset,
+          credit_card_discount: order.creditCardDiscount,
+          shipping_option: order.shippingOption,
+          estimated_shipping_fee:
+            order.estimatedShippingCosts,
+          shipping_fee_paid_by_buyer:
+            order.shippingFeePaidByBuyer,
+          estimated_shipping_fee_discount:
+            order.estimatedShippingFeeDiscount,
+          product_weight: order.productWeight,
+          total_weight: order.totalWeight,
+          receiver_name: order.receiverName,
+          phone_number: order.phoneNumber,
+          address: {
+            street: order.deliveryAddress,
+            city: order.cityRegency,
+            province: order.province,
+          },
+          buyer_note: order.buyerNote,
+          note: order.note,
+          items: orderItems,
+          // admin_fee: {
+          //   type: Number,
+          //   alias: 'adminFee',
+          // },
+          // order_process_fee: {
+          //   type: Number,
+          //   alias: 'orderProcessFee',
+          // },
+          // affiliate_fee: {
+          //   type: Number,
+          //   alias: 'affiliateFee',
+          // },
+          // campaign_fee: {
+          //   type: Number,
+          //   alias: 'campaignFee',
+          // },
+          // voucher_fee: {
+          //   type: Number,
+          //   alias: 'voucherFee',
+          // },
+          // shipping_fee: {
+          //   type: Number,
+          //   alias: 'shippingFee',
+          // },
+          // other_fee: {
+          //   type: Number,
+          //   alias: 'otherFee',
+          // },
+          // return_shipping_fee: {
+          //   type: Number,
+          //   alias: 'returnShippingFee',
+          // },
+          // released_amount: {
+          //   type: Number,
+          //   alias: 'releasedAmount',
+          // },
+          // net_amount: {
+          //   type: Number,
+          //   alias: 'netAmount',
+          // },
+          shipping_arranged_at: order.shippingTimeArranged,
+          order_created_at: order.orderCreationTime,
+          // order_released_at: {
+          //   type: Date,
+          //   alias: 'orderReleasedAt',
+          // },
+          order_completed_at: order.orderCompletionTime,
+          // deleted_at: {
+          //   type: Date,
+          //   alias: 'deletedAt',
+          // },
+        };
+
+        if (existingOrder) {
+          await this.repository.update(
+            existingOrder._id.toString(),
+            payload
+          );
+          updatedCount++;
+        } else {
+          await this.repository.create(payload);
+          createdCount++;
+        }
+      }
+
+      return {
+        created_count: createdCount,
+        updated_count: updatedCount,
+        total_rows: orders.length,
+        total_orders: ordersMap.size,
+      };
+    } catch (error: any) {
+      throw new Error(
+        `Gagal memproses mass upload order: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Mass upload enriched data from shopee order completed
+   * @param fileBuffer
+   * @returns
+   */
+  async massUploadEnrichWithOrderCompletedShopeeV1(
+    fileBuffer: ArrayBuffer
+  ): Promise<MassUploadResponseDTO> {
+    try {
+      const orders =
+        await shopeeV1OrderCompletedParser(fileBuffer);
 
       if (orders.length === 0) {
         throw new Error(
@@ -404,6 +872,7 @@ export class OrderService {
             discount: discount,
             price_after_discount: priceAfterDiscount,
             quantity: item.quantity,
+            subtotal: item.orderSubtotal,
             returned_quantity: item.returnedQuantity,
             // cogs: {
             //   type: Number,
@@ -413,6 +882,13 @@ export class OrderService {
 
         const existingOrder =
           await this.repository.findByOrderId(orderId);
+
+        const orderSubtotal = orderItems.reduce(
+          (acc: number, curr) => {
+            return acc + Number(curr.subtotal);
+          },
+          0
+        );
 
         const payload = {
           // organization: {
@@ -427,9 +903,14 @@ export class OrderService {
           //   required: true,
           //   alias: 'storeId',
           // },
-          platform: PLATFORMS_KV.shopee,
+          platform: PLATFORMS_KV_WITH_LABEL.shopee.value,
           order_id: orderId,
-          status: order.orderStatus,
+          status:
+            Object.values(SHOPEE_ORDER_STATUS).find(
+              (s: { label: string }) =>
+                s.label === order.orderStatus
+            )?.value ?? null,
+
           cancellation_return_status:
             order.cancellationReturnStatus,
           username: order.buyerUsername,
@@ -438,7 +919,7 @@ export class OrderService {
           total_payment: order.totalPayment,
           payment_method: order.paymentMethod,
           paid_at: order.paymentTimeCompleted,
-          order_subtotal: order.orderSubtotal,
+          order_subtotal: orderSubtotal,
           total_discount: order.totalDiscount,
           discount_from_seller: order.discountFromSeller,
           discount_from_shopee: order.discountFromShopee,

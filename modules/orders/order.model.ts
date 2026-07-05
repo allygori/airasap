@@ -152,6 +152,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
     quantity: {
       type: Number,
     },
+    subtotal: {
+      type: Number,
+      alias: 'orderSubtotal',
+    },
     returned_quantity: {
       type: Number,
       alias: 'returnedQuantity',
@@ -290,6 +294,15 @@ const OrderSchema = new Schema<TOrder>(
     },
     status: {
       type: String,
+    },
+    cancelled_by: {
+      type: String,
+      enum: ['buyer', 'seller', 'system', 'unknown'],
+      default: 'unknown',
+    },
+    cancellation_reason: {
+      type: String,
+      alias: 'cancellationReason',
     },
     cancellation_return_status: {
       type: String,

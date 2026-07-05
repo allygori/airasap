@@ -66,7 +66,7 @@ export const SHOPEE_ORDER_STATUS = {
     value: 'sedang-dikirim',
   },
   toReceive: {
-    label: 'Telah dikirim',
+    label: 'Telah Dikirim',
     value: 'telah-dikirim',
   },
   cancelled: {

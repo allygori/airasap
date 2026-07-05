@@ -1,13 +1,21 @@
+import {
+  endOfDay,
+  parse,
+  parseISO,
+  parseJSON,
+  startOfDay,
+} from 'date-fns';
+
 export const dateFilter = <F extends string>(
-  startDate: string | Date,
-  endDate: string | Date,
+  startDate: string,
+  endDate: string,
   field: F
 ) => {
   return {
     $match: {
       [field]: {
-        $gte: new Date(startDate),
-        $lt: new Date(endDate),
+        $gte: startOfDay(parseISO(startDate)), // new Date(startDate),
+        $lte: endOfDay(parseISO(endDate)), // new Date(endDate),
       },
     },
     // $match: {

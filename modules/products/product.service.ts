@@ -11,8 +11,8 @@ import {
   ProductFilterDTO,
   MassUploadResponseDTO,
 } from './product.dto';
-import parseMassProductsExcel from '@/lib/xlsx/shopee/product';
-import { ParsedOrderRow } from '@/lib/xlsx/shopee/product/types';
+import parseMassProductsExcel from '@/lib/xlsx/shopee/v1/product';
+import { ParsedOrderRow } from '@/lib/xlsx/shopee/v1/product/types';
 import { PLATFORMS_KV } from '../constant';
 
 export class ProductService {

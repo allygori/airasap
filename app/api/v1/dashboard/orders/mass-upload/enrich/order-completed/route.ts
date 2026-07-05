@@ -1,6 +1,6 @@
 /**
- * Mass Upload Shopee Orders Endpoint (all order excel file)
- * POST /api/v1/dashboard/orders/mass-upload
+ * Enrich order with order completed data from Shopee Endpoint
+ * POST /api/v1/dashboard/orders/mass-upload/enrich/order-completed
  */
 
 import path from 'path';
@@ -72,10 +72,6 @@ export const POST = withValidation({}, async (request) => {
     let fileDoc =
       await fileService.getByFilename(sha256Filename);
 
-    // let fileDoc = await fileService FileModel.findOne({
-    //   filename: sha256Filename,
-    // });
-
     if (!fileDoc) {
       fileDoc = await fileService.create({
         filename: sha256Filename,
@@ -95,22 +91,28 @@ export const POST = withValidation({}, async (request) => {
 
     const orderService = new OrderService(tenantContext);
     const result =
-      await orderService.massUploadAllOrderShopeeV1(buffer);
+      await orderService.massUploadEnrichWithOrderCompletedShopeeV1(
+        buffer
+      );
 
     return apiSuccess(
       {
-        fileId: fileDoc._id.toString(),
-        ...result,
+        // fileId: fileDoc._id.toString(),
+        // ...result,
+        result,
       },
       undefined,
       201
     );
   } catch (error: any) {
-    console.error('[POST /orders/mass-upload]', error);
+    console.error(
+      '[POST /orders/mass-upload/enrich/order-completed]',
+      error
+    );
     return apiError(
       ErrorCodes.INTERNAL_ERROR,
       error.message ||
-        'Gagal memproses mass upload produk.',
+        'Gagal memperkaya data dengan order selesai.',
       500
     );
   }
