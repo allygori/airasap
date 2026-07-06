@@ -39,7 +39,7 @@ export const HEADER_MAP: Record<string, string> = {
     'Paket Diskon (Diskon dari Penjual)',
   shopeeCoinOffset: 'Potongan Koin Shopee',
   creditCardDiscount: 'Diskon Kartu Kredit',
-  shippingFeePaidByBuyer:
+  shippingCostPaidByBuyer:
     'Ongkos Kirim Dibayar oleh Pembeli',
   estimatedShippingFeeDiscount:
     'Estimasi Potongan Biaya Pengiriman',

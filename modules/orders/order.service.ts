@@ -55,10 +55,15 @@ export class OrderService {
       )
     ) {
       return 'system';
-    } else if (text.toLowerCase().includes('penjual')) {
+    } else if (
+      text.includes('Dibatalkan') &&
+      text.toLowerCase().includes('penjual')
+    ) {
       return 'seller';
-    } else {
+    } else if (text.includes('Dibatalkan')) {
       return 'unknown';
+    } else {
+      return null;
     }
   }
 
@@ -486,7 +491,7 @@ export class OrderService {
   //         estimated_shipping_fee:
   //           order.estimatedShippingFee,
   //         shipping_fee_paid_by_buyer:
-  //           order.shippingFeePaidByBuyer,
+  //           order.shippingCostPaidByBuyer,
   //         estimated_shipping_fee_discount:
   //           order.estimatedShippingFeeDiscount,
   //         product_weight: order.productWeight,
@@ -707,7 +712,7 @@ export class OrderService {
           estimated_shipping_fee:
             order.estimatedShippingCosts,
           shipping_fee_paid_by_buyer:
-            order.shippingFeePaidByBuyer,
+            order.shippingCostPaidByBuyer,
           estimated_shipping_fee_discount:
             order.estimatedShippingFeeDiscount,
           product_weight: order.productWeight,
@@ -939,7 +944,7 @@ export class OrderService {
           estimated_shipping_fee:
             order.estimatedShippingFee,
           shipping_fee_paid_by_buyer:
-            order.shippingFeePaidByBuyer,
+            order.shippingCostPaidByBuyer,
           estimated_shipping_fee_discount:
             order.estimatedShippingFeeDiscount,
           product_weight: order.productWeight,
@@ -1173,7 +1178,7 @@ export class OrderService {
         };
         $set.released_amount = order.totalIncome || 0;
         $set.shipping_fee_paid_by_buyer =
-          order.shippingFeePaidByBuyer || 0;
+          order.shippingCostPaidByBuyer || 0;
         $set.shipping_fee_discount_by_logistics =
           order.shippingFeeDiscountByLogistics || 0;
         $set.shipping_fee_forwarded_by_shopee =

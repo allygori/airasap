@@ -16,6 +16,8 @@ import {
 import { groupRevenueByDay } from './pipelines/groups/revenue';
 import { endOfDay, parse, startOfDay } from 'date-fns';
 import { PipelineStage } from 'mongoose';
+// import { dateParser } from '@/lib/utils/parser';
+import { fnsFormatDate } from '@/lib/formatter/date';
 
 const DEFAULT_DATE_FIELD = 'order_created_at';
 
@@ -246,6 +248,11 @@ export default function aggregateSalesReport({
   //   },
   // ];
 
+  console.log({
+    $gte: fnsFormatDate(startDate, 'yyyy-MM-dd'),
+    $lte: fnsFormatDate(endDate, 'yyyy-MM-dd'),
+  });
+
   return [
     {
       $addFields: {
@@ -287,8 +294,10 @@ export default function aggregateSalesReport({
         // cancelled_by: { $ne: 'buyer' },
         platform: 'shopee',
         order_created_wib: {
-          $gte: '2026-06-01',
-          $lte: '2026-06-30',
+          // $gte: '2026-06-01',
+          // $lte: '2026-06-30',
+          $gte: fnsFormatDate(startDate, 'yyyy-MM-dd'),
+          $lte: fnsFormatDate(endDate, 'yyyy-MM-dd'),
         },
       },
     },
@@ -346,6 +355,10 @@ export default function aggregateSalesReport({
         _id: null,
         total_revenue: {
           $sum: '$daily_revenue',
+          // $subtract: [
+          //   { $sum: '$daily_revenue' },
+          //   { $sum: '$daily_voucher_borne_by_seller' },
+          // ],
         },
         total_payout: {
           $sum: '$daily_payout',
@@ -387,10 +400,22 @@ export default function aggregateSalesReport({
     {
       $project: {
         _id: 0,
-        total_revenue: 1,
+        // total_revenue: 1,
+        total_revenue: {
+          $subtract: [
+            '$total_revenue',
+            '$total_voucher_borne_by_seller',
+          ],
+        },
         total_payout: 1,
         total_profit: 1,
         total_payment: 1,
+        // total_payment: {
+        //   $subtract: [
+        //     '$total_payment',
+        //     '$total_voucher_borne_by_seller',
+        //   ],
+        // },
         total_cost: 1,
         total_orders: 1,
         total_voucher_borne_by_seller: 1,

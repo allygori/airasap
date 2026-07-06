@@ -297,8 +297,8 @@ const OrderSchema = new Schema<TOrder>(
     },
     cancelled_by: {
       type: String,
-      enum: ['buyer', 'seller', 'system', 'unknown'],
-      default: 'unknown',
+      enum: ['buyer', 'seller', 'system', 'unknown', null],
+      default: null,
     },
     cancellation_reason: {
       type: String,
@@ -386,7 +386,7 @@ const OrderSchema = new Schema<TOrder>(
     },
     shipping_fee_paid_by_buyer: {
       type: Number,
-      alias: 'shippingFeePaidByBuyer',
+      alias: 'shippingCostPaidByBuyer',
     },
     shipping_fee_discount_by_logistics: {
       type: Number,

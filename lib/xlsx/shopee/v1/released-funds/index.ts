@@ -144,7 +144,7 @@ export default function parse(buffer: ArrayBuffer) {
   //     estimated_shipping_fee:
   //       order.estimatedShippingFee,
   //     shipping_fee_paid_by_buyer:
-  //       order.shippingFeePaidByBuyer,
+  //       order.shippingCostPaidByBuyer,
   //     estimated_shipping_fee_discount:
   //       order.estimatedShippingFeeDiscount,
   //     product_weight: order.productWeight,

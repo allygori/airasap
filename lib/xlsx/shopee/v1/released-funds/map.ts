@@ -71,7 +71,7 @@ export const INCOME_FIELD_MAP = {
     header: 'Cashback Koin Co-fund disponsori Penjual',
     parser: numberParser,
   },
-  shippingFeePaidByBuyer: {
+  shippingCostPaidByBuyer: {
     header: 'Ongkir Dibayar Pembeli',
     parser: numberParser,
   },

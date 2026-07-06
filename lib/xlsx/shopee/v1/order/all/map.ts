@@ -157,7 +157,7 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Diskon Kartu Kredit',
     parser: numberParser,
   },
-  shippingFeePaidByBuyer: {
+  shippingCostPaidByBuyer: {
     header: 'Ongkos Kirim Dibayar oleh Pembeli',
     parser: numberParser,
   },

@@ -104,7 +104,7 @@ const OrderSchema = new Schema(
     },
     shipping_fee_paid_by_buyer: {
       type: Number,
-      alias: 'shippingFeePaidByBuyer',
+      alias: 'shippingCostPaidByBuyer',
     },
     estimated_shipping_fee_discount: {
       type: Number,

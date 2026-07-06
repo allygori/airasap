@@ -192,7 +192,7 @@ export const ORDER_FIELD_MAP = {
     parser: numberParser,
     dbField: '' /* original: credit_card_discount */,
   },
-  shippingFeePaidByBuyer: {
+  shippingCostPaidByBuyer: {
     header: 'Ongkos Kirim Dibayar oleh Pembeli',
     parser: numberParser,
     dbField: '' /* original: shipping_fee_paid_by_buyer */,

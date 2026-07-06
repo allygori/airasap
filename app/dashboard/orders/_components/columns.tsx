@@ -132,7 +132,19 @@ export const getProductsColumn = (
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => (
-        <div className="text-sm font-medium">
+        <div
+          className={cn(
+            'text-sm font-medium',
+            row.original.status === 'batal'
+              ? 'text-destructive'
+              : [
+                    'telah-dikirim',
+                    'sedang-dikirim',
+                  ].includes(row.original.status)
+                ? 'text-blue-500'
+                : 'text-green-400'
+          )}
+        >
           {Object.values(SHOPEE_ORDER_STATUS).find(
             (s: { value: string }) =>
               s.value === row.original.status
