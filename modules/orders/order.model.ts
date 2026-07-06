@@ -13,78 +13,9 @@ import {
   OrderBaseDTO,
 } from './order.dto';
 
-// const platforms = [...PLATFORMS] as const;
-
-// export type TOrderItem = {
-//   product: typeof ObjectId;
-//   parent_sku?: string;
-//   sku_reference_number?: string;
-//   product_name?: string;
-//   variation_name?: string;
-//   product_key?: string;
-//   original_price?: number;
-//   price_after_discount?: number;
-//   quantity?: number;
-//   returned_quantity?: number;
-//   cogs?: number;
-// };
-
 export type TOrderItem = OrderItemDTO;
 export type TOrderAddress = OrderAddressDTO;
 export type TOrderFee = OrderFeeDTO;
-
-// export type TOrder = Document & {
-//   organization: typeof ObjectId;
-//   store: typeof ObjectId;
-//   platform: (typeof platforms)[number];
-//   order_id?: string;
-//   status?: string;
-//   cancellation_return_status?: string;
-//   username?: string;
-//   number_of_products_ordered?: number;
-//   total_payment?: number;
-//   payment_method?: string;
-//   paid_at?: Date;
-//   order_subtotal?: number;
-//   total_discount?: number;
-//   discount_from_seller?: number;
-//   discount_from_shopee?: number;
-//   voucher_borne_by_seller?: number;
-//   voucher_borne_by_shopee?: number;
-//   coin_cashback?: number;
-//   bundle_deal?: boolean;
-//   bundle_deal_discount_from_shopee?: number;
-//   bundle_deal_discount_from_seller?: number;
-//   shopee_coin_offset?: number;
-//   credit_card_discount?: number;
-//   shipping_option?: string;
-//   estimated_shipping_fee?: number;
-//   shipping_fee_paid_by_buyer?: number;
-//   estimated_shipping_fee_discount?: number;
-//   product_weight?: number;
-//   total_weight?: number;
-//   receiver_name?: string;
-//   phone_number?: string;
-//   address?: TOrderAddress;
-//   buyer_note?: string;
-//   note?: string;
-//   items?: TOrderItem[];
-//   admin_fee?: number;
-//   order_process_fee?: number;
-//   affiliate_fee?: number;
-//   campaign_fee?: number;
-//   voucher_fee?: number;
-//   shipping_fee?: number;
-//   other_fee?: number;
-//   return_shipping_fee?: number;
-//   released_amount?: number;
-//   net_amount?: number;
-//   shipping_arranged_at?: Date;
-//   order_created_at?: Date;
-//   order_released_at?: Date;
-//   order_completed_at?: Date;
-//   deleted_at?: Date;
-// };
 
 export type TOrder = Document &
   OrderBaseDTO & {

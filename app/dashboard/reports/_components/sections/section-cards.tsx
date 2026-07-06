@@ -17,6 +17,7 @@ type SectionCardsProps = {
   payout?: number;
   estimateCOGS?: number;
   estimateProfit?: number;
+  voucherBorneBySeller?: number;
   numberOfBuyers?: number;
   numberOfOrders?: number;
 };
@@ -27,6 +28,7 @@ export function SectionCards({
   payout,
   estimateCOGS,
   estimateProfit,
+  voucherBorneBySeller,
   numberOfBuyers,
   numberOfOrders,
 }: SectionCardsProps) {
@@ -133,6 +135,31 @@ export function SectionCards({
           <CardDescription>Estimasi Profit</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             {formatIDR(estimateProfit || 0)}
+          </CardTitle>
+          <CardAction>
+            <Badge variant="outline">
+              <TrendingUp />
+              +4.5%
+            </Badge>
+          </CardAction>
+        </CardHeader>
+        <CardFooter className="flex-col items-start gap-1.5 text-sm">
+          <div className="line-clamp-1 flex gap-2 font-medium">
+            Steady performance increase{' '}
+            <TrendingUp className="size-4" />
+          </div>
+          <div className="text-muted-foreground">
+            Meets growth projections
+          </div>
+        </CardFooter>
+      </Card>
+      <Card className="@container/card">
+        <CardHeader>
+          <CardDescription>
+            Voucher Ditanggung Seller
+          </CardDescription>
+          <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+            {formatIDR(voucherBorneBySeller || 0)}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">

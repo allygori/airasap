@@ -257,6 +257,9 @@ const ReportClient = () => {
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}
+          voucherBorneBySeller={
+            result?.total_voucher_borne_by_seller
+          }
           numberOfBuyers={result?.total_buyers}
           numberOfOrders={result?.total_orders}
         />
