@@ -125,18 +125,19 @@ function EditFormWrapper({
       credit_card_discount:
         initialData.credit_card_discount ?? 0,
       shipping_option: initialData.shipping_option || '',
-      estimated_shipping_fee:
-        initialData.estimated_shipping_fee ?? 0,
+      estimated_shipping_cost:
+        initialData.estimated_shipping_cost ?? 0,
       free_shipping_from_shopee:
         initialData.free_shipping_from_shopee ?? 0,
-      shipping_fee_paid_by_buyer:
-        initialData.shipping_fee_paid_by_buyer ?? 0,
-      shipping_fee_discount_by_logistics:
-        initialData.shipping_fee_discount_by_logistics ?? 0,
-      shipping_fee_forwarded_by_shopee:
-        initialData.shipping_fee_forwarded_by_shopee ?? 0,
-      estimated_shipping_fee_discount:
-        initialData.estimated_shipping_fee_discount ?? 0,
+      shipping_cost_paid_by_buyer:
+        initialData.shipping_cost_paid_by_buyer ?? 0,
+      shipping_cost_discount_by_logistics:
+        initialData.shipping_cost_discount_by_logistics ??
+        0,
+      shipping_cost_forwarded_by_shopee:
+        initialData.shipping_cost_forwarded_by_shopee ?? 0,
+      estimated_shipping_cost_discount:
+        initialData.estimated_shipping_cost_discount ?? 0,
       product_weight: initialData.product_weight ?? 0,
       total_weight: initialData.total_weight ?? 0,
       receiver_name: initialData.receiver_name || '',
@@ -150,11 +151,10 @@ function EditFormWrapper({
       net_amount: initialData.net_amount ?? 0,
       shipping_arranged_at:
         initialData.shipping_arranged_at || '',
-      order_created_at: initialData.order_created_at || '',
-      order_released_at:
-        initialData.order_released_at || '',
-      order_completed_at:
-        initialData.order_completed_at || '',
+      placed_at: initialData.placed_at || '',
+      released_funds_at:
+        initialData.released_funds_at || '',
+      completed_at: initialData.completed_at || '',
       address: {
         street: initialData.address?.street || '',
         city: initialData.address?.city || '',

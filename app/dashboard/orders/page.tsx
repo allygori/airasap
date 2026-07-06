@@ -81,7 +81,7 @@ export default function OrderIndexPage() {
 
       <DataTableShell
         title="Orders"
-        endpoint="/api/v1/dashboard/orders?sort=-order_created_at"
+        endpoint="/api/v1/dashboard/orders?sort=-placed_at"
         columns={columns}
         searchFields={['order_id']}
         primarySearchField="order_id"

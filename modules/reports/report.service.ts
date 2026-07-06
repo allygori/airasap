@@ -25,7 +25,7 @@ export class ReportService {
   //       startDate,
   //       endDate,
   //       tenantContext: this.tenantContext,
-  //       filterBy: 'order_created_at',
+  //       filterBy: 'placed_at',
   //     });
   //     const report =
   //       await this.repository.aggregate(pipelines);
@@ -51,7 +51,7 @@ export class ReportService {
         startDate,
         endDate,
         tenantContext: this.tenantContext,
-        filterBy: 'order_created_at',
+        filterBy: 'placed_at',
       });
 
       console.log(

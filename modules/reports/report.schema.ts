@@ -12,8 +12,14 @@ export const SalesReportResponseSchema = z.object({
   total_payment: z.number(),
   total_cost: z.number(),
   total_voucher_borne_by_seller: z.number(),
+  total_bundle_deal_discount_from_seller: z.number(),
+  total_shipping_cost_paid_by_buyer: z.number(),
+  total_admin_fee: z.number(),
+  total_processing_fee: z.number(),
   total_orders: z.number(),
   total_buyers: z.number(),
+  total_orders_confirmed: z.number(),
+  total_orders_cancelled: z.number(),
   daily_reports: z.array(
     z.object({
       day: z.number(),
@@ -25,13 +31,17 @@ export const SalesReportResponseSchema = z.object({
       daily_payment: z.number(),
       daily_cost: z.number(),
       number_of_orders: z.number(),
+      total_orders_confirmed: z.number(),
+      total_orders_cancelled: z.number(),
       orders: z.array(
         z.object({
           order_id: z.string(),
+          username: z.string(),
+          status: z.string(),
+          placed_at: z.string(),
           total_profit: z.number(),
           total_payment: z.number(),
           subtotal: z.number(),
-          status: z.string(),
         })
       ),
     })

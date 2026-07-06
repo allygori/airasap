@@ -263,7 +263,7 @@ export const getProductsColumn = (
       header: 'Dibuat',
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">
-          {formatDate(row.original.order_created_at)}
+          {formatDate(row.original.placed_at)}
         </div>
       ),
     },
@@ -272,7 +272,7 @@ export const getProductsColumn = (
       header: 'Selesai',
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">
-          {formatDate(row.original.order_completed_at)}
+          {formatDate(row.original.completed_at)}
         </div>
       ),
     },

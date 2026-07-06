@@ -5,7 +5,10 @@ import {
   Document,
   Types,
 } from 'mongoose';
-import { PLATFORMS } from '../constant';
+import {
+  PLATFORMS,
+  SHOPEE_ORDER_STATUS,
+} from '../constant';
 import {
   OrderItemDTO,
   OrderAddressDTO,
@@ -25,6 +28,10 @@ export type TOrder = Document &
     created_at?: Date;
     updated_at?: Date;
   };
+
+const ORDER_STATUSES = Object.values(
+  SHOPEE_ORDER_STATUS
+).map((item) => item.value);
 
 const OrderItemSchema = new Schema<TOrderItem>(
   {
@@ -225,6 +232,7 @@ const OrderSchema = new Schema<TOrder>(
     },
     status: {
       type: String,
+      enum: ORDER_STATUSES,
     },
     cancelled_by: {
       type: String,
@@ -253,10 +261,6 @@ const OrderSchema = new Schema<TOrder>(
     payment_method: {
       type: String,
       alias: 'paymentMethod',
-    },
-    paid_at: {
-      type: Date,
-      alias: 'paidAt',
     },
     order_subtotal: {
       type: Number,
@@ -311,24 +315,24 @@ const OrderSchema = new Schema<TOrder>(
       type: String,
       alias: 'shippingOption',
     },
-    estimated_shipping_fee: {
+    estimated_shipping_cost: {
       type: Number,
-      alias: 'estimatedShippingFee',
+      alias: 'estimatedShippingCost',
     },
-    shipping_fee_paid_by_buyer: {
+    shipping_cost_paid_by_buyer: {
       type: Number,
       alias: 'shippingCostPaidByBuyer',
     },
-    shipping_fee_discount_by_logistics: {
+    shipping_cost_discount_by_logistics: {
       type: Number,
       required: false,
-      alias: 'shippingFeeDiscountByLogistics',
+      alias: 'shippingCostDiscountByLogistics',
       default: 0,
     },
-    shipping_fee_forwarded_by_shopee: {
+    shipping_cost_forwarded_by_shopee: {
       type: Number,
       required: false,
-      alias: 'shippingFeeForwardedByShopee',
+      alias: 'shippingCostForwardedByShopee',
       default: 0,
     },
     free_shipping_from_shopee: {
@@ -336,9 +340,9 @@ const OrderSchema = new Schema<TOrder>(
       required: false,
       alias: 'freeShippingFromShopee',
     },
-    estimated_shipping_fee_discount: {
+    estimated_shipping_cost_discount: {
       type: Number,
-      alias: 'estimatedShippingFeeDiscount',
+      alias: 'estimatedShippingCostDiscount',
     },
     free_shipping_promo_from_seller: {
       type: Number,
@@ -423,21 +427,27 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       alias: 'netAmount',
     },
+
+    // Date related data
+    placed_at: {
+      type: Date,
+      alias: 'orderCreationTime',
+    },
     shipping_arranged_at: {
       type: Date,
       alias: 'shippingArrangedAt',
     },
-    order_created_at: {
+    paid_at: {
       type: Date,
-      alias: 'orderCreatedAt',
+      alias: 'paidAt',
     },
-    order_released_at: {
+    released_funds_at: {
       type: Date,
-      alias: 'orderReleasedAt',
+      alias: 'releasedFundDate',
     },
-    order_completed_at: {
+    completed_at: {
       type: Date,
-      alias: 'orderCompletedAt',
+      alias: 'orderCompletionTime',
     },
 
     // additional fields
@@ -483,7 +493,7 @@ OrderSchema.index({
 OrderSchema.index({
   organization: 1,
   store: 1,
-  order_created_at: -1,
+  placed_at: -1,
 });
 
 OrderSchema.index(

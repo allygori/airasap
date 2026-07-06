@@ -75,7 +75,7 @@ export const INCOME_FIELD_MAP = {
     header: 'Ongkir Dibayar Pembeli',
     parser: numberParser,
   },
-  shippingFeeDiscountByLogistics: {
+  shippingCostDiscountByLogistics: {
     header: 'Diskon Ongkir Ditanggung Jasa Kirim',
     parser: numberParser,
   },
@@ -83,7 +83,7 @@ export const INCOME_FIELD_MAP = {
     header: 'Gratis Ongkir dari Shopee',
     parser: numberParser,
   },
-  shippingFeeForwardedByShopee: {
+  shippingCostForwardedByShopee: {
     header:
       'Ongkir yang Diteruskan oleh Shopee ke Jasa Kirim',
     parser: numberParser,

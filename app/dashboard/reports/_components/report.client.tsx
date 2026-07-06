@@ -20,6 +20,8 @@ import {
   SalesReportResponseDTO,
   SalesReportResponseSchema,
 } from '@/modules/reports/report.dto';
+import { BarChartOrderTrends } from './sections/charts/bar-chart-order-trends';
+import { ChartBarStackedOrderTrends } from './sections/charts/chart-bar-stacked-order-trends';
 
 // type TResult = typeof SalesReportResponseSchema;
 type TResult = SalesReportResponseDTO;
@@ -260,9 +262,27 @@ const ReportClient = () => {
           voucherBorneBySeller={
             result?.total_voucher_borne_by_seller
           }
+          bundleDealDiscountFromSeller={
+            result?.total_bundle_deal_discount_from_seller
+          }
+          shippingCostPaidByBuyer={
+            result?.total_shipping_cost_paid_by_buyer
+          }
+          adminFee={result?.total_admin_fee}
+          processingFee={result?.total_processing_fee}
           numberOfBuyers={result?.total_buyers}
           numberOfOrders={result?.total_orders}
         />
+
+        <div className="my-8 flex flex-col gap-10 px-6">
+          <BarChartOrderTrends
+            orders={result?.daily_reports || []}
+          />
+          <ChartBarStackedOrderTrends
+            orders={result?.daily_reports || []}
+          />
+        </div>
+
         <ul>
           {(result?.daily_reports || [])
             .sort((a, b) => a.day - b.day)

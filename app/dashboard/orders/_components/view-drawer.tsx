@@ -265,13 +265,11 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Dibuat"
-                  value={formatDate(item.order_created_at)}
+                  value={formatDate(item.placed_at)}
                 />
                 <StatLine
                   label="Selesai"
-                  value={formatDate(
-                    item.order_completed_at
-                  )}
+                  value={formatDate(item.completed_at)}
                 />
                 <StatLine
                   label="Pembayaran"

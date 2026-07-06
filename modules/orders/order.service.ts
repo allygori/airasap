@@ -491,12 +491,12 @@ export class OrderService {
           shopee_coin_offset: order.shopeeCoinOffset,
           credit_card_discount: order.creditCardDiscount,
           shipping_option: order.shippingOption,
-          estimated_shipping_fee:
+          estimated_shipping_cost:
             order.estimatedShippingCosts,
-          shipping_fee_paid_by_buyer:
+          shipping_cost_paid_by_buyer:
             order.shippingCostPaidByBuyer,
-          estimated_shipping_fee_discount:
-            order.estimatedShippingFeeDiscount,
+          estimated_shipping_cost_discount:
+            order.estimatedShippingCostDiscount,
           product_weight: order.productWeight,
           total_weight: order.totalWeight,
           receiver_name: order.receiverName,
@@ -550,12 +550,12 @@ export class OrderService {
           //   alias: 'netAmount',
           // },
           shipping_arranged_at: order.shippingTimeArranged,
-          order_created_at: order.orderCreationTime,
-          // order_released_at: {
+          placed_at: order.orderCreationTime,
+          // released_funds_at: {
           //   type: Date,
-          //   alias: 'orderReleasedAt',
+          //   alias: 'releasedFundDate',
           // },
-          order_completed_at: order.orderCompletionTime,
+          completed_at: order.orderCompletionTime,
           // deleted_at: {
           //   type: Date,
           //   alias: 'deletedAt',
@@ -723,12 +723,12 @@ export class OrderService {
           shopee_coin_offset: order.shopeeCoinOffset,
           credit_card_discount: order.creditCardDiscount,
           shipping_option: order.shippingOption,
-          estimated_shipping_fee:
-            order.estimatedShippingFee,
-          shipping_fee_paid_by_buyer:
+          estimated_shipping_cost:
+            order.estimatedShippingCost,
+          shipping_cost_paid_by_buyer:
             order.shippingCostPaidByBuyer,
-          estimated_shipping_fee_discount:
-            order.estimatedShippingFeeDiscount,
+          estimated_shipping_cost_discount:
+            order.estimatedShippingCostDiscount,
           product_weight: order.productWeight,
           total_weight: order.totalWeight,
           receiver_name: order.receiverName,
@@ -782,12 +782,12 @@ export class OrderService {
           //   alias: 'netAmount',
           // },
           shipping_arranged_at: order.shippingTimeArranged,
-          order_created_at: order.orderCreationTime,
-          // order_released_at: {
+          placed_at: order.orderCreationTime,
+          // released_funds_at: {
           //   type: Date,
-          //   alias: 'orderReleasedAt',
+          //   alias: 'releasedFundDate',
           // },
-          order_completed_at: order.orderCompletionTime,
+          completed_at: order.orderCompletionTime,
           // deleted_at: {
           //   type: Date,
           //   alias: 'deletedAt',
@@ -959,12 +959,12 @@ export class OrderService {
           shipping_fee_refund: order.shippingFeeRefund,
         };
         $set.released_amount = order.totalIncome || 0;
-        $set.shipping_fee_paid_by_buyer =
+        $set.shipping_cost_paid_by_buyer =
           order.shippingCostPaidByBuyer || 0;
-        $set.shipping_fee_discount_by_logistics =
-          order.shippingFeeDiscountByLogistics || 0;
-        $set.shipping_fee_forwarded_by_shopee =
-          order.shippingFeeForwardedByShopee || 0;
+        $set.shipping_cost_discount_by_logistics =
+          order.shippingCostDiscountByLogistics || 0;
+        $set.shipping_cost_forwarded_by_shopee =
+          order.shippingCostForwardedByShopee || 0;
         $set.free_shipping_promo_from_seller =
           order.freeShippingPromoFromSeller || 0;
         $set.compensation = order.compensation || 0;

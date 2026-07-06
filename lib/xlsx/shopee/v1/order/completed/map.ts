@@ -195,13 +195,13 @@ export const ORDER_FIELD_MAP = {
   shippingCostPaidByBuyer: {
     header: 'Ongkos Kirim Dibayar oleh Pembeli',
     parser: numberParser,
-    dbField: '' /* original: shipping_fee_paid_by_buyer */,
+    dbField: '' /* original: shipping_cost_paid_by_buyer */,
   },
-  estimatedShippingFeeDiscount: {
+  estimatedShippingCostDiscount: {
     header: 'Estimasi Potongan Biaya Pengiriman',
     parser: numberParser,
     dbField:
-      '' /* original: estimated_shipping_fee_discount */,
+      '' /* original: estimated_shipping_cost_discount */,
   },
   returnShippingFee: {
     header: 'Ongkos Kirim Pengembalian Barang',
@@ -213,10 +213,10 @@ export const ORDER_FIELD_MAP = {
     parser: numberParser,
     dbField: '' /* original: total_payment */,
   },
-  estimatedShippingFee: {
+  estimatedShippingCost: {
     header: 'Perkiraan Ongkos Kirim',
     parser: numberParser,
-    dbField: '' /* original: estimated_shipping_fee */,
+    dbField: '' /* original: estimated_shipping_cost */,
   },
   buyerNote: {
     header: 'Catatan dari Pembeli',

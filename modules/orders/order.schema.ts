@@ -61,15 +61,15 @@ export const OrderFeeSchema = z.object({
     .optional()
     .default(0),
 
-  // shipping_fee_paid_by_buyer: z
+  // shipping_cost_paid_by_buyer: z
   //   .number().int()
   //   .optional()
   //   .default(0),
-  // shipping_fee_discount_by_logistics: z
+  // shipping_cost_discount_by_logistics: z
   //   .number().int()
   //   .optional()
   //   .default(0),
-  // shipping_fee_forwarded_by_shopee: z
+  // shipping_cost_forwarded_by_shopee: z
   //   .number().int()
   //   .optional()
   //   .default(0),
@@ -130,18 +130,18 @@ export const OrderBaseSchema = z.object({
   shopee_coin_offset: z.number().int().optional(),
   credit_card_discount: z.number().int().optional(),
   shipping_option: z.string().optional(),
-  estimated_shipping_fee: z.number().int().optional(),
+  estimated_shipping_cost: z.number().int().optional(),
   free_shipping_from_shopee: z.number().int().optional(),
-  shipping_fee_paid_by_buyer: z.number().int().optional(),
-  shipping_fee_discount_by_logistics: z
+  shipping_cost_paid_by_buyer: z.number().int().optional(),
+  shipping_cost_discount_by_logistics: z
     .number()
     .optional()
     .default(0),
-  shipping_fee_forwarded_by_shopee: z
+  shipping_cost_forwarded_by_shopee: z
     .number()
     .optional()
     .default(0),
-  estimated_shipping_fee_discount: z
+  estimated_shipping_cost_discount: z
     .number()
     .int()
     .optional(),
@@ -171,9 +171,9 @@ export const OrderBaseSchema = z.object({
   released_amount: z.number().optional(),
   net_amount: z.number().optional(),
   shipping_arranged_at: z.string().optional(),
-  order_created_at: z.string().optional(),
-  order_released_at: z.string().optional(),
-  order_completed_at: z.string().optional(),
+  placed_at: z.string().optional(),
+  released_funds_at: z.string().optional(),
+  completed_at: z.string().optional(),
 
   // additional fields
   total_product_cost: z.number().int().optional(),

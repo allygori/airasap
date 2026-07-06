@@ -161,7 +161,7 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Ongkos Kirim Dibayar oleh Pembeli',
     parser: numberParser,
   },
-  estimatedShippingFeeDiscount: {
+  estimatedShippingCostDiscount: {
     header: 'Estimasi Potongan Biaya Pengiriman',
     parser: numberParser,
   },

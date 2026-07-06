@@ -19,13 +19,10 @@ import { PipelineStage } from 'mongoose';
 // import { dateParser } from '@/lib/utils/parser';
 import { fnsFormatDate } from '@/lib/formatter/date';
 
-const DEFAULT_DATE_FIELD = 'order_created_at';
+const DEFAULT_DATE_FIELD = 'placed_at';
 
 type Args = {
-  filterBy?:
-    | 'order_created_at'
-    | 'order_completed_at'
-    | 'paid_at';
+  filterBy?: 'placed_at' | 'completed_at' | 'paid_at';
   startDate: string;
   endDate: string;
   tenantContext: {
@@ -125,26 +122,26 @@ export default function aggregateSalesReport({
   //       order_created_wib: {
   //         $dateToString: {
   //           format: '%Y-%m-%d',
-  //           date: '$order_created_at',
+  //           date: '$placed_at',
   //           timezone: '+07:00',
   //         },
   //       },
   //       // Ekstrak komponen untuk laporan harian (tetap gunakan timezone +07:00)
   //       year: {
   //         $year: {
-  //           date: '$order_created_at',
+  //           date: '$placed_at',
   //           timezone: '+07:00',
   //         },
   //       },
   //       month: {
   //         $month: {
-  //           date: '$order_created_at',
+  //           date: '$placed_at',
   //           timezone: '+07:00',
   //         },
   //       },
   //       day: {
   //         $dayOfMonth: {
-  //           date: '$order_created_at',
+  //           date: '$placed_at',
   //           timezone: '+07:00',
   //         },
   //       },
@@ -259,25 +256,25 @@ export default function aggregateSalesReport({
         order_created_wib: {
           $dateToString: {
             format: '%Y-%m-%d',
-            date: '$order_created_at',
+            date: '$placed_at',
             timezone: '+07:00',
           },
         },
         year: {
           $year: {
-            date: '$order_created_at',
+            date: '$placed_at',
             timezone: '+07:00',
           },
         },
         month: {
           $month: {
-            date: '$order_created_at',
+            date: '$placed_at',
             timezone: '+07:00',
           },
         },
         day: {
           $dayOfMonth: {
-            date: '$order_created_at',
+            date: '$placed_at',
             timezone: '+07:00',
           },
         },
@@ -307,8 +304,16 @@ export default function aggregateSalesReport({
         total_payment: '$total_payment',
         total_cost: '$total_product_cost',
         total_payout: '$released_amount',
+        order_id: '$order_id',
         username: '$username',
+        status: '$status',
         voucher_borne_by_seller: '$voucher_borne_by_seller',
+        bundle_deal_discount_from_seller:
+          '$bundle_deal_discount_from_seller',
+        shipping_cost_paid_by_buyer:
+          '$shipping_cost_paid_by_buyer',
+        admin_fee: '$fee.admin_fee',
+        processing_fee: '$fee.processing_fee',
         total_profit: {
           $subtract: [
             '$released_amount',
@@ -344,7 +349,85 @@ export default function aggregateSalesReport({
         daily_voucher_borne_by_seller: {
           $sum: '$voucher_borne_by_seller',
         },
+        daily_bundle_deal_discount_from_seller: {
+          $sum: '$bundle_deal_discount_from_seller',
+        },
+        daily_shipping_cost_paid_by_buyer: {
+          $sum: '$shipping_cost_paid_by_buyer',
+        },
+        daily_admin_fee: {
+          $sum: '$admin_fee',
+        },
+        daily_processing_fee: {
+          $sum: '$processing_fee',
+        },
+        // daily_orders_confirmed: {
+        //   $addToSet: {
+        //     $cond: {
+        //       if: {
+        //         $in: [
+        //           '$status',
+        //           [
+        //             'selesai',
+        //             'sedang-dikirim',
+        //             'telah-dikirim',
+        //           ],
+        //         ],
+        //       },
+        //       then: '$order_id',
+        //       else: '$$REMOVE',
+        //     },
+        //   },
+        // },
+        // daily_orders_cancelled: {
+        //   $addToSet: {
+        //     $cond: {
+        //       if: { $eq: ['$status', 'batal'] },
+        //       then: '$order_id',
+        //       else: '$$REMOVE',
+        //     },
+        //   },
+        // },
+        daily_orders_confirmed: {
+          $sum: {
+            $cond: {
+              if: {
+                $in: [
+                  '$status',
+                  [
+                    'selesai',
+                    'sedang-dikirim',
+                    'telah-dikirim',
+                  ],
+                ],
+              },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+        daily_orders_cancelled: {
+          $sum: {
+            $cond: {
+              if: { $eq: ['$status', 'batal'] },
+              then: 1,
+              else: 0,
+            },
+          },
+        },
+        daily_order_ids: { $addToSet: '$order_id' },
         unique_buyers: { $addToSet: '$username' },
+        daily_orders: {
+          $push: {
+            order_id: '$order_id',
+            username: '$username',
+            status: '$status',
+            placed_at: '$placed_at',
+            total_profit: '$total_profit',
+            total_payment: '$total_payment',
+            subtotal: '$revenue',
+          },
+        },
         daily_orders_count: {
           $sum: 1,
         },
@@ -355,10 +438,6 @@ export default function aggregateSalesReport({
         _id: null,
         total_revenue: {
           $sum: '$daily_revenue',
-          // $subtract: [
-          //   { $sum: '$daily_revenue' },
-          //   { $sum: '$daily_voucher_borne_by_seller' },
-          // ],
         },
         total_payout: {
           $sum: '$daily_payout',
@@ -378,6 +457,24 @@ export default function aggregateSalesReport({
         total_voucher_borne_by_seller: {
           $sum: '$daily_voucher_borne_by_seller',
         },
+        total_bundle_deal_discount_from_seller: {
+          $sum: '$daily_bundle_deal_discount_from_seller',
+        },
+        total_shipping_cost_paid_by_buyer: {
+          $sum: '$daily_shipping_cost_paid_by_buyer',
+        },
+        total_admin_fee: {
+          $sum: '$daily_admin_fee',
+        },
+        total_processing_fee: {
+          $sum: '$daily_processing_fee',
+        },
+        total_orders_confirmed: {
+          $sum: '$daily_orders_confirmed',
+        },
+        total_orders_cancelled: {
+          $sum: '$daily_orders_cancelled',
+        },
         // unique_buyers: { $first: '$unique_buyers' },
         daily_buyers: { $push: '$unique_buyers' },
         daily_reports: {
@@ -391,8 +488,17 @@ export default function aggregateSalesReport({
             daily_payment: '$daily_payment',
             daily_cost: '$daily_cost',
             number_of_orders: '$daily_orders_count',
-            username: '$username',
+            total_orders_confirmed: {
+              $sum: '$daily_orders_confirmed',
+            },
+            total_orders_cancelled: {
+              $sum: '$daily_orders_cancelled',
+            },
+            // daily_order_ids: '$daily_order_ids',
+            // daily_buyers: '$unique_buyers',
+            // username: '$username',
             orders: '$daily_orders',
+            // place_at: '$place_at',
           },
         },
       },
@@ -419,10 +525,16 @@ export default function aggregateSalesReport({
         total_cost: 1,
         total_orders: 1,
         total_voucher_borne_by_seller: 1,
+        total_bundle_deal_discount_from_seller: 1,
+        total_shipping_cost_paid_by_buyer: 1,
+        total_admin_fee: 1,
+        total_processing_fee: 1,
         // total_buyers: 1,
         // total_buyers: {
         //   $size: '$unique_buyers',
         // },
+        total_orders_confirmed: 1,
+        total_orders_cancelled: 1,
         total_buyers: {
           $size: {
             $reduce: {

@@ -58,12 +58,12 @@ export const OrderForm = withForm({
     shopee_coin_offset: 0,
     credit_card_discount: 0,
     shipping_option: '',
-    estimated_shipping_fee: 0,
+    estimated_shipping_cost: 0,
     free_shipping_from_shopee: 0,
-    shipping_fee_paid_by_buyer: 0,
-    shipping_fee_discount_by_logistics: 0,
-    shipping_fee_forwarded_by_shopee: 0,
-    estimated_shipping_fee_discount: 0,
+    shipping_cost_paid_by_buyer: 0,
+    shipping_cost_discount_by_logistics: 0,
+    shipping_cost_forwarded_by_shopee: 0,
+    estimated_shipping_cost_discount: 0,
     product_weight: 0,
     total_weight: 0,
     receiver_name: '',
@@ -75,9 +75,9 @@ export const OrderForm = withForm({
     released_amount: 0,
     net_amount: 0,
     shipping_arranged_at: '',
-    order_created_at: '',
-    order_released_at: '',
-    order_completed_at: '',
+    placed_at: '',
+    released_funds_at: '',
+    completed_at: '',
     address: {
       street: '',
       city: '',
@@ -354,7 +354,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="order_created_at"
+                  name="placed_at"
                   children={(field) => (
                     <field.TextField
                       label="Tanggal Dibuat"
@@ -368,7 +368,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="order_released_at"
+                  name="released_funds_at"
                   children={(field) => (
                     <field.TextField
                       label="Tanggal Dana Dilepas"
@@ -382,7 +382,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="order_completed_at"
+                  name="completed_at"
                   children={(field) => (
                     <field.TextField
                       label="Tanggal Selesai"
@@ -742,7 +742,7 @@ export const OrderForm = withForm({
             <CardContent>
               <FieldGroup className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <form.AppField
-                  name="estimated_shipping_fee"
+                  name="estimated_shipping_cost"
                   children={(field) => (
                     <field.TextField
                       type="number"
@@ -778,7 +778,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="shipping_fee_paid_by_buyer"
+                  name="shipping_cost_paid_by_buyer"
                   children={(field) => (
                     <field.TextField
                       type="number"
@@ -796,7 +796,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="shipping_fee_discount_by_logistics"
+                  name="shipping_cost_discount_by_logistics"
                   children={(field) => (
                     <field.TextField
                       type="number"
@@ -814,7 +814,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="shipping_fee_forwarded_by_shopee"
+                  name="shipping_cost_forwarded_by_shopee"
                   children={(field) => (
                     <field.TextField
                       type="number"
@@ -832,7 +832,7 @@ export const OrderForm = withForm({
                 />
 
                 <form.AppField
-                  name="estimated_shipping_fee_discount"
+                  name="estimated_shipping_cost_discount"
                   children={(field) => (
                     <field.TextField
                       type="number"

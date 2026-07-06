@@ -41,11 +41,11 @@ export const HEADER_MAP: Record<string, string> = {
   creditCardDiscount: 'Diskon Kartu Kredit',
   shippingCostPaidByBuyer:
     'Ongkos Kirim Dibayar oleh Pembeli',
-  estimatedShippingFeeDiscount:
+  estimatedShippingCostDiscount:
     'Estimasi Potongan Biaya Pengiriman',
   returnShippingFee: 'Ongkos Kirim Pengembalian Barang',
   totalPayment: 'Total Pembayaran',
-  estimatedShippingFee: 'Perkiraan Ongkos Kirim',
+  estimatedShippingCost: 'Perkiraan Ongkos Kirim',
   buyerNote: 'Catatan dari Pembeli',
   note: 'Catatan',
   buyerUsername: 'Username (Pembeli)',

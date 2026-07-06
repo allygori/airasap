@@ -4,7 +4,7 @@
  * @returns
  */
 export const baseMetrics = (
-  dateField: string = 'order_created_at'
+  dateField: string = 'placed_at'
 ) => {
   return {
     $addFields: {
@@ -24,28 +24,28 @@ export const baseMetrics = (
       // WAJIB menggunakan timezone +07:00 dan field yang konsisten dengan $match
       year: {
         $year: {
-          date: '$order_completed_at',
+          date: '$completed_at',
           timezone: '+07:00',
         },
       },
 
       month: {
         $month: {
-          date: '$order_completed_at',
+          date: '$completed_at',
           timezone: '+07:00',
         },
       },
 
       day: {
         $dayOfMonth: {
-          date: '$order_completed_at',
+          date: '$completed_at',
           timezone: '+07:00',
         },
       },
 
       hour: {
         $hour: {
-          date: '$order_completed_at',
+          date: '$completed_at',
           timezone: '+07:00',
         },
       },
@@ -59,7 +59,7 @@ export const baseMetrics = (
  * @returns
  */
 export const baseMetrics1 = (
-  dateField: string = 'order_created_at'
+  dateField: string = 'placed_at'
 ) => {
   return {
     $addFields: {
