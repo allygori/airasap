@@ -20,7 +20,7 @@ import {
   shopeeV1AllOrderParser,
   type ParsedAllOrderRow,
 } from '@/lib/xlsx/shopee/v1/order/all';
-import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/released-funds';
+import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/order/released-funds';
 import { ProductService } from '../products/product.service';
 import {
   PLATFORMS_KV_WITH_LABEL,

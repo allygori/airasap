@@ -6,7 +6,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 // import mongoose from 'mongoose';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/connection';
 // import { FileModel } from '@/modules/files/file.model';
 import {
   calculateCRC32,

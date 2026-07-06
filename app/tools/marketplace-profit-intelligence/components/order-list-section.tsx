@@ -21,7 +21,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { formatIDR } from '@/lib/formatter';
 import type { ProfitOrder } from './types';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 
 type OrderListSectionProps = {
   orders: ProfitOrder[];

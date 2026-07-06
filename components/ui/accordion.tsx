@@ -1,6 +1,6 @@
 import { Accordion as AccordionPrimitive } from '@base-ui/react/accordion';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowDown01Icon,

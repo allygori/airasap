@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Eye, EyeOff } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import { authClient } from '@/lib/auth/auth-client';
 import GoogleIcon from '@/components/icons/google';
 import { Button } from '@/components/ui/button';

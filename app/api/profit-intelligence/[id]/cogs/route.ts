@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import ToolMarketplaceIncomeReport from '@/lib/mongoose/schema/tool-marketplace-income-report';
+import { db } from '@/lib/db/connection';
+import ToolMarketplaceIncomeReport from '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
 
 export async function PUT(
   request: Request,

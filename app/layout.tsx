@@ -3,7 +3,7 @@ import './globals.css';
 import { Providers } from './providers';
 // import { Geist } from 'next/font/google';
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import { Toaster } from '@/components/ui/sonner';
 
 // const geist = Geist({

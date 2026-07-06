@@ -11,7 +11,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { FieldInfo } from '../partials/field-info';
 import { Eye, EyeOff } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 
 type PasswordFieldProps = ComponentProps<'input'> & {
   label?: string;

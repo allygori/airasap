@@ -22,7 +22,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '@tanstack/react-form';
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 
 const newCost = () => ({
   cogs_unit: 0,

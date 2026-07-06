@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
-import { db } from '@/lib/db';
-import ToolMarketplaceIncomeReport from '@/lib/mongoose/schema/tool-marketplace-income-report';
+import { db } from '@/lib/db/connection';
+import ToolMarketplaceIncomeReport from '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
 import { ResultDashboard } from '@/app/tools/marketplace-profit-intelligence/components/result-dashboard';
 import type { ProfitReportData } from '@/app/tools/marketplace-profit-intelligence/components/types';
 import { DashboardFileInfo } from '../components/dashboard-file-info';

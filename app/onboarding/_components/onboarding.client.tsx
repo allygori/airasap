@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAppForm } from '@/components/form/form.hook';
 import { revalidateLogic } from '@tanstack/react-form';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import { authClient } from '@/lib/auth/auth-client';
 import OnboardingForm from '@/app/onboarding/_components/onboarding.form';
 import {

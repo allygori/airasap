@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import Container from '@/components/shared/general/container';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {

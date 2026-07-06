@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Dialog as ActionSheetPrimitive } from '@base-ui/react/dialog';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 
 const ActionSheetContext = React.createContext<{
   onConfirm?: (flag: boolean) => void;

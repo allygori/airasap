@@ -4,7 +4,7 @@ import { ComponentProps, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 import { authClient } from '@/lib/auth/auth-client';
 import { Button } from '@/components/ui/button';
 import {

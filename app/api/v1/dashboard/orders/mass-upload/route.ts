@@ -5,7 +5,7 @@
 
 import path from 'path';
 import fs from 'fs/promises';
-import { db } from '@/lib/db';
+import { db } from '@/lib/db/connection';
 import {
   calculateCRC32,
   calculateSHA256,

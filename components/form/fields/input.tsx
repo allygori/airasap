@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { FieldInfo } from '../partials/field-info';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils/ui';
 // import { cn } from '@/lib/utils';
 
 type InputFieldProps = ComponentProps<'input'> & {
