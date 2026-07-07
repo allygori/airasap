@@ -433,6 +433,55 @@ export default function aggregateSalesReport({
         },
       },
     },
+    // {
+    //   $addFields: {
+    //     dateObj: {
+    //       $dateFromParts: {
+    //         year: '$_id.year',
+    //         month: '$_id.month',
+    //         day: '$_id.day',
+    //       },
+    //     },
+    //   },
+    // },
+
+    // // Step 3: Create documents for the missing days
+    // {
+    //   $densify: {
+    //     field: 'dateObj',
+    //     range: {
+    //       step: 1,
+    //       unit: 'day',
+    //       bounds: 'full',
+    //     },
+    //   },
+    // },
+    // {
+    //   $fill: {
+    //     sortBy: { dateObj: 1 },
+    //     output: {
+    //       daily_revenue: { value: 0 },
+    //     },
+    //   },
+    // },
+    // {
+    //   $densify: {
+    //     field: 'daily_reports.day',
+    //     range: {
+    //       step: 1,
+    //       unit: 'day',
+    //       bounds: 'full',
+    //     },
+    //   },
+    // },
+    // {
+    //   $fill: {
+    //     sortBy: { 'daily_reports.day': 1 },
+    //     output: {
+    //       daily_revenue: { value: 0 },
+    //     },
+    //   },
+    // },
     {
       $group: {
         _id: null,
@@ -545,6 +594,13 @@ export default function aggregateSalesReport({
           },
         },
         daily_reports: 1,
+      },
+    },
+    {
+      $sort: {
+        'daily_reports.day': 1,
+        'daily_reports.month': 1,
+        'daily_reports.year': 1,
       },
     },
   ] as PipelineStage[];

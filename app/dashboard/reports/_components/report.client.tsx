@@ -272,6 +272,12 @@ const ReportClient = () => {
           processingFee={result?.total_processing_fee}
           numberOfBuyers={result?.total_buyers}
           numberOfOrders={result?.total_orders}
+          numberOfOrdersConfirmed={
+            result?.total_orders_confirmed
+          }
+          numberOfOrdersCancelled={
+            result?.total_orders_cancelled
+          }
         />
 
         <div className="my-8 flex flex-col gap-10 px-6">
@@ -283,6 +289,8 @@ const ReportClient = () => {
           />
         </div>
 
+        {/* <div></div>
+
         <ul>
           {(result?.daily_reports || [])
             .sort((a, b) => a.day - b.day)
@@ -292,22 +300,11 @@ const ReportClient = () => {
                   <p>
                     {item.day}: {item.number_of_orders}
                   </p>
-                  {/* <div>
-                    {(item.orders || []).map(
-                      (order: { order_id: string }) => {
-                        return (
-                          <span key={order.order_id}>
-                            {order.order_id} {','}
-                          </span>
-                        );
-                      }
-                    )}
-                  </div> */}
                 </li>
               );
             })}
         </ul>
-        <pre>{JSON.stringify(result, null, 2)}</pre>
+        <pre>{JSON.stringify(result, null, 2)}</pre> */}
       </main>
     </div>
   );

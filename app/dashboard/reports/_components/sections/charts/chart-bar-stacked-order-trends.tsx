@@ -44,6 +44,7 @@ const chartConfig = {
   confirmed: {
     label: 'Terkonfirmasi',
     color: 'var(--chart-1)',
+    // color: 'var(--color-green-400)',
   },
   cancelled: {
     label: 'Dibatalkan',
