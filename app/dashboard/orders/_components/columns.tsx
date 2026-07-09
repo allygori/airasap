@@ -162,20 +162,20 @@ export const getProductsColumn = (
       ),
     },
     {
-      accessorKey: 'total_product_cost',
-      header: 'HPP',
-      cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          {formatIDR(row.original.total_product_cost ?? 0)}
-        </div>
-      ),
-    },
-    {
       accessorKey: 'released_amount',
       header: 'Pendapatan',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
           {formatIDR(row.original.released_amount ?? 0)}
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'total_product_cost',
+      header: 'HPP',
+      cell: ({ row }) => (
+        <div className="text-sm font-medium">
+          {formatIDR(row.original.total_product_cost ?? 0)}
         </div>
       ),
     },
@@ -213,6 +213,21 @@ export const getProductsColumn = (
         </div>
       ),
     },
+
+    // {
+    //   accessorKey: 'voucher_code',
+    //   header: 'Voucher',
+    //   cell: ({ row }) => (
+    //     <div className="w-32">
+    //       <Badge
+    //         variant="outline"
+    //         className="text-muted-foreground px-1.5"
+    //       >
+    //         {row.original.voucher_code || '-'}
+    //       </Badge>
+    //     </div>
+    //   ),
+    // },
 
     // {
     //   accessorKey: 'category.name',

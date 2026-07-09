@@ -843,6 +843,10 @@ export class OrderService {
       const operations: AnyBulkWriteOperation<TOrder>[] =
         [];
       for await (const order of orders) {
+        console.log(
+          `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`,
+          JSON.stringify(order, null, 2)
+        );
         const orderObj =
           await this.repository.findByOrderId(
             order.orderId
@@ -970,6 +974,7 @@ export class OrderService {
         $set.free_shipping_promo_from_seller =
           order.freeShippingPromoFromSeller || 0;
         $set.compensation = order.compensation || 0;
+        $set.voucher_code = order.voucherCode || null;
         $set.total_product_cost = totalProductCost || 0;
         $set.total_profit =
           $set.released_amount - $set.total_product_cost;

@@ -55,21 +55,22 @@ export class ReportService {
         tz: 'Asia/Jakarta',
       });
 
-      console.log(
-        'OrderService.generateSalesReport pipelines: ',
-        JSON.stringify(pipelines, null, 2)
-      );
+      // console.log(
+      //   'OrderService.generateSalesReport pipelines: ',
+      //   JSON.stringify(pipelines, null, 2)
+      // );
 
       const report =
         await this.repository.aggregate(pipelines);
 
-      console.log(
-        'OrderService.generateSalesReport report: ',
-        JSON.stringify(report, null, 2)
-      );
-      if (!report || report.length === 0) {
-        throw new Error('Laporan tidak ditemukan');
-      }
+      // console.log(
+      //   'OrderService.generateSalesReport report: ',
+      //   JSON.stringify(report, null, 2)
+      // );
+
+      // if (!report || report.length === 0) {
+      //   throw new Error('Laporan tidak ditemukan');
+      // }
 
       return report[0] || null;
 

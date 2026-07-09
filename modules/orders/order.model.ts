@@ -282,6 +282,12 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       alias: 'voucherBorneByShopee',
     },
+    voucher_code: {
+      type: String,
+      required: false,
+      default: null,
+      alias: 'voucherCode',
+    },
     coin_cashback: {
       type: Number,
       alias: 'coinCashback',

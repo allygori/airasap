@@ -118,6 +118,7 @@ export const OrderBaseSchema = z.object({
   discount_from_shopee: z.number().int().optional(),
   voucher_borne_by_seller: z.number().int().optional(),
   voucher_borne_by_shopee: z.number().int().optional(),
+  voucher_code: z.string().optional(),
   coin_cashback: z.number().int().optional(),
   bundle_deal: z.boolean().optional(),
   bundle_deal_discount_from_shopee: z
