@@ -14,9 +14,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { FieldGroup } from '@/components/ui/field';
-// import { PLATFORMS } from '@/lib/db/constant';
-import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
-import { formSchema } from './form.schema';
+import { ORDER_PLATFORMS } from '@/constant/order-platform';
+// import { formSchema } from './form.schema';
 import { VariantsSubForm } from './variants.subform';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,7 +36,7 @@ type ProductFormProps = {
 export const ProductForm = withForm({
   defaultValues: {
     id: '',
-    platform: '',
+    platform: undefined,
     name: '',
     product_id: '',
     variants: [],
@@ -111,7 +110,7 @@ export const ProductForm = withForm({
                         className="col-span-1"
                         disabled={true}
                         items={Object.values(
-                          PLATFORMS_KV_WITH_LABEL
+                          ORDER_PLATFORMS
                         ).map((p) => ({
                           label: p.label.toUpperCase(),
                           value: p.value,

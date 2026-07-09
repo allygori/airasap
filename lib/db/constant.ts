@@ -1,10 +1,10 @@
-export const PLATFORMS = [
-  'shopee',
-  'tokopedia',
-  'tiktok-shop',
-  'lazada',
-  'blibli',
-];
+// export const PLATFORMS = [
+//   'shopee',
+//   'tokopedia',
+//   'tiktok-shop',
+//   'lazada',
+//   'blibli',
+// ];
 
 export const SHOPEE_PAYMENT_METHODS = [
   'ShopeePay',

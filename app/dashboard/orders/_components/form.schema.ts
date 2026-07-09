@@ -1,5 +1,4 @@
 import z from 'zod';
-import { PLATFORMS } from '@/lib/db/constant';
 
 export const orderItemSchema = z.object({
   product: z.string().optional(),

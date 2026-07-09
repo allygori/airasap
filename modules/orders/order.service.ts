@@ -23,9 +23,11 @@ import {
 import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/order/released-funds';
 import { ProductService } from '../products/product.service';
 import {
-  PLATFORMS_KV_WITH_LABEL,
-  SHOPEE_ORDER_STATUS,
-} from '../constant';
+  ORDER_PLATFORMS,
+  OrderPlatform,
+} from '@/constant/order-platform';
+import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
+
 // import { saveJson } from '@/lib/file/save-json';
 import { AnyBulkWriteOperation } from 'mongoose';
 import { TOrder } from './order.model';
@@ -298,7 +300,7 @@ export class OrderService {
   /**
    * Get orders by platform
    */
-  async getByPlatform(platform: string) {
+  async getByPlatform(platform: OrderPlatform) {
     try {
       return await this.repository.findByPlatform(platform);
     } catch (error: any) {
@@ -455,7 +457,7 @@ export class OrderService {
         );
 
         const payload = {
-          platform: PLATFORMS_KV_WITH_LABEL.shopee.value,
+          platform: ORDER_PLATFORMS.shopee.value,
           order_id: orderId,
           status:
             Object.values(SHOPEE_ORDER_STATUS).find(
@@ -690,7 +692,7 @@ export class OrderService {
           //   required: true,
           //   alias: 'storeId',
           // },
-          platform: PLATFORMS_KV_WITH_LABEL.shopee.value,
+          platform: ORDER_PLATFORMS.shopee.value,
           order_id: orderId,
           status:
             Object.values(SHOPEE_ORDER_STATUS).find(
@@ -1000,7 +1002,7 @@ export class OrderService {
   /**
    * Count orders by platform
    */
-  async countByPlatform(platform: string) {
+  async countByPlatform(platform: OrderPlatform) {
     try {
       return await this.repository.countByPlatform(
         platform

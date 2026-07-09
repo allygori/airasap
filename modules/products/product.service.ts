@@ -13,7 +13,10 @@ import {
 } from './product.dto';
 import parseMassProductsExcel from '@/lib/xlsx/shopee/v1/product';
 import { ParsedOrderRow } from '@/lib/xlsx/shopee/v1/product/types';
-import { PLATFORMS_KV } from '../constant';
+import {
+  ORDER_PLATFORMS,
+  OrderPlatform,
+} from '@/constant/order-platform';
 
 export class ProductService {
   private repository: ProductRepository;
@@ -362,7 +365,7 @@ export class ProductService {
   /**
    * Get products by platform
    */
-  async getProductsByPlatform(platform: string) {
+  async getProductsByPlatform(platform: OrderPlatform) {
     try {
       return await this.repository.findByPlatform(platform);
     } catch (error: any) {
@@ -573,7 +576,7 @@ export class ProductService {
         const existingProduct =
           await this.repository.findByProductId(productId);
         const payload = {
-          platform: PLATFORMS_KV.shopee,
+          platform: ORDER_PLATFORMS.shopee.value,
           name: group[0]?.productName || '',
           product_id: productId,
           // key: productId,
@@ -611,7 +614,7 @@ export class ProductService {
   /**
    * Count products by platform
    */
-  async countProductsByPlatform(platform: string) {
+  async countProductsByPlatform(platform: OrderPlatform) {
     try {
       return await this.repository.countByPlatform(
         platform

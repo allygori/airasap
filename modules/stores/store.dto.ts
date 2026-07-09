@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PLATFORMS } from '../constant';
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 /**
  * Skema untuk pembuatan store baru (POST)
@@ -7,7 +7,7 @@ import { PLATFORMS } from '../constant';
 export const CreateStoreSchema = z.object({
   // organization: z.string().min(1, 'Organisasi wajib diisi'),
   // user: z.string().min(1, 'Original name wajib diisi'),
-  platform: z.enum(PLATFORMS),
+  platform: z.enum(ORDER_PLATFORM_VALUES),
   name: z.string().min(1, 'Nama toko wajib diisi'),
 });
 

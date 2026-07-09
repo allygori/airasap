@@ -11,8 +11,7 @@ import {
   ZodOnboardingInput,
   ZodOnboardingSchema,
 } from '@/app/onboarding/_components/onboarding.schema';
-import { PLATFORMS_KV } from '@/modules/constant';
-import { create } from 'domain';
+import { ORDER_PLATFORMS } from '@/constant/order-platform';
 
 type OnboardingClientProps = {
   className?: string;
@@ -129,7 +128,7 @@ export default function OnboardingClient({
             body: JSON.stringify({
               // organization: newOrg.id,
               name: firstStore || newOrg?.name || '',
-              platform: PLATFORMS_KV.shopee,
+              platform: ORDER_PLATFORMS.shopee.value,
             }),
           }
         );

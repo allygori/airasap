@@ -1,5 +1,5 @@
 import { ReportRepository } from './report.repository';
-import aggregateSalesReport from './@shared/aggregate/sales-report';
+import { aggregateSalesReport } from './@shared/aggregate/sales-report';
 
 export class ReportService {
   private repository: ReportRepository;
@@ -52,6 +52,7 @@ export class ReportService {
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
       });
 
       console.log(
@@ -72,7 +73,7 @@ export class ReportService {
 
       return report[0] || null;
 
-      return report;
+      // return report;
     } catch (error: any) {
       throw new Error(
         `Gagal membuat laporan: ${error.message}`

@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { PLATFORMS } from '../constant';
-
-const platforms = [...PLATFORMS] as const;
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 export const OrderItemSchema = z.object({
   // product: z.string().min(1, 'Product ID wajib diisi'),
@@ -100,7 +98,10 @@ export const OrderBaseSchema = z.object({
   //   .min(1, 'Organization ID wajib diisi'),
   // store: z.string().min(1, 'Store ID wajib diisi'),
   order_id: z.string().min(1, 'Order ID wajib diisi'),
-  platform: z.enum(platforms, 'Platform tidak valid'),
+  platform: z.enum(
+    ORDER_PLATFORM_VALUES,
+    'Platform tidak valid'
+  ),
   // order_id: z.string().optional(),
   status: z.string().optional(),
   cancelled_by: z.string().optional(),

@@ -4,13 +4,14 @@
  * Using Mongoose v9
  */
 
-import { saveJson } from '@/lib/file/save-json';
-import { BaseRepository } from '../base.repository';
-import { OrderModel, TOrder } from './order.model';
 import {
   QueryFilter,
   AnyBulkWriteOperation,
 } from 'mongoose';
+import { saveJson } from '@/lib/file/save-json';
+import { BaseRepository } from '../base.repository';
+import { OrderModel, TOrder } from './order.model';
+import { type OrderPlatform } from '@/constant/order-platform';
 
 export class OrderRepository extends BaseRepository<TOrder> {
   constructor(tenantContext: {
@@ -23,7 +24,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
   /**
    * Find orders by platform
    */
-  async findByPlatform(platform: string) {
+  async findByPlatform(platform: OrderPlatform) {
     return await this.model
       .find({
         ...this.getTenantFilter(),
@@ -224,7 +225,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
   /**
    * Count orders by platform
    */
-  async countByPlatform(platform: string) {
+  async countByPlatform(platform: OrderPlatform) {
     return await this.model.countDocuments({
       ...this.getTenantFilter(),
       platform,

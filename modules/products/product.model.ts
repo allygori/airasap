@@ -6,7 +6,7 @@ import {
   Types,
 } from 'mongoose';
 import { ProductBaseDTO } from './product.dto';
-import { PLATFORMS } from '../constant';
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 export type TProduct = Document &
   ProductBaseDTO & {
@@ -35,7 +35,7 @@ const ProductSchema = new Schema<TProduct>(
     },
     platform: {
       type: String,
-      enum: PLATFORMS,
+      enum: ORDER_PLATFORM_VALUES,
       required: true,
     },
     name: { type: String, required: true },

@@ -12,8 +12,6 @@ import { sessionConfig } from './configs/session';
 import { verificationConfig } from './configs/verification';
 // import { StoreService } from '@/modules/stores/store.service';
 // import { CreateStoreDTO } from '@/modules/stores/store.dto';
-// import { PLATFORMS } from '../db/constant';
-// import { PLATFORMS_KV } from '@/modules/constant';
 
 // Ensure your Mongoose connection is established first
 const client = new MongoClient(process.env.MONGODB_URI!);

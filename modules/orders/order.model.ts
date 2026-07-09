@@ -5,10 +5,8 @@ import {
   Document,
   Types,
 } from 'mongoose';
-import {
-  PLATFORMS,
-  SHOPEE_ORDER_STATUS,
-} from '../constant';
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
+import { SHOPEE_ORDER_STATUS_VALUES } from '@/constant/order/shopee/status';
 import {
   OrderItemDTO,
   OrderAddressDTO,
@@ -29,9 +27,7 @@ export type TOrder = Document &
     updated_at?: Date;
   };
 
-const ORDER_STATUSES = Object.values(
-  SHOPEE_ORDER_STATUS
-).map((item) => item.value);
+const ORDER_STATUSES = SHOPEE_ORDER_STATUS_VALUES;
 
 const OrderItemSchema = new Schema<TOrderItem>(
   {
@@ -223,7 +219,7 @@ const OrderSchema = new Schema<TOrder>(
     },
     platform: {
       type: String,
-      enum: PLATFORMS,
+      enum: ORDER_PLATFORM_VALUES,
       required: true,
     },
     order_id: {

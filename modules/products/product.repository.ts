@@ -7,6 +7,7 @@
 import { BaseRepository } from '../base.repository';
 import { ProductModel, TProduct } from './product.model';
 import { QueryFilter, UpdateQuery } from 'mongoose';
+import { type OrderPlatform } from '@/constant/order-platform';
 
 export class ProductRepository extends BaseRepository<TProduct> {
   constructor(tenantContext: {
@@ -53,7 +54,7 @@ export class ProductRepository extends BaseRepository<TProduct> {
   /**
    * Find products by platform
    */
-  async findByPlatform(platform: string) {
+  async findByPlatform(platform: OrderPlatform) {
     return await this.model
       .find({
         ...this.getTenantFilter(),
@@ -218,7 +219,7 @@ export class ProductRepository extends BaseRepository<TProduct> {
   /**
    * Count products by platform
    */
-  async countByPlatform(platform: string) {
+  async countByPlatform(platform: OrderPlatform) {
     return await this.model.countDocuments({
       ...this.getTenantFilter(),
       platform,

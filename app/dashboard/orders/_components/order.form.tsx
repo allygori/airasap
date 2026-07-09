@@ -24,11 +24,10 @@ import {
 } from '@/components/ui/dialog';
 
 import { formSchema } from './form.schema';
-// import { PLATFORMS } from '@/lib/db/constant';
 import { AddressFields } from './address-fields';
 import { FeeFields } from './fee-fields';
 import { OrderItemsSection } from './order-items-section';
-import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
+import { ORDER_PLATFORMS } from '@/constant/order-platform';
 
 type OrderFormProps = {
   title?: string;
@@ -166,7 +165,7 @@ export const OrderForm = withForm({
                       multiple={false}
                       disabled={true}
                       items={Object.values(
-                        PLATFORMS_KV_WITH_LABEL
+                        ORDER_PLATFORMS
                       ).map((p) => ({
                         label: p.label.toUpperCase(),
                         value: p.value,

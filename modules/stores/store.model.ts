@@ -1,13 +1,12 @@
 import { Schema, model, models, Document } from 'mongoose';
-import { PLATFORMS } from '../constant';
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 const ObjectId = Schema.Types.ObjectId;
-const platforms = [...PLATFORMS] as const;
 
 export type TStore = Document & {
   organization: typeof ObjectId;
   user: typeof ObjectId;
-  platform: (typeof platforms)[number];
+  platform: (typeof ORDER_PLATFORM_VALUES)[number];
   name: string;
   is_active: boolean;
   deleted_at?: Date;
@@ -29,7 +28,7 @@ const StoreSchema = new Schema<TStore>(
     // },
     platform: {
       type: String,
-      enum: PLATFORMS,
+      enum: ORDER_PLATFORM_VALUES,
       required: true,
     },
     name: {

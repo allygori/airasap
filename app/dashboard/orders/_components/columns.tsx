@@ -19,7 +19,7 @@ import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { formatIDR } from '@/lib/formatter';
 import { cn } from '@/lib/utils/ui';
 import { formatDate } from '@/lib/formatter/date';
-import { SHOPEE_ORDER_STATUS } from '@/modules/constant';
+import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 

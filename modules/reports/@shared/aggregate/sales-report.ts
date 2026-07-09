@@ -8,16 +8,24 @@ import {
 } from './pipelines/filters';
 // import { mergeFilters } from './pipelines/filters/_merge';
 import { mergeObject } from '@/lib/utils/object/merge';
-import { PLATFORMS_KV_WITH_LABEL } from '@/modules/constant';
+import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import {
   baseMetrics,
   baseMetrics1,
+  metricsForRevenue,
 } from './pipelines/transforms/metrics';
-import { groupRevenueByDay } from './pipelines/groups/revenue';
+import {
+  groupByDateForDailyRevenue,
+  groupRevenueByDay,
+  sumDailyDataFromPreviousGrouping,
+} from './pipelines/groups/revenue';
 import { endOfDay, parse, startOfDay } from 'date-fns';
 import { PipelineStage } from 'mongoose';
 // import { dateParser } from '@/lib/utils/parser';
 import { fnsFormatDate } from '@/lib/formatter/date';
+import { type TimeZone } from '@/constant/timezone';
+import { addNormalizeData } from './pipelines/transforms/normalize';
+import { sortRevenue } from './pipelines/transforms/sort';
 
 const DEFAULT_DATE_FIELD = 'placed_at';
 
@@ -29,9 +37,10 @@ type Args = {
     organizationId: string;
     storeId: string;
   };
+  tz: TimeZone;
 };
 
-export default function aggregateSalesReport({
+export default function aggregateSalesReport1({
   filterBy = DEFAULT_DATE_FIELD,
   startDate,
   endDate,
@@ -45,7 +54,7 @@ export default function aggregateSalesReport({
     ],
     [dateFilter, startDate, endDate, filterBy],
     [orderStatusFilter, 'Selesai'],
-    [platformFilter, PLATFORMS_KV_WITH_LABEL.shopee.value]
+    [platformFilter, ORDER_PLATFORMS.shopee.value]
   );
 
   // console.log(
@@ -278,6 +287,30 @@ export default function aggregateSalesReport({
             timezone: '+07:00',
           },
         },
+
+        // revenue: '$order_subtotal',
+        // total_payment: '$total_payment',
+        // total_cost: '$total_product_cost',
+        // total_payout: '$released_amount',
+        // order_id: '$order_id',
+        // username: '$username',
+        // status: '$status',
+        // voucher_borne_by_seller: '$voucher_borne_by_seller',
+        // bundle_deal_discount_from_seller:
+        //   '$bundle_deal_discount_from_seller',
+        // shipping_cost_paid_by_buyer:
+        //   '$shipping_cost_paid_by_buyer',
+        // admin_fee: '$fee.admin_fee',
+        // processing_fee: '$fee.processing_fee',
+        // // total_profit: '$total_profit',
+        // total_profit: {
+        //   $subtract: [
+        //     '$released_amount',
+        //     {
+        //       $ifNull: ['$total_product_cost', 0],
+        //     },
+        //   ],
+        // },
       },
     },
     {
@@ -605,3 +638,34 @@ export default function aggregateSalesReport({
     },
   ] as PipelineStage[];
 }
+
+export const aggregateSalesReport = ({
+  filterBy = DEFAULT_DATE_FIELD,
+  startDate,
+  endDate,
+  tenantContext,
+  tz,
+}: Args): PipelineStage[] => {
+  const filters = mergeObject(
+    [
+      tenantFilter,
+      tenantContext.organizationId,
+      tenantContext.storeId,
+    ],
+    // [orderStatusFilter, 'Selesai'],
+    [platformFilter, ORDER_PLATFORMS.shopee.value],
+    [dateFilter, startDate, endDate, filterBy]
+  );
+
+  const pipelines = new AggregateBuilder()
+    .with(addNormalizeData(filterBy, tz))
+    .with(filters)
+    .with(groupByDateForDailyRevenue())
+    .with(sumDailyDataFromPreviousGrouping())
+    .with(metricsForRevenue())
+    .with(sortRevenue());
+
+  pipelines.debug();
+
+  return pipelines.build();
+};

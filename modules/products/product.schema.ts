@@ -1,9 +1,7 @@
 import { z } from 'zod';
 // import mongoose from 'mongoose';
-import { PLATFORMS } from '../constant';
-import { Types } from 'mongoose';
-
-const platforms = [...PLATFORMS] as const;
+// import { Types } from 'mongoose';
+import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 // const ObjectIdSchema = z.union([
 //   z.instanceof(Types.ObjectId),
@@ -58,7 +56,9 @@ export const VariantSchema = z.object({
 });
 
 export const ProductBaseSchema = z.object({
-  platform: z.enum(platforms, 'Platform tidak valid'),
+  platform: z
+    .enum(ORDER_PLATFORM_VALUES, 'Platform tidak valid')
+    .optional(),
   name: z.string().min(3, 'Nama minimal 3 karakter'),
   product_id: z.string().min(1, 'Product ID wajib diisi'),
   // key: z.string().optional(),
@@ -128,7 +128,11 @@ export const ProductIdParamsSchema = z.object({
 });
 
 export const ProductPlatformParamsSchema = z.object({
-  platform: z.string().min(1, 'Platform tidak valid'),
+  // platform: z.string().min(1, 'Platform tidak valid'),
+  platform: z.enum(
+    ORDER_PLATFORM_VALUES,
+    'Params "Platform" tidak valid'
+  ),
 });
 
 export const BulkUpdateStatusSchema = z.object({

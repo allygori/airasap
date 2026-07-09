@@ -10,7 +10,6 @@ import { APIError } from 'better-auth/api';
 
 // import mongoose from 'mongoose';
 // import { SessionModel } from '@/modules/sessions/session.model';
-// import { PLATFORMS } from '@/modules/constant';
 // import { db } from '@/lib/db/connection';
 
 export const storePlugin = () => {

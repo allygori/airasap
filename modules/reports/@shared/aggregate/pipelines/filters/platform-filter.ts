@@ -1,9 +1,6 @@
-import { PLATFORMS_KV_WITH_LABEL } from '../../../../../constant';
+import { OrderPlatform } from '@/constant/order-platform';
 
-export type TPlatform =
-  (typeof PLATFORMS_KV_WITH_LABEL)[keyof typeof PLATFORMS_KV_WITH_LABEL]['value'];
-
-export const platformFilter = (platform: TPlatform) => {
+export const platformFilter = (platform: OrderPlatform) => {
   return {
     $match: {
       platform: platform,

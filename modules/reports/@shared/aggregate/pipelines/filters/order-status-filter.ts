@@ -3,7 +3,7 @@ export const orderStatusFilter = (
 ) => {
   return {
     $match: {
-      // status: status,
+      status: status,
     },
   };
 };
