@@ -311,6 +311,21 @@ export class OrderService {
   }
 
   /**
+   * Count orders by platform
+   */
+  async countByPlatform(platform: OrderPlatform) {
+    try {
+      return await this.repository.countByPlatform(
+        platform
+      );
+    } catch (error: any) {
+      throw new Error(
+        `Gagal menghitung order: ${error.message}`
+      );
+    }
+  }
+
+  /**
    * Get active orders only
    */
   async getActive() {
@@ -390,14 +405,22 @@ export class OrderService {
         string,
         ParsedAllOrderRow[]
       >();
+      const productNames = new Set<string>();
       for (const order of orders) {
         const orderId = String(order.id);
+        const productName = String(order.productName);
 
         if (!ordersMap.has(orderId)) {
           ordersMap.set(orderId, []);
         }
         ordersMap.get(orderId)!.push(order);
+        productNames.add(productName);
       }
+
+      const products =
+        await this.productService.getProductsByNames([
+          ...productNames,
+        ]);
 
       let createdCount = 0;
       let updatedCount = 0;
@@ -405,6 +428,9 @@ export class OrderService {
         const order = group[0] || {};
 
         const orderItems = group.map((item) => {
+          const productName = (
+            String(item.productName) || ''
+          ).trim();
           const originalPrice = item.originalPrice
             ? Number(item.originalPrice)
             : 0;
@@ -414,35 +440,55 @@ export class OrderService {
           const discount =
             (priceAfterDiscount / originalPrice) * 100;
 
+          let product;
+          if (productName !== '') {
+            const fuseResult = new Fuse(products, {
+              keys: ['name'],
+              includeScore: true,
+            }).search(productName);
+
+            if (fuseResult.length > 0) {
+              product = fuseResult[0].item;
+            } else {
+              console.warn(
+                `[OrderService.massUploadAllOrderShopeeV1] fuse result for ${productName} not found`
+              );
+            }
+          } else {
+            console.warn(
+              `[OrderService.massUploadAllOrderShopeeV1] fuse search cancelled, productName is empty`
+            );
+          }
+
+          const variantCost = (
+            product?.variants || []
+          ).find((v) => v.name === productName);
+          const productCost =
+            product?.variants?.length === 1
+              ? product?.variants[0]?.default_cost || 0
+              : variantCost?.default_cost || 0;
+          const quantity = item?.quantity
+            ? Number(item.quantity)
+            : 1;
+          const returnedQuantity = item?.returnedQuantity
+            ? Number(item.returnedQuantity)
+            : 0;
+          // add new field in model: final_quantity
+          const finalQuantity = quantity - returnedQuantity;
+
           return {
-            // product: {
-            //   type: Types.ObjectId,
-            //   ref: 'Product',
-            //   required: true,
-            //   alias: 'productId',
-            // },
-            // product_cost: {
-            //   type: Number,
-            //   unique: true
-            // },
+            product: product?._id,
+            product_cost: productCost * finalQuantity,
             parent_sku: item.parentSku,
             sku_reference_number: item.skuReferenceNumber,
             product_name: item.productName,
             variation_name: item.variationName,
-            // product_key: {
-            //   type: String,
-            //   alias: 'productKey',
-            // },
-            product_cost: 0,
             original_price: originalPrice,
             discount: discount,
             price_after_discount: priceAfterDiscount,
-            quantity: item.quantity,
+            quantity: quantity,
             subtotal: item.orderSubtotal,
             returned_quantity: item.returnedQuantity,
-            // cogs: {
-            //   type: Number,
-            // },
           };
         });
 
@@ -638,34 +684,17 @@ export class OrderService {
             (priceAfterDiscount / originalPrice) * 100;
 
           return {
-            // product: {
-            //   type: Types.ObjectId,
-            //   ref: 'Product',
-            //   required: true,
-            //   alias: 'productId',
-            // },
-            // product_cost: {
-            //   type: Number,
-            //   unique: true
-            // },
+            // Don't update product and product_cost?
             parent_sku: item.parentSku,
             sku_reference_number: item.skuReferenceNumber,
             product_name: item.productName,
             variation_name: item.variationName,
-            // product_key: {
-            //   type: String,
-            //   alias: 'productKey',
-            // },
-            product_cost: 0,
             original_price: originalPrice,
             discount: discount,
             price_after_discount: priceAfterDiscount,
             quantity: item.quantity,
             subtotal: item.orderSubtotal,
             returned_quantity: item.returnedQuantity,
-            // cogs: {
-            //   type: Number,
-            // },
           };
         });
 
@@ -824,7 +853,7 @@ export class OrderService {
   /**
    * Enrich order data with released income data from shopee xlsx
    */
-  async enrichWithReleasedIncome(fileBuffer: ArrayBuffer) {
+  async enrichWithReleasedFunds(fileBuffer: ArrayBuffer) {
     try {
       const { orders, productIds } =
         await parseReleasedIncomeExcel(fileBuffer);
@@ -843,10 +872,10 @@ export class OrderService {
       const operations: AnyBulkWriteOperation<TOrder>[] =
         [];
       for await (const order of orders) {
-        console.log(
-          `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`,
-          JSON.stringify(order, null, 2)
-        );
+        // console.log(
+        //   `[OrderService.enrichWithReleasedFunds] Order ID: ${order.orderId} not found`,
+        //   JSON.stringify(order, null, 2)
+        // );
         const orderObj =
           await this.repository.findByOrderId(
             order.orderId
@@ -854,7 +883,7 @@ export class OrderService {
 
         if (!orderObj) {
           console.warn(
-            `[OrderService.enrichWithReleasedIncome] Order ID: ${order.orderId} not found`
+            `[OrderService.enrichWithReleasedFunds] Order ID: ${order.orderId} not found`
           );
           continue;
         }
@@ -891,12 +920,12 @@ export class OrderService {
               item = fuseResult[0].item as ItemFromExcel;
             } else {
               console.warn(
-                `[OrderService.enrichWithReleasedIncome] fuse result for ${productName} not found`
+                `[OrderService.enrichWithReleasedFunds] fuse result for ${productName} not found`
               );
             }
           } else {
             console.warn(
-              `[OrderService.enrichWithReleasedIncome] fuse search cancelled, orderObjItem.productName is empty`
+              `[OrderService.enrichWithReleasedFunds] fuse search cancelled, orderObjItem.productName is empty`
             );
           }
 
@@ -1000,21 +1029,6 @@ export class OrderService {
     } catch (error: any) {
       throw new Error(
         `Gagal melengkapi data order: ${error.message}`
-      );
-    }
-  }
-
-  /**
-   * Count orders by platform
-   */
-  async countByPlatform(platform: OrderPlatform) {
-    try {
-      return await this.repository.countByPlatform(
-        platform
-      );
-    } catch (error: any) {
-      throw new Error(
-        `Gagal menghitung order: ${error.message}`
       );
     }
   }

@@ -213,6 +213,95 @@ export const storePlugin = () => {
           // return ctx.json({ success: true });
         }
       ),
+      setActiveStoreAndOrganization: createAuthEndpoint(
+        '/store/set-active-store-and-organization',
+        {
+          method: 'POST',
+          use: [sessionMiddleware],
+          body: z.object({
+            organizationId: z.string(),
+            storeId: z.string().optional().nullable(),
+          }),
+          // body: {
+          //   organizationId: {
+          //     type: 'string',
+          //     required: true,
+          //   },
+          //   storeId: { type: 'string', required: true },
+          // },
+        },
+        async (ctx) => {
+          // ctx.context.db
+
+          let activeStoreId;
+          const sessionToken =
+            ctx.context.session.session.token;
+          const { organizationId, storeId } = ctx.body;
+
+          if (!sessionToken) {
+            return ctx.json({
+              success: false,
+              error: '[storePlugin] Unauthorized',
+            });
+          }
+
+          activeStoreId = storeId;
+
+          if (!activeStoreId) {
+            const stores =
+              await ctx.context.adapter.findMany({
+                model: 'store',
+                where: [
+                  {
+                    field: 'organization',
+                    operator: 'eq',
+                    value: organizationId,
+                  },
+                  {
+                    field: 'is_active',
+                    operator: 'eq',
+                    value: true,
+                  },
+                ],
+                limit: 1,
+              });
+
+            activeStoreId = (stores[0] as { id?: string })
+              ?.id;
+          }
+
+          if (!activeStoreId) {
+            throw new APIError('BAD_REQUEST', {
+              message: 'Failed to get activeStoreId',
+            });
+          }
+
+          const updatedDoc =
+            await ctx.context.adapter.update({
+              model: 'session',
+              where: [
+                { field: 'token', value: sessionToken },
+              ],
+              update: {
+                activeOrganizationId: organizationId,
+                // active_store: activeStoreId,
+                activeStoreId: activeStoreId,
+              },
+            });
+
+          if (!updatedDoc) {
+            throw new APIError('BAD_REQUEST', {
+              message: 'Failed to update session',
+            });
+          }
+
+          return ctx.json({
+            success: true,
+            data: updatedDoc,
+          });
+        }
+      ),
+
       // // Registers an internal endpoint: /api/auth/store
       // list: createAuthEndpoint(
       //   '/store',

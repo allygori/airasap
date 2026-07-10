@@ -91,7 +91,7 @@ export const POST = withValidation({}, async (request) => {
 
     const orderService = new OrderService(tenantContext);
     const result =
-      await orderService.enrichWithReleasedIncome(buffer);
+      await orderService.enrichWithReleasedFunds(buffer);
 
     return apiSuccess(
       {

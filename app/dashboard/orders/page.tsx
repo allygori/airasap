@@ -85,6 +85,7 @@ export default function OrderIndexPage() {
         columns={columns}
         searchFields={['order_id']}
         primarySearchField="order_id"
+        showCreateButton={false}
         createUrl="/dashboard/orders/create"
         createText="Create Order"
         isSortable={false}

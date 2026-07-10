@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 type CollectionHeaderProps = {
   title: string;
   count?: number;
+  showCreateButton?: boolean;
   createUrl?: string;
   createText?: string;
 };
@@ -15,6 +16,7 @@ type CollectionHeaderProps = {
 export function CollectionHeader({
   title,
   count,
+  showCreateButton,
   createUrl,
   createText = 'Create New',
 }: CollectionHeaderProps) {
@@ -26,7 +28,7 @@ export function CollectionHeader({
           <Badge variant="secondary">{count}</Badge>
         )}
       </div>
-      {createUrl && (
+      {showCreateButton && createUrl && (
         <div className="flex items-center gap-2">
           <Button
             variant="default"

@@ -272,7 +272,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                   value={formatDate(item.completed_at)}
                 />
                 <StatLine
-                  label="Pembayaran"
+                  label="Metode Pembayaran"
                   value={item.payment_method || '-'}
                 />
                 <StatLine
@@ -280,7 +280,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                   value={item.shipping_option || '-'}
                 />
                 <StatLine
-                  label="Pembayaran Buyer"
+                  label="Pembayaran Pembeli"
                   value={formatIDR(item.total_payment, {
                     fallback: 0,
                   })}

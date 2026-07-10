@@ -25,6 +25,7 @@ type DataTableShellProps<TData extends { _id: string }> = {
   columns: ColumnDef<TData, unknown>[];
   searchFields?: string[];
   primarySearchField?: string;
+  showCreateButton?: boolean;
   createUrl?: string;
   createText?: string;
   isSortable?: boolean;
@@ -40,6 +41,7 @@ export function DataTableShell<
   columns,
   searchFields,
   primarySearchField,
+  showCreateButton = true,
   createUrl,
   createText,
   isSortable = false,
@@ -275,6 +277,7 @@ export function DataTableShell<
           <CollectionHeader
             title={title}
             count={totalCount}
+            showCreateButton={showCreateButton}
             createUrl={createUrl}
             createText={createText}
           />

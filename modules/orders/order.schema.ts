@@ -23,7 +23,7 @@ export const OrderItemSchema = z.object({
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
   subtotal: z.number().int().optional(),
-  processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedIncome
+  processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedFunds
   // cogs: z.number().optional(), // replaced with product_cost_amount
   // product_cost: z
   //   .string()

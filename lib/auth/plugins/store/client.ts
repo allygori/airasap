@@ -22,6 +22,19 @@ export const storePluginClient = () => {
             }
           );
         },
+        setActiveStoreAndOrganization: async (body: {
+          organizationId: string;
+          storeId?: string | null;
+        }) => {
+          // Fires an internal fetch to your server-side custom endpoint
+          return await $fetch<{ success: boolean }>(
+            '/store/set-active-store-and-organization',
+            {
+              method: 'POST',
+              body,
+            }
+          );
+        },
       },
     }),
   } satisfies BetterAuthClientPlugin;
