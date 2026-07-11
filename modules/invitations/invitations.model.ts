@@ -3,23 +3,23 @@ import { Schema, model, models, Document } from 'mongoose';
 const ObjectId = Schema.Types.ObjectId;
 
 export type TInvitation = Document & {
-  organization: typeof ObjectId;
+  organizationId: typeof ObjectId;
   email: string;
   role?: string;
   status?: string;
-  expires_at?: Date;
+  expiresAt?: Date;
   inviter: typeof ObjectId;
-  deleted_at?: Date;
+  deletedAt?: Date;
 };
 
 const InvitationSchema = new Schema<TInvitation>(
   {
-    organization: {
+    organizationId: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
       index: true,
-      alias: 'organizationId',
+      // alias: 'organizationId',
     },
     email: {
       type: String,
@@ -31,9 +31,9 @@ const InvitationSchema = new Schema<TInvitation>(
     status: {
       type: String,
     },
-    expires_at: {
+    expiresAt: {
       type: Date,
-      alias: 'expiresAt',
+      // alias: 'expiresAt',
     },
     inviter: {
       type: Schema.Types.ObjectId,
@@ -41,17 +41,17 @@ const InvitationSchema = new Schema<TInvitation>(
       required: true,
       alias: 'inviterId',
     },
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const InvitationModel =

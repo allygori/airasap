@@ -2,20 +2,23 @@ import { BetterAuthOptions } from 'better-auth';
 
 export const accountConfig = {
   modelName: 'accounts',
-  fields: {
-    // accountId: 'account',
-
-    accountId: '_id',
-    userId: 'user',
-    providerId: 'provider',
-    // password: 'password',
-    createdAt: 'created_at',
-    updatedAt: 'updated_at',
-  },
+  // fields: {
+  //   userId: 'user_id',
+  //   providerId: 'provider_id',
+  //   accountId: 'account_id',
+  //   accessToken: 'access_token',
+  //   accessTokenExpiresAt: 'access_token_expires_at',
+  //   idToken: 'id_token',
+  //   refreshToken: 'refresh_token',
+  //   refreshTokenExpiresAt: 'refresh_token_expires_at',
+  //   createdAt: 'created_at',
+  //   updatedAt: 'updated_at',
+  // },
   additionalFields: {
-    deleted_at: {
+    deletedAt: {
       type: 'date',
       required: false,
+      fieldName: 'deleted_at',
     },
   },
 } satisfies BetterAuthOptions['account'];

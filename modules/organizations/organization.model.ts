@@ -13,9 +13,9 @@ import { OrganizationBaseDTO } from './organization.dto';
 
 export type TOrganization = Document &
   OrganizationBaseDTO & {
-    deleted_at?: Date | null;
-    created_at?: Date;
-    updated_at?: Date;
+    deletedAt?: Date | null;
+    createdAt?: Date;
+    updatedAt?: Date;
   };
 
 const OrganizationSchema = new Schema<TOrganization>(
@@ -50,17 +50,17 @@ const OrganizationSchema = new Schema<TOrganization>(
     // username: {
     //   type: String,
     // },
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const OrganizationModel =

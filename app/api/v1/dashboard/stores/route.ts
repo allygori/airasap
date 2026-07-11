@@ -77,11 +77,17 @@ export const POST = withValidation(
 
       const storeService = new StoreService(tenantContext);
       const body = validatedBody as CreateStoreDTO;
+
+      console.log(
+        'Create store body:',
+        JSON.stringify(body, null, 2)
+      );
+
       const newStore = await storeService.create(body);
 
       return apiSuccess(newStore, undefined, 201);
     } catch (error: any) {
-      console.error('[POST /stores]', error);
+      console.error('[POST /v1/dashboard/stores]', error);
 
       if (error.message?.includes('sudah ada')) {
         return apiError(

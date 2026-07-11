@@ -2,11 +2,11 @@ import { BetterAuthOptions } from 'better-auth';
 
 export const userConfig = {
   modelName: 'users',
-  // fields: {
-  //   emailVerified: 'email_verified',
-  //   createdAt: 'created_at',
-  //   updatedAt: 'updated_at',
-  // },
+  fields: {
+    emailVerified: 'email_verified',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
   additionalFields: {
     timezone: {
       type: 'string',

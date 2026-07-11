@@ -132,42 +132,42 @@ export const auth = betterAuth({
   verification: verificationConfig,
 
   // databaseHooks,
-  plugins: [
-    organization({
-      // 1. Plan for error when mapping fields to snake_case,
-      // create store client plugin to set active organization id
-      schema: {
-        organization: {
-          modelName: 'organizations',
-          // fields: {
-          //   // id: '_id', // REMOVE
-          //   createdAt: 'created_at',
-          // },
-        },
-        member: {
-          modelName: 'members',
-          // fields: {
-          //   // id: '_id', // REMOVE
-          //   // organizationId: 'organization', // REMOVE
-          //   organizationId: 'organization_id', // RENAME TO
-          //   // userId: 'user', // REMOVE
-          //   userId: 'user_id', // RENAME TO
-          //   createdAt: 'created_at',
-          //   updatedAt: 'updated_at',
-          // },
-        },
-        session: {
-          fields: {
-            // // id: '_id',
-            // // activeOrganizationId: 'active_organization', // REMOVE
-            // activeOrganizationId: 'active_organization_id', // RENAME TO
-          },
-        },
-      },
-    }),
-    admin(),
-    store(),
-  ],
+  // plugins: [
+  //   organization({
+  //     // 1. Plan for error when mapping fields to snake_case,
+  //     // create store client plugin to set active organization id
+  //     schema: {
+  //       organization: {
+  //         modelName: 'organizations',
+  //         fields: {
+  //           // id: '_id', // REMOVE
+  //           createdAt: 'created_at',
+  //         },
+  //       },
+  //       member: {
+  //         modelName: 'members',
+  //         fields: {
+  //           // id: '_id', // REMOVE
+  //           // organizationId: 'organization', // REMOVE
+  //           organizationId: 'organization_id', // RENAME TO
+  //           // userId: 'user', // REMOVE
+  //           userId: 'user_id', // RENAME TO
+  //           createdAt: 'created_at',
+  //           updatedAt: 'updated_at',
+  //         },
+  //       },
+  //       session: {
+  //         fields: {
+  //           // id: '_id',
+  //           // activeOrganizationId: 'active_organization', // REMOVE
+  //           activeOrganizationId: 'active_organization_id', // RENAME TO
+  //         },
+  //       },
+  //     },
+  //   }),
+  //   admin(),
+  //   store(),
+  // ],
 });
 
 // type Session = typeof auth.$Infer.Session;

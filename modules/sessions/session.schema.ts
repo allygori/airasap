@@ -1,14 +1,14 @@
 import z from 'zod';
 
 export const SessionBaseSchema = z.object({
-  active_organization: z
+  activeOrganizationId: z
     .string()
     .optional()
     .refine((val) => mongoose.isValidObjectId(val), {
       message: 'Mongoose ObjectId tidak valid',
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
-  user: z
+  userId: z
     .string()
     .optional()
     .refine((val) => mongoose.isValidObjectId(val), {
@@ -16,9 +16,9 @@ export const SessionBaseSchema = z.object({
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
   token: z.string(),
-  ip_address: z.string().optional(),
-  user_agent: z.string().optional(),
-  expires_at: z.string().optional(),
+  ipAddress: z.string().optional(),
+  userAgent: z.string().optional(),
+  expiresAt: z.string().optional(),
 });
 
 export const SessionSchema = SessionBaseSchema.extend({
@@ -29,7 +29,7 @@ export const SessionSchema = SessionBaseSchema.extend({
       message: 'Mongoose ObjectId tidak valid',
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
-  active_store: z
+  activeStoreId: z
     .string()
     .optional()
     .refine((val) => mongoose.isValidObjectId(val), {
@@ -38,9 +38,9 @@ export const SessionSchema = SessionBaseSchema.extend({
     .transform((val) => new mongoose.Types.ObjectId(val)),
   theme: z.string().optional(),
   language: z.string().optional(),
-  created_at: z.string().optional(),
-  updated_at: z.string().optional(),
-  deleted_at: z.string().nullable().optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+  deletedAt: z.string().nullable().optional(),
 });
 
 // export const GetLatestOrgAndStoreResponseSchema = z.object({

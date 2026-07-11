@@ -8,13 +8,20 @@ export const BaseAccountSchema = z.object({
   //   })
   //   .transform((val) => new mongoose.Types.ObjectId(val)),
   // account: z.string(),
-  user: z
+  accountId: z.string(),
+  // account_id: z
+  //   .string()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
+  userId: z
     .string()
     .refine((val) => mongoose.isValidObjectId(val), {
       message: 'Mongoose ObjectId tidak valid',
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
-  provider: z.string(),
+  providerId: z.string(),
   password: z.string(),
 });
 

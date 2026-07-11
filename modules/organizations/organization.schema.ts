@@ -1,6 +1,7 @@
 import z from 'zod';
 
 export const OrganizationBaseSchema = z.object({
+  organizationId: z.string(),
   name: z.string().min(1, 'Nama organisasi wajib diisi'),
   slug: z.string().min(1, 'Slug organisasi wajib diisi'),
   logo: z.string().optional(),
@@ -24,9 +25,9 @@ export const OrganizationSchema =
         message: 'Mongoose ObjectId tidak valid',
       })
       .transform((val) => new mongoose.Types.ObjectId(val)),
-    created_at: z.string().optional(),
-    updated_at: z.string().optional(),
-    deleted_at: z.string().nullable().optional(),
+    createdAt: z.string().optional(),
+    updatedAt: z.string().optional(),
+    deletedAt: z.string().nullable().optional(),
   });
 
 export const OrganizationResponseSchema =

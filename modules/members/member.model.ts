@@ -3,27 +3,27 @@ import { Schema, model, models, Document } from 'mongoose';
 const ObjectId = Schema.Types.ObjectId;
 
 export type TMember = Document & {
-  organization: typeof ObjectId;
-  user: typeof ObjectId;
+  organizationId: typeof ObjectId;
+  userId: typeof ObjectId;
   role: 'owner' | 'admin';
-  deleted_at?: Date;
+  deletedAt: Date;
 };
 
 const MemberSchema = new Schema<TMember>(
   {
-    organization: {
+    organizationId: {
       type: Schema.Types.ObjectId,
       ref: 'Organization',
       required: true,
       // index: true,
-      alias: 'organizationId',
+      // alias: 'organizationId',
     },
-    user: {
+    userId: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
       // index: true,
-      alias: 'userId',
+      // alias: 'userId',
     },
     // organization: {
     //   type: String,
@@ -37,17 +37,17 @@ const MemberSchema = new Schema<TMember>(
     },
 
     // additional fields
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const MemberModel =

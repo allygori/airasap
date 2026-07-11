@@ -3,17 +3,17 @@ import { BetterAuthOptions } from 'better-auth';
 // docs: https://better-auth.com/docs/concepts/session-management
 export const sessionConfig = {
   modelName: 'sessions',
-  // fields: {
-  //   // activeOrganizationId: 'active_organization', // REMOVE
-  //   activeOrganizationId: 'active_organization_id', // RENAME TO
-  //   // userId: 'user', // REMOVE
-  //   userId: 'user_id', // RENAME TO
-  //   expiresAt: 'expires_at',
-  //   ipAddress: 'ip_address',
-  //   userAgent: 'user_agent',
-  //   createdAt: 'created_at',
-  //   updatedAt: 'updated_at',
-  // },
+  fields: {
+    // activeOrganizationId: 'active_organization', // REMOVE
+    activeOrganizationId: 'active_organization_id', // RENAME TO
+    // userId: 'user', // REMOVE
+    userId: 'user_id', // RENAME TO
+    expiresAt: 'expires_at',
+    ipAddress: 'ip_address',
+    userAgent: 'user_agent',
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
   expiresIn: 60 * 60 * 24 * 7, // 7 days
   // updateAge: 60 * 60 * 24, // 1 day (every 1 day the session expiration is updated)
   // deferSessionRefresh: true,
@@ -31,9 +31,8 @@ export const sessionConfig = {
       fieldName: 'active_store',
     },
   },
-} satisfies BetterAuthOptions['session'];
-// & {
-//   fields: {
-//     activeOrganizationId: string;
-//   };
-// };
+} satisfies BetterAuthOptions['session'] & {
+  fields: {
+    activeOrganizationId: string;
+  };
+};

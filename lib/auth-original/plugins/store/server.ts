@@ -50,7 +50,7 @@ export const storePlugin = () => {
           activeStoreId: {
             type: 'string',
             required: false,
-            // fieldName: 'active_store',
+            fieldName: 'active_store',
             references: {
               model: 'store',
               field: 'id',
@@ -59,7 +59,7 @@ export const storePlugin = () => {
           activeOrganizationId: {
             type: 'string',
             required: false,
-            // fieldName: 'active_organization',
+            fieldName: 'active_organization',
             references: {
               model: 'organization',
               field: 'id',

@@ -24,52 +24,52 @@ import { SessionDTO } from './session.dto';
 
 export type TSession = Document &
   SessionDTO & {
-    active_store: Types.ObjectId;
+    activeStoreId: Types.ObjectId;
     theme?: string;
     language?: string;
-    deleted_at?: Date | null;
-    created_at?: Date;
-    updated_at?: Date;
+    deletedAt?: Date | null;
+    createdAt?: Date;
+    updatedAt?: Date;
   };
 
 const SessionSchema = new Schema<TSession>(
   {
-    active_organization: {
+    activeOrganizationId: {
       type: Types.ObjectId,
       ref: 'Organization',
       required: true,
-      alias: 'activeOrganizationId',
+      // alias: 'activeOrganizationId',
     },
-    user: {
+    userId: {
       type: Types.ObjectId,
       ref: 'User',
       required: true,
       index: true,
-      alias: 'userId',
+      // alias: 'userId',
     },
     token: {
       type: String,
       unique: true,
     },
-    ip_address: {
+    ipAddress: {
       type: String,
-      alias: 'ipAddress',
+      // alias: 'ipAddress',
     },
-    user_agent: {
+    userAgent: {
       type: String,
-      alias: 'userAgent',
+      // alias: 'userAgent',
     },
-    expires_at: {
+    expiresAt: {
       type: Date,
-      alias: 'expiresAt',
+      // alias: 'expiresAt',
     },
 
     // Custom fields
-    active_store: {
+    activeStoreId: {
       type: Types.ObjectId,
       ref: 'Store',
       required: true,
-      alias: 'activeStoreId',
+      // alias: 'activeStoreId',
     },
     theme: {
       type: String,
@@ -78,17 +78,17 @@ const SessionSchema = new Schema<TSession>(
       type: String,
     },
 
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const SessionModel =

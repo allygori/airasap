@@ -3,8 +3,8 @@ import { Schema, model, models, Document } from 'mongoose';
 export type TVerification = Document & {
   identifier?: string;
   value?: string;
-  expires_at?: Date;
-  deleted_at?: Date;
+  expiresAt?: Date;
+  deletedAt?: Date;
 };
 
 const VerificationSchema = new Schema<TVerification>(
@@ -16,21 +16,21 @@ const VerificationSchema = new Schema<TVerification>(
     value: {
       type: String,
     },
-    expires_at: {
+    expiresAt: {
       type: Date,
-      alias: 'expiresAt',
+      // alias: 'expiresAt',
     },
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const VerificationModel =

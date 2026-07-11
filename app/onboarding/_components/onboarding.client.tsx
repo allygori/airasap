@@ -115,6 +115,21 @@ export default function OnboardingClient({
           );
         }
 
+        // /**
+        //  * Update session to include activeStoreId
+        //  */
+        // const { error: errorUpdateSessionOrg } =
+        //   await authClient.updateSession({
+        //     activeOrganizationId: activeOrgId,
+        //   });
+
+        // if (errorUpdateSessionOrg) {
+        //   console.error(
+        //     'Failed to set update session for activeStoreId',
+        //     errorUpdateSessionOrg
+        //   );
+        // }
+
         /**
          * Create store
          */
@@ -152,18 +167,18 @@ export default function OnboardingClient({
         /**
          * Update session to include activeStoreId
          */
-        const { error: errorUpdateSession } =
+        const { error: errorUpdateSessionStore } =
           await authClient.updateSession({
             // active_store: newStore?._id || newStore?.id,
             activeStoreId: newStore?._id || newStore?.id,
-            language: 'id',
-            theme: 'system',
+            // language: 'id',
+            // theme: 'system',
           });
 
-        if (errorUpdateSession) {
+        if (errorUpdateSessionStore) {
           console.error(
             'Failed to set update session for activeStoreId',
-            errorUpdateSession
+            errorUpdateSessionStore
           );
         }
 

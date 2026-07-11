@@ -9,9 +9,9 @@ import { BaseAccountDTO } from './account.dto';
 
 export type TAccount = Document &
   BaseAccountDTO & {
-    deleted_at?: Date | null;
-    created_at?: Date;
-    updated_at?: Date;
+    deletedAt?: Date | null;
+    createdAt?: Date;
+    updatedAt?: Date;
   };
 
 // export type TAccount = Document & {
@@ -28,20 +28,26 @@ export type TAccount = Document &
 
 const AccountSchema = new Schema<TAccount>(
   {
-    // account: {
+    // account_id: {
     //   type: Types.ObjectId,
     //   required: true,
     //   unique: true,
     //   alias: 'accountId',
     // },
-    user: {
+    accountId: {
+      type: String,
+      required: true,
+      unique: true,
+      // alias: 'accountId',
+    },
+    userId: {
       type: Types.ObjectId,
       ref: 'User',
       required: true,
       // index: true,
-      alias: 'userId',
+      // alias: 'userId',
     },
-    provider: {
+    providerId: {
       type: String,
     },
     password: {
@@ -72,17 +78,17 @@ const AccountSchema = new Schema<TAccount>(
     //   type: String,
     // },
 
-    deleted_at: {
+    deletedAt: {
       type: Date,
-      alias: 'deletedAt',
-    },
-  },
-  {
-    timestamps: {
-      createdAt: 'created_at',
-      updatedAt: 'updated_at',
+      // alias: 'deletedAt',
     },
   }
+  // {
+  //   timestamps: {
+  //     createdAt: 'created_at',
+  //     updatedAt: 'updated_at',
+  //   },
+  // }
 );
 
 export const AccountModel =
