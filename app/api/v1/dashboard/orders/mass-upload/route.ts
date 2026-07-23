@@ -52,47 +52,53 @@ export const POST = withValidation({}, async (request) => {
       );
     }
 
-    const buffer = await file.arrayBuffer();
+    // const buffer = await file.arrayBuffer();
 
     await db.connect();
 
-    const crc32Checksum = calculateCRC32(buffer);
-    const sha256Filename = await calculateSHA256(buffer);
+    // const crc32Checksum = calculateCRC32(buffer);
+    // const sha256Filename = await calculateSHA256(buffer);
 
-    const uploadDir = path.join(process.cwd(), '.upload');
-    await fs.mkdir(uploadDir, { recursive: true });
+    // const uploadDir = path.join(process.cwd(), '.upload');
+    // await fs.mkdir(uploadDir, { recursive: true });
 
-    const ext = 'xlsx';
-    const diskFilename = `${sha256Filename}.${ext}`;
-    const storagePath = path.join(uploadDir, diskFilename);
+    // const ext = 'xlsx';
+    // const diskFilename = `${sha256Filename}.${ext}`;
+    // const storagePath = path.join(uploadDir, diskFilename);
 
-    await fs.writeFile(storagePath, Buffer.from(buffer));
+    // await fs.writeFile(storagePath, Buffer.from(buffer));
 
     const fileService = new FileService(tenantContext);
-    let fileDoc =
-      await fileService.getByFilename(sha256Filename);
+    let fileDoc = await fileService.createMassUploadFile(
+      file,
+      tenantContext.userId
+    );
+
+    console.log('fileDoc', fileDoc);
 
     // let fileDoc = await fileService FileModel.findOne({
     //   filename: sha256Filename,
     // });
 
     if (!fileDoc) {
-      fileDoc = await fileService.create({
-        filename: sha256Filename,
-        original_name: file.name,
-        mime_type:
-          file.type ||
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        file_type: FILE_TYPES_KV.DOC,
-        size: file.size,
-        url: `/upload/${diskFilename}`,
-        checksum: crc32Checksum,
-        storage_provider: 'local',
-        storage_path: storagePath,
-        uploaded_by: tenantContext.userId,
-      });
+      // fileDoc = await fileService.create({
+      //   filename: sha256Filename,
+      //   original_name: file.name,
+      //   mime_type:
+      //     file.type ||
+      //     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      //   file_type: FILE_TYPES_KV.DOC,
+      //   size: file.size,
+      //   url: `/upload/${diskFilename}`,
+      //   checksum: crc32Checksum,
+      //   storage_provider: 'local',
+      //   storage_path: storagePath,
+      //   uploaded_by: tenantContext.userId,
+      // });
+      throw new Error('Gagal mengunggah file');
     }
 
+    const buffer = await file.arrayBuffer();
     const orderService = new OrderService(tenantContext);
     const result =
       await orderService.massUploadAllOrderShopeeV1(buffer);

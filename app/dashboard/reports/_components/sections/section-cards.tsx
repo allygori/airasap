@@ -371,7 +371,7 @@ export function SectionCards({
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
-              Total Fee Proses Pesanan
+              Total Biaya Proses Pesanan
             </CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-2xl">
               {formatIDR(processingFee || 0)}

@@ -65,6 +65,20 @@ export const groupByDateForDailyRevenue = () => {
       },
       daily_order_ids: { $addToSet: '$order_id' },
       unique_buyers: { $addToSet: '$username' },
+      // daily_voucher_codes: {
+      //   $push: {
+      //     $cond: {
+      //       if: {
+      //         $eq: [
+      //           { $ifNull: ['$voucher_code', null] },
+      //           null,
+      //         ],
+      //       },
+      //       then: '$$REMOVE',
+      //       else: '$voucher_code',
+      //     },
+      //   },
+      // },
       daily_orders: {
         $push: {
           order_id: '$order_id',

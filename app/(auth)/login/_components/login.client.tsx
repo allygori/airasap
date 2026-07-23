@@ -117,6 +117,7 @@ export default function Login({ className }: LoginProps) {
       await authClient.signIn.social({
         provider: 'google',
         callbackURL: '/dashboard',
+        newUserCallbackURL: '/onboarding',
       });
     } catch (err) {
       setError('Gagal masuk dengan Google.');

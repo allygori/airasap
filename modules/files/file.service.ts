@@ -3,12 +3,21 @@
  * Handles business logic for file operations
  */
 
+import { put } from '@vercel/blob';
 import { FileRepository } from './file.repository';
 import {
   CreateFileDTO,
   QueryFilterFileDTO,
   UpdateFileDTO,
 } from './file.dto';
+import {
+  calculateCRC32,
+  calculateSHA256,
+} from '@/lib/file';
+import {
+  FILE_TYPES_KV,
+  STORAGE_PROVIDERS,
+} from './file.constant';
 
 export class FileService {
   private repository: FileRepository;
@@ -161,6 +170,11 @@ export class FileService {
     // }
   }
 
+  // /**
+  //  * Create mass upload from Excel File
+  //  */
+  // async create()
+
   /**
    * Update file
    */
@@ -283,7 +297,125 @@ export class FileService {
   /**
    * Get or create file
    */
-  async getOrCreate() {
-    /** @TODO implement */
+  async getOrCreateDocument({
+    file,
+    extension,
+    storagePath,
+    userId,
+    mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  }: {
+    file: File;
+    extension: string;
+    storagePath: string;
+    userId: string;
+    mimeType?: string;
+  }) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const sha256Filename = await calculateSHA256(buffer);
+
+      const existingFile = await this.repository.findOne({
+        filename: sha256Filename,
+      });
+
+      if (existingFile) {
+        return existingFile;
+      }
+
+      // const ext = 'xlsx';
+      // const storagePath = 'all-orders';
+      const diskFilename = `${sha256Filename}.${extension}`;
+      const crc32Checksum = calculateCRC32(buffer);
+      const blob = await put(
+        `${storagePath}/${diskFilename}`,
+        file,
+        {
+          access: 'private' /* or 'public' */,
+          allowOverwrite: true,
+          // addRandomSuffix: true,
+        }
+      );
+
+      if (!blob) {
+        throw new Error('Gagal mengunggah file');
+      }
+
+      console.log('getOrCreateDocument blob:', blob);
+
+      const newFile = await this.repository.create({
+        filename: diskFilename,
+        original_name: file.name,
+        mime_type: blob?.contentType || mimeType,
+        file_type: FILE_TYPES_KV.DOC,
+        size: file.size,
+        url: blob?.url,
+        checksum: crc32Checksum,
+        storage_provider: STORAGE_PROVIDERS.VERCEL.value,
+        storage_path: storagePath, // create directory per store or per organization or per context/scope?
+        uploaded_by: userId, // user id
+      });
+
+      return newFile;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal membuat file: ${error.message}`
+      );
+    }
+  }
+
+  async createMassUploadFile(file: File, userId: string) {
+    try {
+      const buffer = await file.arrayBuffer();
+      const sha256Filename = await calculateSHA256(buffer);
+
+      const existingFile = await this.repository.findOne({
+        filename: sha256Filename,
+      });
+
+      if (existingFile) {
+        return existingFile;
+      }
+
+      const ext = 'xlsx';
+      const storagePath = 'all-orders';
+      const diskFilename = `${sha256Filename}.${ext}`;
+      const crc32Checksum = calculateCRC32(buffer);
+      const blob = await put(
+        `${storagePath}/${diskFilename}`,
+        file,
+        {
+          access: 'private' /* or 'public' */,
+          allowOverwrite: true,
+          // addRandomSuffix: true,
+        }
+      );
+
+      if (!blob) {
+        throw new Error('Gagal mengunggah file');
+      }
+
+      console.log('createMassUploadFile blob:', blob);
+
+      const newFile = await this.repository.create({
+        filename: diskFilename,
+        original_name: file.name,
+        mime_type:
+          blob?.contentType ||
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        file_type: FILE_TYPES_KV.DOC,
+        size: file.size,
+        url: blob?.url,
+        checksum: crc32Checksum,
+        storage_provider: STORAGE_PROVIDERS.VERCEL.value,
+        storage_path: storagePath, // create directory per store or per organization or per context/scope?
+        uploaded_by: userId, // user id
+      });
+
+      return newFile;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal membuat file: ${error.message}`
+      );
+    }
   }
 }

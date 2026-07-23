@@ -136,7 +136,8 @@ export default function RegisterClient({
     try {
       await signIn.social({
         provider: 'google',
-        callbackURL: '/onboarding',
+        callbackURL: '/dashboard',
+        newUserCallbackURL: '/onboarding',
       });
     } catch (err) {
       setError('Gagal mendaftar dengan Google.');
