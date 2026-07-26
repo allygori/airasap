@@ -11,9 +11,18 @@ import { QueryFilter } from 'mongoose';
 export class StoreRepository extends BaseRepository<TStore> {
   constructor(tenantContext: {
     organizationId: string;
-    // storeId?: string;
+    storeId?: string;
   }) {
     super(StoreModel, tenantContext);
+  }
+
+  /**
+   * Find current store
+   */
+  async findCurrentStore() {
+    return await this.model
+      .findById(this.tenantContext.storeId)
+      .lean();
   }
 
   /**
@@ -35,7 +44,8 @@ export class StoreRepository extends BaseRepository<TStore> {
   async create(data: any) {
     return await this.model.create({
       ...data,
-      organizationId: this.tenantContext.organizationId,
+      // organizationId: this.tenantContext.organizationId,
+      organization: this.tenantContext.organizationId,
     });
   }
 

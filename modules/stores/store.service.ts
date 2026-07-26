@@ -15,9 +15,19 @@ export class StoreService {
 
   constructor(tenantContext: {
     organizationId: string;
-    // storeId?: string;
+    storeId?: string;
   }) {
     this.repository = new StoreRepository(tenantContext);
+  }
+
+  async getCurrentStore() {
+    try {
+      return await this.repository.findCurrentStore();
+    } catch (error: any) {
+      throw new Error(
+        `Gagal mendapatkan toko saat ini: ${error.message}`
+      );
+    }
   }
 
   /**

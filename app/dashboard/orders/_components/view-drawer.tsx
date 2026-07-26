@@ -53,7 +53,8 @@ interface ViewDrawerProps<T = any> {
   viewUrl?: string;
 }
 
-const snapPoints = ['148px', '355px', 1];
+// const snapPoints = ['148px', '355px', 1];
+const snapPoints = [0.3, 0.5, 0.75, 1];
 
 const StatLine = ({
   label,
@@ -84,7 +85,7 @@ export function ViewDrawer<T extends Record<string, any>>({
 }: ViewDrawerProps<T>) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<number | string | null>(
-    snapPoints[0]
+    snapPoints[3]
   );
 
   // Detection logic
@@ -105,7 +106,6 @@ export function ViewDrawer<T extends Record<string, any>>({
         ? ({
             snapPoints,
             activeSnapPoint: snap,
-            setActiveSnapPoint: setSnap,
             fadeFromIndex: 1,
           } as never)
         : {})}

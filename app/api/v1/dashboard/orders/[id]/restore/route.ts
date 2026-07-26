@@ -10,22 +10,12 @@ import {
   OrderIdParamsDTO,
 } from '@/modules/orders/order.dto';
 import { withValidation } from '@/lib/api/validate';
+import { getTenantContext } from '@/lib/api/tenant-context';
 import {
   apiSuccess,
   apiError,
   ErrorCodes,
 } from '@/lib/api/response';
-
-/**
- * Extract tenant context from request headers
- */
-function getTenantContext(req: Request) {
-  return {
-    organizationId:
-      req.headers.get('x-organization-id') || '',
-    storeId: req.headers.get('x-store-id') || undefined,
-  };
-}
 
 export const POST = withValidation(
   {
@@ -34,7 +24,7 @@ export const POST = withValidation(
   async (request, context) => {
     const validatedParams =
       context.validatedParams as OrderIdParamsDTO;
-    const tenantContext = getTenantContext(request);
+    const tenantContext = await getTenantContext();
 
     if (!tenantContext.organizationId) {
       return apiError(

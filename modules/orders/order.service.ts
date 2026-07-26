@@ -22,6 +22,7 @@ import {
 } from '@/lib/xlsx/shopee/v1/order/all';
 import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/order/released-funds';
 import { ProductService } from '../products/product.service';
+import { StoreService } from '@/modules/stores/store.service';
 import {
   ORDER_PLATFORMS,
   OrderPlatform,
@@ -31,10 +32,12 @@ import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 // import { saveJson } from '@/lib/file/save-json';
 import { AnyBulkWriteOperation } from 'mongoose';
 import { TOrder } from './order.model';
+import { parseToISOStringWithTimezone } from '@/lib/utils/date';
 
 export class OrderService {
   private repository: OrderRepository;
   private productService: ProductService;
+  private storeService: StoreService;
 
   constructor(tenantContext: {
     organizationId: string;
@@ -42,6 +45,7 @@ export class OrderService {
   }) {
     this.repository = new OrderRepository(tenantContext);
     this.productService = new ProductService(tenantContext);
+    this.storeService = new StoreService(tenantContext);
   }
 
   /**
@@ -426,6 +430,14 @@ export class OrderService {
       let updatedCount = 0;
       for (const [orderId, group] of ordersMap.entries()) {
         const order = group[0] || {};
+
+        // console.log(JSON.stringify(order, null, 2));
+        // console.log(
+        //   `Place at: ${parseToISOStringWithTimezone(
+        //     order.orderCreationTime,
+        //     timezone
+        //   )}`
+        // );
 
         const orderItems = group.map((item) => {
           const productName = (
@@ -863,7 +875,14 @@ export class OrderService {
           'Tidak ada data order yang valid di file Excel.'
         );
       }
+      const store =
+        await this.storeService.getCurrentStore();
 
+      if (!store) {
+        throw new Error(`Toko saat ini tidak ditemukan`);
+      }
+
+      const timezone = store?.timezone;
       const products =
         await this.productService.getByMultipleIds(
           productIds
@@ -976,6 +995,11 @@ export class OrderService {
           items.push(orderObjItem);
         }
 
+        console.log({
+          order,
+          releasedDate: order.releasedFundDate,
+        });
+
         $set.items = items;
         $set.fee = {
           admin_fee: order.adminFee,
@@ -1007,7 +1031,11 @@ export class OrderService {
         $set.total_product_cost = totalProductCost || 0;
         $set.total_profit =
           $set.released_amount - $set.total_product_cost;
-        $set.enriched_at = new Date().toISOString();
+        $set.released_funds_at = order.releasedFundDate;
+        $set.enriched_at = parseToISOStringWithTimezone(
+          new Date(),
+          timezone
+        );
 
         // console.log(JSON.stringify($set, null, 2));
 

@@ -30,6 +30,7 @@ export default function OnboardingClient({
       name: '',
       slug: '',
       firstStore: '',
+      timezone: 'Asia/Jakarta',
       description: '',
     } as ZodOnboardingInput,
     validationLogic: revalidateLogic(),
@@ -41,8 +42,14 @@ export default function OnboardingClient({
       setError(null);
 
       let activeOrgId;
-      const { logo, name, slug, firstStore, description } =
-        value;
+      const {
+        logo,
+        name,
+        slug,
+        firstStore,
+        timezone,
+        description,
+      } = value;
 
       try {
         /**
@@ -60,8 +67,6 @@ export default function OnboardingClient({
           });
 
         activeOrgId = newOrg?.id;
-
-        console.log({ activeOrgId });
 
         if (
           createOrgError &&
@@ -144,6 +149,7 @@ export default function OnboardingClient({
               // organization: newOrg.id,
               name: firstStore || newOrg?.name || '',
               platform: ORDER_PLATFORMS.shopee.value,
+              timezone: timezone,
             }),
           }
         );

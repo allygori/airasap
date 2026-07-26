@@ -119,7 +119,10 @@ export const auth = betterAuth({
   //   modelName: 'accounts',
   //   accountLinking
   // },
-
+  trustedOrigins: [
+    'http://localhost:3000',
+    'http://10.18.93.146:3000',
+  ],
   advanced: {
     database: {
       generateId: false,

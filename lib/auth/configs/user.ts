@@ -13,11 +13,11 @@ export const userConfig = {
       required: false,
       defaultValue: false,
     },
-    timezone: {
-      type: 'string',
-      required: false,
-      defaultValue: 'Asia/Jakarta',
-    },
+    // timezone: {
+    //   type: 'string',
+    //   required: false,
+    //   defaultValue: 'Asia/Jakarta',
+    // },
     // lang: {
     //   type: 'string',
     //   required: false,

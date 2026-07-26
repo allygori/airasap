@@ -1,5 +1,9 @@
 import { Schema, model, models, Document } from 'mongoose';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
+import {
+  type TimeZone,
+  TIMEZONE_VALUES,
+} from '@/constant/timezone';
 
 const ObjectId = Schema.Types.ObjectId;
 
@@ -8,6 +12,7 @@ export type TStore = Document & {
   user: typeof ObjectId;
   platform: (typeof ORDER_PLATFORM_VALUES)[number];
   name: string;
+  timezone: TimeZone;
   is_active: boolean;
   deleted_at?: Date;
 };
@@ -35,11 +40,18 @@ const StoreSchema = new Schema<TStore>(
       type: String,
       required: true,
     },
+    timezone: {
+      type: String,
+      enum: TIMEZONE_VALUES,
+      required: false,
+      default: 'Asia/Jakarta',
+    },
     is_active: {
       type: Boolean,
       default: true,
       alias: 'isActive',
     },
+
     deleted_at: {
       type: Date,
       alias: 'deletedAt',

@@ -199,23 +199,23 @@ const ReportClient = () => {
 
   return (
     <div className="min-h-screen w-full">
-      <header className="animate-in fade-in flex flex-1 flex-row items-center justify-between space-y-4 p-4 duration-700 md:p-6">
+      <header className="animate-in fade-in flex flex-col justify-between space-y-4 p-4 duration-700 sm:flex-1 sm:flex-row sm:items-center sm:p-6">
         {/* <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end"> */}
-        <div className="flex flex-row flex-wrap items-center">
+        <div className="flex flex-row flex-wrap sm:items-center">
           <ZapIcon className="mr-2 size-7" />
           <h1 className="m-0 text-xl font-bold tracking-normal text-slate-900 md:text-2xl dark:text-white">
             Sales Overview
           </h1>
           {/* </div> */}
         </div>
-        <div className="w-6/12">
+        <div className="w-full sm:w-6/12">
           <form
             onSubmit={(e) => {
               e.preventDefault();
               e.stopPropagation();
               form.handleSubmit();
             }}
-            className="flex w-full flex-row items-center justify-end gap-6 lg:flex-row"
+            className="flex w-full flex-col gap-2 md:flex-row md:items-center md:justify-end md:gap-6 lg:flex-row"
           >
             <div className="border-muted-foreground/20 flex flex-row items-center rounded-sm border px-2 py-1">
               <p className="text-muted-foreground/90 mr-2 w-full text-xs font-light">

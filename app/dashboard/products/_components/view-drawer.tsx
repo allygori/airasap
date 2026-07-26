@@ -27,7 +27,7 @@ import {
   ShoppingBagIcon,
   HashIcon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type MediaType = {
   url: string;
@@ -48,7 +48,8 @@ interface ViewDrawerProps<T = any> {
   viewUrl?: string;
 }
 
-const snapPoints = ['148px', '355px', 1];
+// const snapPoints = ['148px', '355px', 1];
+const snapPoints = [0.3, 0.5, 0.75, 1];
 
 export function ViewDrawer<T extends Record<string, any>>({
   item,
@@ -58,8 +59,12 @@ export function ViewDrawer<T extends Record<string, any>>({
 }: ViewDrawerProps<T>) {
   const isMobile = useIsMobile();
   const [snap, setSnap] = useState<number | string | null>(
-    snapPoints[0]
+    snapPoints[3]
   );
+
+  // useEffect(() => {
+  //   setSnap(0.5);
+  // }, []);
 
   // Detection logic
   const isPost = 'title' in item && 'content' in item;
@@ -79,7 +84,7 @@ export function ViewDrawer<T extends Record<string, any>>({
         ? ({
             snapPoints,
             activeSnapPoint: snap,
-            setActiveSnapPoint: setSnap,
+            // setActiveSnapPoint: setSnap,
             fadeFromIndex: 1,
           } as never)
         : {})}
@@ -92,15 +97,6 @@ export function ViewDrawer<T extends Record<string, any>>({
       >
         <div className="flex max-w-full min-w-0 flex-1 flex-col overflow-hidden">
           <DrawerHeader className="min-w-0 shrink-0 gap-1 border-b pb-4">
-            {/* <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
-              <FileText className="size-4 shrink-0 text-blue-500" />
-              <Badge
-                variant="outline"
-                className="text-tiny h-5 shrink-0 truncate font-bold tracking-tighter uppercase"
-              >
-                Product
-              </Badge>
-            </div> */}
             <div className="mb-1 flex min-w-0 items-center gap-2 overflow-hidden">
               <ShoppingBagIcon className="size-4 shrink-0 text-[#EE4D2D]" />
               <Badge
@@ -120,29 +116,6 @@ export function ViewDrawer<T extends Record<string, any>>({
           </DrawerHeader>
 
           <div className="scrollbar-hide min-h-0 min-w-0 flex-1 space-y-6 overflow-x-hidden overflow-y-auto p-4">
-            {/* Visual Preview for Post or Media */}
-            {/* {(isPost || isMedia) && (
-              <div className="bg-muted group relative aspect-video w-full overflow-hidden rounded-xl border shadow-sm">
-                <Image
-                  src={
-                    isMedia
-                      ? item.url
-                      : (
-                          item.featured_image as unknown as MediaType
-                        )?.url || ''
-                  }
-                  alt={title}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {!isMedia && !item.featured_image && (
-                  <div className="text-muted-foreground flex h-full items-center justify-center text-xs italic">
-                    No preview image available
-                  </div>
-                )}
-              </div>
-            )} */}
-
             <section className="bg-muted/30 border-muted-foreground/20 flex min-w-0 flex-col rounded-xl border border-dashed px-3 py-4">
               <h2 className="text-foreground/80 flex items-center gap-1.5 text-xs leading-normal font-bold tracking-widest uppercase">
                 {/* <HashIcon className="size-3" /> */}
@@ -202,12 +175,7 @@ export function ViewDrawer<T extends Record<string, any>>({
                   }
                 >
                   <Edit2 className="mr-2 size-4" />
-                  Edit{' '}
-                  {isPost
-                    ? 'Content'
-                    : isMedia
-                      ? 'Asset'
-                      : 'Details'}
+                  Edit Details
                 </Button>
               )}
               {viewUrl && item.slug && (

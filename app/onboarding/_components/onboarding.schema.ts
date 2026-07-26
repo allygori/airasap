@@ -1,3 +1,4 @@
+import { TIMEZONE_VALUES } from '@/constant/timezone';
 import { z } from 'zod';
 
 export const ZodOnboardingSchema = z.object({
@@ -7,6 +8,10 @@ export const ZodOnboardingSchema = z.object({
   firstStore: z
     .string()
     .min(5, 'Nama toko pertama wajib diisi.'),
+  timezone: z.enum(
+    TIMEZONE_VALUES,
+    'Timezone wajib diisi.'
+  ),
   description: z.string(),
 });
 

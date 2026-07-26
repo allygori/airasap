@@ -62,8 +62,10 @@ export default function Login({ className }: LoginProps) {
         }
 
         // 1. Fetch existing organizations
-        const { data: orgs } =
+        const { data: organizations } =
           await authClient.organization.list();
+
+        const orgs = organizations?.filter(Boolean);
 
         if (!orgs || orgs.length === 0) {
           router.push('/onboarding');

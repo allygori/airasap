@@ -17,7 +17,7 @@ export default function ProductIndexPage() {
 
   return (
     <>
-      <div className="animate-in fade-in flex flex-1 flex-row justify-between space-y-4 p-4 duration-700 md:p-6">
+      <div className="animate-in fade-in flex flex-col justify-between space-y-4 p-4 duration-700 md:flex-1 md:flex-row md:p-6">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div className="space-y-1.5">
             <div className="text-primary animate-in slide-in-from-left-4 flex items-center gap-2 text-xs font-bold tracking-[0.2em] uppercase duration-500">
@@ -28,7 +28,7 @@ export default function ProductIndexPage() {
               Products
             </h1>
             <p className="max-w-lg font-medium text-slate-500 dark:text-slate-400">
-              Manage Title, COGS and many.
+              Kelola rincian produk
             </p>
           </div>
         </div>

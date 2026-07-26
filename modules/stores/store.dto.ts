@@ -1,47 +1,11 @@
 import { z } from 'zod';
-import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
+import {
+  CreateStoreSchema,
+  UpdateStoreSchema,
+  StoreFilterSchema,
+} from './store.schema';
 
-/**
- * Skema untuk pembuatan store baru (POST)
- */
-export const CreateStoreSchema = z.object({
-  // organization: z.string().min(1, 'Organisasi wajib diisi'),
-  // user: z.string().min(1, 'Original name wajib diisi'),
-  platform: z.enum(ORDER_PLATFORM_VALUES),
-  name: z.string().min(1, 'Nama toko wajib diisi'),
-});
-
-/**
- * Skema untuk pembaruan store (PATCH/PUT) - Semua field opsional
- */
-export const UpdateStoreSchema =
-  CreateStoreSchema.partial();
-
-/**
- * Skema untuk query filter
- */
-export const StoreFilterSchema = z.object({
-  is_active: z.preprocess((value) => {
-    if (value === 'true' || value === true) return true;
-    if (value === 'false' || value === false) return false;
-    return undefined;
-  }, z.boolean().optional()),
-  search: z.string().optional(),
-  page: z.preprocess((value) => {
-    if (typeof value === 'string' && value.length) {
-      const parsed = Number(value);
-      return Number.isNaN(parsed) ? value : parsed;
-    }
-    return value;
-  }, z.number().int().positive().optional().default(1)),
-  limit: z.preprocess((value) => {
-    if (typeof value === 'string' && value.length) {
-      const parsed = Number(value);
-      return Number.isNaN(parsed) ? value : parsed;
-    }
-    return value;
-  }, z.number().int().positive().optional().default(10)),
-});
+export * from './store.schema';
 
 /**
  * Inferred TypeScript types dari Zod

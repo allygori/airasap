@@ -4,6 +4,7 @@ import { Alert } from '@/components/ui/alert';
 import { FieldGroup } from '@/components/ui/field';
 import { withForm } from '@/components/form/form.hook';
 import { ZodOnboardingInput } from './onboarding.schema';
+import { TIMEZONES } from '@/constant/timezone';
 
 type FormProps = {
   error?: string | null;
@@ -15,6 +16,7 @@ const OnboardingForm = withForm({
     name: '',
     slug: '',
     firstStore: '',
+    timezone: 'Asia/Jakarta',
     description: '',
   } as ZodOnboardingInput,
   props: {
@@ -62,7 +64,7 @@ const OnboardingForm = withForm({
             children={(field) => {
               return (
                 <field.TextField
-                  label="Slug"
+                  label="Slug Organisasi"
                   placeholder="acme-inc"
                   // disabled={true}
                 />
@@ -81,6 +83,18 @@ const OnboardingForm = withForm({
                 />
               );
             }}
+          />
+
+          <form.AppField
+            name="timezone"
+            children={(field) => (
+              <field.SelectField
+                label="Timezone"
+                multiple={false}
+                disabled={false}
+                items={Object.values(TIMEZONES)}
+              />
+            )}
           />
 
           <form.AppField
