@@ -14,7 +14,7 @@ export const orderItemSchema = z.object({
   processing_fee: z.number().optional(),
   cogs: z.number().optional(),
   product_cost: z.string().optional(),
-  product_cost_amount: z.number().optional(),
+  // product_cost_amount: z.number().optional(),
 });
 
 export const orderAddressSchema = z.object({

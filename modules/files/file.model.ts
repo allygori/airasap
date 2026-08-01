@@ -63,7 +63,7 @@ const FileSchema = new Schema<TFile>(
     },
     filename: {
       type: String,
-      unique: true,
+      // unique: true,
       required: true,
     },
     original_name: {

@@ -195,6 +195,7 @@ function EditFormWrapper({
         quantity: item.quantity ?? 1,
         returned_quantity: item.returned_quantity ?? 0,
         processing_fee: item.processing_fee ?? 0,
+        product_cost: item.product_cost ?? 0,
         // product_cost_amount: item.product_cost_amount ?? 0,
       })),
     };
