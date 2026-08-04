@@ -943,12 +943,12 @@ export class OrderService {
                 item = fuseResult[0].item as ItemFromExcel;
               } else {
                 console.warn(
-                  `[OrderService.enrichWithReleasedFunds] fuse result for ${productName} not found`
+                  `[OrderService.enrichWithReleasedFunds v2] fuse result for ${productName} not found`
                 );
               }
             } else {
               console.warn(
-                `[OrderService.enrichWithReleasedFunds] fuse search cancelled, orderObjItem.productName is empty`
+                `[OrderService.enrichWithReleasedFunds v2] fuse search cancelled, orderObjItem.productName is empty`
               );
             }
 
@@ -1048,44 +1048,287 @@ export class OrderService {
     };
 
     const v2 = async (ab: ArrayBuffer) => {
-      const { orders } = await releasedFundsV2parser(ab);
+      try {
+        const { orders, productIds } =
+          await releasedFundsV2parser(ab);
 
-      if ((orders || []).length === 0) {
-        // throw new Error(
-        //   'Tidak ada data order yang valid di file Excel.'
-        // );
-        console.warn(
-          'Tidak ada data order yang valid di file Excel.'
-        );
-        return true;
-      }
-      const store =
-        await this.storeService.getCurrentStore();
+        console.log({ length: orders.length, productIds });
 
-      if (!store) {
-        throw new Error(`Toko saat ini tidak ditemukan`);
-      }
-
-      const operations: AnyBulkWriteOperation<TOrder>[] =
-        [];
-
-      for (const order of orders) {
-        const orderObj =
-          await this.repository.findByOrderId(
-            String(order.orderId)
-          );
-
-        if (!orderObj) {
+        if ((orders || []).length === 0) {
+          // throw new Error(
+          //   'Tidak ada data order yang valid di file Excel.'
+          // );
           console.warn(
-            `[OrderService.enrichWithReleasedFunds] Order ID: ${order.orderId} not found`
+            'Tidak ada data order yang valid di file Excel.'
           );
-          continue;
+          return true;
+        }
+        const store =
+          await this.storeService.getCurrentStore();
+
+        if (!store) {
+          throw new Error(`Toko saat ini tidak ditemukan`);
         }
 
-        /**
-         * @TODO update order, requirements create parser for all and completed order v2. Flow need changed!
-         */
+        const products =
+          await this.productService.getByMultipleIds(
+            productIds
+          );
+        const operations: AnyBulkWriteOperation<TOrder>[] =
+          [];
+
+        for (const order of orders) {
+          const orderObj =
+            await this.repository.findByOrderId(
+              String(order.orderId)
+            );
+
+          console.log({ orderObjId: orderObj?.order_id });
+
+          if (!orderObj) {
+            console.warn(
+              `[OrderService.enrichWithReleasedFunds v2] Order ID: ${order.orderId} not found`
+            );
+            continue;
+          }
+
+          /**
+           * @TODO update order, requirements create parser for all and completed order v2. Flow need changed!
+           */
+          const orderObjItems = orderObj?.items || [];
+          const $set: Record<string, any> = {};
+          const items = [];
+          let totalProductCost = 0;
+
+          // for loop items?
+          for (let i = 0; i < orderObjItems.length; i++) {
+            const orderObjItem = orderObjItems[i];
+            const productName = (
+              orderObjItem.product_name || ''
+            ).trim();
+
+            type ItemFromExcel = {
+              number: number;
+              // rowType: string;
+              // orderId: string;
+              productId: string;
+              productName: string;
+              productPrice: number;
+              adminFee: number;
+              orderProcessingFee: number;
+            };
+
+            let item: ItemFromExcel | undefined;
+            if (productName !== '') {
+              const fuseResult = new Fuse(order.items, {
+                keys: ['productName'],
+                includeScore: true,
+              }).search(productName);
+
+              if (fuseResult.length > 0) {
+                item = fuseResult[0].item as ItemFromExcel;
+              } else {
+                console.warn(
+                  `[OrderService.enrichWithReleasedFunds v2] fuse result for ${productName} not found`
+                );
+              }
+            } else {
+              console.warn(
+                `[OrderService.enrichWithReleasedFunds v2] fuse search cancelled, orderObjItem.productName is empty`
+              );
+            }
+            const product = products.find(
+              (p) => p.product_id === item?.productId
+            );
+
+            // const product = await this.productService.getProductByProductId();
+
+            const name =
+              orderObjItem?.variation_name ||
+              orderObjItem?.product_name;
+            const variantCost = (
+              product?.variants || []
+            ).find((v) => v.name === name);
+            const productCost =
+              product?.variants?.length === 1
+                ? product?.variants[0]?.default_cost || 0
+                : variantCost?.default_cost || 0;
+
+            orderObjItem.product = product?._id;
+            orderObjItem.product_id = item?.productId;
+            orderObjItem.product_cost =
+              productCost * (orderObjItem?.quantity || 1);
+            orderObjItem.profit =
+              (orderObjItem?.price_after_discount || 0) -
+              productCost; // price_after_discount not included fees, remove?
+            // orderObjItem.product_cost =
+            //   defaultCost?.default_cost || 0;
+            orderObjItem.processing_fee =
+              item?.orderProcessingFee || 0;
+            // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+            totalProductCost =
+              totalProductCost + orderObjItem.product_cost;
+
+            items.push(orderObjItem);
+          }
+
+          const sellerSponsoredVoucher =
+            order.sellerSponsoredVoucher
+              ? Number(order.sellerSponsoredVoucher)
+              : 0;
+          const sellerSponsoredCoinCashback =
+            order.sellerSponsoredCoinCashback
+              ? Number(order.sellerSponsoredCoinCashback)
+              : 0;
+          const productDiscountFromShopee =
+            order.productDiscountFromShopee
+              ? Number(order.productDiscountFromShopee)
+              : 0;
+          const sellerSponsoredCoFundVoucher =
+            order.sellerSponsoredCoFundVoucher
+              ? Number(order.sellerSponsoredCoFundVoucher)
+              : 0;
+          const sellerSponsoredCoFundCoinCashback =
+            order.sellerSponsoredCoFundCoinCashback
+              ? Number(
+                  order.sellerSponsoredCoFundCoinCashback
+                )
+              : 0;
+          const totalVouchersAndDiscounts =
+            sellerSponsoredVoucher +
+            sellerSponsoredCoinCashback +
+            productDiscountFromShopee +
+            sellerSponsoredCoFundVoucher +
+            sellerSponsoredCoFundCoinCashback;
+
+          const adminFee = order.adminFee
+            ? Number(order.adminFee)
+            : 0;
+          const orderProcessingFee =
+            order.orderProcessingFee
+              ? Number(order.orderProcessingFee)
+              : 0;
+          const totalPlatformFee =
+            adminFee + orderProcessingFee;
+
+          const totalGOXFee = order.GOXFee
+            ? Number(order.GOXFee)
+            : 0;
+
+          const AMSServiceFee = order.AMSServiceFee
+            ? Number(order.AMSServiceFee)
+            : 0;
+          const campaignFee = order.campaignFee
+            ? Number(order.campaignFee)
+            : 0;
+          const AMSCommissionFee = order.AMSCommissionFee
+            ? Number(order.AMSCommissionFee)
+            : 0;
+          const autoTopUpFeeFromIncome =
+            order.autoTopUpFeeFromIncome
+              ? Number(order.autoTopUpFeeFromIncome)
+              : 0;
+          const totalPromotionFee =
+            AMSServiceFee +
+            campaignFee +
+            AMSCommissionFee +
+            autoTopUpFeeFromIncome;
+
+          const otherFee = order.otherFee
+            ? Number(order.otherFee)
+            : 0;
+          const transactionFee = order.transactionFee
+            ? Number(order.transactionFee)
+            : 0;
+          const fbsFee = order.fbsFee
+            ? Number(order.fbsFee)
+            : 0;
+          const taxPPH22 = order.taxPPH22
+            ? Number(order.taxPPH22)
+            : 0;
+          const totalOtherFee =
+            otherFee + transactionFee + fbsFee + taxPPH22;
+
+          $set.items = items;
+          $set.fee = {
+            admin_fee: order.adminFee,
+            processing_fee: order.orderProcessingFee,
+            affiliate_fee: order.AMSCommissionFee,
+            service_fee: order.serviceFee,
+            // shipping_saver_program_fee:
+            //   order.shippingSaverProgramFee,
+            transaction_fee: order.transactionFee,
+            campaign_fee: order.campaignFee,
+            auto_top_up_fee_from_income:
+              order.autoTopUpFeeFromIncome,
+            return_shipping_fee: order.returnShippingFee,
+            return_to_sender_shipping_fee:
+              order.returnShippingFee,
+            shipping_fee_refund: order.shippingFeeRefund,
+          };
+
+          const releasedFundsAmount =
+            Number(order.productPrice) +
+            (totalVouchersAndDiscounts +
+              totalPlatformFee +
+              totalGOXFee +
+              totalPromotionFee +
+              totalOtherFee);
+          console.log({
+            orderId: orderObj.order_id,
+            releasedFundsAmount,
+            productPrice: order.productPrice,
+            totalVouchersAndDiscounts,
+            totalPlatformFee,
+            totalGOXFee,
+            totalPromotionFee,
+            totalOtherFee,
+          });
+          $set.released_amount = releasedFundsAmount || 0;
+          $set.shipping_cost_paid_by_buyer =
+            order.shippingCostPaidByBuyer || 0;
+          $set.shipping_cost_discount_by_logistics =
+            order.shippingCostDiscountFromLogistics || 0;
+          // $set.shipping_cost_forwarded_by_shopee =
+          //   order.shippingCostForwardedByShopee || 0;
+          $set.free_shipping_promo_from_seller =
+            order.freeShippingPromoFromSeller || 0;
+          $set.compensation = order.compensation || 0;
+          $set.voucher_code = order.voucherCode || null;
+          $set.total_product_cost = totalProductCost || 0;
+          $set.total_profit =
+            $set.released_amount - $set.total_product_cost;
+          $set.released_funds_at = order.releasedFundDate;
+          $set.enriched_at = new Date();
+          // $set.enriched_at = parseToISOStringWithTimezone(
+          //   new Date(),
+          //   timezone
+          // );
+
+          // console.log(JSON.stringify($set, null, 2));
+
+          operations.push({
+            updateOne: {
+              filter: { order_id: String(order.orderId) },
+              update: { $set },
+              upsert: true,
+            },
+          });
+        }
+
+        const result =
+          await this.repository.bulkWrite(operations);
+
+        return result;
+      } catch (error: any) {
+        throw new Error(
+          `Gagal melengkapi data order: ${error.message}`
+        );
       }
+
+      // totalProductCost = 0;
+      // }
     };
 
     try {

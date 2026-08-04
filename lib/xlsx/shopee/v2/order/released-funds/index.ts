@@ -16,12 +16,14 @@ const VERSION = 2;
 export default function parse(buffer: ArrayBuffer): {
   version: number;
   orders: ParsedOrder[];
+  productIds: string[];
 } {
   const incomeRows = incomeParser(buffer);
   const sellerFeeRows = sellerFeeParser(buffer);
 
   // const orders = [];
   const ordersMap = new Map<string, ParsedOrder>();
+  const productIds = new Set<string>();
   for (const row of incomeRows) {
     const rowType = String(row.rowType ?? '').toLowerCase();
     const orderId = String(row.orderId ?? '');
@@ -45,6 +47,9 @@ export default function parse(buffer: ArrayBuffer): {
 
       existing.items.push(row as ParsedIncomeRow);
       ordersMap.set(orderId, existing);
+      if (row.productId !== '-') {
+        productIds.add(String(row.productId));
+      }
     } else {
       console.warn(
         `Can't identified rowType: ${rowType} - ${orderId}`
@@ -120,5 +125,6 @@ export default function parse(buffer: ArrayBuffer): {
   return {
     version: VERSION,
     orders: [...ordersMap.values()],
+    productIds: [...productIds],
   };
 }

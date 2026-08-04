@@ -3,11 +3,11 @@ import path from 'path';
 import reader from './reader';
 import parser from './parser';
 
-// How to run: pnpm test:watch -- lib/xlsx/shopee/v1/order/all/parser.test.ts
+// How to run: pnpm test:watch -- lib/xlsx/shopee/v2/order/all/parser.test.ts
 describe('Shopee All Order Parser', () => {
   const excelPath = path.join(
     process.cwd(),
-    '.data/2026/2026-06--june-order-all--20260601_20260630.xlsx'
+    '.data/2026/2026-07--july--order-all--20260701_20260731.xlsx'
   );
 
   it('should parse the mock excel file correctly with field mapping', () => {
@@ -25,7 +25,7 @@ describe('Shopee All Order Parser', () => {
     expect(Array.isArray(result)).toBe(true);
     expect(result.length).toBeGreaterThan(0);
 
-    const testOrderId = '26060234FPM7HD';
+    const testOrderId = '260714MGMYXKMH';
     const order = result.find(
       (row) => row.id === testOrderId
     );

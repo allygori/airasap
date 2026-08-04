@@ -15,6 +15,7 @@ export const OrderItemSchema = z.object({
   parent_sku: z.string().optional(),
   sku_reference_number: z.string().optional(),
   product_name: z.string().optional(),
+  product_id: z.string().optional(),
   variation_name: z.string().optional(),
   // product_key: z.string().optional(),
   original_price: z.number().int().optional(),

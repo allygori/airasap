@@ -51,6 +51,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: String,
       alias: 'productName',
     },
+    product_id: {
+      type: String,
+      alias: 'productId',
+    },
     // variation_id: {
     //   type: String,
     //   alias: 'variationId',
