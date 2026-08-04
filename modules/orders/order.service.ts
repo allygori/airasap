@@ -20,7 +20,8 @@ import {
   shopeeV1AllOrderParser,
   type ParsedAllOrderRow,
 } from '@/lib/xlsx/shopee/v1/order/all';
-import parseReleasedIncomeExcel from '@/lib/xlsx/shopee/v1/order/released-funds';
+import releasedFundsV1parser from '@/lib/xlsx/shopee/v1/order/released-funds';
+import releasedFundsV2parser from '@/lib/xlsx/shopee/v2/order/released-funds';
 import { ProductService } from '../products/product.service';
 import { StoreService } from '@/modules/stores/store.service';
 import {
@@ -33,6 +34,10 @@ import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { AnyBulkWriteOperation } from 'mongoose';
 import { TOrder } from './order.model';
 import { parseToISOStringWithTimezone } from '@/lib/utils/date';
+import {
+  getReleasedFunds,
+  getReleasedFundsVersion,
+} from '@/lib/xlsx/shopee/order/released-funds';
 
 export class OrderService {
   private repository: OrderRepository;
@@ -866,14 +871,193 @@ export class OrderService {
    * Enrich order data with released income data from shopee xlsx
    */
   async enrichWithReleasedFunds(fileBuffer: ArrayBuffer) {
-    try {
-      const { orders, productIds } =
-        await parseReleasedIncomeExcel(fileBuffer);
+    const v1 = async (ab: ArrayBuffer) => {
+      try {
+        const { orders, productIds } =
+          await releasedFundsV1parser(ab);
+
+        if ((orders || []).length === 0) {
+          // throw new Error(
+          //   'Tidak ada data order yang valid di file Excel.'
+          // );
+          console.warn(
+            'Tidak ada data order yang valid di file Excel.'
+          );
+          return true;
+        }
+        const store =
+          await this.storeService.getCurrentStore();
+
+        if (!store) {
+          throw new Error(`Toko saat ini tidak ditemukan`);
+        }
+
+        const timezone = store?.timezone;
+        const products =
+          await this.productService.getByMultipleIds(
+            productIds
+          );
+
+        const operations: AnyBulkWriteOperation<TOrder>[] =
+          [];
+        for await (const order of orders) {
+          const orderObj =
+            await this.repository.findByOrderId(
+              order.orderId
+            );
+
+          if (!orderObj) {
+            console.warn(
+              `[OrderService.enrichWithReleasedFunds] Order ID: ${order.orderId} not found`
+            );
+            continue;
+          }
+
+          const orderObjItems = orderObj?.items || [];
+          const $set: Record<string, any> = {};
+          const items = [];
+          let totalProductCost = 0;
+
+          for (let i = 0; i < orderObjItems.length; i++) {
+            const orderObjItem = orderObjItems[i];
+            const productName = (
+              orderObjItem.product_name || ''
+            ).trim();
+
+            type ItemFromExcel = {
+              number: number;
+              rowType: string;
+              orderId: string;
+              productId: string;
+              productName: string;
+              orderProcessingFee: number;
+            };
+            let item: ItemFromExcel | undefined;
+            if (productName !== '') {
+              const fuseResult = new Fuse(order.items, {
+                keys: ['productName'],
+                includeScore: true,
+              }).search(productName);
+
+              if (fuseResult.length > 0) {
+                item = fuseResult[0].item as ItemFromExcel;
+              } else {
+                console.warn(
+                  `[OrderService.enrichWithReleasedFunds] fuse result for ${productName} not found`
+                );
+              }
+            } else {
+              console.warn(
+                `[OrderService.enrichWithReleasedFunds] fuse search cancelled, orderObjItem.productName is empty`
+              );
+            }
+
+            const product = products.find(
+              (p) => p.product_id === item?.productId
+            );
+
+            const name =
+              orderObjItem?.variation_name ||
+              orderObjItem?.product_name;
+            const variantCost = (
+              product?.variants || []
+            ).find((v) => v.name === name);
+            const productCost =
+              product?.variants?.length === 1
+                ? product?.variants[0]?.default_cost || 0
+                : variantCost?.default_cost || 0;
+
+            orderObjItem.product = product?._id;
+            orderObjItem.product_cost =
+              productCost * (orderObjItem?.quantity || 1);
+            orderObjItem.profit =
+              (orderObjItem?.price_after_discount || 0) -
+              productCost; // price_after_discount not included fees, remove?
+            // orderObjItem.product_cost =
+            //   defaultCost?.default_cost || 0;
+            orderObjItem.processing_fee =
+              item?.orderProcessingFee || 0;
+            // orderObjItem.product_cost = product // find correct variant and get default_cost
+
+            totalProductCost =
+              totalProductCost + orderObjItem.product_cost;
+
+            items.push(orderObjItem);
+          }
+
+          $set.items = items;
+          $set.fee = {
+            admin_fee: order.adminFee,
+            processing_fee: order.orderProcessingFee,
+            affiliate_fee: order.amsCommissionFee,
+            service_fee: order.serviceFee,
+            shipping_saver_program_fee:
+              order.shippingSaverProgramFee,
+            transaction_fee: order.transactionFee,
+            campaign_fee: order.campaignFee,
+            auto_top_up_fee_from_income:
+              order.autoTopUpFeeFromIncome,
+            return_shipping_fee: order.returnShippingFee,
+            return_to_sender_shipping_fee:
+              order.returnToSenderShippingFee,
+            shipping_fee_refund: order.shippingFeeRefund,
+          };
+          $set.released_amount = order.totalIncome || 0;
+          $set.shipping_cost_paid_by_buyer =
+            order.shippingCostPaidByBuyer || 0;
+          $set.shipping_cost_discount_by_logistics =
+            order.shippingCostDiscountByLogistics || 0;
+          $set.shipping_cost_forwarded_by_shopee =
+            order.shippingCostForwardedByShopee || 0;
+          $set.free_shipping_promo_from_seller =
+            order.freeShippingPromoFromSeller || 0;
+          $set.compensation = order.compensation || 0;
+          $set.voucher_code = order.voucherCode || null;
+          $set.total_product_cost = totalProductCost || 0;
+          $set.total_profit =
+            $set.released_amount - $set.total_product_cost;
+          $set.released_funds_at = order.releasedFundDate;
+          $set.enriched_at = new Date();
+          // $set.enriched_at = parseToISOStringWithTimezone(
+          //   new Date(),
+          //   timezone
+          // );
+
+          // console.log(JSON.stringify($set, null, 2));
+
+          operations.push({
+            updateOne: {
+              filter: { order_id: order.orderId },
+              update: { $set },
+              upsert: true,
+            },
+          });
+
+          totalProductCost = 0;
+        }
+
+        const result =
+          await this.repository.bulkWrite(operations);
+
+        return result;
+      } catch (error: any) {
+        throw new Error(
+          `Gagal melengkapi data order: ${error.message}`
+        );
+      }
+    };
+
+    const v2 = async (ab: ArrayBuffer) => {
+      const { orders } = await releasedFundsV2parser(ab);
 
       if ((orders || []).length === 0) {
-        throw new Error(
+        // throw new Error(
+        //   'Tidak ada data order yang valid di file Excel.'
+        // );
+        console.warn(
           'Tidak ada data order yang valid di file Excel.'
         );
+        return true;
       }
       const store =
         await this.storeService.getCurrentStore();
@@ -882,22 +1066,13 @@ export class OrderService {
         throw new Error(`Toko saat ini tidak ditemukan`);
       }
 
-      const timezone = store?.timezone;
-      const products =
-        await this.productService.getByMultipleIds(
-          productIds
-        );
-
       const operations: AnyBulkWriteOperation<TOrder>[] =
         [];
-      for await (const order of orders) {
-        // console.log(
-        //   `[OrderService.enrichWithReleasedFunds] Order ID: ${order.orderId} not found`,
-        //   JSON.stringify(order, null, 2)
-        // );
+
+      for (const order of orders) {
         const orderObj =
           await this.repository.findByOrderId(
-            order.orderId
+            String(order.orderId)
           );
 
         if (!orderObj) {
@@ -907,157 +1082,30 @@ export class OrderService {
           continue;
         }
 
-        const orderObjItems = orderObj?.items || [];
-        const $set: Record<string, any> = {};
-        const items = [];
-        let totalProductCost = 0;
+        /**
+         * @TODO update order, requirements create parser for all and completed order v2. Flow need changed!
+         */
+      }
+    };
 
-        for (let i = 0; i < orderObjItems.length; i++) {
-          const orderObjItem = orderObjItems[i];
-          const productName = (
-            orderObjItem.product_name || ''
-          ).trim();
+    try {
+      const version =
+        await getReleasedFundsVersion(fileBuffer);
 
-          // let item: { productId: string, orderProcessingFee: number};
-          // let item: Record<string, string | number>;
-          type ItemFromExcel = {
-            number: number;
-            rowType: string;
-            orderId: string;
-            productId: string;
-            productName: string;
-            orderProcessingFee: number;
-          };
-          let item: ItemFromExcel | undefined;
-          if (productName !== '') {
-            const fuseResult = new Fuse(order.items, {
-              keys: ['productName'],
-              includeScore: true,
-            }).search(productName);
-
-            if (fuseResult.length > 0) {
-              item = fuseResult[0].item as ItemFromExcel;
-            } else {
-              console.warn(
-                `[OrderService.enrichWithReleasedFunds] fuse result for ${productName} not found`
-              );
-            }
-          } else {
-            console.warn(
-              `[OrderService.enrichWithReleasedFunds] fuse search cancelled, orderObjItem.productName is empty`
-            );
-          }
-
-          const product = products.find(
-            (p) => p.product_id === item?.productId
-          );
-
-          // if (order.orderId === '2606142928J5U4') {
-          //   saveJson(
-          //     `.data/json-logs/debug-${order.orderId}.json`,
-          //     { item, orderObjItem, product }
-          //   );
-          // }
-
-          // if (order.orderId === '260623TTEVN47Y') {
-          //   saveJson(
-          //     `.data/json-logs/debug-${order.orderId}.json`,
-          //     { item, orderObjItem, product }
-          //   );
-          // }
-
-          const name =
-            orderObjItem?.variation_name ||
-            orderObjItem?.product_name;
-          const variantCost = (
-            product?.variants || []
-          ).find((v) => v.name === name);
-          const productCost =
-            product?.variants?.length === 1
-              ? product?.variants[0]?.default_cost || 0
-              : variantCost?.default_cost || 0;
-
-          orderObjItem.product = product?._id;
-          orderObjItem.product_cost =
-            productCost * (orderObjItem?.quantity || 1);
-          orderObjItem.profit =
-            (orderObjItem?.price_after_discount || 0) -
-            productCost; // price_after_discount not included fees, remove?
-          // orderObjItem.product_cost =
-          //   defaultCost?.default_cost || 0;
-          orderObjItem.processing_fee =
-            item?.orderProcessingFee || 0;
-          // orderObjItem.product_cost = product // find correct variant and get default_cost
-
-          totalProductCost =
-            totalProductCost + orderObjItem.product_cost;
-
-          items.push(orderObjItem);
-        }
-
-        console.log({
-          order,
-          releasedDate: order.releasedFundDate,
-        });
-
-        $set.items = items;
-        $set.fee = {
-          admin_fee: order.adminFee,
-          processing_fee: order.orderProcessingFee,
-          affiliate_fee: order.amsCommissionFee,
-          service_fee: order.serviceFee,
-          shipping_saver_program_fee:
-            order.shippingSaverProgramFee,
-          transaction_fee: order.transactionFee,
-          campaign_fee: order.campaignFee,
-          auto_top_up_fee_from_income:
-            order.autoTopUpFeeFromIncome,
-          return_shipping_fee: order.returnShippingFee,
-          return_to_sender_shipping_fee:
-            order.returnToSenderShippingFee,
-          shipping_fee_refund: order.shippingFeeRefund,
-        };
-        $set.released_amount = order.totalIncome || 0;
-        $set.shipping_cost_paid_by_buyer =
-          order.shippingCostPaidByBuyer || 0;
-        $set.shipping_cost_discount_by_logistics =
-          order.shippingCostDiscountByLogistics || 0;
-        $set.shipping_cost_forwarded_by_shopee =
-          order.shippingCostForwardedByShopee || 0;
-        $set.free_shipping_promo_from_seller =
-          order.freeShippingPromoFromSeller || 0;
-        $set.compensation = order.compensation || 0;
-        $set.voucher_code = order.voucherCode || null;
-        $set.total_product_cost = totalProductCost || 0;
-        $set.total_profit =
-          $set.released_amount - $set.total_product_cost;
-        $set.released_funds_at = order.releasedFundDate;
-        $set.enriched_at = parseToISOStringWithTimezone(
-          new Date(),
-          timezone
+      if (version < 0) {
+        throw new Error(
+          `Format tidak sesuai: Laporan Dana Dilepas tidak ditemukan.`
         );
-
-        // console.log(JSON.stringify($set, null, 2));
-
-        operations.push({
-          updateOne: {
-            filter: { order_id: order.orderId },
-            update: { $set },
-            upsert: true,
-          },
-        });
-
-        totalProductCost = 0;
       }
 
-      const result =
-        await this.repository.bulkWrite(operations);
+      // return parser(fileBuffer);
+      if (version === 1) {
+        return v1(fileBuffer);
+      }
 
-      return result;
-    } catch (error: any) {
-      throw new Error(
-        `Gagal melengkapi data order: ${error.message}`
-      );
+      return v2(fileBuffer);
+    } catch (error) {
+      throw error;
     }
   }
 }

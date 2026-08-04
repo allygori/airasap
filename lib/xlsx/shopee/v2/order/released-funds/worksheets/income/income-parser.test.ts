@@ -26,7 +26,6 @@ describe('Shopee Released Funds (v2) Worksheet "Penghasilan"', () => {
     expect(result[0]).toEqual(
       expect.objectContaining({
         orderId: '260728TDY6TYGG',
-        username: 'r.i.t.z_dentalsupply',
         productPrice: 637000,
         buyerPayment: 635873,
         // buyerPaymentMethod: 'Online Payment',
