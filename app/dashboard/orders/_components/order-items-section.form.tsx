@@ -24,7 +24,11 @@ import { Badge } from '@/components/ui/badge';
 import { Field, FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 
-export function OrderItemsSection({ form }: { form: any }) {
+export function OrderItemsSectionForm({
+  form,
+}: {
+  form: any;
+}) {
   const items = useStore(
     form.store,
     (state: any) => state.values.items
@@ -110,6 +114,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
+                            disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -127,6 +132,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
+                            disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -144,6 +150,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
+                            disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -161,6 +168,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
+                            disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -170,7 +178,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                         )}
                       />
 
-                      <form.AppField
+                      {/* <form.AppField
                         name={`items[${i}].product_key`}
                         children={(subField: any) => (
                           <subField.TextField
@@ -185,7 +193,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             }
                           />
                         )}
-                      />
+                      /> */}
 
                       <form.AppField
                         name={`items[${i}].original_price`}
@@ -236,6 +244,7 @@ export function OrderItemsSection({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
+                            disabled={true}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value === ''
@@ -296,10 +305,10 @@ export function OrderItemsSection({ form }: { form: any }) {
                               field.state.value[i]
                                 ?.variation_name
                             ) || [];
+
                           const currentProductCost =
                             !!subField.state.value
-                              ? subField.state.value /
-                                (items[i].quantity ?? 1)
+                              ? subField.state.value
                               : 0;
 
                           return (

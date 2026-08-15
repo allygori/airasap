@@ -11,7 +11,9 @@ export const OrderItemSchema = z.object({
     })
     .transform((val) => new mongoose.Types.ObjectId(val)),
   product_cost: z.number().int().optional(),
+  total_product_cost: z.number().int().optional(),
   profit: z.number().int().optional(),
+  estimated_profit: z.number().int().optional(),
   parent_sku: z.string().optional(),
   sku_reference_number: z.string().optional(),
   product_name: z.string().optional(),
@@ -181,6 +183,7 @@ export const OrderBaseSchema = z.object({
   // additional fields
   total_product_cost: z.number().int().optional(),
   total_profit: z.number().int().optional(),
+  estimated_total_profit: z.number().int().optional(),
   enriched_at: z.string().nullable().optional(),
   /**
    * @TODO implement

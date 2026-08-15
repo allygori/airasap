@@ -57,6 +57,7 @@ export const addNormalizeData = <F extends string>(
       admin_fee: '$fee.admin_fee',
       processing_fee: '$fee.processing_fee',
       total_profit: '$total_profit',
+      estimated_total_profit: '$estimated_total_profit',
 
       // total_profit: {
       //   $subtract: [

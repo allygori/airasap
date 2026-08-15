@@ -22,6 +22,7 @@ import {
 } from '@/modules/reports/report.dto';
 import { BarChartOrderTrends } from './sections/charts/bar-chart-order-trends';
 import { ChartBarStackedOrderTrends } from './sections/charts/chart-bar-stacked-order-trends';
+import { ChartBarStackedOrders } from './sections/charts/chart-bar-stacked-orders';
 
 // type TResult = typeof SalesReportResponseSchema;
 type TResult = SalesReportResponseDTO;
@@ -259,6 +260,9 @@ const ReportClient = () => {
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}
+          estimatedTotalProfit={
+            result?.estimated_total_profit
+          }
           voucherBorneBySeller={
             result?.total_voucher_borne_by_seller
           }
@@ -281,10 +285,14 @@ const ReportClient = () => {
         />
 
         <div className="my-8 flex flex-col gap-10 px-6">
-          <BarChartOrderTrends
+          {/* <BarChartOrderTrends
             orders={result?.daily_reports || []}
           />
           <ChartBarStackedOrderTrends
+            orders={result?.daily_reports || []}
+          /> */}
+
+          <ChartBarStackedOrders
             orders={result?.daily_reports || []}
           />
         </div>

@@ -11,6 +11,7 @@ export const metricsForRevenue = () => {
       },
       total_payout: 1,
       total_profit: 1,
+      estimated_total_profit: 1,
       total_payment: 1,
       // total_payment: {
       //   $subtract: [

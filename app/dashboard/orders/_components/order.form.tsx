@@ -26,7 +26,7 @@ import {
 import { formSchema } from './form.schema';
 import { AddressFields } from './address-fields';
 import { FeeFields } from './fee-fields';
-import { OrderItemsSection } from './order-items-section';
+import { OrderItemsSectionForm } from './order-items-section.form';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
 
 type OrderFormProps = {
@@ -248,7 +248,7 @@ export const OrderForm = withForm({
           </Card>
 
           {/* SECTION 2: Daftar Produk (Items) */}
-          <OrderItemsSection form={form} />
+          <OrderItemsSectionForm form={form} />
 
           {/* SECTION 3: Pengiriman & Logistik */}
           <Card className="border-border/50 shadow-sm">

@@ -202,35 +202,63 @@ export function ViewDrawer<T extends Record<string, any>>({
                           product_name: string;
                           variation_name: string;
                           quantity: number;
+                          product_cost: number;
                         },
                         idx: number
                       ) => {
                         return (
                           <li
-                            className="border-b-foreground/30 grid grid-cols-12 items-center justify-between gap-2 border-b pb-2 text-xs leading-normal text-wrap last:border-b-0"
+                            className="border-b-foreground/30 border-b pb-2 text-xs leading-normal text-wrap last:border-b-0"
                             key={idx}
                           >
-                            <div className="col-span-10 pr-8">
-                              <span className="font-semibold">
-                                {n.product_name}
-                              </span>
-                              {n.variation_name && (
-                                <span className="pl-2 font-medium">
-                                  ({n.variation_name})
-                                </span>
-                              )}
+                            <div>
+                              <div className="grid grid-cols-12 items-center justify-between gap-2">
+                                <div className="col-span-10 pr-8">
+                                  <span className="font-semibold">
+                                    {n.product_name}
+                                  </span>
+                                  {n.variation_name && (
+                                    <span className="pl-2 font-medium">
+                                      ({n.variation_name})
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="col-span-2 text-left font-light">
+                                  <span>x&nbsp;</span>
+                                  <span>{n.quantity}</span>
+                                </div>
+                              </div>
+                              <div className="text-foreground/70 grid grid-cols-12 items-center justify-between gap-2">
+                                <div className="col-span-3 text-left font-light">
+                                  <span>
+                                    {formatIDR(
+                                      n.product_cost,
+                                      {
+                                        fallback: 0,
+                                      }
+                                    )}
+                                  </span>
+                                </div>
+                                <div className="col-span-1 text-left font-light">
+                                  <span>x&nbsp;</span>
+                                  <span>{n.quantity}</span>
+                                </div>
+                                <div className="col-span-1 text-left font-light">
+                                  <span>=&nbsp;</span>
+                                </div>
+                                <div className="col-span-3 text-left font-light">
+                                  <span>
+                                    {formatIDR(
+                                      n.product_cost *
+                                        n.quantity,
+                                      {
+                                        fallback: 0,
+                                      }
+                                    )}
+                                  </span>
+                                </div>
+                              </div>
                             </div>
-                            <div className="col-span-2 text-left font-light">
-                              <span>x&nbsp;</span>
-                              <span>{n.quantity}</span>
-                            </div>
-                            {/* <p className="leading-normal font-light text-wrap">
-                              <span className="pr-8 font-medium">
-                                {n.product_name}
-                              </span>
-                              <span>x&nbsp;</span>
-                              <span>{n.quantity}</span>
-                            </p> */}
                           </li>
                         );
                       }

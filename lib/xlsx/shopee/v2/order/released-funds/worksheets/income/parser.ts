@@ -1,4 +1,7 @@
-import { getColIdx } from '@/lib/xlsx/utils';
+import {
+  getColIdx,
+  getColIdxWithFallback,
+} from '@/lib/xlsx/utils';
 import { INCOME_FIELD_MAP, type FieldConfig } from './map';
 import type {
   IncomeFieldKey,
@@ -51,20 +54,30 @@ export default function parseIncomeSheet(
     IncomeFieldKey,
     FieldConfig,
   ][]) {
+    // let colIdx =
+    //   config.columnIndex ??
+    //   getColIdx(headers, config.header || '');
+
+    // if (colIdx === -1) {
+    //   colIdx = headers.findIndex((h) =>
+    //     h.includes(config.header)
+    //   );
+
+    //   if (colIdx === -1) {
+    //     console.warn(
+    //       `${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Penghasilan".`
+    //     );
+    //   }
+    // }
+
     let colIdx =
       config.columnIndex ??
-      getColIdx(headers, config.header || '');
+      getColIdxWithFallback(headers, config.header || '');
 
     if (colIdx === -1) {
-      colIdx = headers.findIndex((h) =>
-        h.includes(config.header)
+      console.warn(
+        `${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Penghasilan".`
       );
-
-      if (colIdx === -1) {
-        console.warn(
-          `${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Penghasilan".`
-        );
-      }
     }
 
     // indices[key] = colIdx;

@@ -1,4 +1,7 @@
-import { getColIdx } from '@/lib/xlsx/utils';
+import {
+  getColIdx,
+  getColIdxWithFallback,
+} from '@/lib/xlsx/utils';
 import {
   SELLER_FEE_FIELD_MAP,
   type FieldConfig,
@@ -21,20 +24,35 @@ export default function parseIncomeSheet(
     SellerFeeFieldKey,
     FieldConfig,
   ][]) {
+    // let colIdx =
+    //   config.columnIndex ??
+    //   getColIdx(headers, config.header || '');
+
+    // if (colIdx === -1) {
+    //   colIdx = headers.findIndex((h) =>
+    //     h.includes(config.header)
+    //   );
+
+    //   if (colIdx === -1) {
+    //     console.warn(
+    //       `Kolom ${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Seller Fee".`
+    //     );
+    //   }
+    // }
+
+    console.log(
+      `header name: ${config.header}`,
+      JSON.stringify(headers, null, 2)
+    );
+
     let colIdx =
       config.columnIndex ??
-      getColIdx(headers, config.header || '');
+      getColIdxWithFallback(headers, config.header || '');
 
     if (colIdx === -1) {
-      colIdx = headers.findIndex((h) =>
-        h.includes(config.header)
+      console.warn(
+        `${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Seller Fee".`
       );
-
-      if (colIdx === -1) {
-        console.warn(
-          `Kolom ${config.header} tidak ditemukan di Laporan Dana Dilepas V2 Sheet "Seller Fee".`
-        );
-      }
     }
 
     // indices[key] = colIdx;

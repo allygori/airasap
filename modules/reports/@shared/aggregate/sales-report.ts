@@ -355,6 +355,7 @@ export default function aggregateSalesReport1({
             },
           ],
         },
+        estimated_total_profit: '$estimated_total_profit',
       },
     },
     {
@@ -372,6 +373,9 @@ export default function aggregateSalesReport1({
         },
         daily_profit: {
           $sum: '$total_profit',
+        },
+        daily_estimated_profit: {
+          $sum: '$estimated_total_profit',
         },
         daily_payment: {
           $sum: '$total_payment',
@@ -527,6 +531,9 @@ export default function aggregateSalesReport1({
         total_profit: {
           $sum: '$daily_profit',
         },
+        total_estimated_profit: {
+          $sum: '$daily_estimated_profit',
+        },
         total_payment: {
           $sum: '$daily_payment',
         },
@@ -597,6 +604,7 @@ export default function aggregateSalesReport1({
         },
         total_payout: 1,
         total_profit: 1,
+        total_estimated_profit: 1,
         total_payment: 1,
         // total_payment: {
         //   $subtract: [

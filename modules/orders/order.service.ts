@@ -448,6 +448,9 @@ export class OrderService {
           const productName = (
             String(item.productName) || ''
           ).trim();
+          const variantName = (
+            String(item.variationName) || ''
+          ).trim();
           const originalPrice = item.originalPrice
             ? Number(item.originalPrice)
             : 0;
@@ -456,6 +459,10 @@ export class OrderService {
             : 0;
           const discount =
             (priceAfterDiscount / originalPrice) * 100;
+
+          console.log(
+            `[${order.id}] Discount: ${discount}`
+          );
 
           let product;
           if (productName !== '') {
@@ -479,11 +486,22 @@ export class OrderService {
 
           const variantCost = (
             product?.variants || []
-          ).find((v) => v.name === productName);
+          ).find(
+            (v) =>
+              v.name === variantName ||
+              v.name === productName
+          );
           const productCost =
             product?.variants?.length === 1
               ? product?.variants[0]?.default_cost || 0
               : variantCost?.default_cost || 0;
+
+          // console.log({
+          //   variantCost,
+          //   productCost,
+          //   variants: product?.variants,
+          //   product,
+          // });
           const quantity = item?.quantity
             ? Number(item.quantity)
             : 1;
@@ -492,10 +510,15 @@ export class OrderService {
             : 0;
           // add new field in model: final_quantity
           const finalQuantity = quantity - returnedQuantity;
+          const totalProductCost =
+            productCost * finalQuantity;
 
           return {
             product: product?._id,
-            product_cost: productCost * finalQuantity,
+            product_cost: productCost,
+            total_product_cost: totalProductCost, // without multiply with quantity?
+            // prettier-ignore
+            estimated_profit: (Number(item.orderSubtotal) - totalProductCost),
             parent_sku: item.parentSku,
             sku_reference_number: item.skuReferenceNumber,
             product_name: item.productName,
@@ -508,9 +531,6 @@ export class OrderService {
             returned_quantity: item.returnedQuantity,
           };
         });
-
-        const existingOrder =
-          await this.repository.findByOrderId(orderId);
 
         const orderSubtotal = orderItems.reduce(
           (acc: number, curr) => {
@@ -625,7 +645,23 @@ export class OrderService {
           //   type: Date,
           //   alias: 'deletedAt',
           // },
+          total_product_cost: orderItems.reduce(
+            (acc, n) => acc + n.product_cost * n.quantity,
+            0
+          ),
+          estimated_total_profit: orderItems.reduce(
+            (acc, n) => acc + n.estimated_profit,
+            0
+          ),
         };
+
+        const existingOrder =
+          await this.repository.findByOrderId(orderId);
+
+        // if (!existingOrder) {
+        //   await this.repository.create(payload);
+        //   createdCount++;
+        // }
 
         if (existingOrder) {
           await this.repository.update(
@@ -841,6 +877,11 @@ export class OrderService {
           //   alias: 'deletedAt',
           // },
         };
+
+        // if (!existingOrder) {
+        //   await this.repository.create(payload);
+        //   createdCount++;
+        // }
 
         if (existingOrder) {
           await this.repository.update(
@@ -1334,6 +1375,8 @@ export class OrderService {
     try {
       const version =
         await getReleasedFundsVersion(fileBuffer);
+
+      console.log(`version: ${version}`);
 
       if (version < 0) {
         throw new Error(

@@ -26,7 +26,12 @@ export default function reader(arrayBuffer: ArrayBuffer) {
 
   let headerRowIndex = -1;
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
-    if (rows[i] && rows[i].includes(HEADER_DETECTION_KEY)) {
+    if (
+      rows[i] &&
+      String(rows[i])
+        .toLowerCase()
+        .includes(HEADER_DETECTION_KEY.toLowerCase())
+    ) {
       headerRowIndex = i;
       break;
     }

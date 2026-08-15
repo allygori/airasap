@@ -47,6 +47,11 @@ const OrderItemSchema = new Schema<TOrderItem>(
       default: 0,
       required: false,
     },
+    estimated_profit: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
     product_name: {
       type: String,
       alias: 'productName',
@@ -462,6 +467,10 @@ const OrderSchema = new Schema<TOrder>(
       default: 0,
     },
     total_profit: {
+      type: Number,
+      default: 0,
+    },
+    estimated_total_profit: {
       type: Number,
       default: 0,
     },

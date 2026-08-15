@@ -137,12 +137,14 @@ export const getProductsColumn = (
             'text-sm font-medium',
             row.original.status === 'batal'
               ? 'text-destructive'
-              : [
-                    'telah-dikirim',
-                    'sedang-dikirim',
-                  ].includes(row.original.status)
-                ? 'text-blue-500'
-                : 'text-green-400'
+              : row.original.status === 'selesai'
+                ? 'text-green-400'
+                : [
+                      'pengembalian',
+                      'pengembalian-dana',
+                    ].includes(row.original.status)
+                  ? 'text-yellow-400'
+                  : 'text-blue-500'
           )}
         >
           {Object.values(SHOPEE_ORDER_STATUS).find(
@@ -182,20 +184,41 @@ export const getProductsColumn = (
     {
       accessorKey: 'total_profit',
       header: 'Profit',
-      cell: ({ row }) => (
-        <div
-          className={cn(
-            'text-base font-medium',
-            row.original.total_profit > 0
-              ? 'text-green-400'
-              : row.original.total_profit < 0
-                ? 'text-red-400'
-                : ''
-          )}
-        >
-          {formatIDR(row.original.total_profit ?? 0)}
-        </div>
-      ),
+      cell: ({ row }) => {
+        let isStatusNotCanceled =
+          row.original.status !== 'batal';
+        let releasedFundsAmount =
+          row.original.released_amount || 0;
+        let totalProfit =
+          isStatusNotCanceled &&
+          row.original.total_profit === 0
+            ? row.original.estimated_total_profit
+            : row.original.total_profit;
+
+        return (
+          <div className="flex flex-row items-center">
+            <span
+              className={cn(
+                'text-base font-medium',
+                totalProfit > 0
+                  ? 'text-green-400'
+                  : totalProfit < 0
+                    ? 'text-red-400'
+                    : ''
+              )}
+            >
+              {formatIDR(totalProfit ?? 0)}
+            </span>
+            <span>
+              &nbsp;
+              {isStatusNotCanceled &&
+              releasedFundsAmount === 0
+                ? '(E)'
+                : ''}
+            </span>
+          </div>
+        );
+      },
     },
     {
       accessorKey: 'enriched_at',

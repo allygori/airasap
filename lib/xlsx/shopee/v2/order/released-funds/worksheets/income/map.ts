@@ -136,7 +136,8 @@ export const INCOME_FIELD_MAP = {
     parser: numberParser,
   },
   otherFee: {
-    header: 'Biaya Lainnya',
+    // header: 'Biaya Lainnya',
+    header: 'Premi',
     parser: numberParser,
   },
   transactionFee: {

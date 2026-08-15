@@ -3,6 +3,10 @@ export const SHOPEE_ORDER_STATUS = {
     label: 'Selesai',
     value: 'selesai',
   },
+  needsToBeShipped: {
+    label: 'Perlu Dikirim',
+    value: 'perlu-dikirim',
+  },
   toShip: {
     label: 'Sedang Dikirim',
     value: 'sedang-dikirim',
