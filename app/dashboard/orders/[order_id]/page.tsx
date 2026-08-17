@@ -82,11 +82,11 @@ const EditPage = ({
 };
 
 function EditFormWrapper({
-  initialData,
   orderId,
+  initialData,
 }: {
-  initialData: OrderData;
   orderId: string;
+  initialData: OrderData;
 }) {
   const router = useRouter();
 
@@ -196,6 +196,9 @@ function EditFormWrapper({
         returned_quantity: item.returned_quantity ?? 0,
         processing_fee: item.processing_fee ?? 0,
         product_cost: item.product_cost ?? 0,
+        profit: item.profit ?? 0,
+        estimated_profit: item.estimated_profit ?? 0,
+
         // product_cost_amount: item.product_cost_amount ?? 0,
       })),
     };
@@ -208,10 +211,17 @@ function EditFormWrapper({
     },
     onSubmit: async ({ value }) => {
       try {
-        const { id: _, ...payload } = value;
+        // const { _id, ...payload } = value;
 
+        // console.log({
+        //   _id,
+        //   id: payload.id,
+        //   order_id: payload.order_id,
+        // });
+
+        const payload = value;
         const response = await fetch(
-          `/api/v1/dashboard/orders/marketplace/${orderId}`,
+          `/api/v1/dashboard/orders/${payload._id}/overwrite`,
           {
             method: 'PATCH',
             headers: {
@@ -235,7 +245,8 @@ function EditFormWrapper({
           description: `Order "${value.order_id}" has been updated.`,
         });
 
-        router.push('/dashboard/orders');
+        // router.push('/dashboard/orders');
+        router.back();
         router.refresh();
       } catch (error: unknown) {
         const message =

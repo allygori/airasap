@@ -30,6 +30,9 @@ export const SHOPEE_ORDER_STATUS = {
   },
 } as const;
 
+export const SHOPEE_ORDER_STATUS_LABEL_VALUE =
+  Object.values(SHOPEE_ORDER_STATUS);
+
 export const SHOPEE_ORDER_STATUS_VALUES = Object.values(
   SHOPEE_ORDER_STATUS
 ).map((s) => s.value);

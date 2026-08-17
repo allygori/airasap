@@ -47,6 +47,7 @@ export const orderFeeSchema = z.object({
 });
 
 export const formSchema = z.object({
+  _id: z.string().optional(),
   id: z.string().optional(),
   order_id: z.string().min(1, 'Order ID wajib diisi'),
   platform: z.enum([

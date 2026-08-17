@@ -3,14 +3,30 @@ export const metricsForRevenue = () => {
     $project: {
       _id: 0,
       // total_revenue: 1,
+      total_profit: 1,
       total_revenue: {
         $subtract: [
           '$total_revenue',
           '$total_voucher_borne_by_seller',
         ],
       },
+      ratio_profit_to_revenue: {
+        $multiply: [
+          {
+            $divide: [
+              '$total_profit',
+              {
+                $subtract: [
+                  '$total_revenue',
+                  '$total_voucher_borne_by_seller',
+                ],
+              },
+            ],
+          },
+          100,
+        ],
+      },
       total_payout: 1,
-      total_profit: 1,
       estimated_total_profit: 1,
       total_payment: 1,
       // total_payment: {

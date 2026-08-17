@@ -260,6 +260,9 @@ const ReportClient = () => {
           payout={result?.total_payout}
           estimateCOGS={result?.total_cost}
           estimateProfit={result?.total_profit}
+          ratioProfitToRevenue={
+            result?.ratio_profit_to_revenue
+          }
           estimatedTotalProfit={
             result?.estimated_total_profit
           }

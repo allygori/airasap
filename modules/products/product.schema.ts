@@ -86,7 +86,7 @@ export const UpdateProductSchema =
 export const ProductResponseSchema =
   ProductBaseSchema.extend({
     _id: z.string(),
-    id: z.string(),
+    id: z.string().optional(),
     // organization: z.string().optional(),
     // store: z.string().optional(),
     created_at: z.string().optional(),

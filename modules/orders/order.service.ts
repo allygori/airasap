@@ -255,6 +255,103 @@ export class OrderService {
   }
 
   /**
+   * Overwrite order
+   */
+  async overwrite(dto: UpdateOrderDTO) {
+    try {
+      // console.log(
+      //   `overwrite: ${id}`,
+      //   JSON.stringify(dto, null, 2)
+      // );
+
+      const data = { ...dto };
+      data.items = (data?.items || []).map((item) => {
+        const productCost = item.product_cost || 0;
+        return {
+          ...item,
+          profit:
+            (item?.price_after_discount || 0) - productCost,
+          total_product_cost:
+            (item.quantity || 0) * productCost,
+        };
+      });
+      const totalProductCost = data.items.reduce(
+        (acc, n) => acc + (n.total_product_cost || 0),
+        0
+      );
+      data.total_profit =
+        (data.released_amount || 0) - totalProductCost;
+
+      const updatedOrder =
+        await this.repository.overwrite(data);
+
+      if (!updatedOrder) {
+        throw new Error('Gagal memperbarui order');
+      }
+
+      return updatedOrder;
+
+      // return true;
+    } catch (error: any) {
+      console.error(
+        `[OrderService.overwrite] error: `,
+        error
+      );
+      throw new Error(
+        `Gagal memperbarui order: ${error.message}`
+      );
+    }
+
+    // try {
+    //   const order = await this.repository.findById(id);
+    //   if (!order) {
+    //     throw new Error(
+    //       'Order tidak ditemukan untuk diperbarui'
+    //     );
+    //   }
+
+    //   // Jika order_id diubah, validasi keunikan
+    //   if (dto.order_id && dto.order_id !== order.order_id) {
+    //     const existingOrder =
+    //       await this.repository.findByOrderId(dto.order_id);
+    //     if (existingOrder) {
+    //       throw new Error(
+    //         `Order dengan ID '${dto.order_id}' sudah ada`
+    //       );
+    //     }
+    //   }
+
+    //   // Hitung finalPrice untuk setiap variant jika ada
+    //   const dataToUpdate = { ...dto };
+    //   // if (dataToUpdate.variants) {
+    //   //   dataToUpdate.variants = dataToUpdate.variants.map(
+    //   //     (variant) => ({
+    //   //       ...variant,
+    //   //       finalPrice:
+    //   //         variant.price -
+    //   //         (variant.price * variant.discount) / 100,
+    //   //     })
+    //   //   );
+    //   // }
+
+    //   const updatedOrder = await this.repository.update(
+    //     id,
+    //     dataToUpdate
+    //   );
+
+    //   if (!updatedOrder) {
+    //     throw new Error('Gagal memperbarui order');
+    //   }
+
+    //   return updatedOrder;
+    // } catch (error: any) {
+    //   throw new Error(
+    //     `Gagal memperbarui order: ${error.message}`
+    //   );
+    // }
+  }
+
+  /**
    * Soft delete order
    */
   async remove(id: string) {
@@ -658,21 +755,21 @@ export class OrderService {
         const existingOrder =
           await this.repository.findByOrderId(orderId);
 
-        // if (!existingOrder) {
-        //   await this.repository.create(payload);
-        //   createdCount++;
-        // }
-
-        if (existingOrder) {
-          await this.repository.update(
-            existingOrder._id.toString(),
-            payload
-          );
-          updatedCount++;
-        } else {
+        if (!existingOrder) {
           await this.repository.create(payload);
           createdCount++;
         }
+
+        // if (existingOrder) {
+        //   await this.repository.update(
+        //     existingOrder._id.toString(),
+        //     payload
+        //   );
+        //   updatedCount++;
+        // } else {
+        //   await this.repository.create(payload);
+        //   createdCount++;
+        // }
       }
 
       return {

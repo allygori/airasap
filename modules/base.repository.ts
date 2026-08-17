@@ -83,6 +83,30 @@ export abstract class BaseRepository<T extends Document> {
       .lean();
   }
 
+  async overwrite(data: UpdateQuery<T>) {
+    try {
+      const { _id, ...payload } = data;
+
+      if (!_id) {
+        throw new Error(`${_id} is required`);
+      }
+
+      const doc = await this.model.findById(_id);
+
+      if (!doc) {
+        throw new Error(
+          `Document with id: ${_id} not found`
+        );
+      }
+
+      doc.overwrite(payload);
+
+      return doc.save();
+    } catch (e) {
+      throw e;
+    }
+  }
+
   async delete(id: string) {
     return this.model
       .findOneAndDelete({

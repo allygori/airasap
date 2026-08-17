@@ -10,6 +10,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { formatIDR } from '@/lib/formatter';
+import { round } from '@/lib/utils/number';
+import FinancialDisplay from '@/components/shared/general/financial-display';
 
 type SectionCardsProps = {
   revenue?: number;
@@ -17,6 +19,7 @@ type SectionCardsProps = {
   payout?: number;
   estimateCOGS?: number;
   estimateProfit?: number;
+  ratioProfitToRevenue?: number;
   estimatedTotalProfit?: number;
   voucherBorneBySeller?: number;
   bundleDealDiscountFromSeller?: number;
@@ -35,6 +38,7 @@ export function SectionCards({
   payout,
   estimateCOGS,
   estimateProfit,
+  ratioProfitToRevenue,
   estimatedTotalProfit,
   voucherBorneBySeller,
   bundleDealDiscountFromSeller,
@@ -150,13 +154,25 @@ export function SectionCards({
             <CardDescription>
               Estimasi Profit
             </CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {formatIDR(estimateProfit || 0)}
+            <CardTitle className="text-2xl font-semibold tabular-nums @[200px]/card:text-3xl">
+              <FinancialDisplay
+                value={estimateProfit || 0}
+                formatter={formatIDR}
+              />
+              {/* {formatIDR(estimateProfit || 0)} */}
             </CardTitle>
             <CardAction>
               <Badge variant="outline">
-                <TrendingUp />
-                +4.5%
+                {/* <TrendingUp /> */}
+                <FinancialDisplay
+                  value={round(ratioProfitToRevenue) ?? 0}
+                  showSign={true}
+                  Prefix={TrendingUp}
+                  // prefix={
+                  //   <TrendingUp className="text-constructive mr-1 size-3" />
+                  // }
+                />
+                {/* {round(ratioProfitToRevenue)} */}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -167,6 +183,56 @@ export function SectionCards({
             </div>
             <div className="text-muted-foreground">
               Meets growth projections
+            </div>
+          </CardFooter>
+        </Card>
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Total Admin Fee
+            </CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {formatIDR(adminFee || 0)}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline">
+                <TrendingUp />
+                +12.5%
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">
+              Trending up this month{' '}
+              <TrendingUp className="size-4" />
+            </div>
+            <div className="text-muted-foreground">
+              Visitors for the last 6 months
+            </div>
+          </CardFooter>
+        </Card>
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Total Biaya Proses Pesanan
+            </CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-2xl">
+              {formatIDR(processingFee || 0)}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline">
+                <TrendingUp />
+                +12.5%
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">
+              Trending up this month{' '}
+              <TrendingUp className="size-4" />
+            </div>
+            <div className="text-muted-foreground">
+              Visitors for the last 6 months
             </div>
           </CardFooter>
         </Card>
@@ -245,31 +311,7 @@ export function SectionCards({
             </div>
           </CardFooter>
         </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>
-              Total Pembeli (Unique)
-            </CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {numberOfBuyers || 0}
-            </CardTitle>
-            <CardAction>
-              <Badge variant="outline">
-                <TrendingUp />
-                +12.5%
-              </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="line-clamp-1 flex gap-2 font-medium">
-              Trending up this month{' '}
-              <TrendingUp className="size-4" />
-            </div>
-            <div className="text-muted-foreground">
-              Visitors for the last 6 months
-            </div>
-          </CardFooter>
-        </Card>
+
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>Total Order</CardDescription>
@@ -318,6 +360,33 @@ export function SectionCards({
             </div>
           </CardFooter>
         </Card>
+      </div>
+      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+        <Card className="@container/card">
+          <CardHeader>
+            <CardDescription>
+              Total Pembeli (Unique)
+            </CardDescription>
+            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+              {numberOfBuyers || 0}
+            </CardTitle>
+            <CardAction>
+              <Badge variant="outline">
+                <TrendingUp />
+                +12.5%
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardFooter className="flex-col items-start gap-1.5 text-sm">
+            <div className="line-clamp-1 flex gap-2 font-medium">
+              Trending up this month{' '}
+              <TrendingUp className="size-4" />
+            </div>
+            <div className="text-muted-foreground">
+              Visitors for the last 6 months
+            </div>
+          </CardFooter>
+        </Card>
         <Card className="@container/card">
           <CardHeader>
             <CardDescription>
@@ -340,58 +409,6 @@ export function SectionCards({
             </div>
             <div className="text-muted-foreground">
               Meets growth projections
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
-      <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>
-              Total Admin Fee
-            </CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-2xl">
-              {formatIDR(adminFee || 0)}
-            </CardTitle>
-            <CardAction>
-              <Badge variant="outline">
-                <TrendingUp />
-                +12.5%
-              </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="line-clamp-1 flex gap-2 font-medium">
-              Trending up this month{' '}
-              <TrendingUp className="size-4" />
-            </div>
-            <div className="text-muted-foreground">
-              Visitors for the last 6 months
-            </div>
-          </CardFooter>
-        </Card>
-        <Card className="@container/card">
-          <CardHeader>
-            <CardDescription>
-              Total Biaya Proses Pesanan
-            </CardDescription>
-            <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-2xl">
-              {formatIDR(processingFee || 0)}
-            </CardTitle>
-            <CardAction>
-              <Badge variant="outline">
-                <TrendingUp />
-                +12.5%
-              </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardFooter className="flex-col items-start gap-1.5 text-sm">
-            <div className="line-clamp-1 flex gap-2 font-medium">
-              Trending up this month{' '}
-              <TrendingUp className="size-4" />
-            </div>
-            <div className="text-muted-foreground">
-              Visitors for the last 6 months
             </div>
           </CardFooter>
         </Card>

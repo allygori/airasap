@@ -28,6 +28,10 @@ import { AddressFields } from './address-fields';
 import { FeeFields } from './fee-fields';
 import { OrderItemsSectionForm } from './order-items-section.form';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
+import {
+  SHOPEE_ORDER_STATUS_VALUES,
+  SHOPEE_ORDER_STATUS_LABEL_VALUE,
+} from '@/constant/order/shopee/status';
 
 type OrderFormProps = {
   title?: string;
@@ -174,7 +178,7 @@ export const OrderForm = withForm({
                   )}
                 />
 
-                <form.AppField
+                {/* <form.AppField
                   name="status"
                   children={(field) => (
                     <field.TextField
@@ -184,6 +188,26 @@ export const OrderForm = withForm({
                       onChange={(e) =>
                         field.handleChange(e.target.value)
                       }
+                    />
+                  )}
+                /> */}
+
+                <form.AppField
+                  name="status"
+                  children={(field) => (
+                    <field.SelectField
+                      label="Status Order"
+                      items={
+                        SHOPEE_ORDER_STATUS_LABEL_VALUE
+                      }
+                      multiple={false}
+                      // value={field.state.value ?? ''}
+                      // onValueChange={(v) =>
+                      //   field.handleChange(v)
+                      // }
+                      // onChange={(e) =>
+                      //   field.handleChange(e.target.value)
+                      // }
                     />
                   )}
                 />

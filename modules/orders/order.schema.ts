@@ -1,15 +1,27 @@
 import { z } from 'zod';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
+import { ProductResponseSchema } from '@/modules/products/product.schema';
 
 export const OrderItemSchema = z.object({
   // product: z.string().min(1, 'Product ID wajib diisi'),
-  product: z
-    .string()
-    .optional()
-    .refine((val) => mongoose.isValidObjectId(val), {
-      message: 'Mongoose ObjectId tidak valid',
-    })
-    .transform((val) => new mongoose.Types.ObjectId(val)),
+  // product: z
+  //   .string()
+  //   .optional()
+  //   .refine((val) => mongoose.isValidObjectId(val), {
+  //     message: 'Mongoose ObjectId tidak valid',
+  //   })
+  //   .transform((val) => new mongoose.Types.ObjectId(val)),
+
+  product: z.union([
+    ProductResponseSchema,
+    z
+      .string()
+      .optional()
+      .refine((val) => mongoose.isValidObjectId(val), {
+        message: 'Mongoose ObjectId tidak valid',
+      })
+      .transform((val) => new mongoose.Types.ObjectId(val)),
+  ]),
   product_cost: z.number().int().optional(),
   total_product_cost: z.number().int().optional(),
   profit: z.number().int().optional(),
@@ -202,7 +214,10 @@ export const OrderBaseSchema = z.object({
 });
 
 export const CreateOrderSchema = OrderBaseSchema;
-export const UpdateOrderSchema = OrderBaseSchema.partial();
+export const UpdateOrderSchema =
+  OrderBaseSchema.partial().extend({
+    _id: z.string().optional(),
+  });
 
 export const OrderResponseSchema = OrderBaseSchema.extend({
   _id: z.string(),
