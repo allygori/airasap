@@ -20,6 +20,7 @@ import {
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { FileService } from '@/modules/files/file.service';
 import { FILE_TYPES_KV } from '@/modules/files/file.constant';
+import { CreateFileDTO } from '@/modules/files/file.dto';
 
 export const POST = withValidation({}, async (request) => {
   try {
@@ -90,12 +91,13 @@ export const POST = withValidation({}, async (request) => {
     // }
 
     const fileService = new FileService(tenantContext);
-    let fileDoc = await fileService.getOrCreateDocument({
-      file,
-      extension: 'xlsx',
-      storagePath: 'completed-orders',
-      userId: tenantContext.userId,
-    });
+    const fileDoc: CreateFileDTO =
+      await fileService.getOrCreateDocument({
+        file,
+        extension: 'xlsx',
+        storagePath: 'completed-orders',
+        userId: tenantContext.userId,
+      });
 
     if (!fileDoc) {
       throw new Error('Gagal mengunggah file');
@@ -105,7 +107,8 @@ export const POST = withValidation({}, async (request) => {
     const orderService = new OrderService(tenantContext);
     const result =
       await orderService.massUploadEnrichWithOrderCompletedShopeeV1(
-        buffer
+        buffer,
+        fileDoc._id
       );
 
     return apiSuccess(

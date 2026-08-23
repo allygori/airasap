@@ -25,7 +25,14 @@ export class AggregateBuilder {
     return this.pipeline;
   }
 
+  /**
+   * @deprecated
+   */
   debug() {
+    console.log(JSON.stringify(this.pipeline, null, 2));
+  }
+
+  log() {
     console.log(JSON.stringify(this.pipeline, null, 2));
   }
 }

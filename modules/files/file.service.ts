@@ -340,7 +340,7 @@ export class FileService {
         throw new Error('Gagal mengunggah file');
       }
 
-      console.log('getOrCreateDocument blob:', blob);
+      // console.log('getOrCreateDocument blob:', blob);
 
       const newFile = await this.repository.create({
         filename: diskFilename,

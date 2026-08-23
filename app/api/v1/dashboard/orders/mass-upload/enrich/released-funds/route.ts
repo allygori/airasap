@@ -20,6 +20,7 @@ import {
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { FileService } from '@/modules/files/file.service';
 import { FILE_TYPES_KV } from '@/modules/files/file.constant';
+import { CreateFileDTO } from '@/modules/files/file.dto';
 
 export const POST = withValidation({}, async (request) => {
   try {
@@ -94,12 +95,13 @@ export const POST = withValidation({}, async (request) => {
     //   await orderService.enrichWithReleasedFunds(buffer);
 
     const fileService = new FileService(tenantContext);
-    let fileDoc = await fileService.getOrCreateDocument({
-      file,
-      extension: 'xlsx',
-      storagePath: 'released-funds',
-      userId: tenantContext.userId,
-    });
+    let fileDoc: CreateFileDTO =
+      await fileService.getOrCreateDocument({
+        file,
+        extension: 'xlsx',
+        storagePath: 'released-funds',
+        userId: tenantContext.userId,
+      });
 
     if (!fileDoc) {
       throw new Error('Gagal mengunggah file');
@@ -108,7 +110,10 @@ export const POST = withValidation({}, async (request) => {
     const buffer = await file.arrayBuffer();
     const orderService = new OrderService(tenantContext);
     const result =
-      await orderService.enrichWithReleasedFunds(buffer);
+      await orderService.enrichWithReleasedFunds(
+        buffer,
+        fileDoc._id
+      );
 
     return apiSuccess(
       {

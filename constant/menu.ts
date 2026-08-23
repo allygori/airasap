@@ -42,6 +42,21 @@ export const mainNav = [
     icon: ChartPieIcon,
   },
   // {
+  //   title: 'Reports',
+  //   url: '/dashboard/reports',
+  //   icon: ChartPieIcon,
+  //   items: [
+  //     {
+  //       title: 'Active Proposals',
+  //       url: '#',
+  //     },
+  //     {
+  //       title: 'Archived',
+  //       url: '#',
+  //     },
+  //   ],
+  // },
+  // {
   //   title: "Media Storage",
   //   url: "/dashboard/media",
   //   icon: Database,

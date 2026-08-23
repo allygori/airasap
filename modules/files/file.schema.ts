@@ -46,7 +46,23 @@ export const BaseFileSchema = z.object({
 /**
  * Create file schema
  */
-export const CreateFileSchema = BaseFileSchema;
+export const CreateFileSchema = BaseFileSchema.extend({
+  _id: z
+    .string()
+    .optional()
+    .refine((val) => mongoose.isValidObjectId(val), {
+      message: 'Mongoose ObjectId tidak valid',
+    })
+    .transform((val) => new mongoose.Types.ObjectId(val)),
+  created_at: z.union([
+    // z.string().optional(),
+    z.date().nullable().optional(),
+  ]),
+  // updated_at: z.string().optional(),
+  updated_at: z.union([z.date().nullable().optional()]),
+  // deleted_at: z.string().nullable().optional(),
+  deleted_at: z.union([z.date().nullable().optional()]),
+});
 
 /**
  * Update file schema - All fields are optional

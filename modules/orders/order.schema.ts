@@ -22,23 +22,30 @@ export const OrderItemSchema = z.object({
       })
       .transform((val) => new mongoose.Types.ObjectId(val)),
   ]),
+  product_id: z.string().optional(),
+  product_name: z.string().optional(),
+  variation_id: z.string().optional(),
+  variation_name: z.string().optional(),
+  parent_sku: z.string().optional(),
+  child_sku: z.string().optional(), // sku_reference_number
+
   product_cost: z.number().int().optional(),
   total_product_cost: z.number().int().optional(),
   profit: z.number().int().optional(),
   estimated_profit: z.number().int().optional(),
-  parent_sku: z.string().optional(),
-  sku_reference_number: z.string().optional(),
-  product_name: z.string().optional(),
-  product_id: z.string().optional(),
-  variation_name: z.string().optional(),
   // product_key: z.string().optional(),
   original_price: z.number().int().optional(),
-  discount: z.number().optional(),
+  discount_percentage: z.number().optional(),
   price_after_discount: z.number().int().optional(),
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
   subtotal: z.number().int().optional(),
   processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedFunds
+  gross_sales: z.number().int().optional(),
+  net_sales: z.number().int().optional(),
+  gross_profit: z.number().int().optional(),
+  net_profit: z.number().int().optional(),
+
   // cogs: z.number().optional(), // replaced with product_cost_amount
   // product_cost: z
   //   .string()
@@ -185,8 +192,11 @@ export const OrderBaseSchema = z.object({
   // shipping_fee: z.number().optional(),
   // other_fee: z.number().optional(),
   // return_shipping_fee: z.number().optional(),
-  released_amount: z.number().optional(),
-  net_amount: z.number().optional(),
+
+  // released_amount: z.number().optional(),
+  released_funds: z.number().optional(),
+  // net_amount: z.number().optional(),
+
   shipping_arranged_at: z.string().optional(),
   placed_at: z.string().optional(),
   released_funds_at: z.string().optional(),
@@ -197,19 +207,39 @@ export const OrderBaseSchema = z.object({
   total_profit: z.number().int().optional(),
   estimated_total_profit: z.number().int().optional(),
   enriched_at: z.string().nullable().optional(),
+
+  total_gross_sales: z.number().int().optional(),
+  total_net_sales: z.number().int().optional(),
+  total_gross_profit: z.number().int().optional(),
+  total_net_profit: z.number().int().optional(),
+
   /**
    * @TODO implement
    */
-  // enrichments: z.array(z.object({
-  //   file: z
-  //   .string()
-  //   .refine((val) => mongoose.isValidObjectId(val), {
-  //     message: 'Mongoose ObjectId tidak valid',
-  //   })
-  //   .transform((val) => new mongoose.Types.ObjectId(val)),
-  //   enriched_by: z.string(),
-  //   enriched_at: z.string(),
-  // })),
+  enrichments: z.array(
+    z.object({
+      file: z
+        .string()
+        .refine((val) => mongoose.isValidObjectId(val), {
+          message: 'Mongoose ObjectId tidak valid',
+        })
+        .transform(
+          (val) => new mongoose.Types.ObjectId(val)
+        ),
+      enriched_by: z.string().nullable().optional(),
+      enriched_at: z.union([
+        z.date().nullable().optional(),
+        z.string().nullable().optional(),
+      ]),
+    })
+  ),
+  other_variable_cost: [
+    {
+      name: z.string().nullable().optional(),
+      cost: z.number().int().optional(),
+      note: z.string().nullable().optional(),
+    },
+  ],
   deleted_at: z.string().nullable().optional(),
 });
 

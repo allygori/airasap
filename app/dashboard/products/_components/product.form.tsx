@@ -39,6 +39,7 @@ export const ProductForm = withForm({
     platform: undefined,
     name: '',
     product_id: '',
+    parent_sku: '',
     variants: [],
     options: [],
     is_active: false,
@@ -126,6 +127,17 @@ export const ProductForm = withForm({
                         type="text"
                         label="Product ID"
                         disabled={true}
+                      />
+                    )}
+                  />
+
+                  <form.AppField
+                    name="parent_sku"
+                    children={(field) => (
+                      <field.TextField
+                        type="text"
+                        label="Parent SKU"
+                        disabled={false}
                       />
                     )}
                   />

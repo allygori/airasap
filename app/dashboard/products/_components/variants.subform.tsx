@@ -29,19 +29,19 @@ const newCost = () => ({
   notes: '',
 });
 
-const newVariant = () => ({
-  variant_id: '',
-  name: '',
-  price: 0,
-  discount: 0,
-  final_price: 0,
-  parent_sku: '',
-  sku: '',
-  gtin: '',
-  is_default: false,
-  default_cost: 0,
-  costs: [newCost()],
-});
+// const newVariant = () => ({
+//   variant_id: '',
+//   name: '',
+//   price: 0,
+//   discount: 0,
+//   final_price: 0,
+//   parent_sku: '',
+//   sku: '',
+//   gtin: '',
+//   is_default: false,
+//   default_cost: 0,
+//   costs: [newCost()],
+// });
 
 export function VariantsSubForm({ form }: { form: any }) {
   const variants = useStore(
@@ -319,7 +319,7 @@ export function VariantsSubForm({ form }: { form: any }) {
                         )}
                       />
 
-                      <form.AppField
+                      {/* <form.AppField
                         name={`variants[${i}].parent_sku`}
                         children={(subField: any) => (
                           <subField.TextField
@@ -335,12 +335,13 @@ export function VariantsSubForm({ form }: { form: any }) {
                             }
                           />
                         )}
-                      />
+                      /> */}
+
                       <form.AppField
-                        name={`variants[${i}].sku`}
+                        name={`variants[${i}].sku_reference_number`}
                         children={(subField: any) => (
                           <subField.TextField
-                            label="SKU"
+                            label="SKU Reference Number"
                             value={
                               subField.state.value ?? ''
                             }

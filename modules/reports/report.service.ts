@@ -1,5 +1,6 @@
+import { aggregateProductSalesReport } from './product/product-report';
 import { ReportRepository } from './report.repository';
-import { aggregateSalesReport } from './@shared/aggregate/sales-report';
+import { aggregateSalesReport } from './sales/sales-report';
 
 export class ReportService {
   private repository: ReportRepository;
@@ -48,6 +49,46 @@ export class ReportService {
   ) {
     try {
       const pipelines = aggregateSalesReport({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+
+      // console.log(
+      //   'OrderService.generateSalesReport pipelines: ',
+      //   JSON.stringify(pipelines, null, 2)
+      // );
+
+      const report =
+        await this.repository.aggregate(pipelines);
+
+      // console.log(
+      //   'OrderService.generateSalesReport report: ',
+      //   JSON.stringify(report, null, 2)
+      // );
+
+      // if (!report || report.length === 0) {
+      //   throw new Error('Laporan tidak ditemukan');
+      // }
+
+      return report[0] || null;
+
+      // return report;
+    } catch (error: any) {
+      throw new Error(
+        `Gagal membuat laporan: ${error.message}`
+      );
+    }
+  }
+
+  async generateProductSalesReport(
+    startDate: string,
+    endDate: string
+  ) {
+    try {
+      const pipelines = aggregateProductSalesReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,

@@ -55,6 +55,7 @@ export default function ProductIndexPage() {
         columns={columns}
         searchFields={['name']}
         primarySearchField="name"
+        // showCreateButton={false}
         createUrl="/dashboard/products/create"
         createText="Create Product"
         isSortable={false}

@@ -45,6 +45,19 @@ const ProductSchema = new Schema<TProduct>(
       required: true,
       unique: true,
     },
+    parent_sku: {
+      type: String,
+      required: false,
+    },
+    has_variation: {
+      type: Boolean,
+      required: false,
+      default: false,
+    },
+    // sku_reference_number: {
+    //   type: String,
+    //   required: false,
+    // },
     options: {
       type: [[String]],
       required: false,
@@ -58,7 +71,19 @@ const ProductSchema = new Schema<TProduct>(
         // quantity: { type: Number, default: 0 },
         discount: { type: Number, default: 0 },
         final_price: { type: Number },
-        parent_sku: { type: String, required: false },
+        // parent_sku: { type: String, required: false },
+        // parent_sku: {
+        //   type: String,
+        //   required: false,
+        // },
+        // sku_reference_number: {
+        //   type: String,
+        //   required: false,
+        // },
+        child_sku: {
+          type: String,
+          required: false,
+        },
         sku: { type: String, required: false },
         gtin: { type: String, required: false },
         is_default: {

@@ -37,7 +37,37 @@ const OrderItemSchema = new Schema<TOrderItem>(
       required: false, // Not required because there are possibility user rename product name and can't find and match product by name, solution is user select the right product
       alias: 'productId',
     },
+    product_id: {
+      type: String,
+      alias: 'productId',
+    },
+    product_name: {
+      type: String,
+      alias: 'productName',
+    },
+    variation_id: {
+      type: String,
+      alias: 'variationId',
+    },
+    variation_name: {
+      type: String,
+      alias: 'variationName',
+    },
+    parent_sku: {
+      type: String,
+      alias: 'parentSku',
+    },
+    child_sku: {
+      type: String,
+      alias: 'skuReferenceNumber',
+    },
+
     product_cost: {
+      type: Number,
+      default: 0,
+      required: false,
+    },
+    total_product_cost: {
       type: Number,
       default: 0,
       required: false,
@@ -52,39 +82,22 @@ const OrderItemSchema = new Schema<TOrderItem>(
       default: 0,
       required: false,
     },
-    product_name: {
-      type: String,
-      alias: 'productName',
-    },
-    product_id: {
-      type: String,
-      alias: 'productId',
-    },
-    // variation_id: {
-    //   type: String,
-    //   alias: 'variationId',
-    // },
-    variation_name: {
-      type: String,
-      alias: 'variationName',
-    },
+
     // product_key: {
     //   type: String,
     //   alias: 'productKey',
     // },
-    parent_sku: {
-      type: String,
-      alias: 'parentSku',
-    },
-    sku_reference_number: {
-      type: String,
-      alias: 'skuReferenceNumber',
-    },
+
+    // sku_reference_number: {
+    //   type: String,
+    //   alias: 'skuReferenceNumber',
+    // },
+
     original_price: {
       type: Number,
       alias: 'originalPrice',
     },
-    discount: {
+    discount_percentage: {
       type: Number,
       default: 0,
     },
@@ -102,6 +115,19 @@ const OrderItemSchema = new Schema<TOrderItem>(
     returned_quantity: {
       type: Number,
       alias: 'returnedQuantity',
+    },
+
+    gross_sales: {
+      type: Number,
+    },
+    net_sales: {
+      type: Number,
+    },
+    gross_profit: {
+      type: Number,
+    },
+    net_profit: {
+      type: Number,
     },
     // cogs: {
     //   // replaced with product_cost_amount
@@ -429,14 +455,20 @@ const OrderSchema = new Schema<TOrder>(
     //   type: Number,
     //   alias: 'returnShippingFee',
     // },
-    released_amount: {
+    // released_amount: {
+    //   type: Number,
+    //   alias: 'releasedAmount',
+    //   default: 0,
+    // },
+    // net_amount: {
+    //   type: Number,
+    //   alias: 'netAmount',
+    // },
+
+    released_funds: {
       type: Number,
       alias: 'releasedAmount',
       default: 0,
-    },
-    net_amount: {
-      type: Number,
-      alias: 'netAmount',
     },
 
     // Date related data
@@ -479,14 +511,40 @@ const OrderSchema = new Schema<TOrder>(
       alias: 'enrichedAt',
       default: null,
     },
+
+    total_gross_sales: {
+      type: Number,
+      default: 0,
+    },
+    total_net_sales: {
+      type: Number,
+      default: 0,
+    },
+    total_gross_profit: {
+      type: Number,
+      default: 0,
+    },
+    total_net_profit: {
+      type: Number,
+      default: 0,
+    },
+    other_variable_cost: [
+      {
+        name: { type: String },
+        cost: { type: Number },
+        note: { type: String },
+      },
+    ],
     /**
      * @TODO implement
      */
-    // enrichments: [
-    //   {
-
-    //   }
-    // ],
+    enrichments: [
+      {
+        file: { type: Types.ObjectId, ref: 'File' },
+        enriched_by: { type: Types.ObjectId, ref: 'User' },
+        enriched_at: { type: Date },
+      },
+    ],
     deleted_at: {
       type: Date,
       alias: 'deletedAt',

@@ -38,8 +38,10 @@ import {
   getReleasedFunds,
   getReleasedFundsVersion,
 } from '@/lib/xlsx/shopee/order/released-funds';
+import { saveJson } from '@/lib/file/save-json';
 
 export class OrderService {
+  private tenantContext;
   private repository: OrderRepository;
   private productService: ProductService;
   private storeService: StoreService;
@@ -47,7 +49,9 @@ export class OrderService {
   constructor(tenantContext: {
     organizationId: string;
     storeId?: string;
+    userId?: string;
   }) {
+    this.tenantContext = tenantContext;
     this.repository = new OrderRepository(tenantContext);
     this.productService = new ProductService(tenantContext);
     this.storeService = new StoreService(tenantContext);
@@ -523,16 +527,27 @@ export class OrderService {
         productNames.add(productName);
       }
 
+      // console.log('productNames', productNames);
+
       const products =
         await this.productService.getProductsByNames([
           ...productNames,
         ]);
+
+      // saveJson('.data/json-logs/all-order-products.json', {
+      //   productNames,
+      //   products,
+      // });
 
       let createdCount = 0;
       let updatedCount = 0;
       for (const [orderId, group] of ordersMap.entries()) {
         const order = group[0] || {};
 
+        // console.log(
+        //   `${order.id} - products`,
+        //   JSON.stringify(products, null, 2)
+        // );
         // console.log(JSON.stringify(order, null, 2));
         // console.log(
         //   `Place at: ${parseToISOStringWithTimezone(
@@ -554,12 +569,13 @@ export class OrderService {
           const priceAfterDiscount = item.priceAfterDiscount
             ? Number(item.priceAfterDiscount)
             : 0;
+          // prettier-ignore
           const discount =
-            (priceAfterDiscount / originalPrice) * 100;
+            ((originalPrice - priceAfterDiscount) / originalPrice) * 100;
 
-          console.log(
-            `[${order.id}] Discount: ${discount}`
-          );
+          // console.log(
+          //   `[${order.id}] Discount: ${discount}`
+          // );
 
           let product;
           if (productName !== '') {
@@ -581,20 +597,29 @@ export class OrderService {
             );
           }
 
-          const variantCost = (
-            product?.variants || []
-          ).find(
+          const variant = (product?.variants || []).find(
             (v) =>
               v.name === variantName ||
               v.name === productName
           );
+
+          if (!variant) {
+            console.warn(
+              `[OrderService.massUploadAllOrderShopeeV1] Variant name: ${variantName} or Product Name ${productName} not found`
+            );
+          }
+
+          // console.log(
+          //   `[OrderService.massUploadAllOrderShopeeV1] ${order.id} variant`,
+          //   JSON.stringify(variant, null, 2)
+          // );
           const productCost =
             product?.variants?.length === 1
               ? product?.variants[0]?.default_cost || 0
-              : variantCost?.default_cost || 0;
+              : variant?.default_cost || 0;
 
           // console.log({
-          //   variantCost,
+          //   variant,
           //   productCost,
           //   variants: product?.variants,
           //   product,
@@ -619,6 +644,7 @@ export class OrderService {
             parent_sku: item.parentSku,
             sku_reference_number: item.skuReferenceNumber,
             product_name: item.productName,
+            variation_id: variant?.variant_id,
             variation_name: item.variationName,
             original_price: originalPrice,
             discount: discount,
@@ -791,7 +817,8 @@ export class OrderService {
    * @returns
    */
   async massUploadEnrichWithOrderCompletedShopeeV1(
-    fileBuffer: ArrayBuffer
+    fileBuffer: ArrayBuffer,
+    fileId: string
   ): Promise<MassUploadResponseDTO> {
     try {
       const orders =
@@ -830,14 +857,16 @@ export class OrderService {
           const priceAfterDiscount = item.priceAfterDiscount
             ? Number(item.priceAfterDiscount)
             : 0;
+          // prettier-ignore
           const discount =
-            (priceAfterDiscount / originalPrice) * 100;
+            ((originalPrice - priceAfterDiscount) / originalPrice) * 100;
 
           return {
             // Don't update product and product_cost?
             parent_sku: item.parentSku,
             sku_reference_number: item.skuReferenceNumber,
             product_name: item.productName,
+            // variation_id: variant?.variant_id,
             variation_name: item.variationName,
             original_price: originalPrice,
             discount: discount,
@@ -969,6 +998,13 @@ export class OrderService {
           //   alias: 'releasedFundDate',
           // },
           completed_at: order.orderCompletionTime,
+          enrichments: [
+            {
+              file: fileId,
+              enriched_by: this.tenantContext.userId,
+              enriched_at: new Date(),
+            },
+          ],
           // deleted_at: {
           //   type: Date,
           //   alias: 'deletedAt',
@@ -1008,7 +1044,10 @@ export class OrderService {
   /**
    * Enrich order data with released income data from shopee xlsx
    */
-  async enrichWithReleasedFunds(fileBuffer: ArrayBuffer) {
+  async enrichWithReleasedFunds(
+    fileBuffer: ArrayBuffer,
+    fileId: string
+  ) {
     const v1 = async (ab: ArrayBuffer) => {
       try {
         const { orders, productIds } =
@@ -1097,13 +1136,13 @@ export class OrderService {
             const name =
               orderObjItem?.variation_name ||
               orderObjItem?.product_name;
-            const variantCost = (
-              product?.variants || []
-            ).find((v) => v.name === name);
+            const variant = (product?.variants || []).find(
+              (v) => v.name === name
+            );
             const productCost =
               product?.variants?.length === 1
                 ? product?.variants[0]?.default_cost || 0
-                : variantCost?.default_cost || 0;
+                : variant?.default_cost || 0;
 
             orderObjItem.product = product?._id;
             orderObjItem.product_cost =
@@ -1155,7 +1194,13 @@ export class OrderService {
           $set.total_profit =
             $set.released_amount - $set.total_product_cost;
           $set.released_funds_at = order.releasedFundDate;
-          $set.enriched_at = new Date();
+          $set.enrichments = orderObj.enrichments.push({
+            file: fileId,
+            enriched_by: this.tenantContext.userId,
+            enriched_at: new Date(),
+          });
+
+          // $set.enriched_at = new Date();
           // $set.enriched_at = parseToISOStringWithTimezone(
           //   new Date(),
           //   timezone
@@ -1284,13 +1329,13 @@ export class OrderService {
             const name =
               orderObjItem?.variation_name ||
               orderObjItem?.product_name;
-            const variantCost = (
-              product?.variants || []
-            ).find((v) => v.name === name);
+            const variant = (product?.variants || []).find(
+              (v) => v.name === name
+            );
             const productCost =
               product?.variants?.length === 1
                 ? product?.variants[0]?.default_cost || 0
-                : variantCost?.default_cost || 0;
+                : variant?.default_cost || 0;
 
             orderObjItem.product = product?._id;
             orderObjItem.product_id = item?.productId;

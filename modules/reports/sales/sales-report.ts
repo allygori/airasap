@@ -1,11 +1,11 @@
-import { AggregateBuilder } from './builder';
+import { AggregateBuilder } from '../@shared/aggregate/builder';
 import {
   // mergeFilters,
   tenantFilter,
   dateFilter,
   orderStatusFilter,
   platformFilter,
-} from './pipelines/filters';
+} from '../@shared/aggregate/pipelines/filters';
 // import { mergeFilters } from './pipelines/filters/_merge';
 import { mergeObject } from '@/lib/utils/object/merge';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
@@ -13,19 +13,19 @@ import {
   baseMetrics,
   baseMetrics1,
   metricsForRevenue,
-} from './pipelines/transforms/metrics';
+} from '../@shared/aggregate/pipelines/transforms/metrics';
 import {
   groupByDateForDailyRevenue,
   groupRevenueByDay,
   sumDailyDataFromPreviousGrouping,
-} from './pipelines/groups/revenue';
+} from '../@shared/aggregate/pipelines/groups/revenue';
 import { endOfDay, parse, startOfDay } from 'date-fns';
 import { PipelineStage } from 'mongoose';
 // import { dateParser } from '@/lib/utils/parser';
 import { fnsFormatDate } from '@/lib/formatter/date';
 import { type TimeZone } from '@/constant/timezone';
-import { addNormalizeData } from './pipelines/transforms/normalize';
-import { sortRevenue } from './pipelines/transforms/sort';
+import { addNormalizeData } from '../@shared/aggregate/pipelines/transforms/normalize';
+import { sortRevenue } from '../@shared/aggregate/pipelines/transforms/sort';
 
 const DEFAULT_DATE_FIELD = 'placed_at';
 
@@ -673,7 +673,7 @@ export const aggregateSalesReport = ({
     .with(metricsForRevenue())
     .with(sortRevenue());
 
-  pipelines.debug();
+  pipelines.log();
 
   return pipelines.build();
 };
