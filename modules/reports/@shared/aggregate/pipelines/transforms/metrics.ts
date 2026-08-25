@@ -27,7 +27,7 @@ export const metricsForRevenue = () => {
         ],
       },
       total_payout: 1,
-      estimated_total_profit: 1,
+      total_gross_profit: 1,
       total_payment: 1,
       // total_payment: {
       //   $subtract: [
@@ -79,7 +79,7 @@ export const baseMetrics = (
 
       total_cost: '$total_product_cost',
 
-      total_payout: '$released_amount',
+      total_payout: '$released_funds',
 
       order_count: 1,
 
@@ -134,7 +134,7 @@ export const baseMetrics1 = (
 
       total_cost: '$total_product_cost',
 
-      total_payout: '$released_amount',
+      total_payout: '$released_funds',
 
       order_count: 1,
 

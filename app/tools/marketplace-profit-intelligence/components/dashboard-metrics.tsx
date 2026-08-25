@@ -47,7 +47,7 @@ export function DashboardMetrics({
         <CardContent>
           <div className="text-2xl font-bold">
             {formatIDR(
-              reportData.summary?.released_amount || 0
+              reportData.summary?.released_funds || 0
             )}
           </div>
         </CardContent>
@@ -73,7 +73,7 @@ export function DashboardMetrics({
         <CardContent>
           <div className="text-2xl font-bold text-green-700 dark:text-green-400">
             {formatIDR(
-              (reportData.summary?.released_amount || 0) -
+              (reportData.summary?.released_funds || 0) -
                 totalCOGS
             )}
           </div>

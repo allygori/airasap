@@ -15,8 +15,8 @@ export const groupByDateForDailyRevenue = () => {
       daily_profit: {
         $sum: '$total_profit',
       },
-      daily_estimated_total_profit: {
-        $sum: '$estimated_total_profit',
+      daily_total_gross_profit: {
+        $sum: '$total_gross_profit',
       },
       daily_payment: {
         $sum: '$total_payment',
@@ -113,8 +113,8 @@ export const sumDailyDataFromPreviousGrouping = () => {
       total_profit: {
         $sum: '$daily_profit',
       },
-      estimated_total_profit: {
-        $sum: '$daily_estimated_total_profit',
+      total_gross_profit: {
+        $sum: '$daily_total_gross_profit',
       },
       total_payment: {
         $sum: '$daily_payment',
@@ -156,8 +156,8 @@ export const sumDailyDataFromPreviousGrouping = () => {
           daily_revenue: '$daily_revenue',
           daily_payout: '$daily_payout',
           daily_profit: '$daily_profit',
-          daily_estimated_profit:
-            '$daily_estimated_total_profit',
+          daily_total_gross_profit:
+            '$daily_total_gross_profit',
           daily_payment: '$daily_payment',
           daily_cost: '$daily_cost',
           number_of_orders: '$daily_orders_count',

@@ -27,12 +27,12 @@ export const OrderItemSchema = z.object({
   variation_id: z.string().optional(),
   variation_name: z.string().optional(),
   parent_sku: z.string().optional(),
-  child_sku: z.string().optional(), // sku_reference_number
+  child_sku: z.string().optional(), // child_sku
 
   product_cost: z.number().int().optional(),
   total_product_cost: z.number().int().optional(),
   profit: z.number().int().optional(),
-  estimated_profit: z.number().int().optional(),
+  // estimated_profit: z.number().int().optional(),
   // product_key: z.string().optional(),
   original_price: z.number().int().optional(),
   discount_percentage: z.number().optional(),
@@ -193,7 +193,7 @@ export const OrderBaseSchema = z.object({
   // other_fee: z.number().optional(),
   // return_shipping_fee: z.number().optional(),
 
-  // released_amount: z.number().optional(),
+  // released_funds: z.number().optional(),
   released_funds: z.number().optional(),
   // net_amount: z.number().optional(),
 
@@ -205,8 +205,8 @@ export const OrderBaseSchema = z.object({
   // additional fields
   total_product_cost: z.number().int().optional(),
   total_profit: z.number().int().optional(),
-  estimated_total_profit: z.number().int().optional(),
-  enriched_at: z.string().nullable().optional(),
+  // estimated_total_profit: z.number().int().optional(),
+  // enriched_at: z.string().nullable().optional(),
 
   total_gross_sales: z.number().int().optional(),
   total_net_sales: z.number().int().optional(),
@@ -218,6 +218,13 @@ export const OrderBaseSchema = z.object({
    */
   enrichments: z.array(
     z.object({
+      kind: z
+        .enum(
+          ['completed', 'released-funds'],
+          'Tipe enrichment tidak valid'
+        )
+        .nullable()
+        .optional(),
       file: z
         .string()
         .refine((val) => mongoose.isValidObjectId(val), {

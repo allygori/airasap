@@ -161,10 +161,10 @@ export function OrderItemsSectionForm({
                       />
 
                       <form.AppField
-                        name={`items[${i}].sku_reference_number`}
+                        name={`items[${i}].child_sku`}
                         children={(subField: any) => (
                           <subField.TextField
-                            label="SKU Reference Number"
+                            label="Child SKU"
                             value={
                               subField.state.value ?? ''
                             }

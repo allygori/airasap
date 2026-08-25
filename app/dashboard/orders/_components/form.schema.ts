@@ -3,7 +3,7 @@ import z from 'zod';
 export const orderItemSchema = z.object({
   product: z.string().optional(),
   parent_sku: z.string().optional(),
-  sku_reference_number: z.string().optional(),
+  child_sku: z.string().optional(),
   product_name: z.string().optional(),
   variation_name: z.string().optional(),
   product_key: z.string().optional(),
@@ -96,7 +96,7 @@ export const formSchema = z.object({
   items: z.array(orderItemSchema).optional(),
   free_shipping_promo_from_seller: z.number().optional(),
   compensation: z.number().optional(),
-  released_amount: z.number().optional(),
+  released_funds: z.number().optional(),
   net_amount: z.number().optional(),
   shipping_arranged_at: z.string().optional(),
   placed_at: z.string().optional(),

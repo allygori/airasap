@@ -217,6 +217,15 @@ export class ProductRepository extends BaseRepository<TProduct> {
   }
 
   /**
+   * Count products
+   */
+  async count() {
+    return await this.model.countDocuments({
+      ...this.getTenantFilter(),
+    });
+  }
+
+  /**
    * Count products by platform
    */
   async countByPlatform(platform: OrderPlatform) {

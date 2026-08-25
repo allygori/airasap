@@ -88,7 +88,7 @@ export const ORDER_FIELD_MAP = {
   skuReferenceNumber: {
     header: 'Nomor Referensi SKU',
     parser: stringParser,
-    dbField: '' /* original: sku_reference_number */,
+    dbField: '' /* original: child_sku */,
   },
   variationName: {
     header: 'Nama Variasi',

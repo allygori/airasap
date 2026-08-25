@@ -284,7 +284,7 @@ export class OrderService {
         0
       );
       data.total_profit =
-        (data.released_amount || 0) - totalProductCost;
+        (data.released_funds || 0) - totalProductCost;
 
       const updatedOrder =
         await this.repository.overwrite(data);
@@ -570,7 +570,7 @@ export class OrderService {
             ? Number(item.priceAfterDiscount)
             : 0;
           // prettier-ignore
-          const discount =
+          const discountPercentage =
             ((originalPrice - priceAfterDiscount) / originalPrice) * 100;
 
           // console.log(
@@ -634,24 +634,30 @@ export class OrderService {
           const finalQuantity = quantity - returnedQuantity;
           const totalProductCost =
             productCost * finalQuantity;
+          const grossSales = priceAfterDiscount * quantity;
+          const grossProfit = grossSales - totalProductCost;
 
           return {
             product: product?._id,
             product_cost: productCost,
             total_product_cost: totalProductCost, // without multiply with quantity?
             // prettier-ignore
-            estimated_profit: (Number(item.orderSubtotal) - totalProductCost),
+            // estimated_profit: (Number(item.orderSubtotal) - totalProductCost),
             parent_sku: item.parentSku,
-            sku_reference_number: item.skuReferenceNumber,
+            child_sku: item.skuReferenceNumber,
             product_name: item.productName,
             variation_id: variant?.variant_id,
             variation_name: item.variationName,
             original_price: originalPrice,
-            discount: discount,
+            discount_percentage: discountPercentage,
             price_after_discount: priceAfterDiscount,
             quantity: quantity,
             subtotal: item.orderSubtotal,
             returned_quantity: item.returnedQuantity,
+            gross_sales: grossSales,
+            // net_sales: z.number().int().optional(),
+            gross_profit: grossProfit,
+            // net_profit: z.number().int().optional(),
           };
         });
 
@@ -661,6 +667,16 @@ export class OrderService {
           },
           0
         );
+
+        const totalProductCost = orderItems.reduce(
+          (acc, n) => acc + n.product_cost * n.quantity,
+          0
+        );
+        const totalGrossSales = orderItems.reduce(
+          (acc, n) => acc + n.gross_sales,
+          0
+        );
+        // const totalFee = Object.values()
 
         const payload = {
           platform: ORDER_PLATFORMS.shopee.value,
@@ -749,7 +765,7 @@ export class OrderService {
           //   type: Number,
           //   alias: 'returnShippingFee',
           // },
-          // released_amount: {
+          // released_funds: {
           //   type: Number,
           //   alias: 'releasedAmount',
           // },
@@ -768,14 +784,19 @@ export class OrderService {
           //   type: Date,
           //   alias: 'deletedAt',
           // },
-          total_product_cost: orderItems.reduce(
-            (acc, n) => acc + n.product_cost * n.quantity,
-            0
-          ),
-          estimated_total_profit: orderItems.reduce(
-            (acc, n) => acc + n.estimated_profit,
-            0
-          ),
+          total_product_cost: totalProductCost,
+          // estimated_total_profit: orderItems.reduce(
+          //   (acc, n) => acc + n.estimated_profit,
+          //   0
+          // ),
+          total_gross_sales: totalGrossSales,
+          total_net_sales: totalGrossSales,
+          total_gross_profit:
+            totalGrossSales - totalProductCost,
+          total_net_profit:
+            totalGrossSales - totalProductCost,
+          enrichments: [],
+          other_variable_cost: [],
         };
 
         const existingOrder =
@@ -864,7 +885,7 @@ export class OrderService {
           return {
             // Don't update product and product_cost?
             parent_sku: item.parentSku,
-            sku_reference_number: item.skuReferenceNumber,
+            child_sku: item.skuReferenceNumber,
             product_name: item.productName,
             // variation_id: variant?.variant_id,
             variation_name: item.variationName,
@@ -886,6 +907,22 @@ export class OrderService {
           },
           0
         );
+
+        // const enrichment = {
+        //   type: 'completed',
+        //   file: fileId,
+        //   enriched_by: this.tenantContext.userId,
+        //   enriched_at: new Date(),
+        // };
+
+        const enrichments =
+          existingOrder?.enrichments || [];
+        enrichments.push({
+          kind: 'completed',
+          file: fileId,
+          enriched_by: this.tenantContext.userId,
+          enriched_at: new Date(),
+        });
 
         const payload = {
           // organization: {
@@ -983,7 +1020,7 @@ export class OrderService {
           //   type: Number,
           //   alias: 'returnShippingFee',
           // },
-          // released_amount: {
+          // released_funds: {
           //   type: Number,
           //   alias: 'releasedAmount',
           // },
@@ -998,13 +1035,7 @@ export class OrderService {
           //   alias: 'releasedFundDate',
           // },
           completed_at: order.orderCompletionTime,
-          enrichments: [
-            {
-              file: fileId,
-              enriched_by: this.tenantContext.userId,
-              enriched_at: new Date(),
-            },
-          ],
+          enrichments: enrichments,
           // deleted_at: {
           //   type: Date,
           //   alias: 'deletedAt',
@@ -1162,6 +1193,14 @@ export class OrderService {
             items.push(orderObjItem);
           }
 
+          const enrichments = orderObj?.enrichments || [];
+          enrichments.push({
+            kind: 'released-funds',
+            file: fileId,
+            enriched_by: this.tenantContext.userId,
+            enriched_at: new Date(),
+          });
+
           $set.items = items;
           $set.fee = {
             admin_fee: order.adminFee,
@@ -1179,7 +1218,7 @@ export class OrderService {
               order.returnToSenderShippingFee,
             shipping_fee_refund: order.shippingFeeRefund,
           };
-          $set.released_amount = order.totalIncome || 0;
+          $set.released_funds = order.totalIncome || 0;
           $set.shipping_cost_paid_by_buyer =
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
@@ -1192,13 +1231,9 @@ export class OrderService {
           $set.voucher_code = order.voucherCode || null;
           $set.total_product_cost = totalProductCost || 0;
           $set.total_profit =
-            $set.released_amount - $set.total_product_cost;
+            $set.released_funds - $set.total_product_cost;
           $set.released_funds_at = order.releasedFundDate;
-          $set.enrichments = orderObj.enrichments.push({
-            file: fileId,
-            enriched_by: this.tenantContext.userId,
-            enriched_at: new Date(),
-          });
+          $set.enrichments = enrichments;
 
           // $set.enriched_at = new Date();
           // $set.enriched_at = parseToISOStringWithTimezone(
@@ -1433,6 +1468,14 @@ export class OrderService {
           const totalOtherFee =
             otherFee + transactionFee + fbsFee + taxPPH22;
 
+          const enrichments = orderObj?.enrichments || [];
+          enrichments.push({
+            kind: 'released-funds',
+            file: fileId,
+            enriched_by: this.tenantContext.userId,
+            enriched_at: new Date(),
+          });
+
           $set.items = items;
           $set.fee = {
             admin_fee: order.adminFee,
@@ -1468,7 +1511,7 @@ export class OrderService {
             totalPromotionFee,
             totalOtherFee,
           });
-          $set.released_amount = releasedFundsAmount || 0;
+          $set.released_funds = releasedFundsAmount || 0;
           $set.shipping_cost_paid_by_buyer =
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
@@ -1481,9 +1524,10 @@ export class OrderService {
           $set.voucher_code = order.voucherCode || null;
           $set.total_product_cost = totalProductCost || 0;
           $set.total_profit =
-            $set.released_amount - $set.total_product_cost;
+            $set.released_funds - $set.total_product_cost;
           $set.released_funds_at = order.releasedFundDate;
-          $set.enriched_at = new Date();
+          $set.enrichments = enrichments;
+          // $set.enriched_at = new Date();
           // $set.enriched_at = parseToISOStringWithTimezone(
           //   new Date(),
           //   timezone

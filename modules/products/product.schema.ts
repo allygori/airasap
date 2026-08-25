@@ -14,7 +14,7 @@ import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 export const VariantSchema = z.object({
   name: z.string().min(1, 'Nama variant wajib diisi'),
   variant_id: z.string().min(1, 'Variant ID wajib diisi'),
-  child_sku: z.string().optional().nullable(), // sku_reference_number
+  child_sku: z.string().optional().nullable(), // child_sku
   gtin: z.string().nullable().optional(),
 
   // key: z.string().min(1, 'Variant key wajib diisi'),
@@ -37,7 +37,7 @@ export const VariantSchema = z.object({
   // sku: z.string().optional(),
   // parent_sku: z.string().optional().nullable(),
 
-  // sku_reference_number: z.string().optional().nullable(),
+  // child_sku: z.string().optional().nullable(),
   is_default: z.boolean(), // https://share.google/aimode/LIpXWTeE9qAGrqCxZ
   costs: z
     .array(
@@ -66,7 +66,7 @@ export const ProductBaseSchema = z.object({
     .optional(),
   name: z.string().min(3, 'Nama minimal 3 karakter'),
   product_id: z.string().min(1, 'Product ID wajib diisi'),
-  parent_sku: z.string().optional().nullable(),
+  parent_sku: z.string().optional(),
   has_variation: z.boolean().default(false),
   // key: z.string().optional(),
   // options: z.array(

@@ -164,11 +164,11 @@ export const getProductsColumn = (
       ),
     },
     {
-      accessorKey: 'released_amount',
+      accessorKey: 'released_funds',
       header: 'Pendapatan',
       cell: ({ row }) => (
         <div className="text-sm font-medium">
-          {formatIDR(row.original.released_amount ?? 0)}
+          {formatIDR(row.original.released_funds ?? 0)}
         </div>
       ),
     },
@@ -188,11 +188,11 @@ export const getProductsColumn = (
         let isStatusNotCanceled =
           row.original.status !== 'batal';
         let releasedFundsAmount =
-          row.original.released_amount || 0;
+          row.original.released_funds || 0;
         let totalProfit =
           isStatusNotCanceled &&
           row.original.total_profit === 0
-            ? row.original.estimated_total_profit
+            ? row.original.total_gross_profit
             : row.original.total_profit;
 
         return (
@@ -223,18 +223,52 @@ export const getProductsColumn = (
     {
       accessorKey: 'enriched_at',
       header: 'Dilengkapi',
-      cell: ({ row }) => (
-        <div className="text-sm font-medium">
-          <CheckCircleIcon
-            className={cn(
-              'text-muted-foreground size-3',
-              row.original.enriched_at
-                ? 'text-green-500 dark:text-green-400'
-                : 'text-gray-500'
-            )}
-          />
-        </div>
-      ),
+      cell: ({ row }) => {
+        const completed = (
+          row.original.enrichments || []
+        ).findIndex(
+          (item: { kind: string }) =>
+            item.kind === 'completed'
+        );
+        const releasedFunds = (
+          row.original.enrichments || []
+        ).findIndex(
+          (item: { kind: string }) =>
+            item.kind === 'released-funds'
+        );
+
+        console.log({ completed, releasedFunds });
+
+        return (
+          <div className="flex flex-row flex-wrap space-x-2 text-sm font-medium">
+            {/* {
+              (row.original.enrichments || []).forEach((item, idx) => {
+                return {
+                  { item.type === 'completed' }
+                }
+              })
+            } */}
+
+            <CheckCircleIcon
+              className={cn(
+                'text-muted-foreground size-3',
+                completed >= 0
+                  ? 'text-green-500 dark:text-green-400'
+                  : 'text-gray-500'
+              )}
+            />
+
+            <CheckCircleIcon
+              className={cn(
+                'text-muted-foreground size-3',
+                releasedFunds >= 0
+                  ? 'text-green-500 dark:text-green-400'
+                  : 'text-gray-500'
+              )}
+            />
+          </div>
+        );
+      },
     },
 
     // {

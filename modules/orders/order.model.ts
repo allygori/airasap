@@ -77,18 +77,18 @@ const OrderItemSchema = new Schema<TOrderItem>(
       default: 0,
       required: false,
     },
-    estimated_profit: {
-      type: Number,
-      default: 0,
-      required: false,
-    },
+    // estimated_profit: {
+    //   type: Number,
+    //   default: 0,
+    //   required: false,
+    // },
 
     // product_key: {
     //   type: String,
     //   alias: 'productKey',
     // },
 
-    // sku_reference_number: {
+    // child_sku: {
     //   type: String,
     //   alias: 'skuReferenceNumber',
     // },
@@ -455,7 +455,7 @@ const OrderSchema = new Schema<TOrder>(
     //   type: Number,
     //   alias: 'returnShippingFee',
     // },
-    // released_amount: {
+    // released_funds: {
     //   type: Number,
     //   alias: 'releasedAmount',
     //   default: 0,
@@ -502,15 +502,15 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       default: 0,
     },
-    estimated_total_profit: {
-      type: Number,
-      default: 0,
-    },
-    enriched_at: {
-      type: Date,
-      alias: 'enrichedAt',
-      default: null,
-    },
+    // estimated_total_profit: {
+    //   type: Number,
+    //   default: 0,
+    // },
+    // enriched_at: {
+    //   type: Date,
+    //   alias: 'enrichedAt',
+    //   default: null,
+    // },
 
     total_gross_sales: {
       type: Number,
@@ -540,6 +540,10 @@ const OrderSchema = new Schema<TOrder>(
      */
     enrichments: [
       {
+        kind: {
+          type: String,
+          enum: ['completed', 'released-funds'],
+        },
         file: { type: Types.ObjectId, ref: 'File' },
         enriched_by: { type: Types.ObjectId, ref: 'User' },
         enriched_at: { type: Date },

@@ -273,7 +273,7 @@ export function ViewDrawer<T extends Record<string, any>>({
               <section>
                 <StatLine
                   label="Pendapatan"
-                  value={formatIDR(item.released_amount, {
+                  value={formatIDR(item.released_funds, {
                     fallback: 0,
                   })}
                 />

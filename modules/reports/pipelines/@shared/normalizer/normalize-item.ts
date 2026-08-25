@@ -5,7 +5,7 @@ export const normalizeItem = () => {
       discount: '$total_discount',
       net_sales: '',
       platform_fee: '',
-      seller_income: '$released_amount',
+      seller_income: '$released_funds',
     },
   };
 };

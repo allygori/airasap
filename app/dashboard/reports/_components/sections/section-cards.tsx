@@ -20,7 +20,7 @@ type SectionCardsProps = {
   estimateCOGS?: number;
   estimateProfit?: number;
   ratioProfitToRevenue?: number;
-  estimatedTotalProfit?: number;
+  totalGrossProfit?: number;
   voucherBorneBySeller?: number;
   bundleDealDiscountFromSeller?: number;
   shippingCostPaidByBuyer?: number;
@@ -39,7 +39,7 @@ export function SectionCards({
   estimateCOGS,
   estimateProfit,
   ratioProfitToRevenue,
-  estimatedTotalProfit,
+  totalGrossProfit,
   voucherBorneBySeller,
   bundleDealDiscountFromSeller,
   shippingCostPaidByBuyer,
@@ -414,11 +414,9 @@ export function SectionCards({
         </Card>
         <Card className="@container/card">
           <CardHeader>
-            <CardDescription>
-              Estimasi Profit (Tanpa Potongan Fee)
-            </CardDescription>
+            <CardDescription>Gross Profit</CardDescription>
             <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-              {formatIDR(estimatedTotalProfit || 0)}
+              {formatIDR(totalGrossProfit || 0)}
             </CardTitle>
             <CardAction>
               <Badge variant="outline">

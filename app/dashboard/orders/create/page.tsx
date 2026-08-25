@@ -46,7 +46,7 @@ const defaultValues: z.input<typeof formSchema> = {
   note: '',
   free_shipping_promo_from_seller: 0,
   compensation: 0,
-  released_amount: 0,
+  released_funds: 0,
   net_amount: 0,
   shipping_arranged_at: '',
   placed_at: '',

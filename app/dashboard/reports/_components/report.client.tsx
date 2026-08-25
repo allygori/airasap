@@ -263,9 +263,7 @@ const ReportClient = () => {
           ratioProfitToRevenue={
             result?.ratio_profit_to_revenue
           }
-          estimatedTotalProfit={
-            result?.estimated_total_profit
-          }
+          totalGrossProfit={result?.total_gross_profit}
           voucherBorneBySeller={
             result?.total_voucher_borne_by_seller
           }

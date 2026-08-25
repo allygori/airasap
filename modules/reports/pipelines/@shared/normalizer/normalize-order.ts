@@ -45,7 +45,7 @@ export const normalizeOrder = <F extends string>(
       revenue: '$order_subtotal',
       total_payment: '$total_payment',
       total_cost: '$total_product_cost',
-      total_payout: '$released_amount',
+      total_payout: '$released_funds',
       order_id: '$order_id',
       username: '$username',
       status: '$status',
@@ -61,7 +61,7 @@ export const normalizeOrder = <F extends string>(
 
       // total_profit: {
       //   $subtract: [
-      //     '$released_amount',
+      //     '$released_funds',
       //     {
       //       $ifNull: ['$total_product_cost', 0],
       //     },

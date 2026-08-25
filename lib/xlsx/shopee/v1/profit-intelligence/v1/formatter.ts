@@ -138,7 +138,7 @@ export function formatReportData(
     order_diff: parsed.orderDiff,
     summary: {
       total_income: parsed.income.grossSales,
-      released_amount: parsed.income.netPayout,
+      released_funds: parsed.income.netPayout,
       total_expense: {
         total: Object.values(parsed.income.fees).reduce(
           (total: number, value: number) => total + value,

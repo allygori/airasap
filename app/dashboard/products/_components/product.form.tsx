@@ -1,9 +1,10 @@
 'use client';
 
-import { z } from 'zod';
+// import { z } from 'zod';
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useStore } from '@tanstack/react-form';
 import { withForm } from '@/components/form/form.hook';
 import {
   Card,
@@ -40,6 +41,7 @@ export const ProductForm = withForm({
     name: '',
     product_id: '',
     parent_sku: '',
+    has_variation: false,
     variants: [],
     options: [],
     is_active: false,
@@ -137,11 +139,22 @@ export const ProductForm = withForm({
                       <field.TextField
                         type="text"
                         label="Parent SKU"
-                        disabled={false}
+                        disabled={true}
                       />
                     )}
                   />
                 </FieldGroup>
+
+                {/* <pre>
+                  {JSON.stringify(
+                    useStore(
+                      form.store,
+                      (state: any) => state.values
+                    ),
+                    null,
+                    2
+                  )}
+                </pre> */}
               </CardContent>
             </Card>
 

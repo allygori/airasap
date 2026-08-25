@@ -1,21 +1,36 @@
-import { Schema, model, models, Document } from 'mongoose';
+import {
+  Schema,
+  model,
+  models,
+  Document,
+  Types,
+} from 'mongoose';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 import {
   type TimeZone,
   TIMEZONE_VALUES,
 } from '@/constant/timezone';
+import { StoreBaseDTO } from './store.dto';
 
-const ObjectId = Schema.Types.ObjectId;
+// const ObjectId = Schema.Types.ObjectId;
 
-export type TStore = Document & {
-  organization: typeof ObjectId;
-  user: typeof ObjectId;
-  platform: (typeof ORDER_PLATFORM_VALUES)[number];
-  name: string;
-  timezone: TimeZone;
-  is_active: boolean;
-  deleted_at?: Date;
-};
+// export type TStore = Document & {
+//   organization: typeof ObjectId;
+//   user: typeof ObjectId;
+//   platform: (typeof ORDER_PLATFORM_VALUES)[number];
+//   name: string;
+//   timezone: TimeZone;
+//   is_active: boolean;
+//   deleted_at?: Date;
+// };
+
+export type TStore = Document &
+  StoreBaseDTO & {
+    organization: Types.ObjectId;
+    deleted_at?: Date | null;
+    created_at?: Date;
+    updated_at?: Date;
+  };
 
 const StoreSchema = new Schema<TStore>(
   {
@@ -39,6 +54,10 @@ const StoreSchema = new Schema<TStore>(
     name: {
       type: String,
       required: true,
+    },
+    code: {
+      type: String,
+      // required: true,
     },
     timezone: {
       type: String,

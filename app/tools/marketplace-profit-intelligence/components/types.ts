@@ -68,7 +68,7 @@ export type ProfitReportData = {
     to: Date | string;
   };
   summary?: {
-    released_amount?: number;
+    released_funds?: number;
     total_income?: number;
   };
   extra?: {

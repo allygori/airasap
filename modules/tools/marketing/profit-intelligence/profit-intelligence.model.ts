@@ -311,7 +311,7 @@ const ToolMarketplaceIncomeReportSchema = new Schema(
       |--------------------------------------------------------------------------
       */
 
-      released_amount: {
+      released_funds: {
         type: Number,
         default: 0,
         index: true,

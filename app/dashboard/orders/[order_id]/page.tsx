@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { formSchema } from '../_components/form.schema';
 import { OrderResponseDTO } from '@/modules/orders/order.dto';
 
-type OrderData = OrderResponseDTO;
+// type OrderData = OrderResponseDTO;
 
 const EditPage = ({
   params,
@@ -17,7 +17,9 @@ const EditPage = ({
   params: Promise<{ order_id: string }>;
 }) => {
   const { order_id } = use(params);
-  const [data, setData] = useState<OrderData | null>(null);
+  const [data, setData] = useState<OrderResponseDTO | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -86,7 +88,7 @@ function EditFormWrapper({
   initialData,
 }: {
   orderId: string;
-  initialData: OrderData;
+  initialData: OrderResponseDTO;
 }) {
   const router = useRouter();
 
@@ -147,8 +149,8 @@ function EditFormWrapper({
       free_shipping_promo_from_seller:
         initialData.free_shipping_promo_from_seller ?? 0,
       compensation: initialData.compensation ?? 0,
-      released_amount: initialData.released_amount ?? 0,
-      net_amount: initialData.net_amount ?? 0,
+      released_funds: initialData.released_funds ?? 0,
+      // net_amount: initialData.net_amount ?? 0,
       shipping_arranged_at:
         initialData.shipping_arranged_at || '',
       placed_at: initialData.placed_at || '',
@@ -184,8 +186,7 @@ function EditFormWrapper({
       items: (initialData.items || []).map((item: any) => ({
         product: item.product || '',
         parent_sku: item.parent_sku || '',
-        sku_reference_number:
-          item.sku_reference_number || '',
+        child_sku: item.child_sku || '',
         product_name: item.product_name || '',
         variation_name: item.variation_name || '',
         product_key: item.product_key || '',
@@ -197,11 +198,12 @@ function EditFormWrapper({
         processing_fee: item.processing_fee ?? 0,
         product_cost: item.product_cost ?? 0,
         profit: item.profit ?? 0,
-        estimated_profit: item.estimated_profit ?? 0,
-
+        // estimated_profit: item.estimated_profit ?? 0,
         // product_cost_amount: item.product_cost_amount ?? 0,
       })),
-    };
+      enrichments: [],
+      other_variable_cost: [],
+    } satisfies OrderResponseDTO;
   }, [initialData]);
 
   const form = useAppForm({

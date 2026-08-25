@@ -5,6 +5,7 @@ import { TIMEZONE_VALUES } from '@/constant/timezone';
 export const BaseStoreSchema = z.object({
   platform: z.enum(ORDER_PLATFORM_VALUES),
   name: z.string().min(1, 'Nama toko wajib diisi'),
+  code: z.string(), // 2 chars code, e.g: 'KD'
   timezone: z.enum(TIMEZONE_VALUES),
   is_active: z.boolean().default(true),
 });

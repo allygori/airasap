@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
-import { formSchema } from '../_components/form.schema';
+// import { formSchema } from '../_components/form.schema';
 import {
   ProductResponseSchema,
   ProductResponseDTO,
@@ -97,6 +97,7 @@ function EditPostFormWrapper({
       platform: initialData.platform || '',
       name: initialData.name || '',
       product_id: String(initialData.product_id || ''),
+      parent_sku: String(initialData.parent_sku || ''),
       options: initialData.options || [],
       variants: (initialData.variants || []).map(
         (variant: any) => ({
@@ -106,7 +107,7 @@ function EditPostFormWrapper({
           discount: Number(variant.discount || 0),
           final_price: Number(variant.final_price || 0),
           parent_sku: variant.parent_sku || '',
-          sku: variant.sku || '',
+          child_sku: variant.child_sku || '',
           gtin: variant.gtin || '',
           is_default: Boolean(variant.is_default),
           costs: (variant.costs || []).map((cost: any) => ({

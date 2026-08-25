@@ -10,7 +10,7 @@ export const SalesReportResponseSchema = z.object({
   total_revenue: z.number(),
   ratio_profit_to_revenue: z.number(),
   total_payout: z.number(),
-  estimated_total_profit: z.number(),
+  total_gross_profit: z.number(),
   total_payment: z.number(),
   total_cost: z.number(),
   total_voucher_borne_by_seller: z.number(),

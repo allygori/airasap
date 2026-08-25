@@ -54,7 +54,7 @@ const ProductSchema = new Schema<TProduct>(
       required: false,
       default: false,
     },
-    // sku_reference_number: {
+    // child_sku: {
     //   type: String,
     //   required: false,
     // },
@@ -76,7 +76,7 @@ const ProductSchema = new Schema<TProduct>(
         //   type: String,
         //   required: false,
         // },
-        // sku_reference_number: {
+        // child_sku: {
         //   type: String,
         //   required: false,
         // },

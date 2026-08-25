@@ -17,6 +17,7 @@ import {
   ORDER_PLATFORMS,
   OrderPlatform,
 } from '@/constant/order-platform';
+import SkuGenerator from '@/lib/sku';
 
 export class ProductService {
   private repository: ProductRepository;
@@ -536,11 +537,24 @@ export class ProductService {
         return matrix;
       };
 
+      const SKUGen = new SkuGenerator({
+        storeCode: 'KD',
+      });
+      // const counter = await this.countProductsByTenant();
+      // const parentSKU = SKUGen.generateParentSKU(
+      //   counter,
+      //   'C1'
+      // );
       let options: string[][] = [];
+      // let productCounter = 0;
+      // let variantCounter = 0;
       for (const [
         productId,
         group,
       ] of productsMap.entries()) {
+        // productCounter = await this.countProductsByTenant();
+        const parentSKU = SKUGen.generateParentSKU();
+
         const variants = group.map((item) => {
           if (item.variantName) {
             // options.push(
@@ -556,6 +570,17 @@ export class ProductService {
             );
           }
 
+          const childSKU =
+            SKUGen.generateChildSKU(parentSKU);
+
+          // console.log({
+          //   parentSKU,
+          //   childSKU,
+          //   // variantCounter,
+          // });
+
+          // variantCounter++;
+
           return {
             variant_id: item.variantId,
             name:
@@ -565,25 +590,37 @@ export class ProductService {
             // quantity: item.quantity ?? 0,
             discount: 0,
             final_price: item.price,
-            parent_sku: item.parentSKU,
-            sku: item.SKU,
+            // parent_sku: item.parentSKU,
+            parent_sku: parentSKU,
+            // child_sku: item.SKU,
+            child_sku: childSKU,
+            // sku: item.SKU,
             gtin: item.GTIN,
             is_default: group.length === 1,
             costs: [],
           };
         });
-        console.log(options);
+        // console.log(options);
         const existingProduct =
           await this.repository.findByProductId(productId);
+
+        const hasVariation = options.length > 0;
         const payload = {
           platform: ORDER_PLATFORMS.shopee.value,
-          name: group[0]?.productName || '',
           product_id: productId,
+          name: group[0]?.productName || '',
           // key: productId,
+          // parent_sku: group[0].parentSKU,
+          parent_sku: hasVariation
+            ? parentSKU
+            : variants[0].child_sku,
+          // : SKUGen.generateChildSKU(parentSKU),
+          has_variation: hasVariation,
           options,
           variants,
           is_active: true,
         };
+
         if (existingProduct) {
           await this.repository.update(
             existingProduct._id.toString(),
@@ -596,6 +633,7 @@ export class ProductService {
         }
 
         options = [];
+        // variantCounter = 0;
       }
 
       return {
@@ -607,6 +645,19 @@ export class ProductService {
     } catch (error: any) {
       throw new Error(
         `Gagal memproses mass upload produk: ${error.message}`
+      );
+    }
+  }
+
+  /**
+   * Count products by tenant
+   */
+  async countProductsByTenant() {
+    try {
+      return await this.repository.count();
+    } catch (error: any) {
+      throw new Error(
+        `Gagal menghitung produk: ${error.message}`
       );
     }
   }

@@ -154,7 +154,7 @@ export function ResultDashboard({
           start={reportData.period.from}
           end={reportData.period.to}
           totalProfit={
-            (reportData.summary?.released_amount || 0) -
+            (reportData.summary?.released_funds || 0) -
             totalCOGS
           }
           orders={reportData.orders || []}

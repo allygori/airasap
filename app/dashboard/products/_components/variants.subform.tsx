@@ -338,10 +338,10 @@ export function VariantsSubForm({ form }: { form: any }) {
                       /> */}
 
                       <form.AppField
-                        name={`variants[${i}].sku_reference_number`}
+                        name={`variants[${i}].child_sku`}
                         children={(subField: any) => (
                           <subField.TextField
-                            label="SKU Reference Number"
+                            label="Child SKU"
                             value={
                               subField.state.value ?? ''
                             }

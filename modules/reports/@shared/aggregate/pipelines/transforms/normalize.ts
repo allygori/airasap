@@ -45,7 +45,7 @@ export const addNormalizeData = <F extends string>(
       revenue: '$order_subtotal',
       total_payment: '$total_payment',
       total_cost: '$total_product_cost',
-      total_payout: '$released_amount',
+      total_payout: '$released_funds',
       order_id: '$order_id',
       username: '$username',
       status: '$status',
@@ -57,11 +57,11 @@ export const addNormalizeData = <F extends string>(
       admin_fee: '$fee.admin_fee',
       processing_fee: '$fee.processing_fee',
       total_profit: '$total_profit',
-      estimated_total_profit: '$estimated_total_profit',
+      total_gross_profit: '$total_gross_profit',
 
       // total_profit: {
       //   $subtract: [
-      //     '$released_amount',
+      //     '$released_funds',
       //     {
       //       $ifNull: ['$total_product_cost', 0],
       //     },

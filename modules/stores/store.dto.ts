@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  BaseStoreSchema,
   CreateStoreSchema,
   UpdateStoreSchema,
   StoreFilterSchema,
@@ -10,6 +11,8 @@ export * from './store.schema';
 /**
  * Inferred TypeScript types dari Zod
  */
+export type StoreBaseDTO = z.infer<typeof BaseStoreSchema>;
+
 export type CreateStoreDTO = z.infer<
   typeof CreateStoreSchema
 >;

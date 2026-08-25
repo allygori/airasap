@@ -96,8 +96,17 @@ export const getProductsColumn = (
               {row.original.name}
             </Button>
           </ViewDrawer>
+          {/* <p className="text-sm">
+            {row.original.parent_sku}
+          </p>
           <p className="text-sm">
             {row.original.product_id}
+          </p> */}
+          {/* <p className="text-sm">
+            {`${row.original.product_id} - ${row.original.parent_sku}`}
+          </p> */}
+          <p className="text-sm">
+            {`${row.original.parent_sku} - ${row.original.product_id}`}
           </p>
         </div>
       ),
