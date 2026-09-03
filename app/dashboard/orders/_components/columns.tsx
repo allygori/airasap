@@ -237,8 +237,6 @@ export const getProductsColumn = (
             item.kind === 'released-funds'
         );
 
-        console.log({ completed, releasedFunds });
-
         return (
           <div className="flex flex-row flex-wrap space-x-2 text-sm font-medium">
             {/* {

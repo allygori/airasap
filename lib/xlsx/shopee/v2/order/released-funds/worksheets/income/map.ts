@@ -51,6 +51,10 @@ export const INCOME_FIELD_MAP = {
     header: 'Tipe Pesanan',
     parser: stringParser,
   },
+  releasedFundsAmount: {
+    header: 'Total Penghasilan',
+    parser: numberParser,
+  },
   productPrice: {
     header: 'Harga Produk',
     parser: numberParser,

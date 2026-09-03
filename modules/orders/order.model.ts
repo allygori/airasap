@@ -467,7 +467,7 @@ const OrderSchema = new Schema<TOrder>(
 
     released_funds: {
       type: Number,
-      alias: 'releasedAmount',
+      alias: 'releasedFundsAmount',
       default: 0,
     },
 

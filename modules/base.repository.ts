@@ -102,8 +102,9 @@ export abstract class BaseRepository<T extends Document> {
       doc.overwrite(payload);
 
       return doc.save();
-    } catch (e) {
-      throw e;
+    } catch (error) {
+      console.log(`[base.repository] overwrite:`, error);
+      throw error;
     }
   }
 

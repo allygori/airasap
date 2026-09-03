@@ -30,19 +30,27 @@ export const PATCH = withValidation(
     body: UpdateOrderSchema,
   },
   async (request, context) => {
-    const validatedBody =
-      context.validatedBody as UpdateOrderDTO;
-    const validatedParams =
-      context.validatedParams as OrderIdParamsDTO;
-    const tenantContext = await getTenantContext();
+    try {
+      const validatedBody =
+        context.validatedBody as UpdateOrderDTO;
+      const validatedParams =
+        context.validatedParams as OrderIdParamsDTO;
+      const tenantContext = await getTenantContext();
 
-    const orderService = new OrderService(tenantContext);
-    const updatedOrder = await orderService.overwrite(
-      // validatedParams.id,
-      validatedBody
-    );
+      const orderService = new OrderService(tenantContext);
+      const updatedOrder = await orderService.overwrite(
+        // validatedParams.id,
+        validatedBody
+      );
 
-    return apiSuccess(updatedOrder);
+      return apiSuccess(updatedOrder);
+    } catch (error) {
+      console.error(
+        `[/api/v1/dashboard/orders/[id]/overwrite] error:`,
+        error
+      );
+      return apiError('500', String(error));
+    }
   }
 );
 

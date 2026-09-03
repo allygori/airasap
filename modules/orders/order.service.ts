@@ -285,6 +285,7 @@ export class OrderService {
       );
       data.total_profit =
         (data.released_funds || 0) - totalProductCost;
+      data.total_net_profit = data.total_profit;
 
       const updatedOrder =
         await this.repository.overwrite(data);
@@ -1295,6 +1296,11 @@ export class OrderService {
         const operations: AnyBulkWriteOperation<TOrder>[] =
           [];
 
+        // saveJson(
+        //   '.data/json-logs/debug-released-funds-orders--v1.json',
+        //   orders
+        // );
+
         for (const order of orders) {
           const orderObj =
             await this.repository.findByOrderId(
@@ -1494,13 +1500,18 @@ export class OrderService {
             shipping_fee_refund: order.shippingFeeRefund,
           };
 
+          // const releasedFundsAmount =
+          //   Number(order.productPrice) +
+          //   (totalVouchersAndDiscounts +
+          //     totalPlatformFee +
+          //     totalGOXFee +
+          //     totalPromotionFee +
+          //     totalOtherFee);
+
           const releasedFundsAmount =
-            Number(order.productPrice) +
-            (totalVouchersAndDiscounts +
-              totalPlatformFee +
-              totalGOXFee +
-              totalPromotionFee +
-              totalOtherFee);
+            order.releasedFundsAmount
+              ? Number(order.releasedFundsAmount)
+              : 0;
           console.log({
             orderId: orderObj.order_id,
             releasedFundsAmount,
