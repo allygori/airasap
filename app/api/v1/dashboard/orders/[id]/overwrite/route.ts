@@ -13,11 +13,7 @@ import {
   OrderIdParamsDTO,
 } from '@/modules/orders/order.dto';
 import { withValidation } from '@/lib/api/validate';
-import {
-  apiSuccess,
-  apiError,
-  ErrorCodes,
-} from '@/lib/api/response';
+import { apiSuccess, apiError } from '@/lib/api/response';
 import { getTenantContext } from '@/lib/api/tenant-context';
 
 /**
@@ -39,7 +35,7 @@ export const PATCH = withValidation(
 
       const orderService = new OrderService(tenantContext);
       const updatedOrder = await orderService.overwrite(
-        // validatedParams.id,
+        validatedParams.id,
         validatedBody
       );
 

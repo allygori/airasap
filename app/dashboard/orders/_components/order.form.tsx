@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
-import { formSchema } from './form.schema';
+import { OrderFormSchema } from '@/modules/orders/order.schema';
 import { AddressFields } from './address-fields';
 import { FeeFields } from './fee-fields';
 import { OrderItemsSectionForm } from './order-items-section.form';
@@ -100,7 +100,7 @@ export const OrderForm = withForm({
       shipping_fee_refund: 0,
     },
     items: [],
-  } as unknown as z.input<typeof formSchema>,
+  } as unknown as z.input<typeof OrderFormSchema>,
   props: {
     title: undefined,
   } as OrderFormProps,

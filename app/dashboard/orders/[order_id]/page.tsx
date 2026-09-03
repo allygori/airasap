@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
-import { formSchema } from '../_components/form.schema';
+import { OrderFormSchema } from '@/modules/orders/order.schema';
 import { OrderResponseDTO } from '@/modules/orders/order.dto';
 
 // type OrderData = OrderResponseDTO;
@@ -207,9 +207,11 @@ function EditFormWrapper({
   }, [initialData]);
 
   const form = useAppForm({
-    defaultValues: formValues as z.input<typeof formSchema>,
+    defaultValues: formValues as z.input<
+      typeof OrderFormSchema
+    >,
     validators: {
-      onDynamic: formSchema,
+      onDynamic: OrderFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {
@@ -221,7 +223,16 @@ function EditFormWrapper({
         //   order_id: payload.order_id,
         // });
 
-        const payload = value;
+        const payload = {
+          ...value,
+          items: (value.items || []).map((item: any) => ({
+            ...item,
+            product:
+              typeof item.product === 'object'
+                ? item.product?._id || undefined
+                : item.product || undefined,
+          })),
+        };
         const response = await fetch(
           `/api/v1/dashboard/orders/${payload._id}/overwrite`,
           {

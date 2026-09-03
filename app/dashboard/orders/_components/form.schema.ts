@@ -12,8 +12,8 @@ export const orderItemSchema = z.object({
   quantity: z.number().optional(),
   returned_quantity: z.number().optional(),
   processing_fee: z.number().optional(),
-  cogs: z.number().optional(),
-  product_cost: z.string().optional(),
+  product_cost: z.number().optional(),
+  // product_cost: z.string().optional(),
   // product_cost_amount: z.number().optional(),
 });
 

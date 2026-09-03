@@ -7,9 +7,9 @@ import { revalidateLogic } from '@tanstack/react-form';
 
 import { useAppForm } from '@/components/form/form.hook';
 import { OrderForm } from '../_components/order.form';
-import { formSchema } from '../_components/form.schema';
+import { OrderFormSchema } from '@/modules/orders/order.schema';
 
-const defaultValues: z.input<typeof formSchema> = {
+const defaultValues: z.input<typeof OrderFormSchema> = {
   order_id: '',
   platform: 'shopee',
   status: '',
@@ -80,7 +80,7 @@ const CreatePage = () => {
     defaultValues,
     validationLogic: revalidateLogic(),
     validators: {
-      onDynamic: formSchema,
+      onDynamic: OrderFormSchema,
     },
     onSubmit: async ({ value }) => {
       try {

@@ -83,23 +83,32 @@ export abstract class BaseRepository<T extends Document> {
       .lean();
   }
 
-  async overwrite(data: UpdateQuery<T>) {
+  async overwrite(id: string, data: UpdateQuery<T>) {
     try {
       const { _id, ...payload } = data;
 
-      if (!_id) {
-        throw new Error(`${_id} is required`);
+      if (!id) {
+        throw new Error('Document id is required');
       }
 
-      const doc = await this.model.findById(_id);
+      const doc = await this.model.findOne({
+        _id: id,
+        ...this.getTenantFilter(),
+      });
 
       if (!doc) {
         throw new Error(
-          `Document with id: ${_id} not found`
+          `Document with id: ${id} not found`
         );
       }
 
-      doc.overwrite(payload);
+      doc.overwrite({
+        ...payload,
+        organization: this.tenantContext.organizationId,
+        ...(this.tenantContext.storeId && {
+          store: this.tenantContext.storeId,
+        }),
+      });
 
       return doc.save();
     } catch (error) {

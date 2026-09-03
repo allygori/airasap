@@ -261,7 +261,7 @@ export class OrderService {
   /**
    * Overwrite order
    */
-  async overwrite(dto: UpdateOrderDTO) {
+  async overwrite(id: string, dto: UpdateOrderDTO) {
     try {
       // console.log(
       //   `overwrite: ${id}`,
@@ -287,8 +287,10 @@ export class OrderService {
         (data.released_funds || 0) - totalProductCost;
       data.total_net_profit = data.total_profit;
 
-      const updatedOrder =
-        await this.repository.overwrite(data);
+      const updatedOrder = await this.repository.overwrite(
+        id,
+        data
+      );
 
       if (!updatedOrder) {
         throw new Error('Gagal memperbarui order');
@@ -1176,7 +1178,9 @@ export class OrderService {
                 ? product?.variants[0]?.default_cost || 0
                 : variant?.default_cost || 0;
 
-            orderObjItem.product = product?._id;
+            orderObjItem.product = product?._id
+              ? String(product._id)
+              : undefined;
             orderObjItem.product_cost =
               productCost * (orderObjItem?.quantity || 1);
             orderObjItem.profit =
@@ -1378,7 +1382,9 @@ export class OrderService {
                 ? product?.variants[0]?.default_cost || 0
                 : variant?.default_cost || 0;
 
-            orderObjItem.product = product?._id;
+            orderObjItem.product = product?._id
+              ? String(product._id)
+              : undefined;
             orderObjItem.product_id = item?.productId;
             orderObjItem.product_cost =
               productCost * (orderObjItem?.quantity || 1);

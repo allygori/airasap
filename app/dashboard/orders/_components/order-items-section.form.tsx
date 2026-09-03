@@ -36,13 +36,40 @@ export function OrderItemsSectionForm({
 
   const getCosts = useMemo(() => {
     return (index: number, variantName?: string) => {
-      return items[index].product?.variants?.length === 1
-        ? items[index].product?.variants[0]?.costs || []
-        : items[index].product?.variants?.find(
-            (item: { name: string }) =>
-              item.name === variantName
-          )?.costs || [];
-      // return items[index].product_cost || 0;
+      const product = items?.[index]?.product;
+
+      if (!product || typeof product !== 'object') {
+        return [];
+      }
+
+      const variants = product.variants || [];
+      if (variants.length === 0) {
+        return [];
+      }
+
+      if (variants.length === 1) {
+        return variants[0]?.costs || [];
+      }
+
+      const normalizedVariantName = (variantName || '')
+        .trim()
+        .toLowerCase();
+      const matchedVariant = variants.find(
+        (variant: any) => {
+          return (
+            variant.name?.trim().toLowerCase() ===
+              normalizedVariantName ||
+            variant.variant_id === variantName
+          );
+        }
+      );
+
+      return (
+        matchedVariant?.costs ||
+        variants.find((variant: any) => variant.is_default)
+          ?.costs ||
+        []
+      );
     };
   }, [
     // field.state.value[i]?.product?.variants,

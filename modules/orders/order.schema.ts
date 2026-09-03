@@ -2,6 +2,13 @@ import { z } from 'zod';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 import { ProductResponseSchema } from '@/modules/products/product.schema';
 
+const ObjectIdStringSchema = z
+  .string()
+  .regex(
+    /^[0-9a-fA-F]{24}$/,
+    'Mongoose ObjectId tidak valid'
+  );
+
 export const OrderItemSchema = z.object({
   // product: z.string().min(1, 'Product ID wajib diisi'),
   // product: z
@@ -12,16 +19,13 @@ export const OrderItemSchema = z.object({
   //   })
   //   .transform((val) => new mongoose.Types.ObjectId(val)),
 
-  product: z.union([
-    ProductResponseSchema,
-    z
-      .string()
-      .optional()
-      .refine((val) => mongoose.isValidObjectId(val), {
-        message: 'Mongoose ObjectId tidak valid',
-      })
-      .transform((val) => new mongoose.Types.ObjectId(val)),
-  ]),
+  product: z
+    .union([
+      ProductResponseSchema,
+      ObjectIdStringSchema,
+      z.literal(''),
+    ])
+    .optional(),
   product_id: z.string().optional(),
   product_name: z.string().optional(),
   variation_id: z.string().optional(),
@@ -195,7 +199,7 @@ export const OrderBaseSchema = z.object({
 
   // released_funds: z.number().optional(),
   released_funds: z.number().optional(),
-  // net_amount: z.number().optional(),
+  net_amount: z.number().optional(),
 
   shipping_arranged_at: z.string().optional(),
   placed_at: z.string().optional(),
@@ -216,37 +220,41 @@ export const OrderBaseSchema = z.object({
   /**
    * @TODO implement
    */
-  enrichments: z.array(
-    z.object({
-      kind: z
-        .enum(
-          ['completed', 'released-funds'],
-          'Tipe enrichment tidak valid'
-        )
-        .nullable()
-        .optional(),
-      file: z
-        .string()
-        .refine((val) => mongoose.isValidObjectId(val), {
-          message: 'Mongoose ObjectId tidak valid',
-        })
-        .transform(
-          (val) => new mongoose.Types.ObjectId(val)
-        ),
-      enriched_by: z.string().nullable().optional(),
-      enriched_at: z.union([
-        z.date().nullable().optional(),
-        z.string().nullable().optional(),
-      ]),
-    })
-  ),
-  other_variable_cost: [
-    {
-      name: z.string().nullable().optional(),
-      cost: z.number().int().optional(),
-      note: z.string().nullable().optional(),
-    },
-  ],
+  enrichments: z
+    .array(
+      z.object({
+        kind: z
+          .enum(
+            ['completed', 'released-funds'],
+            'Tipe enrichment tidak valid'
+          )
+          .nullable()
+          .optional(),
+        file: z
+          .string()
+          .regex(
+            /^[0-9a-fA-F]{24}$/,
+            'Mongoose ObjectId tidak valid'
+          ),
+        enriched_by: z.string().nullable().optional(),
+        enriched_at: z.union([
+          z.date().nullable().optional(),
+          z.string().nullable().optional(),
+        ]),
+      })
+    )
+    .optional()
+    .default([]),
+  other_variable_cost: z
+    .array(
+      z.object({
+        name: z.string().nullable().optional(),
+        cost: z.number().int().optional(),
+        note: z.string().nullable().optional(),
+      })
+    )
+    .optional()
+    .default([]),
   deleted_at: z.string().nullable().optional(),
 });
 
@@ -255,6 +263,10 @@ export const UpdateOrderSchema =
   OrderBaseSchema.partial().extend({
     _id: z.string().optional(),
   });
+export const OrderFormSchema = CreateOrderSchema.extend({
+  _id: z.string().optional(),
+  id: z.string().optional(),
+});
 
 export const OrderResponseSchema = OrderBaseSchema.extend({
   _id: z.string(),
