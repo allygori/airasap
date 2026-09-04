@@ -38,6 +38,7 @@ import {
   secondaryNav,
 } from '@/constant/menu';
 import { useSession } from '@/lib/auth/auth-client';
+import { NavMain2 } from './nav-main-2';
 
 export function AppSidebar({
   ...props
@@ -62,7 +63,8 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={mainNav} />
+        {/* <NavMain items={mainNav} /> */}
+        <NavMain2 items={mainNav} />
         {(documentsNav || []).length > 0 && (
           <NavDocuments items={documentsNav} />
         )}

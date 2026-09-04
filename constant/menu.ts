@@ -40,6 +40,16 @@ export const mainNav = [
     title: 'Reports',
     url: '/dashboard/reports',
     icon: ChartPieIcon,
+    items: [
+      {
+        title: 'Sales Report',
+        url: '/dashboard/reports/sales',
+      },
+      {
+        title: 'Products Report',
+        url: '/dashboard/reports/products',
+      },
+    ],
   },
   // {
   //   title: 'Reports',
