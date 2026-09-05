@@ -1,4 +1,5 @@
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
+import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
 import { filterProductAnalyticsOrders } from '@/modules/reports/pipelines/@shared/filter-orders';
@@ -18,6 +19,12 @@ import { groupByProduct } from '@/modules/reports/pipelines/product/group-by-pro
 import { type PipelineStage } from 'mongoose';
 
 const DEFAULT_DATE_FIELD = 'placed_at';
+const REPORTABLE_SHOPEE_ORDER_STATUSES = [
+  SHOPEE_ORDER_STATUS.completed.value,
+  // SHOPEE_ORDER_STATUS.needsToBeShipped.value,
+  // SHOPEE_ORDER_STATUS.toShip.value,
+  // SHOPEE_ORDER_STATUS.toReceive.value,
+] as const;
 
 export type ProductAnalyticsFilters = {
   filterBy?: 'placed_at' | 'completed_at' | 'paid_at';
@@ -54,6 +61,7 @@ export const aggregateProductSalesReport = ({
         dateFilterBy: filterBy,
         startDate,
         endDate,
+        statuses: [...REPORTABLE_SHOPEE_ORDER_STATUSES],
       })
     )
     .with(normalizeProductAnalyticsOrder(filterBy, tz))
@@ -68,6 +76,9 @@ export const aggregateProductSalesReport = ({
         startDate,
         endDate,
         periodDays,
+        reportableStatuses: [
+          ...REPORTABLE_SHOPEE_ORDER_STATUSES,
+        ],
       })
     )
     .with(projectProductAnalyticsResult());

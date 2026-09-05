@@ -11,6 +11,7 @@ type Args = {
   dateFilterBy: string;
   startDate: string;
   endDate: string;
+  statuses?: string[];
 };
 
 export const filterOrders = ({
@@ -36,6 +37,7 @@ export const filterProductAnalyticsOrders = ({
   dateFilterBy,
   startDate,
   endDate,
+  statuses,
 }: Args): PipelineStage.Match => {
   return {
     $match: {
@@ -47,6 +49,9 @@ export const filterProductAnalyticsOrders = ({
         $gte: new Date(startDate),
         $lt: new Date(endDate),
       },
+      ...(statuses?.length
+        ? { status: { $in: statuses } }
+        : {}),
       items: { $type: 'array', $ne: [] },
     },
   };

@@ -123,5 +123,6 @@ export const ProductAnalyticsResponseSchema = z.object({
     start_date: z.string().nullable(),
     end_date: z.string().nullable(),
     period_days: z.number(),
+    reportable_statuses: z.array(z.string()),
   }),
 });

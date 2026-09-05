@@ -142,6 +142,9 @@ const ProductsReportPage = () => {
               <p className="text-muted-foreground line-clamp-2 text-sm">
                 Revenue, profit, contribution, and velocity
                 by SKU.
+                {result?.meta.reportable_statuses.length
+                  ? ` Status: ${result.meta.reportable_statuses.join(', ')}.`
+                  : ''}
               </p>
             </div>
           </div>

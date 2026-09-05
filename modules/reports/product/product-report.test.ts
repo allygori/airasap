@@ -26,6 +26,7 @@ describe('Product Sales Report', () => {
         store: new Types.ObjectId(STORE_ID),
         platform: 'shopee',
         deleted_at: null,
+        status: { $in: ['selesai'] },
         placed_at: {
           $gte: new Date(startDate),
           $lt: new Date(endDate),
@@ -71,6 +72,18 @@ describe('Product Sales Report', () => {
 
   it('returns a dashboard-ready shape with summary, products, and meta', () => {
     expect(pipeline.at(-2)).toHaveProperty('$facet');
+    expect(pipeline.at(-2)).toMatchObject({
+      $facet: {
+        meta: [
+          { $count: 'total_products' },
+          {
+            $addFields: {
+              reportable_statuses: ['selesai'],
+            },
+          },
+        ],
+      },
+    });
     expect(pipeline.at(-1)).toEqual({
       $project: expect.objectContaining({
         _id: 0,
