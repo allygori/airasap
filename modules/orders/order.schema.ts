@@ -35,7 +35,6 @@ export const OrderItemSchema = z.object({
 
   product_cost: z.number().int().optional(),
   total_product_cost: z.number().int().optional(),
-  profit: z.number().int().optional(),
   // estimated_profit: z.number().int().optional(),
   // product_key: z.string().optional(),
   original_price: z.number().int().optional(),
@@ -43,6 +42,7 @@ export const OrderItemSchema = z.object({
   price_after_discount: z.number().int().optional(),
   quantity: z.number().int().optional(),
   returned_quantity: z.number().int().optional(),
+  final_quantity: z.number().int().optional(),
   subtotal: z.number().int().optional(),
   processing_fee: z.number().int().optional(), // @TODO update enrichWithReleasedFunds
   gross_sales: z.number().int().optional(),

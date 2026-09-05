@@ -109,8 +109,56 @@ export const normalizeProductAnalyticsItem =
           '$items.gross_profit',
           {
             $subtract: [
-              { $ifNull: ['$items.subtotal', 0] },
-              { $ifNull: ['$items.total_product_cost', 0] },
+              {
+                $ifNull: [
+                  '$items.gross_sales',
+                  '$items.subtotal',
+                  {
+                    $multiply: [
+                      {
+                        $ifNull: [
+                          '$items.price_after_discount',
+                          0,
+                        ],
+                      },
+                      { $ifNull: ['$items.quantity', 0] },
+                    ],
+                  },
+                ],
+              },
+              {
+                $ifNull: [
+                  '$items.total_product_cost',
+                  {
+                    $multiply: [
+                      {
+                        $ifNull: ['$items.product_cost', 0],
+                      },
+                      {
+                        $max: [
+                          0,
+                          {
+                            $subtract: [
+                              {
+                                $ifNull: [
+                                  '$items.quantity',
+                                  0,
+                                ],
+                              },
+                              {
+                                $ifNull: [
+                                  '$items.returned_quantity',
+                                  0,
+                                ],
+                              },
+                            ],
+                          },
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
             ],
           },
         ],

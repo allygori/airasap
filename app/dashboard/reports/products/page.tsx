@@ -207,14 +207,12 @@ const ProductsReportPage = () => {
           />
           <MetricCard
             icon={ArrowDownUp}
-            label="COGS + Fees"
+            label="COGS + Deductions"
             value={formatIDR(
               (summary?.cogs || 0) +
-                (summary?.platform_fee || 0) +
-                (summary?.shipping_cost || 0) +
-                (summary?.other_variable_cost || 0)
+                (summary?.marketplace_deduction || 0)
             )}
-            sub={`${formatNumber(summary?.total_products)} products`}
+            sub={`${formatIDR(summary?.cogs || 0)} COGS`}
           />
         </section>
 

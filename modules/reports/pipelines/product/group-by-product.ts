@@ -55,20 +55,18 @@ export const groupByProduct = (): PipelineStage.Group => ({
     },
     platform_fee: {
       $sum: {
-        $ifNull: ['$_analytics.allocated_platform_fee', 0],
+        $ifNull: ['$_analytics.item_processing_fee', 0],
       },
     },
     shipping_cost: {
-      $sum: {
-        $ifNull: ['$_analytics.allocated_shipping_cost', 0],
-      },
+      $sum: 0,
     },
     other_variable_cost: {
+      $sum: 0,
+    },
+    marketplace_deduction: {
       $sum: {
-        $ifNull: [
-          '$_analytics.allocated_other_variable_cost',
-          0,
-        ],
+        $ifNull: ['$_analytics.marketplace_deduction', 0],
       },
     },
     net_profit: {

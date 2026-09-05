@@ -75,19 +75,12 @@ const EditPage = ({
     );
   }
 
-  return (
-    <EditFormWrapper
-      initialData={data}
-      orderId={order_id}
-    />
-  );
+  return <EditFormWrapper initialData={data} />;
 };
 
 function EditFormWrapper({
-  orderId,
   initialData,
 }: {
-  orderId: string;
   initialData: OrderResponseDTO;
 }) {
   const router = useRouter();
@@ -190,21 +183,20 @@ function EditFormWrapper({
         shipping_fee_refund:
           initialData.fee?.shipping_fee_refund ?? 0,
       },
-      items: (initialData.items || []).map((item: any) => ({
+      items: (initialData.items || []).map((item) => ({
         product: item.product || '',
         parent_sku: item.parent_sku || '',
         child_sku: item.child_sku || '',
         product_name: item.product_name || '',
         variation_name: item.variation_name || '',
-        product_key: item.product_key || '',
         original_price: item.original_price ?? 0,
         price_after_discount:
           item.price_after_discount ?? 0,
         quantity: item.quantity ?? 1,
         returned_quantity: item.returned_quantity ?? 0,
+        final_quantity: item.final_quantity ?? 0,
         processing_fee: item.processing_fee ?? 0,
         product_cost: item.product_cost ?? 0,
-        profit: item.profit ?? 0,
         // estimated_profit: item.estimated_profit ?? 0,
         // product_cost_amount: item.product_cost_amount ?? 0,
       })),
@@ -232,7 +224,7 @@ function EditFormWrapper({
 
         const payload = {
           ...value,
-          items: (value.items || []).map((item: any) => ({
+          items: (value.items || []).map((item) => ({
             ...item,
             product:
               typeof item.product === 'object'

@@ -3,11 +3,7 @@ import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
 import { filterProductAnalyticsOrders } from '@/modules/reports/pipelines/@shared/filter-orders';
-import {
-  allocateOrderLevelCosts,
-  calculateNetProfitAfterAllocation,
-  calculateProductItemMetrics,
-} from '@/modules/reports/pipelines/@shared/calculate-item-metrics';
+import { calculateProductItemMetrics } from '@/modules/reports/pipelines/@shared/calculate-item-metrics';
 import { normalizeProductAnalyticsItem } from '@/modules/reports/pipelines/@shared/normalizer/normalize-item';
 import { normalizeProductAnalyticsOrder } from '@/modules/reports/pipelines/@shared/normalizer/normalize-order';
 import { unwindItems } from '@/modules/reports/pipelines/@shared/unwind-items';
@@ -16,6 +12,12 @@ import {
   projectProductAnalyticsResult,
 } from '@/modules/reports/pipelines/product/finalize-product-analytics';
 import { groupByProduct } from '@/modules/reports/pipelines/product/group-by-product';
+import {
+  differenceInCalendarDays,
+  endOfDay,
+  parseISO,
+  startOfDay,
+} from 'date-fns';
 import { type PipelineStage } from 'mongoose';
 
 const DEFAULT_DATE_FIELD = 'placed_at';
@@ -43,11 +45,10 @@ export const aggregateProductSalesReport = ({
 }: ProductAnalyticsFilters): PipelineStage[] => {
   const periodDays = Math.max(
     1,
-    Math.ceil(
-      (new Date(endDate).getTime() -
-        new Date(startDate).getTime()) /
-        86_400_000
-    )
+    differenceInCalendarDays(
+      endOfDay(parseISO(endDate)),
+      startOfDay(parseISO(startDate))
+    ) + 1
   );
 
   const pipelines = new AggregateBuilder()
@@ -65,8 +66,6 @@ export const aggregateProductSalesReport = ({
     .with(unwindItems())
     .with(normalizeProductAnalyticsItem())
     .with(calculateProductItemMetrics())
-    .with(allocateOrderLevelCosts())
-    .with(calculateNetProfitAfterAllocation())
     .with(groupByProduct())
     .with(
       finalizeProductAnalytics({

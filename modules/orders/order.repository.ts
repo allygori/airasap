@@ -241,4 +241,18 @@ export class OrderRepository extends BaseRepository<TOrder> {
   ) {
     return await this.model.bulkWrite(operations);
   }
+
+  async unsetDeprecatedItemProfitField() {
+    return await this.model.updateMany(
+      {
+        ...this.getTenantFilter(),
+        'items.profit': { $exists: true },
+      },
+      {
+        $unset: {
+          'items.$[].profit': '',
+        },
+      }
+    );
+  }
 }

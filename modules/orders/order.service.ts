@@ -90,7 +90,6 @@ export class OrderService {
     returnedQuantity?: number;
     subtotal?: number;
     productCostUnit?: number;
-    processingFee?: number;
   }) {
     const quantity = Number(args.quantity || 0);
     const returnedQuantity = Number(
@@ -114,13 +113,12 @@ export class OrderService {
 
     return {
       product_cost: productCost,
+      final_quantity: finalQuantity,
       total_product_cost: totalProductCost,
       gross_sales: grossSales,
       net_sales: netSales,
       gross_profit: grossProfit,
       net_profit: netProfit,
-      profit:
-        finalQuantity > 0 ? netProfit / finalQuantity : 0,
     };
   }
 
@@ -133,6 +131,18 @@ export class OrderService {
       Number.isFinite(value)
       ? value
       : Number(value || 0) || 0;
+  }
+
+  private cleanOrderItemFinancialFields(
+    item: Record<string, any>
+  ) {
+    const cleanItem = { ...item };
+
+    delete cleanItem.profit;
+    delete cleanItem.estimated_profit;
+    delete cleanItem.product_key;
+
+    return cleanItem;
   }
 
   private calculateReleasedFundsAmount(
@@ -232,21 +242,17 @@ export class OrderService {
       const totalProductCost = this.toNumber(
         item.total_product_cost
       );
-      const finalQuantity = Math.max(
-        this.toNumber(item.quantity) -
-          this.toNumber(item.returned_quantity),
-        0
-      );
       const netProfit =
         itemReleasedFunds - totalProductCost;
+      const grossProfit =
+        this.toNumber(item.gross_sales) - totalProductCost;
 
-      return {
+      return this.cleanOrderItemFinancialFields({
         ...item,
+        gross_profit: grossProfit,
         net_sales: itemReleasedFunds,
         net_profit: netProfit,
-        profit:
-          finalQuantity > 0 ? netProfit / finalQuantity : 0,
-      };
+      });
     });
   }
 
@@ -447,13 +453,12 @@ export class OrderService {
             returnedQuantity: item.returned_quantity || 0,
             subtotal: item.subtotal || 0,
             productCostUnit: productCost,
-            processingFee: item.processing_fee || 0,
           });
 
-        return {
+        return this.cleanOrderItemFinancialFields({
           ...item,
           ...financials,
-        };
+        });
       });
       if (this.toNumber(data.released_funds) !== 0) {
         data.items =
@@ -692,6 +697,10 @@ export class OrderService {
         `Gagal memperbarui status order: ${error.message}`
       );
     }
+  }
+
+  async removeDeprecatedItemProfitField() {
+    return await this.repository.unsetDeprecatedItemProfitField();
   }
 
   /**
@@ -1129,11 +1138,9 @@ export class OrderService {
               subtotal: Number(item.orderSubtotal || 0),
               productCostUnit:
                 existingItem?.product_cost || 0,
-              processingFee:
-                existingItem?.processing_fee || 0,
             });
 
-          return {
+          return this.cleanOrderItemFinancialFields({
             ...existingItem,
             // Don't update product and product_cost?
             parent_sku: item.parentSku,
@@ -1148,7 +1155,7 @@ export class OrderService {
             subtotal: item.orderSubtotal,
             returned_quantity: returnedQuantity,
             ...financials,
-          };
+          });
         });
 
         const orderSubtotal = orderItems.reduce(
@@ -1467,8 +1474,6 @@ export class OrderService {
                   orderObjItem?.returned_quantity || 0,
                 subtotal: orderObjItem?.subtotal || 0,
                 productCostUnit: productCost,
-                processingFee:
-                  orderObjItem.processing_fee || 0,
               });
             Object.assign(orderObjItem, financials);
             // orderObjItem.product_cost =
@@ -1479,7 +1484,12 @@ export class OrderService {
               totalProductCost +
               (orderObjItem.total_product_cost || 0);
 
-            items.push(orderObjItem);
+            items.push(
+              this.cleanOrderItemFinancialFields({
+                ...orderObjItem,
+                ...item,
+              })
+            );
           }
 
           const enrichments = orderObj?.enrichments || [];
@@ -1718,8 +1728,6 @@ export class OrderService {
                   orderObjItem?.returned_quantity || 0,
                 subtotal: orderObjItem?.subtotal || 0,
                 productCostUnit: productCost,
-                processingFee:
-                  orderObjItem.processing_fee || 0,
               });
             Object.assign(orderObjItem, financials);
             // orderObjItem.product_cost =
@@ -1730,7 +1738,12 @@ export class OrderService {
               totalProductCost +
               (orderObjItem.total_product_cost || 0);
 
-            items.push(orderObjItem);
+            items.push(
+              this.cleanOrderItemFinancialFields({
+                ...orderObjItem,
+                ...item,
+              })
+            );
           }
 
           const sellerSponsoredVoucher =

@@ -72,11 +72,6 @@ const OrderItemSchema = new Schema<TOrderItem>(
       default: 0,
       required: false,
     },
-    profit: {
-      type: Number,
-      default: 0,
-      required: false,
-    },
     // estimated_profit: {
     //   type: Number,
     //   default: 0,
@@ -115,6 +110,10 @@ const OrderItemSchema = new Schema<TOrderItem>(
     returned_quantity: {
       type: Number,
       alias: 'returnedQuantity',
+    },
+    final_quantity: {
+      type: Number,
+      alias: 'finalQuantity',
     },
 
     gross_sales: {

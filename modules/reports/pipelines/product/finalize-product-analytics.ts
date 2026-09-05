@@ -177,6 +177,9 @@ export const finalizeProductAnalytics = ({
           other_variable_cost: {
             $sum: '$other_variable_cost',
           },
+          marketplace_deduction: {
+            $sum: '$marketplace_deduction',
+          },
           net_profit: { $sum: '$net_profit' },
         },
       },
@@ -230,6 +233,7 @@ export const projectProductAnalyticsResult =
             platform_fee: 0,
             shipping_cost: 0,
             other_variable_cost: 0,
+            marketplace_deduction: 0,
             net_profit: 0,
             gross_margin: 0,
             net_margin: 0,
