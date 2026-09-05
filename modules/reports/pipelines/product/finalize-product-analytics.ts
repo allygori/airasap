@@ -4,7 +4,6 @@ type Args = {
   startDate: string;
   endDate: string;
   periodDays: number;
-  reportableStatuses: string[];
 };
 
 const safeDivide = (
@@ -22,7 +21,6 @@ export const finalizeProductAnalytics = ({
   startDate,
   endDate,
   periodDays,
-  reportableStatuses,
 }: Args): PipelineStage.Facet => ({
   $facet: {
     products: [
@@ -205,7 +203,6 @@ export const finalizeProductAnalytics = ({
           start_date: startDate,
           end_date: endDate,
           period_days: periodDays,
-          reportable_statuses: reportableStatuses,
         },
       },
     ],
@@ -247,7 +244,6 @@ export const projectProductAnalyticsResult =
             start_date: null,
             end_date: null,
             period_days: 0,
-            reportable_statuses: [],
           },
         ],
       },

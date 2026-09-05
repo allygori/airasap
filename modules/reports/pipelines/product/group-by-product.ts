@@ -23,7 +23,7 @@ export const groupByProduct = (): PipelineStage.Group => ({
     child_sku: { $first: '$_analytics.child_sku' },
     order_ids: { $addToSet: '$_analytics.order_id' },
     units: {
-      $sum: { $ifNull: ['$_analytics.quantity', 0] },
+      $sum: { $ifNull: ['$_analytics.final_quantity', 0] },
     },
     returned_units: {
       $sum: {
@@ -76,6 +76,32 @@ export const groupByProduct = (): PipelineStage.Group => ({
         $ifNull: [
           '$_analytics.item_net_profit',
           '$_analytics.calculated_net_profit',
+          0,
+        ],
+      },
+    },
+    items_count: { $sum: 1 },
+    items_with_stored_net_sales: {
+      $sum: {
+        $cond: [
+          {
+            $ne: [{ $type: '$items.net_sales' }, 'missing'],
+          },
+          1,
+          0,
+        ],
+      },
+    },
+    items_with_stored_net_profit: {
+      $sum: {
+        $cond: [
+          {
+            $ne: [
+              { $type: '$items.net_profit' },
+              'missing',
+            ],
+          },
+          1,
           0,
         ],
       },

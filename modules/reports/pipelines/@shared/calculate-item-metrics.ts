@@ -106,36 +106,8 @@ export const calculateNetProfitAfterAllocation =
       },
       '_analytics.calculated_net_profit': {
         $subtract: [
-          {
-            $subtract: [
-              {
-                $ifNull: ['$_analytics.item_net_sales', 0],
-              },
-              { $ifNull: ['$_analytics.item_cogs', 0] },
-            ],
-          },
-          {
-            $add: [
-              {
-                $ifNull: [
-                  '$_analytics.allocated_platform_fee',
-                  0,
-                ],
-              },
-              {
-                $ifNull: [
-                  '$_analytics.allocated_shipping_cost',
-                  0,
-                ],
-              },
-              {
-                $ifNull: [
-                  '$_analytics.allocated_other_variable_cost',
-                  0,
-                ],
-              },
-            ],
-          },
+          { $ifNull: ['$_analytics.item_net_sales', 0] },
+          { $ifNull: ['$_analytics.item_cogs', 0] },
         ],
       },
     },

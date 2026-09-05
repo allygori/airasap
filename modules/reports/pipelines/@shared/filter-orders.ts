@@ -3,6 +3,7 @@ import { tenantFilter } from './filter/tenant-filter';
 import { platformFilter } from './filter/platform-filter';
 import { dateFilter } from './filter/date-filter';
 import { Types, type PipelineStage } from 'mongoose';
+import { endOfDay, parseISO, startOfDay } from 'date-fns';
 
 type Args = {
   organizationId: string;
@@ -46,8 +47,8 @@ export const filterProductAnalyticsOrders = ({
       platform,
       deleted_at: null,
       [dateFilterBy]: {
-        $gte: new Date(startDate),
-        $lt: new Date(endDate),
+        $gte: startOfDay(parseISO(startDate)),
+        $lte: endOfDay(parseISO(endDate)),
       },
       ...(statuses?.length
         ? { status: { $in: statuses } }

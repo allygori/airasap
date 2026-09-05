@@ -50,12 +50,26 @@ export const normalizeProductAnalyticsItem =
       '_analytics.returned_quantity': {
         $ifNull: ['$items.returned_quantity', 0],
       },
+      '_analytics.final_quantity': {
+        $max: [
+          0,
+          {
+            $subtract: [
+              { $ifNull: ['$items.quantity', 0] },
+              { $ifNull: ['$items.returned_quantity', 0] },
+            ],
+          },
+        ],
+      },
       '_analytics.item_gross_sales': {
         $ifNull: [
           '$items.gross_sales',
+          '$items.subtotal',
           {
             $multiply: [
-              { $ifNull: ['$items.original_price', 0] },
+              {
+                $ifNull: ['$items.price_after_discount', 0],
+              },
               { $ifNull: ['$items.quantity', 0] },
             ],
           },
@@ -70,7 +84,22 @@ export const normalizeProductAnalyticsItem =
           {
             $multiply: [
               { $ifNull: ['$items.product_cost', 0] },
-              { $ifNull: ['$items.quantity', 0] },
+              {
+                $max: [
+                  0,
+                  {
+                    $subtract: [
+                      { $ifNull: ['$items.quantity', 0] },
+                      {
+                        $ifNull: [
+                          '$items.returned_quantity',
+                          0,
+                        ],
+                      },
+                    ],
+                  },
+                ],
+              },
             ],
           },
         ],
@@ -78,16 +107,16 @@ export const normalizeProductAnalyticsItem =
       '_analytics.item_gross_profit': {
         $ifNull: [
           '$items.gross_profit',
-          '$items.profit',
-          0,
+          {
+            $subtract: [
+              { $ifNull: ['$items.subtotal', 0] },
+              { $ifNull: ['$items.total_product_cost', 0] },
+            ],
+          },
         ],
       },
       '_analytics.item_net_profit': {
-        $ifNull: [
-          '$items.net_profit',
-          '$items.profit',
-          null,
-        ],
+        $ifNull: ['$items.net_profit', null],
       },
       '_analytics.item_processing_fee': {
         $ifNull: ['$items.processing_fee', 0],

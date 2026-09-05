@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { aggregateProductSalesReport } from './product-report';
+import { endOfDay, parseISO, startOfDay } from 'date-fns';
 
 const ORGANIZATION_ID = '6a64d53fb427fb66c352640a';
 const STORE_ID = '6a64d540b427fb66c352640c';
@@ -19,7 +20,7 @@ describe('Product Sales Report', () => {
     tz: 'Asia/Jakarta',
   });
 
-  it('uses tenant, platform, and half-open date filters before unwind', () => {
+  it('uses tenant, platform, and sales-report date filters before unwind', () => {
     expect(pipeline[0]).toEqual({
       $match: {
         organization: new Types.ObjectId(ORGANIZATION_ID),
@@ -28,8 +29,8 @@ describe('Product Sales Report', () => {
         deleted_at: null,
         status: { $in: ['selesai'] },
         placed_at: {
-          $gte: new Date(startDate),
-          $lt: new Date(endDate),
+          $gte: startOfDay(parseISO(startDate)),
+          $lte: endOfDay(parseISO(endDate)),
         },
         items: { $type: 'array', $ne: [] },
       },
@@ -72,18 +73,6 @@ describe('Product Sales Report', () => {
 
   it('returns a dashboard-ready shape with summary, products, and meta', () => {
     expect(pipeline.at(-2)).toHaveProperty('$facet');
-    expect(pipeline.at(-2)).toMatchObject({
-      $facet: {
-        meta: [
-          { $count: 'total_products' },
-          {
-            $addFields: {
-              reportable_statuses: ['selesai'],
-            },
-          },
-        ],
-      },
-    });
     expect(pipeline.at(-1)).toEqual({
       $project: expect.objectContaining({
         _id: 0,

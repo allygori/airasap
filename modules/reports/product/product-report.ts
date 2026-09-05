@@ -21,9 +21,6 @@ import { type PipelineStage } from 'mongoose';
 const DEFAULT_DATE_FIELD = 'placed_at';
 const REPORTABLE_SHOPEE_ORDER_STATUSES = [
   SHOPEE_ORDER_STATUS.completed.value,
-  // SHOPEE_ORDER_STATUS.needsToBeShipped.value,
-  // SHOPEE_ORDER_STATUS.toShip.value,
-  // SHOPEE_ORDER_STATUS.toReceive.value,
 ] as const;
 
 export type ProductAnalyticsFilters = {
@@ -76,9 +73,6 @@ export const aggregateProductSalesReport = ({
         startDate,
         endDate,
         periodDays,
-        reportableStatuses: [
-          ...REPORTABLE_SHOPEE_ORDER_STATUSES,
-        ],
       })
     )
     .with(projectProductAnalyticsResult());
