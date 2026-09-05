@@ -6,11 +6,13 @@ export const CreateReportSchema = z.object({
 });
 
 export const SalesReportResponseSchema = z.object({
-  total_profit: z.number(),
+  // total_profit: z.number(),
+  total_gross_profit: z.number(),
+  total_net_profit: z.number(),
   total_revenue: z.number(),
   ratio_profit_to_revenue: z.number(),
   total_payout: z.number(),
-  total_gross_profit: z.number(),
+  // total_gross_profit: z.number(),
   total_payment: z.number(),
   total_cost: z.number(),
   total_voucher_borne_by_seller: z.number(),
@@ -29,7 +31,9 @@ export const SalesReportResponseSchema = z.object({
       year: z.number(),
       daily_revenue: z.number(),
       daily_payout: z.number(),
-      daily_profit: z.number(),
+      // daily_profit: z.number(),
+      daily_gross_profit: z.number(),
+      daily_net_profit: z.number(),
       daily_payment: z.number(),
       daily_cost: z.number(),
       number_of_orders: z.number(),
@@ -41,7 +45,9 @@ export const SalesReportResponseSchema = z.object({
           username: z.string(),
           status: z.string(),
           placed_at: z.string(),
-          total_profit: z.number(),
+          // total_profit: z.number(),
+          total_gross_profit: z.number(),
+          total_net_profit: z.number(),
           total_payment: z.number(),
           subtotal: z.number(),
         })

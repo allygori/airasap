@@ -1,3 +1,5 @@
+// import { SHOPEE_ORDER_STATUS_VALUES } from '@/constant/order/shopee/status';
+
 export const groupByDateForDailyRevenue = () => {
   return {
     $group: {
@@ -12,12 +14,36 @@ export const groupByDateForDailyRevenue = () => {
       daily_payout: {
         $sum: '$total_payout',
       },
-      daily_profit: {
-        $sum: '$total_profit',
-      },
+      // daily_profit: {
+      //   $sum: '$total_profit',
+      // },
+      // daily_total_gross_profit: {
+      //   $sum: '$total_gross_profit',
+      // },
+      // daily_total_net_profit: {
+      //   $sum: '$total_net_profit',
+      // },
+
       daily_total_gross_profit: {
         $sum: '$total_gross_profit',
+        // $sum: {
+        //   $cond: {
+        //     if: { $eq: ['$status', 'selesai'] },
+        //     then: '$total_gross_profit',
+        //     else: 0,
+        //   },
+        // },
       },
+      daily_total_net_profit: {
+        $sum: {
+          $cond: {
+            if: { $eq: ['$status', 'selesai'] },
+            then: '$total_net_profit',
+            else: 0,
+          },
+        },
+      },
+
       daily_payment: {
         $sum: '$total_payment',
       },
@@ -88,7 +114,9 @@ export const groupByDateForDailyRevenue = () => {
           username: '$username',
           status: '$status',
           placed_at: '$placed_at',
-          total_profit: '$total_profit',
+          // total_profit: '$total_profit',
+          total_gross_profit: '$total_gross_profit',
+          total_net_profit: '$total_net_profit',
           total_payment: '$total_payment',
           subtotal: '$revenue',
         },
@@ -110,11 +138,14 @@ export const sumDailyDataFromPreviousGrouping = () => {
       total_payout: {
         $sum: '$daily_payout',
       },
-      total_profit: {
-        $sum: '$daily_profit',
-      },
+      // total_profit: {
+      //   $sum: '$daily_profit',
+      // },
       total_gross_profit: {
         $sum: '$daily_total_gross_profit',
+      },
+      total_net_profit: {
+        $sum: '$daily_total_net_profit',
       },
       total_payment: {
         $sum: '$daily_payment',
@@ -155,7 +186,9 @@ export const sumDailyDataFromPreviousGrouping = () => {
           year: '$_id.year',
           daily_revenue: '$daily_revenue',
           daily_payout: '$daily_payout',
-          daily_profit: '$daily_profit',
+          // daily_profit: '$daily_profit',
+          daily_gross_profit: '$daily_gross_profit',
+          daily_net_profit: '$daily_net_profit',
           daily_total_gross_profit:
             '$daily_total_gross_profit',
           daily_payment: '$daily_payment',
@@ -178,148 +211,148 @@ export const sumDailyDataFromPreviousGrouping = () => {
   };
 };
 
-/**
- * Ampas
- * @returns
- */
-export const groupRevenueByDay1 = () => {
-  return {
-    $group: {
-      _id: {
-        year: '$year',
-        month: '$month',
-        day: '$day',
-      },
+// /**
+//  * Ampas
+//  * @returns
+//  */
+// export const groupRevenueByDay1 = () => {
+//   return {
+//     $group: {
+//       _id: {
+//         year: '$year',
+//         month: '$month',
+//         day: '$day',
+//       },
 
-      revenue: {
-        $sum: '$revenue',
-      },
+//       revenue: {
+//         $sum: '$revenue',
+//       },
 
-      income: {
-        $sum: '$total_income',
-      },
+//       income: {
+//         $sum: '$total_income',
+//       },
 
-      profit: {
-        $sum: '$total_profit',
-      },
+//       profit: {
+//         $sum: '$total_profit',
+//       },
 
-      total_payment: {
-        $sum: '$total_payment',
-      },
+//       total_payment: {
+//         $sum: '$total_payment',
+//       },
 
-      total_cost: {
-        $sum: '$total_cost',
-      },
+//       total_cost: {
+//         $sum: '$total_cost',
+//       },
 
-      number_of_orders: {
-        $sum: 1,
-      },
+//       number_of_orders: {
+//         $sum: 1,
+//       },
 
-      orders: {
-        $push: {
-          order_id: '$order_id',
-          total_profit: '$total_profit',
-          total_payment: '$total_payment',
-          subtotal: '$order_subtotal',
-          status: '$status',
-        },
-      },
-    },
-  };
-};
+//       orders: {
+//         $push: {
+//           order_id: '$order_id',
+//           total_profit: '$total_profit',
+//           total_payment: '$total_payment',
+//           subtotal: '$order_subtotal',
+//           status: '$status',
+//         },
+//       },
+//     },
+//   };
+// };
 
-/**
- * Ampas
- * @returns
- */
-export const groupRevenueByDay2 = () => {
-  return {
-    $group: {
-      _id: {
-        year: '$year',
-        month: '$month',
-        day: '$day',
-      },
+// /**
+//  * Ampas
+//  * @returns
+//  */
+// export const groupRevenueByDay2 = () => {
+//   return {
+//     $group: {
+//       _id: {
+//         year: '$year',
+//         month: '$month',
+//         day: '$day',
+//       },
 
-      daily_revenue: {
-        $sum: '$revenue',
-      },
+//       daily_revenue: {
+//         $sum: '$revenue',
+//       },
 
-      daily_payout: {
-        $sum: '$total_payout',
-      },
+//       daily_payout: {
+//         $sum: '$total_payout',
+//       },
 
-      daily_profit: {
-        $sum: '$total_profit',
-      },
+//       daily_profit: {
+//         $sum: '$total_profit',
+//       },
 
-      daily_payment: {
-        $sum: '$total_payment',
-      },
+//       daily_payment: {
+//         $sum: '$total_payment',
+//       },
 
-      daily_cost: {
-        $sum: '$total_cost',
-      },
+//       daily_cost: {
+//         $sum: '$total_cost',
+//       },
 
-      daily_orders_count: {
-        $sum: 1,
-      },
+//       daily_orders_count: {
+//         $sum: 1,
+//       },
 
-      daily_orders: {
-        $push: {
-          order_id: '$order_id',
-          total_profit: '$total_profit',
-          total_payment: '$total_payment',
-          subtotal: '$order_subtotal',
-          status: '$status',
-        },
-      },
-    },
-  };
-};
+//       daily_orders: {
+//         $push: {
+//           order_id: '$order_id',
+//           total_profit: '$total_profit',
+//           total_payment: '$total_payment',
+//           subtotal: '$order_subtotal',
+//           status: '$status',
+//         },
+//       },
+//     },
+//   };
+// };
 
-export const groupRevenueByDay = () => {
-  return {
-    $group: {
-      _id: {
-        year: '$year',
-        month: '$month',
-        day: '$day',
-      },
+// export const groupRevenueByDay = () => {
+//   return {
+//     $group: {
+//       _id: {
+//         year: '$year',
+//         month: '$month',
+//         day: '$day',
+//       },
 
-      daily_revenue: {
-        $sum: '$revenue',
-      },
+//       daily_revenue: {
+//         $sum: '$revenue',
+//       },
 
-      daily_payout: {
-        $sum: '$total_payout',
-      },
+//       daily_payout: {
+//         $sum: '$total_payout',
+//       },
 
-      daily_profit: {
-        $sum: '$total_profit',
-      },
+//       daily_profit: {
+//         $sum: '$total_profit',
+//       },
 
-      daily_payment: {
-        $sum: '$total_payment',
-      },
+//       daily_payment: {
+//         $sum: '$total_payment',
+//       },
 
-      daily_cost: {
-        $sum: '$total_cost',
-      },
+//       daily_cost: {
+//         $sum: '$total_cost',
+//       },
 
-      daily_orders_count: {
-        $sum: 1,
-      },
+//       daily_orders_count: {
+//         $sum: 1,
+//       },
 
-      daily_orders: {
-        $push: {
-          order_id: '$order_id',
-          total_profit: '$total_profit',
-          total_payment: '$total_payment',
-          subtotal: '$order_subtotal',
-          status: '$status',
-        },
-      },
-    },
-  };
-};
+//       daily_orders: {
+//         $push: {
+//           order_id: '$order_id',
+//           total_profit: '$total_profit',
+//           total_payment: '$total_payment',
+//           subtotal: '$order_subtotal',
+//           status: '$status',
+//         },
+//       },
+//     },
+//   };
+// };

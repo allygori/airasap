@@ -182,7 +182,7 @@ export const getProductsColumn = (
       ),
     },
     {
-      accessorKey: 'total_profit',
+      accessorKey: 'total_net_profit',
       header: 'Profit',
       cell: ({ row }) => {
         let isStatusNotCanceled =
@@ -191,30 +191,33 @@ export const getProductsColumn = (
           row.original.released_funds || 0;
         let totalProfit =
           isStatusNotCanceled &&
-          row.original.total_profit === 0
+          row.original.total_net_profit === 0
             ? row.original.total_gross_profit
-            : row.original.total_profit;
+            : row.original.total_net_profit;
 
         return (
           <div className="flex flex-row items-center">
             <span
               className={cn(
                 'text-base font-medium',
-                totalProfit > 0
-                  ? 'text-green-400'
-                  : totalProfit < 0
-                    ? 'text-red-400'
-                    : ''
+                !isStatusNotCanceled
+                  ? 'text-yellow-400'
+                  : totalProfit > 0
+                    ? 'text-green-400'
+                    : totalProfit < 0
+                      ? 'text-red-400'
+                      : ''
               )}
             >
               {formatIDR(totalProfit ?? 0)}
             </span>
-            <span>
-              &nbsp;
-              {isStatusNotCanceled &&
-              releasedFundsAmount === 0
-                ? '(E)'
-                : ''}
+            <span className="text-tiny pl-1.5">
+              {/* &nbsp; */}
+              {isStatusNotCanceled
+                ? releasedFundsAmount === 0
+                  ? '(E)'
+                  : ''
+                : '(P)'}
             </span>
           </div>
         );

@@ -279,13 +279,13 @@ export function ViewDrawer<T extends Record<string, any>>({
                 />
                 <StatLine
                   label="Profit"
-                  value={formatIDR(item.total_profit, {
+                  value={formatIDR(item.total_net_profit, {
                     fallback: 0,
                   })}
                   valueClass={
-                    item.total_profit !== undefined &&
-                    item.total_profit !== 0
-                      ? item.total_profit < 0
+                    item.total_net_profit !== undefined &&
+                    item.total_net_profit !== 0
+                      ? item.total_net_profit < 0
                         ? 'text-destructive'
                         : 'text-green-600'
                       : ''

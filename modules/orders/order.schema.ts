@@ -208,7 +208,7 @@ export const OrderBaseSchema = z.object({
 
   // additional fields
   total_product_cost: z.number().int().optional(),
-  total_profit: z.number().int().optional(),
+  // total_profit: z.number().int().optional(),
   // estimated_total_profit: z.number().int().optional(),
   // enriched_at: z.string().nullable().optional(),
 

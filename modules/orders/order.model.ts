@@ -498,10 +498,10 @@ const OrderSchema = new Schema<TOrder>(
       type: Number,
       default: 0,
     },
-    total_profit: {
-      type: Number,
-      default: 0,
-    },
+    // total_profit: {
+    //   type: Number,
+    //   default: 0,
+    // },
     // estimated_total_profit: {
     //   type: Number,
     //   default: 0,

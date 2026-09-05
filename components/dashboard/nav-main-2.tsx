@@ -49,7 +49,7 @@ export function NavMain2({
             >
               <Link
                 href={item.url}
-                className="flex flex-row gap-2"
+                className="flex w-full flex-row gap-2"
               >
                 {item.icon && <item.icon />}
                 <span>{item.title}</span>

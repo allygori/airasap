@@ -120,7 +120,7 @@ export const INCOME_FIELD_MAP = {
     parser: numberParser,
   },
   GOXFee: {
-    header: 'Biaya Gratis Ongkir XTRA',
+    header: 'Gratis Ongkir XTRA',
     parser: numberParser,
   },
   AMSServiceFee: {
@@ -140,8 +140,7 @@ export const INCOME_FIELD_MAP = {
     parser: numberParser,
   },
   otherFee: {
-    // header: 'Biaya Lainnya',
-    header: 'Premi',
+    header: 'Biaya Lainnya',
     parser: numberParser,
   },
   transactionFee: {

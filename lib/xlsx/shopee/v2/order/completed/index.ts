@@ -10,7 +10,7 @@ export default function parse(buffer: ArrayBuffer) {
   return parsedData;
 }
 
-export const shopeeV1OrderCompletedParser = (
+export const shopeeV2OrderCompletedParser = (
   buffer: ArrayBuffer
 ) => {
   const data = orderReader(buffer);

@@ -20,6 +20,8 @@ import {
   shopeeV1AllOrderParser,
   type ParsedAllOrderRow,
 } from '@/lib/xlsx/shopee/v1/order/all';
+import { shopeeV2OrderCompletedParser } from '@/lib/xlsx/shopee/v2/order/completed';
+import { shopeeV2AllOrderParser } from '@/lib/xlsx/shopee/v2/order/all';
 import releasedFundsV1parser from '@/lib/xlsx/shopee/v1/order/released-funds';
 import releasedFundsV2parser from '@/lib/xlsx/shopee/v2/order/released-funds';
 import { ProductService } from '../products/product.service';
@@ -80,6 +82,121 @@ export class OrderService {
     } else {
       return null;
     }
+  }
+
+  private calculateOrderItemFinancials(args: {
+    priceAfterDiscount?: number;
+    quantity?: number;
+    returnedQuantity?: number;
+    subtotal?: number;
+    productCostUnit?: number;
+    processingFee?: number;
+  }) {
+    const quantity = Number(args.quantity || 0);
+    const returnedQuantity = Number(
+      args.returnedQuantity || 0
+    );
+    const finalQuantity = Math.max(
+      quantity - returnedQuantity,
+      0
+    );
+    const priceAfterDiscount = Number(
+      args.priceAfterDiscount || 0
+    );
+    const grossSales =
+      Number(args.subtotal || 0) ||
+      priceAfterDiscount * quantity;
+    const productCost = Number(args.productCostUnit || 0);
+    const totalProductCost = productCost * finalQuantity;
+    const grossProfit = grossSales - totalProductCost;
+    const netSales = grossSales;
+    const netProfit = grossProfit;
+
+    return {
+      product_cost: productCost,
+      total_product_cost: totalProductCost,
+      gross_sales: grossSales,
+      net_sales: netSales,
+      gross_profit: grossProfit,
+      net_profit: netProfit,
+      profit:
+        finalQuantity > 0 ? netProfit / finalQuantity : 0,
+    };
+  }
+
+  private getBuyerUsername(order: Record<string, any>) {
+    return order.buyerUsername || order.username || '';
+  }
+
+  private toNumber(value: unknown) {
+    return typeof value === 'number' &&
+      Number.isFinite(value)
+      ? value
+      : Number(value || 0) || 0;
+  }
+
+  private calculateReleasedFundsAmount(
+    order: Record<string, any>
+  ) {
+    const explicitAmount =
+      order.releasedFundsAmount ?? order.totalIncome;
+
+    if (
+      explicitAmount !== undefined &&
+      explicitAmount !== null &&
+      this.toNumber(explicitAmount) !== 0
+    ) {
+      return this.toNumber(explicitAmount);
+    }
+
+    const productIncome =
+      order.productPrice ?? order.originalProductPrice ?? 0;
+
+    return [
+      productIncome,
+      order.totalProductDiscount,
+      order.refundToBuyer,
+      order.refundToBuyerAmount,
+      order.buyerRefund,
+      order.buyerRefundAmount,
+      order.shippingCostPaidByBuyer,
+      order.shippingCostPaidToLogistics,
+      order.shippingCostDiscountFromLogistics,
+      order.shippingCostDiscountByLogistics,
+      order.freeShippingFromShopee,
+      order.shippingCostForwardedByShopee,
+      order.returnShippingFee,
+      order.returnToSellerFee,
+      order.returnToSenderShippingFee,
+      order.shippingFeeRefund,
+      order.sellerSponsoredVoucher,
+      order.sellerSponsoredCoinCashback,
+      order.productDiscountFromShopee,
+      order.sellerSponsoredCoFundVoucher,
+      order.sellerSponsoredCoFundCoinCashback,
+      order.adminFee,
+      order.orderProcessingFee,
+      order.GOXFee,
+      order.shippingSaverProgramFee,
+      order.AMSServiceFee,
+      order.serviceFee,
+      order.campaignFee,
+      order.AMSCommissionFee,
+      order.amsCommissionFee,
+      order.autoTopUpFeeFromIncome,
+      order.otherFee,
+      order.premium,
+      order.transactionFee,
+      order.fbsFee,
+      order.taxPPH22,
+      order.importDutyVatIncomeTax,
+      order.compensation,
+      order.freeShippingPromoFromSeller,
+      order.proRatedRedeemedCoinForReturn,
+      order.proRatedShopeeVoucherForReturn,
+      order.proRatedBankPaymentPromotionForReturn,
+      order.proRatedShopeePaymentPromotionForReturn,
+    ].reduce((sum, value) => sum + this.toNumber(value), 0);
   }
 
   /**
@@ -271,21 +388,44 @@ export class OrderService {
       const data = { ...dto };
       data.items = (data?.items || []).map((item) => {
         const productCost = item.product_cost || 0;
+        const financials =
+          this.calculateOrderItemFinancials({
+            priceAfterDiscount:
+              item?.price_after_discount || 0,
+            quantity: item.quantity || 0,
+            returnedQuantity: item.returned_quantity || 0,
+            subtotal: item.subtotal || 0,
+            productCostUnit: productCost,
+            processingFee: item.processing_fee || 0,
+          });
+
         return {
           ...item,
-          profit:
-            (item?.price_after_discount || 0) - productCost,
-          total_product_cost:
-            (item.quantity || 0) * productCost,
+          ...financials,
         };
       });
-      const totalProductCost = data.items.reduce(
-        (acc, n) => acc + (n.total_product_cost || 0),
+      data.total_product_cost = data.items.reduce(
+        (acc, item) => acc + (item.total_product_cost || 0),
         0
       );
-      data.total_profit =
-        (data.released_funds || 0) - totalProductCost;
-      data.total_net_profit = data.total_profit;
+      data.total_gross_sales = data.items.reduce(
+        (acc, item) => acc + (item.gross_sales || 0),
+        0
+      );
+      data.total_net_sales = data.items.reduce(
+        (acc, item) => acc + (item.net_sales || 0),
+        0
+      );
+      data.total_gross_profit = data.items.reduce(
+        (acc, item) => acc + (item.gross_profit || 0),
+        0
+      );
+      data.total_net_profit = data.items.reduce(
+        (acc, item) => acc + (item.net_profit || 0),
+        0
+      );
+      // data.total_profit = data.total_net_profit;
+      // data.total_net_profit = data.total_profit;
 
       const updatedOrder = await this.repository.overwrite(
         id,
@@ -505,8 +645,12 @@ export class OrderService {
     fileBuffer: ArrayBuffer
   ): Promise<MassUploadResponseDTO> {
     try {
-      const orders =
-        await shopeeV1AllOrderParser(fileBuffer);
+      let orders: any[];
+      try {
+        orders = await shopeeV2AllOrderParser(fileBuffer);
+      } catch {
+        orders = await shopeeV1AllOrderParser(fileBuffer);
+      }
 
       if (orders.length === 0) {
         throw new Error(
@@ -574,7 +718,11 @@ export class OrderService {
             : 0;
           // prettier-ignore
           const discountPercentage =
-            ((originalPrice - priceAfterDiscount) / originalPrice) * 100;
+            originalPrice > 0
+              ? ((originalPrice - priceAfterDiscount) /
+                  originalPrice) *
+                100
+              : 0;
 
           // console.log(
           //   `[${order.id}] Discount: ${discount}`
@@ -634,20 +782,22 @@ export class OrderService {
             ? Number(item.returnedQuantity)
             : 0;
           // add new field in model: final_quantity
-          const finalQuantity = quantity - returnedQuantity;
-          const totalProductCost =
-            productCost * finalQuantity;
-          const grossSales = priceAfterDiscount * quantity;
-          const grossProfit = grossSales - totalProductCost;
+          const financials =
+            this.calculateOrderItemFinancials({
+              priceAfterDiscount,
+              quantity,
+              returnedQuantity,
+              subtotal: Number(item.orderSubtotal || 0),
+              productCostUnit: productCost,
+            });
 
           return {
             product: product?._id,
-            product_cost: productCost,
-            total_product_cost: totalProductCost, // without multiply with quantity?
             // prettier-ignore
             // estimated_profit: (Number(item.orderSubtotal) - totalProductCost),
             parent_sku: item.parentSku,
             child_sku: item.skuReferenceNumber,
+            product_id: product?.product_id,
             product_name: item.productName,
             variation_id: variant?.variant_id,
             variation_name: item.variationName,
@@ -657,10 +807,7 @@ export class OrderService {
             quantity: quantity,
             subtotal: item.orderSubtotal,
             returned_quantity: item.returnedQuantity,
-            gross_sales: grossSales,
-            // net_sales: z.number().int().optional(),
-            gross_profit: grossProfit,
-            // net_profit: z.number().int().optional(),
+            ...financials,
           };
         });
 
@@ -670,15 +817,28 @@ export class OrderService {
           },
           0
         );
-
         const totalProductCost = orderItems.reduce(
-          (acc, n) => acc + n.product_cost * n.quantity,
+          (acc, item) =>
+            acc + (item.total_product_cost || 0),
           0
         );
         const totalGrossSales = orderItems.reduce(
-          (acc, n) => acc + n.gross_sales,
+          (acc, item) => acc + (item.gross_sales || 0),
           0
         );
+        const totalNetSales = orderItems.reduce(
+          (acc, item) => acc + (item.net_sales || 0),
+          0
+        );
+        const totalGrossProfit = orderItems.reduce(
+          (acc, item) => acc + (item.gross_profit || 0),
+          0
+        );
+        const totalNetProfit = orderItems.reduce(
+          (acc, item) => acc + (item.net_profit || 0),
+          0
+        );
+
         // const totalFee = Object.values()
 
         const payload = {
@@ -695,7 +855,7 @@ export class OrderService {
           cancellation_reason: order.cancellationReason,
           cancellation_return_status:
             order.cancellationReturnStatus,
-          username: order.buyerUsername,
+          username: this.getBuyerUsername(order),
           number_of_products_ordered:
             order.numberOfProductsOrdered,
           total_payment: order.totalPayment,
@@ -793,11 +953,10 @@ export class OrderService {
           //   0
           // ),
           total_gross_sales: totalGrossSales,
-          total_net_sales: totalGrossSales,
-          total_gross_profit:
-            totalGrossSales - totalProductCost,
-          total_net_profit:
-            totalGrossSales - totalProductCost,
+          total_net_sales: totalNetSales,
+          total_gross_profit: totalGrossProfit,
+          // total_profit: totalNetProfit,
+          total_net_profit: totalNetProfit,
           enrichments: [],
           other_variable_cost: [],
         };
@@ -845,8 +1004,14 @@ export class OrderService {
     fileId: string
   ): Promise<MassUploadResponseDTO> {
     try {
-      const orders =
-        await shopeeV1OrderCompletedParser(fileBuffer);
+      let orders: any[];
+      try {
+        orders =
+          await shopeeV2OrderCompletedParser(fileBuffer);
+      } catch {
+        orders =
+          await shopeeV1OrderCompletedParser(fileBuffer);
+      }
 
       if (orders.length === 0) {
         throw new Error(
@@ -870,10 +1035,14 @@ export class OrderService {
       let updatedCount = 0;
       for (const [orderId, group] of ordersMap.entries()) {
         const order = group[0] || {};
+        const existingOrder =
+          await this.repository.findByOrderId(orderId);
+        const existingItems = existingOrder?.items || [];
 
-        const orderItems = group.map((item) => {
+        const orderItems = group.map((item, index) => {
           // const product = products.find((p: { variants: [] }) => p.variants.find((variant)))
           // const product = products.find((prd) => prd.product_id === order.product)
+          const existingItem = existingItems[index];
 
           const originalPrice = item.originalPrice
             ? Number(item.originalPrice)
@@ -883,9 +1052,31 @@ export class OrderService {
             : 0;
           // prettier-ignore
           const discount =
-            ((originalPrice - priceAfterDiscount) / originalPrice) * 100;
+            originalPrice > 0
+              ? ((originalPrice - priceAfterDiscount) /
+                  originalPrice) *
+                100
+              : 0;
+          const quantity = item.quantity
+            ? Number(item.quantity)
+            : existingItem?.quantity || 0;
+          const returnedQuantity = item.returnedQuantity
+            ? Number(item.returnedQuantity)
+            : existingItem?.returned_quantity || 0;
+          const financials =
+            this.calculateOrderItemFinancials({
+              priceAfterDiscount,
+              quantity,
+              returnedQuantity,
+              subtotal: Number(item.orderSubtotal || 0),
+              productCostUnit:
+                existingItem?.product_cost || 0,
+              processingFee:
+                existingItem?.processing_fee || 0,
+            });
 
           return {
+            ...existingItem,
             // Don't update product and product_cost?
             parent_sku: item.parentSku,
             child_sku: item.skuReferenceNumber,
@@ -893,21 +1084,40 @@ export class OrderService {
             // variation_id: variant?.variant_id,
             variation_name: item.variationName,
             original_price: originalPrice,
-            discount: discount,
+            discount_percentage: discount,
             price_after_discount: priceAfterDiscount,
-            quantity: item.quantity,
+            quantity,
             subtotal: item.orderSubtotal,
-            returned_quantity: item.returnedQuantity,
+            returned_quantity: returnedQuantity,
+            ...financials,
           };
         });
-
-        const existingOrder =
-          await this.repository.findByOrderId(orderId);
 
         const orderSubtotal = orderItems.reduce(
           (acc: number, curr) => {
             return acc + Number(curr.subtotal);
           },
+          0
+        );
+        const totalProductCost = orderItems.reduce(
+          (acc, item) =>
+            acc + (item.total_product_cost || 0),
+          0
+        );
+        const totalGrossSales = orderItems.reduce(
+          (acc, item) => acc + (item.gross_sales || 0),
+          0
+        );
+        const totalNetSales = orderItems.reduce(
+          (acc, item) => acc + (item.net_sales || 0),
+          0
+        );
+        const totalGrossProfit = orderItems.reduce(
+          (acc, item) => acc + (item.gross_profit || 0),
+          0
+        );
+        const totalNetProfit = orderItems.reduce(
+          (acc, item) => acc + (item.net_profit || 0),
           0
         );
 
@@ -950,13 +1160,19 @@ export class OrderService {
 
           cancellation_return_status:
             order.cancellationReturnStatus,
-          username: order.buyerUsername,
+          username: this.getBuyerUsername(order),
           number_of_products_ordered:
             order.numberOfProductsOrdered,
           total_payment: order.totalPayment,
           payment_method: order.paymentMethod,
           paid_at: order.paymentTimeCompleted,
           order_subtotal: orderSubtotal,
+          total_product_cost: totalProductCost,
+          total_gross_sales: totalGrossSales,
+          total_net_sales: totalNetSales,
+          total_gross_profit: totalGrossProfit,
+          // total_profit: totalNetProfit,
+          total_net_profit: totalNetProfit,
           total_discount: order.totalDiscount,
           discount_from_seller: order.discountFromSeller,
           discount_from_shopee: order.discountFromShopee,
@@ -1181,19 +1397,29 @@ export class OrderService {
             orderObjItem.product = product?._id
               ? String(product._id)
               : undefined;
-            orderObjItem.product_cost =
-              productCost * (orderObjItem?.quantity || 1);
-            orderObjItem.profit =
-              (orderObjItem?.price_after_discount || 0) -
-              productCost; // price_after_discount not included fees, remove?
-            // orderObjItem.product_cost =
-            //   defaultCost?.default_cost || 0;
+            orderObjItem.product_cost = productCost;
             orderObjItem.processing_fee =
               item?.orderProcessingFee || 0;
+            const financials =
+              this.calculateOrderItemFinancials({
+                priceAfterDiscount:
+                  orderObjItem?.price_after_discount || 0,
+                quantity: orderObjItem?.quantity || 0,
+                returnedQuantity:
+                  orderObjItem?.returned_quantity || 0,
+                subtotal: orderObjItem?.subtotal || 0,
+                productCostUnit: productCost,
+                processingFee:
+                  orderObjItem.processing_fee || 0,
+              });
+            Object.assign(orderObjItem, financials);
+            // orderObjItem.product_cost =
+            //   defaultCost?.default_cost || 0;
             // orderObjItem.product_cost = product // find correct variant and get default_cost
 
             totalProductCost =
-              totalProductCost + orderObjItem.product_cost;
+              totalProductCost +
+              (orderObjItem.total_product_cost || 0);
 
             items.push(orderObjItem);
           }
@@ -1223,7 +1449,8 @@ export class OrderService {
               order.returnToSenderShippingFee,
             shipping_fee_refund: order.shippingFeeRefund,
           };
-          $set.released_funds = order.totalIncome || 0;
+          $set.released_funds =
+            this.calculateReleasedFundsAmount(order);
           $set.shipping_cost_paid_by_buyer =
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
@@ -1235,8 +1462,23 @@ export class OrderService {
           $set.compensation = order.compensation || 0;
           $set.voucher_code = order.voucherCode || null;
           $set.total_product_cost = totalProductCost || 0;
-          $set.total_profit =
-            $set.released_funds - $set.total_product_cost;
+          $set.total_gross_sales = items.reduce(
+            (acc, item) => acc + (item.gross_sales || 0),
+            0
+          );
+          $set.total_net_sales = items.reduce(
+            (acc, item) => acc + (item.net_sales || 0),
+            0
+          );
+          $set.total_gross_profit = items.reduce(
+            (acc, item) => acc + (item.gross_profit || 0),
+            0
+          );
+          $set.total_net_profit = items.reduce(
+            (acc, item) => acc + (item.net_profit || 0),
+            0
+          );
+          // $set.total_profit = $set.total_net_profit;
           $set.released_funds_at = order.releasedFundDate;
           $set.enrichments = enrichments;
 
@@ -1386,19 +1628,29 @@ export class OrderService {
               ? String(product._id)
               : undefined;
             orderObjItem.product_id = item?.productId;
-            orderObjItem.product_cost =
-              productCost * (orderObjItem?.quantity || 1);
-            orderObjItem.profit =
-              (orderObjItem?.price_after_discount || 0) -
-              productCost; // price_after_discount not included fees, remove?
-            // orderObjItem.product_cost =
-            //   defaultCost?.default_cost || 0;
+            orderObjItem.product_cost = productCost;
             orderObjItem.processing_fee =
               item?.orderProcessingFee || 0;
+            const financials =
+              this.calculateOrderItemFinancials({
+                priceAfterDiscount:
+                  orderObjItem?.price_after_discount || 0,
+                quantity: orderObjItem?.quantity || 0,
+                returnedQuantity:
+                  orderObjItem?.returned_quantity || 0,
+                subtotal: orderObjItem?.subtotal || 0,
+                productCostUnit: productCost,
+                processingFee:
+                  orderObjItem.processing_fee || 0,
+              });
+            Object.assign(orderObjItem, financials);
+            // orderObjItem.product_cost =
+            //   defaultCost?.default_cost || 0;
             // orderObjItem.product_cost = product // find correct variant and get default_cost
 
             totalProductCost =
-              totalProductCost + orderObjItem.product_cost;
+              totalProductCost +
+              (orderObjItem.total_product_cost || 0);
 
             items.push(orderObjItem);
           }
@@ -1515,9 +1767,7 @@ export class OrderService {
           //     totalOtherFee);
 
           const releasedFundsAmount =
-            order.releasedFundsAmount
-              ? Number(order.releasedFundsAmount)
-              : 0;
+            this.calculateReleasedFundsAmount(order);
           console.log({
             orderId: orderObj.order_id,
             releasedFundsAmount,
@@ -1540,8 +1790,23 @@ export class OrderService {
           $set.compensation = order.compensation || 0;
           $set.voucher_code = order.voucherCode || null;
           $set.total_product_cost = totalProductCost || 0;
-          $set.total_profit =
-            $set.released_funds - $set.total_product_cost;
+          $set.total_gross_sales = items.reduce(
+            (acc, item) => acc + (item.gross_sales || 0),
+            0
+          );
+          $set.total_net_sales = items.reduce(
+            (acc, item) => acc + (item.net_sales || 0),
+            0
+          );
+          $set.total_gross_profit = items.reduce(
+            (acc, item) => acc + (item.gross_profit || 0),
+            0
+          );
+          $set.total_net_profit = items.reduce(
+            (acc, item) => acc + (item.net_profit || 0),
+            0
+          );
+          // $set.total_profit = $set.total_net_profit;
           $set.released_funds_at = order.releasedFundDate;
           $set.enrichments = enrichments;
           // $set.enriched_at = new Date();

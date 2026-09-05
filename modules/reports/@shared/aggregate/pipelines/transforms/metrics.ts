@@ -3,7 +3,9 @@ export const metricsForRevenue = () => {
     $project: {
       _id: 0,
       // total_revenue: 1,
-      total_profit: 1,
+      // total_profit: 1,
+      total_gross_profit: 1,
+      total_net_profit: 1,
       total_revenue: {
         $subtract: [
           '$total_revenue',
@@ -14,7 +16,7 @@ export const metricsForRevenue = () => {
         $multiply: [
           {
             $divide: [
-              '$total_profit',
+              '$total_net_profit',
               {
                 $subtract: [
                   '$total_revenue',
@@ -27,7 +29,6 @@ export const metricsForRevenue = () => {
         ],
       },
       total_payout: 1,
-      total_gross_profit: 1,
       total_payment: 1,
       // total_payment: {
       //   $subtract: [

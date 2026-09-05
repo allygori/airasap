@@ -23,7 +23,7 @@ describe('Order Service', () => {
       buffer.byteOffset + buffer.byteLength
     );
     const result =
-      await orderService.massUploadShopeeOrders(
+      await orderService.massUploadAllOrderShopeeV1(
         arrayBuffer
       );
 
