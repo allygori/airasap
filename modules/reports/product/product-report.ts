@@ -16,7 +16,6 @@ import {
 } from '../@shared/aggregate/pipelines/transforms/metrics';
 import {
   groupByDateForDailyRevenue,
-  groupRevenueByDay,
   sumDailyDataFromPreviousGrouping,
 } from '../@shared/aggregate/pipelines/groups/revenue';
 import { endOfDay, parse, startOfDay } from 'date-fns';

@@ -167,12 +167,19 @@ function EditFormWrapper({
         processing_fee:
           initialData.fee?.processing_fee ?? 0,
         affiliate_fee: initialData.fee?.affiliate_fee ?? 0,
+        gox_fee: initialData.fee?.gox_fee ?? 0,
         service_fee: initialData.fee?.service_fee ?? 0,
         shipping_saver_program_fee:
           initialData.fee?.shipping_saver_program_fee ?? 0,
         transaction_fee:
           initialData.fee?.transaction_fee ?? 0,
         campaign_fee: initialData.fee?.campaign_fee ?? 0,
+        other_fee: initialData.fee?.other_fee ?? 0,
+        premium_fee: initialData.fee?.premium_fee ?? 0,
+        fbs_fee: initialData.fee?.fbs_fee ?? 0,
+        tax_pph22: initialData.fee?.tax_pph22 ?? 0,
+        import_duty_vat_income_tax:
+          initialData.fee?.import_duty_vat_income_tax ?? 0,
         auto_top_up_fee_from_income:
           initialData.fee?.auto_top_up_fee_from_income ?? 0,
         return_shipping_fee:

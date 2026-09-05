@@ -199,6 +199,57 @@ export class OrderService {
     ].reduce((sum, value) => sum + this.toNumber(value), 0);
   }
 
+  private hasReleasedFundsComponents(
+    order: Record<string, any>
+  ) {
+    return [
+      order.releasedFundsAmount,
+      order.totalIncome,
+      order.productPrice,
+      order.originalProductPrice,
+    ].some((value) => this.toNumber(value) !== 0);
+  }
+
+  private applyReleasedFundsFinancialsToItems(
+    items: Record<string, any>[],
+    releasedFundsAmount: number
+  ): Record<string, any>[] {
+    const totalGrossSales = items.reduce(
+      (sum, item) => sum + this.toNumber(item.gross_sales),
+      0
+    );
+
+    return items.map((item) => {
+      const itemReleasedFunds =
+        this.hasReleasedFundsComponents(item) ||
+        totalGrossSales === 0
+          ? this.calculateReleasedFundsAmount(item)
+          : Math.round(
+              (releasedFundsAmount *
+                this.toNumber(item.gross_sales)) /
+                totalGrossSales
+            );
+      const totalProductCost = this.toNumber(
+        item.total_product_cost
+      );
+      const finalQuantity = Math.max(
+        this.toNumber(item.quantity) -
+          this.toNumber(item.returned_quantity),
+        0
+      );
+      const netProfit =
+        itemReleasedFunds - totalProductCost;
+
+      return {
+        ...item,
+        net_sales: itemReleasedFunds,
+        net_profit: netProfit,
+        profit:
+          finalQuantity > 0 ? netProfit / finalQuantity : 0,
+      };
+    });
+  }
+
   /**
    * Get all orders
    */
@@ -1432,16 +1483,34 @@ export class OrderService {
             enriched_at: new Date(),
           });
 
-          $set.items = items;
+          const releasedFundsAmount =
+            this.calculateReleasedFundsAmount(order);
+          const itemsWithReleasedFunds =
+            this.applyReleasedFundsFinancialsToItems(
+              items,
+              releasedFundsAmount
+            );
+
+          $set.items = itemsWithReleasedFunds;
           $set.fee = {
             admin_fee: order.adminFee,
             processing_fee: order.orderProcessingFee,
-            affiliate_fee: order.amsCommissionFee,
+            affiliate_fee:
+              this.toNumber(order.amsCommissionFee) +
+              this.toNumber(order.AMSCommissionFee) +
+              this.toNumber(order.AMSServiceFee),
+            gox_fee: order.GOXFee,
             service_fee: order.serviceFee,
             shipping_saver_program_fee:
               order.shippingSaverProgramFee,
             transaction_fee: order.transactionFee,
             campaign_fee: order.campaignFee,
+            other_fee: order.otherFee,
+            premium_fee: order.premium,
+            fbs_fee: order.fbsFee,
+            tax_pph22: order.taxPPH22,
+            import_duty_vat_income_tax:
+              order.importDutyVatIncomeTax,
             auto_top_up_fee_from_income:
               order.autoTopUpFeeFromIncome,
             return_shipping_fee: order.returnShippingFee,
@@ -1449,8 +1518,7 @@ export class OrderService {
               order.returnToSenderShippingFee,
             shipping_fee_refund: order.shippingFeeRefund,
           };
-          $set.released_funds =
-            this.calculateReleasedFundsAmount(order);
+          $set.released_funds = releasedFundsAmount;
           $set.shipping_cost_paid_by_buyer =
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
@@ -1466,18 +1534,21 @@ export class OrderService {
             (acc, item) => acc + (item.gross_sales || 0),
             0
           );
-          $set.total_net_sales = items.reduce(
-            (acc, item) => acc + (item.net_sales || 0),
-            0
-          );
-          $set.total_gross_profit = items.reduce(
-            (acc, item) => acc + (item.gross_profit || 0),
-            0
-          );
-          $set.total_net_profit = items.reduce(
-            (acc, item) => acc + (item.net_profit || 0),
-            0
-          );
+          $set.total_net_sales =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.net_sales || 0),
+              0
+            );
+          $set.total_gross_profit =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.gross_profit || 0),
+              0
+            );
+          $set.total_net_profit =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.net_profit || 0),
+              0
+            );
           // $set.total_profit = $set.total_net_profit;
           $set.released_funds_at = order.releasedFundDate;
           $set.enrichments = enrichments;
@@ -1740,21 +1811,39 @@ export class OrderService {
             enriched_at: new Date(),
           });
 
-          $set.items = items;
+          const releasedFundsAmount =
+            this.calculateReleasedFundsAmount(order);
+          const itemsWithReleasedFunds =
+            this.applyReleasedFundsFinancialsToItems(
+              items,
+              releasedFundsAmount
+            );
+
+          $set.items = itemsWithReleasedFunds;
           $set.fee = {
             admin_fee: order.adminFee,
             processing_fee: order.orderProcessingFee,
-            affiliate_fee: order.AMSCommissionFee,
+            affiliate_fee:
+              this.toNumber(order.AMSCommissionFee) +
+              this.toNumber(order.AMSServiceFee),
+            gox_fee: order.GOXFee,
             service_fee: order.serviceFee,
-            // shipping_saver_program_fee:
-            //   order.shippingSaverProgramFee,
+            shipping_saver_program_fee: (order as any)
+              .shippingSaverProgramFee,
             transaction_fee: order.transactionFee,
             campaign_fee: order.campaignFee,
+            other_fee: order.otherFee,
+            premium_fee: (order as any).premium,
+            fbs_fee: order.fbsFee,
+            tax_pph22: order.taxPPH22,
+            import_duty_vat_income_tax: (order as any)
+              .importDutyVatIncomeTax,
             auto_top_up_fee_from_income:
               order.autoTopUpFeeFromIncome,
             return_shipping_fee: order.returnShippingFee,
             return_to_sender_shipping_fee:
-              order.returnShippingFee,
+              order.returnToSellerFee ||
+              (order as any).returnToSenderShippingFee,
             shipping_fee_refund: order.shippingFeeRefund,
           };
 
@@ -1766,8 +1855,6 @@ export class OrderService {
           //     totalPromotionFee +
           //     totalOtherFee);
 
-          const releasedFundsAmount =
-            this.calculateReleasedFundsAmount(order);
           console.log({
             orderId: orderObj.order_id,
             releasedFundsAmount,
@@ -1794,18 +1881,21 @@ export class OrderService {
             (acc, item) => acc + (item.gross_sales || 0),
             0
           );
-          $set.total_net_sales = items.reduce(
-            (acc, item) => acc + (item.net_sales || 0),
-            0
-          );
-          $set.total_gross_profit = items.reduce(
-            (acc, item) => acc + (item.gross_profit || 0),
-            0
-          );
-          $set.total_net_profit = items.reduce(
-            (acc, item) => acc + (item.net_profit || 0),
-            0
-          );
+          $set.total_net_sales =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.net_sales || 0),
+              0
+            );
+          $set.total_gross_profit =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.gross_profit || 0),
+              0
+            );
+          $set.total_net_profit =
+            itemsWithReleasedFunds.reduce(
+              (acc, item) => acc + (item.net_profit || 0),
+              0
+            );
           // $set.total_profit = $set.total_net_profit;
           $set.released_funds_at = order.releasedFundDate;
           $set.enrichments = enrichments;

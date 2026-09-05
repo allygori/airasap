@@ -6,7 +6,7 @@ import incomeParser from './index';
 describe('Shopee Released Funds (v2) Worksheet "Penghasilan"', () => {
   const excelPath = path.join(
     process.cwd(),
-    '.data/2026/2026-07--july--released-funds--20260701_20260731.xlsx'
+    '.data/2026/orders/2026-07--july--released-funds--20260701_20260731.xlsx'
   );
 
   const buffer = fs.readFileSync(excelPath);

@@ -202,7 +202,7 @@ export const ChartBarStackedOrders = ({
               date: `${existing.year}-${String(existing.month).padStart(2, '0')}-${String(existing.day).padStart(2, '0')}`,
               data1: existing.daily_payment || 0,
               data2: existing.daily_cost || 0,
-              data3: existing.daily_profit || 0,
+              data3: existing.daily_net_profit || 0,
             }
           : {
               day: day,

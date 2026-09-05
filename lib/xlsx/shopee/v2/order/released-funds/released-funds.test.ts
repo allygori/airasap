@@ -6,7 +6,7 @@ import releasedFundsParser from './index';
 describe('Shopee Released Funds (v2)', () => {
   const excelPath = path.join(
     process.cwd(),
-    '.data/2026/2026-07--july--released-funds--20260701_20260731.xlsx'
+    '.data/2026/orders/2026-07--july--released-funds--20260701_20260731.xlsx'
   );
 
   const buffer = fs.readFileSync(excelPath);
@@ -31,5 +31,34 @@ describe('Shopee Released Funds (v2)', () => {
   it('should match order with gratis ongkir xtra fee to -22032', () => {
     const order = orders[5];
     expect(order.GOXFee).toBe(-22032);
+  });
+
+  it('should parse august payout and fees from explicit total income columns', () => {
+    const augustExcelPath = path.join(
+      process.cwd(),
+      '.data/2026/orders/2026-08--augustus--released-funds--20260801_20260831.xlsx'
+    );
+    const augustBuffer = fs.readFileSync(augustExcelPath);
+    const augustArrayBuffer = augustBuffer.buffer.slice(
+      augustBuffer.byteOffset,
+      augustBuffer.byteOffset + augustBuffer.byteLength
+    );
+
+    const { orders: augustOrders } = releasedFundsParser(
+      augustArrayBuffer
+    );
+    const firstOrder = augustOrders.find(
+      (order) => order.orderId === '260828HT3KR0YS'
+    );
+
+    expect(firstOrder).toEqual(
+      expect.objectContaining({
+        releasedFundsAmount: 94846,
+        productPrice: 109200,
+        adminFee: -9828,
+        orderProcessingFee: -1250,
+        GOXFee: -3276,
+      })
+    );
   });
 });

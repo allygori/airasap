@@ -344,6 +344,20 @@ export function ViewDrawer<T extends Record<string, any>>({
                   }
                 />
                 <StatLine
+                  label="Biaya Gratis Ongkir Xtra"
+                  value={formatIDR(item.fee?.gox_fee, {
+                    fallback: 0,
+                  })}
+                  valueClass={
+                    item.fee?.gox_fee !== undefined &&
+                    item.fee?.gox_fee !== 0
+                      ? item.fee?.gox_fee < 0
+                        ? 'text-destructive'
+                        : 'text-green-600'
+                      : ''
+                  }
+                />
+                <StatLine
                   label="Biaya Affiliate"
                   value={formatIDR(
                     item.fee?.affiliate_fee,
@@ -367,24 +381,6 @@ export function ViewDrawer<T extends Record<string, any>>({
                     item.fee?.campaign_fee !== undefined &&
                     item.fee?.campaign_fee !== 0
                       ? item.fee?.campaign_fee < 0
-                        ? 'text-destructive'
-                        : 'text-green-600'
-                      : ''
-                  }
-                />
-                <StatLine
-                  label="Biaya Gratis Ongkir"
-                  value={formatIDR(
-                    item.fee?.shipping_saver_program_fee,
-                    { fallback: 0 }
-                  )}
-                  valueClass={
-                    item.fee?.shipping_saver_program_fee !==
-                      undefined &&
-                    item.fee?.shipping_saver_program_fee !==
-                      0
-                      ? item.fee
-                          ?.shipping_saver_program_fee < 0
                         ? 'text-destructive'
                         : 'text-green-600'
                       : ''

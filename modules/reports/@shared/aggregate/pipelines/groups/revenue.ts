@@ -187,8 +187,8 @@ export const sumDailyDataFromPreviousGrouping = () => {
           daily_revenue: '$daily_revenue',
           daily_payout: '$daily_payout',
           // daily_profit: '$daily_profit',
-          daily_gross_profit: '$daily_gross_profit',
-          daily_net_profit: '$daily_net_profit',
+          daily_gross_profit: '$daily_total_gross_profit',
+          daily_net_profit: '$daily_total_net_profit',
           daily_total_gross_profit:
             '$daily_total_gross_profit',
           daily_payment: '$daily_payment',

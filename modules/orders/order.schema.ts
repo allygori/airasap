@@ -71,6 +71,7 @@ export const OrderFeeSchema = z.object({
   admin_fee: z.number().int().optional().default(0),
   processing_fee: z.number().int().optional().default(0),
   affiliate_fee: z.number().int().optional().default(0), // shopee: AMS program, tokped: ?
+  gox_fee: z.number().int().optional().default(0),
   service_fee: z.number().int().optional().default(0),
   shipping_saver_program_fee: z
     .number()
@@ -79,6 +80,15 @@ export const OrderFeeSchema = z.object({
     .default(0), // shopee: gratis ongkir xtra/xtra+ program ??
   transaction_fee: z.number().int().optional().default(0),
   campaign_fee: z.number().int().optional().default(0),
+  other_fee: z.number().int().optional().default(0),
+  premium_fee: z.number().int().optional().default(0),
+  fbs_fee: z.number().int().optional().default(0),
+  tax_pph22: z.number().int().optional().default(0),
+  import_duty_vat_income_tax: z
+    .number()
+    .int()
+    .optional()
+    .default(0),
   auto_top_up_fee_from_income: z
     .number()
     .int()

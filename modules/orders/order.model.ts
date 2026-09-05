@@ -181,6 +181,12 @@ const OrderFeeSchema = new Schema<TOrderFee>(
       default: 0,
       alias: 'affiliateFee',
     }, // shopee: AMS program, tokped: ?
+    gox_fee: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'GOXFee',
+    },
     service_fee: {
       type: Number,
       required: false,
@@ -204,6 +210,36 @@ const OrderFeeSchema = new Schema<TOrderFee>(
       required: false,
       default: 0,
       alias: 'campaignFee',
+    },
+    other_fee: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'otherFee',
+    },
+    premium_fee: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'premiumFee',
+    },
+    fbs_fee: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'fbsFee',
+    },
+    tax_pph22: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'taxPPH22',
+    },
+    import_duty_vat_income_tax: {
+      type: Number,
+      required: false,
+      default: 0,
+      alias: 'importDutyVatIncomeTax',
     },
     auto_top_up_fee_from_income: {
       type: Number,

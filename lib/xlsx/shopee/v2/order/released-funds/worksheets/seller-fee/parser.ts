@@ -11,19 +11,19 @@ import type {
   ParsedSellerFeeRow,
 } from './types';
 
-const fieldMap: Record<string, FieldConfig> = {
-  ...SELLER_FEE_FIELD_MAP,
-};
-
 export default function parseIncomeSheet(
   rows: unknown[][],
   headers: string[],
   headerRowIndex: number
 ): ParsedSellerFeeRow[] {
-  for (const [key, config] of Object.entries(fieldMap) as [
+  const columnIndexes = {} as Record<
     SellerFeeFieldKey,
-    FieldConfig,
-  ][]) {
+    number
+  >;
+
+  for (const [key, config] of Object.entries(
+    SELLER_FEE_FIELD_MAP
+  ) as [SellerFeeFieldKey, FieldConfig][]) {
     // let colIdx =
     //   config.columnIndex ??
     //   getColIdx(headers, config.header || '');
@@ -40,12 +40,7 @@ export default function parseIncomeSheet(
     //   }
     // }
 
-    console.log(
-      `header name: ${config.header}`,
-      JSON.stringify(headers, null, 2)
-    );
-
-    let colIdx =
+    const colIdx =
       config.columnIndex ??
       getColIdxWithFallback(headers, config.header || '');
 
@@ -55,8 +50,7 @@ export default function parseIncomeSheet(
       );
     }
 
-    // indices[key] = colIdx;
-    fieldMap[key].columnIndex = colIdx;
+    columnIndexes[key] = colIdx;
   }
 
   const result: ParsedSellerFeeRow[] = [];
@@ -68,7 +62,7 @@ export default function parseIncomeSheet(
     for (const [key, config] of Object.entries(
       SELLER_FEE_FIELD_MAP
     ) as [SellerFeeFieldKey, FieldConfig][]) {
-      const idx = fieldMap[key].columnIndex;
+      const idx = columnIndexes[key];
       const rawValue =
         idx !== undefined && idx !== -1
           ? row[idx]

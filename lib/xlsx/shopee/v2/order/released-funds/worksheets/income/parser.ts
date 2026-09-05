@@ -14,20 +14,15 @@ const SHOPEE_ORDER_PROCESSING_FEE = process.env
   ? Number(process.env.SHOPEE_ORDER_PROCESSING_FEE)
   : 1250;
 
-// const IncomeFields: FieldConfig & {  }
-const fieldMap: Record<
-  string,
-  FieldConfig & {
-    columnIndex?: number;
-    // value?: string | number | Date;
-  }
-> = INCOME_FIELD_MAP;
-
 export default function parseIncomeSheet(
   rows: unknown[][],
   headers: string[],
   headerRowIndex: number
 ): ParsedIncomeRow[] {
+  const columnIndexes = {} as Record<
+    IncomeFieldKey,
+    number
+  >;
   // let headerRowIndex = -1;
   // for (let i = 0; i < Math.min(rows.length, 10); i++) {
   //   if (rows[i] && rows[i].includes(HEADER_DETECTION_KEY)) {
@@ -50,10 +45,9 @@ export default function parseIncomeSheet(
 
   // const indices = {} as Record<IncomeFieldKey, number>;
 
-  for (const [key, config] of Object.entries(fieldMap) as [
-    IncomeFieldKey,
-    FieldConfig,
-  ][]) {
+  for (const [key, config] of Object.entries(
+    INCOME_FIELD_MAP
+  ) as [IncomeFieldKey, FieldConfig][]) {
     // let colIdx =
     //   config.columnIndex ??
     //   getColIdx(headers, config.header || '');
@@ -70,7 +64,7 @@ export default function parseIncomeSheet(
     //   }
     // }
 
-    let colIdx =
+    const colIdx =
       config.columnIndex ??
       getColIdxWithFallback(headers, config.header || '');
 
@@ -80,8 +74,7 @@ export default function parseIncomeSheet(
       );
     }
 
-    // indices[key] = colIdx;
-    fieldMap[key].columnIndex = colIdx;
+    columnIndexes[key] = colIdx;
   }
 
   const result: ParsedIncomeRow[] = [];
@@ -93,7 +86,7 @@ export default function parseIncomeSheet(
     for (const [key, config] of Object.entries(
       INCOME_FIELD_MAP
     ) as [IncomeFieldKey, FieldConfig][]) {
-      const idx = fieldMap[key].columnIndex;
+      const idx = columnIndexes[key];
       const rawValue =
         idx !== undefined && idx !== -1
           ? row[idx]
