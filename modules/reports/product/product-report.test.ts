@@ -1,16 +1,14 @@
-import fs from 'fs';
-import path from 'path';
+import { Types } from 'mongoose';
 import { aggregateProductSalesReport } from './product-report';
 
 const ORGANIZATION_ID = '6a64d53fb427fb66c352640a';
 const STORE_ID = '6a64d540b427fb66c352640c';
 
-// How to run: pnpm test -- modules/reports/product/product-report.test.ts
-describe('Product Sales Report ', () => {
-  const startDate = '2026-07-31T17:00:00.000Z';
-  const endDate = '2026-08-31T16:59:59.999Z';
+describe('Product Sales Report', () => {
+  const startDate = '2026-08-01T00:00:00.000Z';
+  const endDate = '2026-09-01T00:00:00.000Z';
 
-  const pipelines = aggregateProductSalesReport({
+  const pipeline = aggregateProductSalesReport({
     startDate,
     endDate,
     tenantContext: {
@@ -21,35 +19,65 @@ describe('Product Sales Report ', () => {
     tz: 'Asia/Jakarta',
   });
 
-  it('Should return true', async () => {
-    expect(true).toBe(true);
+  it('uses tenant, platform, and half-open date filters before unwind', () => {
+    expect(pipeline[0]).toEqual({
+      $match: {
+        organization: new Types.ObjectId(ORGANIZATION_ID),
+        store: new Types.ObjectId(STORE_ID),
+        platform: 'shopee',
+        deleted_at: null,
+        placed_at: {
+          $gte: new Date(startDate),
+          $lt: new Date(endDate),
+        },
+        items: { $type: 'array', $ne: [] },
+      },
+    });
+
+    expect(pipeline[1]).toHaveProperty('$addFields');
+    expect(pipeline[2]).toEqual({
+      $unwind: {
+        path: '$items',
+        preserveNullAndEmptyArrays: false,
+      },
+    });
   });
 
-  // const orderService = new OrderService({
-  //   // organizationId: '0000000',
-  //   // storeId: '1111111',
-  //   organizationId: '6a3167e1a6e065a4c0edc4da',
-  //   storeId: '6a3167e2a6e065a4c0edc4dc',
-  // });
+  it('groups by product variation and counts distinct order ids', () => {
+    const groupStage = pipeline.find(
+      (stage) => '$group' in stage
+    );
 
-  // const excelPath = path.join(
-  //   process.cwd(),
-  //   '.data/Order.completed.20260501_20260522.xlsx'
-  // );
+    expect(groupStage).toMatchObject({
+      $group: {
+        _id: {
+          product_id: {
+            $ifNull: [
+              '$_analytics.product_id',
+              'unknown-product',
+            ],
+          },
+          variation_id: {
+            $ifNull: [
+              '$_analytics.variation_id',
+              'default',
+            ],
+          },
+        },
+        order_ids: { $addToSet: '$_analytics.order_id' },
+      },
+    });
+  });
 
-  // it('should parse the mock excel file correctly and insert/update orders', async () => {
-  //   const buffer = fs.readFileSync(excelPath);
-  //   const arrayBuffer = buffer.buffer.slice(
-  //     buffer.byteOffset,
-  //     buffer.byteOffset + buffer.byteLength
-  //   );
-  //   const result =
-  //     await orderService.massUploadShopeeOrders(
-  //       arrayBuffer
-  //     );
-
-  //   expect(true).toBe(true);
-  //   expect(result.total_rows).toBe(39);
-  //   expect(result.total_orders).toBe(36);
-  // });
+  it('returns a dashboard-ready shape with summary, products, and meta', () => {
+    expect(pipeline.at(-2)).toHaveProperty('$facet');
+    expect(pipeline.at(-1)).toEqual({
+      $project: expect.objectContaining({
+        _id: 0,
+        products: 1,
+        summary: expect.any(Object),
+        meta: expect.any(Object),
+      }),
+    });
+  });
 });

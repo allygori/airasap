@@ -55,3 +55,73 @@ export const SalesReportResponseSchema = z.object({
     })
   ),
 });
+
+export const ProductAnalyticsRowSchema = z.object({
+  product_id: z.string().nullable().optional(),
+  product_name: z.string(),
+  variation_id: z.string().nullable().optional(),
+  variation_name: z.string().nullable().optional(),
+  parent_sku: z.string().nullable().optional(),
+  child_sku: z.string().nullable().optional(),
+  orders: z.number(),
+  units: z.number(),
+  returned_units: z.number(),
+  gross_sales: z.number(),
+  discount: z.number(),
+  net_sales: z.number(),
+  cogs: z.number(),
+  gross_profit: z.number(),
+  platform_fee: z.number(),
+  shipping_cost: z.number(),
+  other_variable_cost: z.number(),
+  net_profit: z.number(),
+  gross_margin: z.number(),
+  net_margin: z.number(),
+  profit_per_unit: z.number(),
+  sales_contribution: z.number(),
+  profit_contribution: z.number(),
+  unit_contribution: z.number(),
+  order_contribution: z.number(),
+  sales_rank: z.number(),
+  profit_rank: z.number(),
+  units_rank: z.number(),
+  sales_per_day: z.number(),
+  units_per_day: z.number(),
+  orders_per_day: z.number(),
+  profit_per_day: z.number(),
+  classification: z.enum([
+    'Star',
+    'Revenue Driver',
+    'Profit Driver',
+    'Weak',
+  ]),
+});
+
+export const ProductAnalyticsSummarySchema = z.object({
+  total_products: z.number(),
+  total_orders: z.number(),
+  total_units: z.number(),
+  returned_units: z.number(),
+  gross_sales: z.number(),
+  discount: z.number(),
+  net_sales: z.number(),
+  cogs: z.number(),
+  gross_profit: z.number(),
+  platform_fee: z.number(),
+  shipping_cost: z.number(),
+  other_variable_cost: z.number(),
+  net_profit: z.number(),
+  gross_margin: z.number(),
+  net_margin: z.number(),
+});
+
+export const ProductAnalyticsResponseSchema = z.object({
+  summary: ProductAnalyticsSummarySchema,
+  products: z.array(ProductAnalyticsRowSchema),
+  meta: z.object({
+    total_products: z.number(),
+    start_date: z.string().nullable(),
+    end_date: z.string().nullable(),
+    period_days: z.number(),
+  }),
+});

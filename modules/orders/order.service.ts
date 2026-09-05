@@ -455,6 +455,13 @@ export class OrderService {
           ...financials,
         };
       });
+      if (this.toNumber(data.released_funds) !== 0) {
+        data.items =
+          this.applyReleasedFundsFinancialsToItems(
+            data.items,
+            this.toNumber(data.released_funds)
+          ) as typeof data.items;
+      }
       data.total_product_cost = data.items.reduce(
         (acc, item) => acc + (item.total_product_cost || 0),
         0

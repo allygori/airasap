@@ -1,34 +1,25 @@
-import { AggregateBuilder } from '../@shared/aggregate/builder';
-import {
-  // mergeFilters,
-  tenantFilter,
-  dateFilter,
-  orderStatusFilter,
-  platformFilter,
-} from '../@shared/aggregate/pipelines/filters';
-// import { mergeFilters } from './pipelines/filters/_merge';
-import { mergeObject } from '@/lib/utils/object/merge';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
-import {
-  baseMetrics,
-  baseMetrics1,
-  metricsForRevenue,
-} from '../@shared/aggregate/pipelines/transforms/metrics';
-import {
-  groupByDateForDailyRevenue,
-  sumDailyDataFromPreviousGrouping,
-} from '../@shared/aggregate/pipelines/groups/revenue';
-import { endOfDay, parse, startOfDay } from 'date-fns';
-import { PipelineStage } from 'mongoose';
-// import { dateParser } from '@/lib/utils/parser';
-import { fnsFormatDate } from '@/lib/formatter/date';
 import { type TimeZone } from '@/constant/timezone';
-import { addNormalizeData } from '../@shared/aggregate/pipelines/transforms/normalize';
-import { sortRevenue } from '../@shared/aggregate/pipelines/transforms/sort';
+import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
+import { filterProductAnalyticsOrders } from '@/modules/reports/pipelines/@shared/filter-orders';
+import {
+  allocateOrderLevelCosts,
+  calculateNetProfitAfterAllocation,
+  calculateProductItemMetrics,
+} from '@/modules/reports/pipelines/@shared/calculate-item-metrics';
+import { normalizeProductAnalyticsItem } from '@/modules/reports/pipelines/@shared/normalizer/normalize-item';
+import { normalizeProductAnalyticsOrder } from '@/modules/reports/pipelines/@shared/normalizer/normalize-order';
+import { unwindItems } from '@/modules/reports/pipelines/@shared/unwind-items';
+import {
+  finalizeProductAnalytics,
+  projectProductAnalyticsResult,
+} from '@/modules/reports/pipelines/product/finalize-product-analytics';
+import { groupByProduct } from '@/modules/reports/pipelines/product/group-by-product';
+import { type PipelineStage } from 'mongoose';
 
 const DEFAULT_DATE_FIELD = 'placed_at';
 
-type Args = {
+export type ProductAnalyticsFilters = {
   filterBy?: 'placed_at' | 'completed_at' | 'paid_at';
   startDate: string;
   endDate: string;
@@ -45,27 +36,41 @@ export const aggregateProductSalesReport = ({
   endDate,
   tenantContext,
   tz,
-}: Args): PipelineStage[] => {
-  const filters = mergeObject(
-    [
-      tenantFilter,
-      tenantContext.organizationId,
-      tenantContext.storeId,
-    ],
-    // [orderStatusFilter, 'Selesai'],
-    [platformFilter, ORDER_PLATFORMS.shopee.value],
-    [dateFilter, startDate, endDate, filterBy]
+}: ProductAnalyticsFilters): PipelineStage[] => {
+  const periodDays = Math.max(
+    1,
+    Math.ceil(
+      (new Date(endDate).getTime() -
+        new Date(startDate).getTime()) /
+        86_400_000
+    )
   );
 
   const pipelines = new AggregateBuilder()
-    .with(addNormalizeData(filterBy, tz))
-    .with(filters)
-    .with(groupByDateForDailyRevenue())
-    .with(sumDailyDataFromPreviousGrouping())
-    .with(metricsForRevenue())
-    .with(sortRevenue());
-
-  pipelines.log();
+    .with(
+      filterProductAnalyticsOrders({
+        ...tenantContext,
+        platform: ORDER_PLATFORMS.shopee.value,
+        dateFilterBy: filterBy,
+        startDate,
+        endDate,
+      })
+    )
+    .with(normalizeProductAnalyticsOrder(filterBy, tz))
+    .with(unwindItems())
+    .with(normalizeProductAnalyticsItem())
+    .with(calculateProductItemMetrics())
+    .with(allocateOrderLevelCosts())
+    .with(calculateNetProfitAfterAllocation())
+    .with(groupByProduct())
+    .with(
+      finalizeProductAnalytics({
+        startDate,
+        endDate,
+        periodDays,
+      })
+    )
+    .with(projectProductAnalyticsResult());
 
   return pipelines.build();
 };
