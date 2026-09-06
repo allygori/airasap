@@ -90,6 +90,12 @@ export const ProductAnalyticsRowSchema = z.object({
   units_per_day: z.number(),
   orders_per_day: z.number(),
   profit_per_day: z.number(),
+  items_count: z.number(),
+  items_with_stored_net_sales: z.number(),
+  items_with_stored_net_profit: z.number(),
+  canonical_net_sales_rate: z.number(),
+  canonical_net_profit_rate: z.number(),
+  data_quality_score: z.number(),
   classification: z.enum([
     'Star',
     'Revenue Driver',
@@ -115,6 +121,12 @@ export const ProductAnalyticsSummarySchema = z.object({
   net_profit: z.number(),
   gross_margin: z.number(),
   net_margin: z.number(),
+  total_items: z.number(),
+  items_with_stored_net_sales: z.number(),
+  items_with_stored_net_profit: z.number(),
+  canonical_net_sales_rate: z.number(),
+  canonical_net_profit_rate: z.number(),
+  data_quality_score: z.number(),
 });
 
 export const ProductAnalyticsResponseSchema = z.object({

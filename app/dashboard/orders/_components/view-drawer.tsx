@@ -272,12 +272,6 @@ export function ViewDrawer<T extends Record<string, any>>({
 
               <section>
                 <StatLine
-                  label="Pendapatan"
-                  value={formatIDR(item.released_funds, {
-                    fallback: 0,
-                  })}
-                />
-                <StatLine
                   label="Profit"
                   value={formatIDR(item.total_net_profit, {
                     fallback: 0,
@@ -290,6 +284,21 @@ export function ViewDrawer<T extends Record<string, any>>({
                         : 'text-green-600'
                       : ''
                   }
+                />
+                <StatLine
+                  label="Pendapatan"
+                  value={formatIDR(item.released_funds, {
+                    fallback: 0,
+                  })}
+                />
+                <StatLine
+                  label="Total Product Cost"
+                  value={formatIDR(
+                    item.total_product_cost,
+                    {
+                      fallback: 0,
+                    }
+                  )}
                 />
                 <StatLine
                   label="Dibuat"

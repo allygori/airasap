@@ -52,6 +52,27 @@ export const finalizeProductAnalytics = ({
             '$net_profit',
             periodDays
           ),
+          canonical_net_sales_rate: safeDivide(
+            '$items_with_stored_net_sales',
+            '$items_count'
+          ),
+          canonical_net_profit_rate: safeDivide(
+            '$items_with_stored_net_profit',
+            '$items_count'
+          ),
+        },
+      },
+      {
+        $addFields: {
+          data_quality_score: safeDivide(
+            {
+              $add: [
+                '$canonical_net_sales_rate',
+                '$canonical_net_profit_rate',
+              ],
+            },
+            2
+          ),
         },
       },
       {
@@ -181,6 +202,13 @@ export const finalizeProductAnalytics = ({
             $sum: '$marketplace_deduction',
           },
           net_profit: { $sum: '$net_profit' },
+          total_items: { $sum: '$items_count' },
+          items_with_stored_net_sales: {
+            $sum: '$items_with_stored_net_sales',
+          },
+          items_with_stored_net_profit: {
+            $sum: '$items_with_stored_net_profit',
+          },
         },
       },
       {
@@ -192,6 +220,29 @@ export const finalizeProductAnalytics = ({
           net_margin: safeDivide(
             '$net_profit',
             '$net_sales'
+          ),
+          canonical_net_sales_rate: safeDivide(
+            '$items_with_stored_net_sales',
+            '$total_items'
+          ),
+          canonical_net_profit_rate: safeDivide(
+            '$items_with_stored_net_profit',
+            '$total_items'
+          ),
+          data_quality_score: safeDivide(
+            {
+              $add: [
+                safeDivide(
+                  '$items_with_stored_net_sales',
+                  '$total_items'
+                ),
+                safeDivide(
+                  '$items_with_stored_net_profit',
+                  '$total_items'
+                ),
+              ],
+            },
+            2
           ),
         },
       },
@@ -237,6 +288,12 @@ export const projectProductAnalyticsResult =
             net_profit: 0,
             gross_margin: 0,
             net_margin: 0,
+            total_items: 0,
+            items_with_stored_net_sales: 0,
+            items_with_stored_net_profit: 0,
+            canonical_net_sales_rate: 0,
+            canonical_net_profit_rate: 0,
+            data_quality_score: 0,
           },
         ],
       },
