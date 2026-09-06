@@ -78,6 +78,61 @@ export const groupByProduct = (): PipelineStage.Group => ({
         ],
       },
     },
+    top_orders: {
+      $topN: {
+        n: 5,
+        sortBy: { '_analytics.item_net_sales': -1 },
+        output: {
+          order_id: '$_analytics.order_id',
+          units: {
+            $ifNull: ['$_analytics.final_quantity', 0],
+          },
+          net_sales: {
+            $ifNull: ['$_analytics.item_net_sales', 0],
+          },
+          net_profit: {
+            $ifNull: [
+              '$_analytics.item_net_profit',
+              '$_analytics.calculated_net_profit',
+              0,
+            ],
+          },
+          net_margin: {
+            $cond: [
+              {
+                $ne: [
+                  {
+                    $ifNull: [
+                      '$_analytics.item_net_sales',
+                      0,
+                    ],
+                  },
+                  0,
+                ],
+              },
+              {
+                $divide: [
+                  {
+                    $ifNull: [
+                      '$_analytics.item_net_profit',
+                      '$_analytics.calculated_net_profit',
+                      0,
+                    ],
+                  },
+                  {
+                    $ifNull: [
+                      '$_analytics.item_net_sales',
+                      0,
+                    ],
+                  },
+                ],
+              },
+              0,
+            ],
+          },
+        },
+      },
+    },
     items_count: { $sum: 1 },
     items_with_stored_net_sales: {
       $sum: {

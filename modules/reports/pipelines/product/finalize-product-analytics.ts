@@ -17,6 +17,10 @@ const safeDivide = (
   ],
 });
 
+const clamp01 = (value: unknown) => ({
+  $min: [1, { $max: [0, value] }],
+});
+
 export const finalizeProductAnalytics = ({
   startDate,
   endDate,
@@ -125,6 +129,51 @@ export const finalizeProductAnalytics = ({
       },
       {
         $addFields: {
+          opportunity_score: {
+            $multiply: [
+              100,
+              {
+                $add: [
+                  {
+                    $multiply: [
+                      0.3,
+                      clamp01('$profit_contribution'),
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      0.25,
+                      clamp01('$sales_contribution'),
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      0.15,
+                      clamp01('$unit_contribution'),
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      0.2,
+                      clamp01(
+                        safeDivide('$net_margin', 0.35)
+                      ),
+                    ],
+                  },
+                  {
+                    $multiply: [
+                      0.1,
+                      clamp01('$data_quality_score'),
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        },
+      },
+      {
+        $addFields: {
           classification: {
             $switch: {
               branches: [
@@ -160,10 +209,46 @@ export const finalizeProductAnalytics = ({
               default: 'Weak',
             },
           },
+          opportunity_label: {
+            $switch: {
+              branches: [
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$opportunity_score', 45] },
+                      { $gt: ['$net_profit', 0] },
+                      { $gte: ['$net_margin', 0.15] },
+                    ],
+                  },
+                  then: 'Scale',
+                },
+                {
+                  case: {
+                    $and: [
+                      { $gte: ['$opportunity_score', 30] },
+                      { $gt: ['$net_profit', 0] },
+                    ],
+                  },
+                  then: 'Optimize',
+                },
+                {
+                  case: {
+                    $or: [
+                      { $lt: ['$net_profit', 0] },
+                      { $lt: ['$net_margin', 0.05] },
+                    ],
+                  },
+                  then: 'Fix Margin',
+                },
+              ],
+              default: 'Monitor',
+            },
+          },
         },
       },
       {
         $sort: {
+          opportunity_score: -1,
           net_sales: -1,
           net_profit: -1,
           product_name: 1,

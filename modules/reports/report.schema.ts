@@ -96,6 +96,22 @@ export const ProductAnalyticsRowSchema = z.object({
   canonical_net_sales_rate: z.number(),
   canonical_net_profit_rate: z.number(),
   data_quality_score: z.number(),
+  opportunity_score: z.number(),
+  opportunity_label: z.enum([
+    'Scale',
+    'Optimize',
+    'Fix Margin',
+    'Monitor',
+  ]),
+  top_orders: z.array(
+    z.object({
+      order_id: z.string(),
+      units: z.number(),
+      net_sales: z.number(),
+      net_profit: z.number(),
+      net_margin: z.number(),
+    })
+  ),
   classification: z.enum([
     'Star',
     'Revenue Driver',
@@ -129,9 +145,31 @@ export const ProductAnalyticsSummarySchema = z.object({
   data_quality_score: z.number(),
 });
 
+export const ProductAnalyticsGrowthSchema = z.object({
+  previous_period: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+  }),
+  summary: z.object({
+    net_sales: z.number(),
+    net_profit: z.number(),
+    units: z.number(),
+    orders: z.number(),
+    net_margin: z.number(),
+  }),
+  changes: z.object({
+    net_sales: z.number(),
+    net_profit: z.number(),
+    units: z.number(),
+    orders: z.number(),
+    net_margin: z.number(),
+  }),
+});
+
 export const ProductAnalyticsResponseSchema = z.object({
   summary: ProductAnalyticsSummarySchema,
   products: z.array(ProductAnalyticsRowSchema),
+  comparison: ProductAnalyticsGrowthSchema.optional(),
   meta: z.object({
     total_products: z.number(),
     start_date: z.string().nullable(),
