@@ -22,6 +22,19 @@ export const groupByProduct = (): PipelineStage.Group => ({
     parent_sku: { $first: '$_analytics.parent_sku' },
     child_sku: { $first: '$_analytics.child_sku' },
     order_ids: { $addToSet: '$_analytics.order_id' },
+    orders: {
+      $addToSet: {
+        order_id: '$_analytics.order_id',
+        gross_sales: '$_analytics.order_gross_sales',
+        total_payment: '$_analytics.order_total_payment',
+        shopee_fee: '$_analytics.order_platform_fee',
+        seller_discount:
+          '$_analytics.order_seller_discount',
+        shopee_discount:
+          '$_analytics.order_shopee_discount',
+        voucher_code: '$_analytics.order_voucher_code',
+      },
+    },
     units: {
       $sum: { $ifNull: ['$_analytics.final_quantity', 0] },
     },

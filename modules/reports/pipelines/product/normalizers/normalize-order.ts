@@ -28,6 +28,9 @@ export const normalizeProductAnalyticsOrder = <
         organization: '$organization',
         store: '$store',
         status: '$status',
+        order_total_payment: {
+          $ifNull: ['$total_payment', 0],
+        },
         order_gross_sales: {
           $ifNull: [
             '$total_gross_sales',
@@ -43,6 +46,35 @@ export const normalizeProductAnalyticsOrder = <
           ],
         },
         order_discount: { $ifNull: ['$total_discount', 0] },
+        order_seller_discount: {
+          $add: [
+            {
+              $ifNull: ['$voucher_borne_by_seller', 0],
+            },
+            {
+              $ifNull: [
+                '$bundle_deal_discount_from_seller',
+                0,
+              ],
+            },
+          ],
+        },
+        order_shopee_discount: {
+          $add: [
+            {
+              $ifNull: ['$voucher_borne_by_shopee', 0],
+            },
+            {
+              $ifNull: [
+                '$bundle_deal_discount_from_shopee',
+                0,
+              ],
+            },
+          ],
+        },
+        order_voucher_code: {
+          $ifNull: ['$voucher_code', null],
+        },
         order_cogs: { $ifNull: ['$total_product_cost', 0] },
         order_gross_profit: {
           $ifNull: [
@@ -70,23 +102,47 @@ export const normalizeProductAnalyticsOrder = <
           $ifNull: ['$released_funds', 0],
         },
         order_platform_fee: {
-          $add: [
-            { $ifNull: ['$fee.admin_fee', 0] },
-            { $ifNull: ['$fee.processing_fee', 0] },
-            { $ifNull: ['$fee.affiliate_fee', 0] },
-            { $ifNull: ['$fee.service_fee', 0] },
-            { $ifNull: ['$fee.transaction_fee', 0] },
-            { $ifNull: ['$fee.campaign_fee', 0] },
-            {
-              $ifNull: [
-                '$fee.shipping_saver_program_fee',
-                0,
-              ],
-            },
-            { $ifNull: ['$fee.other_fee', 0] },
-            { $ifNull: ['$fee.premium_fee', 0] },
-            { $ifNull: ['$fee.fbs_fee', 0] },
-          ],
+          $abs: {
+            $add: [
+              { $ifNull: ['$fee.admin_fee', 0] },
+              { $ifNull: ['$fee.processing_fee', 0] },
+              { $ifNull: ['$fee.affiliate_fee', 0] },
+              { $ifNull: ['$fee.gox_fee', 0] },
+              { $ifNull: ['$fee.service_fee', 0] },
+              { $ifNull: ['$fee.transaction_fee', 0] },
+              { $ifNull: ['$fee.campaign_fee', 0] },
+              {
+                $ifNull: [
+                  '$fee.shipping_saver_program_fee',
+                  0,
+                ],
+              },
+              { $ifNull: ['$fee.other_fee', 0] },
+              { $ifNull: ['$fee.premium_fee', 0] },
+              { $ifNull: ['$fee.fbs_fee', 0] },
+              { $ifNull: ['$fee.tax_pph22', 0] },
+              {
+                $ifNull: [
+                  '$fee.import_duty_vat_income_tax',
+                  0,
+                ],
+              },
+              {
+                $ifNull: [
+                  '$fee.auto_top_up_fee_from_income',
+                  0,
+                ],
+              },
+              { $ifNull: ['$fee.return_shipping_fee', 0] },
+              {
+                $ifNull: [
+                  '$fee.return_to_sender_shipping_fee',
+                  0,
+                ],
+              },
+              { $ifNull: ['$fee.shipping_fee_refund', 0] },
+            ],
+          },
         },
         order_shipping_cost: {
           $add: [

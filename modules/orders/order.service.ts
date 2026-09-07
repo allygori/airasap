@@ -936,6 +936,7 @@ export class OrderService {
             order.voucherBorneBySeller,
           voucher_borne_by_shopee:
             order.voucherBorneByShopee,
+          voucher_code: order.voucherCode || null,
           coin_cashback: order.coinCashback,
           bundle_deal: order.bundleDeal,
           bundle_deal_discount_from_shopee:
@@ -1245,6 +1246,7 @@ export class OrderService {
             order.voucherBorneBySeller,
           voucher_borne_by_shopee:
             order.voucherBorneByShopee,
+          voucher_code: order.voucherCode || null,
           coin_cashback: order.coinCashback,
           bundle_deal: order.bundleDeal,
           bundle_deal_discount_from_shopee:

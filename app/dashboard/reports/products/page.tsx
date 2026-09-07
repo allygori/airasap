@@ -9,12 +9,15 @@ import {
   CircleDollarSign,
   Crown,
   Database,
+  HandCoins,
   MoveDownRight,
   MoveRight,
   MoveUpRight,
   type LucideIcon,
   PackageSearch,
+  ReceiptText,
   ShieldCheck,
+  TicketPercent,
   Target,
   TrendingUp,
 } from 'lucide-react';
@@ -235,6 +238,56 @@ const ProductsReportPage = () => {
             sub={`${formatIDR(summary?.cogs || 0)} COGS`}
           />
         </section>
+
+        {summary ? (
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <MetricCard
+              icon={ReceiptText}
+              label="Gross Sales"
+              value={formatIDR(
+                summary.total_gross_sales ||
+                  summary.gross_sales ||
+                  0
+              )}
+              sub="Order-level gross sales"
+            />
+            <MetricCard
+              icon={HandCoins}
+              label="Pembayaran Pembeli"
+              value={formatIDR(summary.total_payment)}
+              sub="Dari total_payment"
+            />
+            <SignedMetricCard
+              icon={ArrowDownUp}
+              label="Total Shopee Fee"
+              value={-1 * summary.total_shopee_fee}
+              sub="Admin, processing, GOX, dan fee lain"
+            />
+            <SignedMetricCard
+              icon={TicketPercent}
+              label="Diskon Seller"
+              value={-1 * summary.seller_discount}
+              sub="Voucher seller + paket diskon"
+            />
+            <SignedMetricCard
+              icon={BadgePercent}
+              label="Diskon Shopee"
+              value={-1 * summary.shopee_discount}
+              sub="Voucher Shopee + paket diskon"
+            />
+            <MetricCard
+              icon={ShieldCheck}
+              label="Order Selesai"
+              value={formatNumber(
+                summary.distinct_completed_orders
+              )}
+              sub={`${formatNumber(
+                summary.product_order_count ||
+                  summary.total_orders
+              )} product-order count`}
+            />
+          </section>
+        ) : null}
 
         {products.length ? (
           <section className="grid gap-3 xl:grid-cols-[minmax(0,1.1fr)_minmax(18rem,0.9fr)]">
@@ -658,6 +711,39 @@ const MetricCard = ({
         <p className="truncate text-lg font-semibold">
           {value}
         </p>
+        <p className="text-muted-foreground truncate text-xs">
+          {sub}
+        </p>
+      </div>
+    </CardContent>
+  </Card>
+);
+
+const SignedMetricCard = ({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number;
+  sub: string;
+}) => (
+  <Card className="bg-card rounded-md">
+    <CardContent className="flex items-center gap-3">
+      <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
+        <Icon className="size-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-muted-foreground text-xs font-medium uppercase">
+          {label}
+        </p>
+        <FinancialDisplay
+          value={value}
+          formatter={formatIDR}
+          className="truncate text-lg font-semibold"
+        />
         <p className="text-muted-foreground truncate text-xs">
           {sub}
         </p>

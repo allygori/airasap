@@ -8,7 +8,7 @@ import {
 
 export type FieldConfig = {
   header: string;
-  parser: (val: unknown) => any;
+  parser: (val: unknown) => unknown;
   columnIndex?: number;
 };
 
@@ -133,6 +133,10 @@ export const ALL_ORDER_FIELD_MAP = {
   voucherBorneByShopee: {
     header: 'Voucher Ditanggung Shopee',
     parser: numberParser,
+  },
+  voucherCode: {
+    header: 'Kode Voucher',
+    parser: stringParser,
   },
   bundleDeal: {
     header: 'Paket Diskon',

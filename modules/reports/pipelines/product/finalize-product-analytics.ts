@@ -258,6 +258,7 @@ export const finalizeProductAnalytics = ({
         $project: {
           _id: 0,
           order_ids: 0,
+          orders: 0,
           total_net_sales: 0,
           total_net_profit: 0,
           total_units: 0,
@@ -271,6 +272,7 @@ export const finalizeProductAnalytics = ({
           _id: null,
           total_products: { $sum: 1 },
           total_orders: { $sum: { $size: '$order_ids' } },
+          order_sets: { $push: '$orders' },
           total_units: { $sum: '$units' },
           returned_units: { $sum: '$returned_units' },
           gross_sales: { $sum: '$gross_sales' },
@@ -298,6 +300,15 @@ export const finalizeProductAnalytics = ({
       },
       {
         $addFields: {
+          distinct_orders: {
+            $reduce: {
+              input: '$order_sets',
+              initialValue: [],
+              in: {
+                $setUnion: ['$$value', '$$this'],
+              },
+            },
+          },
           gross_margin: safeDivide(
             '$gross_profit',
             '$net_sales'
@@ -331,7 +342,48 @@ export const finalizeProductAnalytics = ({
           ),
         },
       },
-      { $project: { _id: 0 } },
+      {
+        $addFields: {
+          distinct_completed_orders: {
+            $size: '$distinct_orders',
+          },
+          product_order_count: '$total_orders',
+          total_gross_sales: {
+            $sum: '$distinct_orders.gross_sales',
+          },
+          total_payment: {
+            $sum: '$distinct_orders.total_payment',
+          },
+          total_shopee_fee: {
+            $sum: '$distinct_orders.shopee_fee',
+          },
+          seller_discount: {
+            $sum: '$distinct_orders.seller_discount',
+          },
+          shopee_discount: {
+            $sum: '$distinct_orders.shopee_discount',
+          },
+          voucher_codes: {
+            $filter: {
+              input: '$distinct_orders.voucher_code',
+              as: 'voucherCode',
+              cond: {
+                $and: [
+                  { $ne: ['$$voucherCode', null] },
+                  { $ne: ['$$voucherCode', ''] },
+                ],
+              },
+            },
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          order_sets: 0,
+          distinct_orders: 0,
+        },
+      },
     ],
     meta: [
       {
@@ -359,9 +411,17 @@ export const projectProductAnalyticsResult =
           {
             total_products: 0,
             total_orders: 0,
+            product_order_count: 0,
+            distinct_completed_orders: 0,
             total_units: 0,
             returned_units: 0,
             gross_sales: 0,
+            total_gross_sales: 0,
+            total_payment: 0,
+            total_shopee_fee: 0,
+            seller_discount: 0,
+            shopee_discount: 0,
+            voucher_codes: [],
             discount: 0,
             net_sales: 0,
             cogs: 0,

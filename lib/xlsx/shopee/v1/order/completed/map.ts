@@ -7,7 +7,7 @@ import {
 
 export type FieldConfig = {
   header: string;
-  parser: (val: unknown) => any;
+  parser: (val: unknown) => unknown;
   dbField?: string;
 };
 
@@ -164,6 +164,11 @@ export const ORDER_FIELD_MAP = {
     header: 'Voucher Ditanggung Shopee',
     parser: numberParser,
     dbField: '' /* original: voucher_borne_by_shopee */,
+  },
+  voucherCode: {
+    header: 'Kode Voucher',
+    parser: stringParser,
+    dbField: '' /* original: voucher_code */,
   },
   bundleDeal: {
     header: 'Paket Diskon',

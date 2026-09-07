@@ -23,6 +23,11 @@ import { type PipelineStage } from 'mongoose';
 const DEFAULT_DATE_FIELD = 'placed_at';
 const REPORTABLE_SHOPEE_ORDER_STATUSES = [
   SHOPEE_ORDER_STATUS.completed.value,
+  // SHOPEE_ORDER_STATUS.needsToBeShipped.value,
+  // SHOPEE_ORDER_STATUS.toShip.value,
+  // SHOPEE_ORDER_STATUS.toReceive.value,
+  // SHOPEE_ORDER_STATUS.refund.value,
+  // SHOPEE_ORDER_STATUS.return.value,
 ] as const;
 
 export type ProductAnalyticsFilters = {
