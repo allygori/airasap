@@ -2,16 +2,16 @@ import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
-import { filterProductAnalyticsOrders } from '@/modules/reports/pipelines/@shared/filter-orders';
-import { calculateProductItemMetrics } from '@/modules/reports/pipelines/@shared/calculate-item-metrics';
-import { normalizeProductAnalyticsItem } from '@/modules/reports/pipelines/@shared/normalizer/normalize-item';
-import { normalizeProductAnalyticsOrder } from '@/modules/reports/pipelines/@shared/normalizer/normalize-order';
-import { unwindItems } from '@/modules/reports/pipelines/@shared/unwind-items';
+import { calculateProductItemMetrics } from '@/modules/reports/pipelines/product/calculate-item-metrics';
 import {
   finalizeProductAnalytics,
   projectProductAnalyticsResult,
 } from '@/modules/reports/pipelines/product/finalize-product-analytics';
 import { groupByProduct } from '@/modules/reports/pipelines/product/group-by-product';
+import { normalizeProductAnalyticsItem } from '@/modules/reports/pipelines/product/normalizers/normalize-item';
+import { normalizeProductAnalyticsOrder } from '@/modules/reports/pipelines/product/normalizers/normalize-order';
+import { filterProductAnalyticsOrders } from '@/modules/reports/pipelines/shared/filter-orders';
+import { unwindItems } from '@/modules/reports/pipelines/shared/unwind-items';
 import {
   differenceInCalendarDays,
   endOfDay,

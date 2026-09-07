@@ -1,7 +1,3 @@
-import { mergeObject } from '@/lib/utils/object/merge';
-import { tenantFilter } from './filter/tenant-filter';
-import { platformFilter } from './filter/platform-filter';
-import { dateFilter } from './filter/date-filter';
 import { Types, type PipelineStage } from 'mongoose';
 import { endOfDay, parseISO, startOfDay } from 'date-fns';
 
@@ -13,22 +9,6 @@ type Args = {
   startDate: string;
   endDate: string;
   statuses?: string[];
-};
-
-export const filterOrders = ({
-  organizationId,
-  storeId,
-  platform,
-  dateFilterBy,
-  startDate,
-  endDate,
-}: Args) => {
-  return mergeObject(
-    [tenantFilter, organizationId, storeId],
-    // [orderStatusFilter, 'Selesai'],
-    [platformFilter, platform],
-    [dateFilter, startDate, endDate, dateFilterBy]
-  );
 };
 
 export const filterProductAnalyticsOrders = ({
