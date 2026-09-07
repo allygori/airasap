@@ -431,8 +431,9 @@ const ReportsOverviewPage = () => {
             <SignalCard
               icon={UserRound}
               label="Customer Signal"
-              value="Next Phase"
+              value="Repeat Report"
               sub="Repeat order and customer value"
+              href="/dashboard/reports/customers"
             />
             <SignalCard
               icon={TicketPercent}
@@ -441,6 +442,7 @@ const ReportsOverviewPage = () => {
                 result.voucher_summary.discount_ratio
               )}
               sub={`${formatIDR(result.voucher_summary.total_discount)} total discount`}
+              href="/dashboard/reports/vouchers"
             />
           </section>
         ) : null}

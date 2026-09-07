@@ -57,6 +57,14 @@ export const mainNav = [
         title: 'Products Report',
         url: '/dashboard/reports/products',
       },
+      {
+        title: 'Customers Report',
+        url: '/dashboard/reports/customers',
+      },
+      {
+        title: 'Vouchers Report',
+        url: '/dashboard/reports/vouchers',
+      },
     ],
   },
   // {

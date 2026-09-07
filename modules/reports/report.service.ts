@@ -1,11 +1,15 @@
+import { aggregateCustomerReport } from './customer/customer-report';
 import { aggregateProductSalesReport } from './product/product-report';
 import {
+  type CustomerReportResponseDTO,
   type ProductAnalyticsResponseDTO,
   type SalesV2ResponseDTO,
+  type VoucherReportResponseDTO,
 } from './report.dto';
 import { ReportRepository } from './report.repository';
 import { aggregateSalesReport } from './sales/sales-report';
 import { aggregateSalesV2Report } from './sales-v2/sales-report';
+import { aggregateVoucherReport } from './voucher/voucher-report';
 import {
   differenceInCalendarDays,
   parseISO,
@@ -18,6 +22,10 @@ type ProductAnalyticsSummary =
 type SalesV2Summary = SalesV2ResponseDTO['summary'];
 type SalesV2DailyReport =
   SalesV2ResponseDTO['daily_reports'][number];
+type CustomerReportSummary =
+  CustomerReportResponseDTO['summary'];
+type VoucherReportSummary =
+  VoucherReportResponseDTO['summary'];
 
 export class ReportService {
   private repository: ReportRepository;
@@ -200,6 +208,60 @@ export class ReportService {
     } catch (error: unknown) {
       throw new Error(
         `Gagal membuat laporan sales v2: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async generateCustomerReport(
+    startDate: string,
+    endDate: string
+  ) {
+    try {
+      const pipelines = aggregateCustomerReport({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+
+      const report =
+        await this.repository.aggregate(pipelines);
+
+      return (
+        report[0] ||
+        createEmptyCustomerReport(startDate, endDate)
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        `Gagal membuat customer report: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async generateVoucherReport(
+    startDate: string,
+    endDate: string
+  ) {
+    try {
+      const pipelines = aggregateVoucherReport({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+
+      const report =
+        await this.repository.aggregate(pipelines);
+
+      return (
+        report[0] ||
+        createEmptyVoucherReport(startDate, endDate)
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        `Gagal membuat voucher report: ${getErrorMessage(error)}`
       );
     }
   }
@@ -751,6 +813,85 @@ const createEmptySalesV2Report = (
     discount_ratio: 0,
     top_codes: [],
   },
+  meta: {
+    start_date: startDate,
+    end_date: endDate,
+    period_days: Math.max(
+      1,
+      differenceInCalendarDays(
+        startOfDay(parseISO(endDate)),
+        startOfDay(parseISO(startDate))
+      ) + 1
+    ),
+  },
+});
+
+const createEmptyCustomerSummary =
+  (): CustomerReportSummary => ({
+    total_customers: 0,
+    new_customers: 0,
+    repeat_customers: 0,
+    returning_customers: 0,
+    total_orders: 0,
+    total_net_sales: 0,
+    total_net_profit: 0,
+    total_payment: 0,
+    total_units: 0,
+    repeat_customer_rate: 0,
+    returning_customer_rate: 0,
+    average_orders_per_customer: 0,
+    average_net_sales_per_customer: 0,
+    average_net_profit_per_customer: 0,
+    average_days_to_second_order: 0,
+  });
+
+const createEmptyCustomerReport = (
+  startDate: string,
+  endDate: string
+): CustomerReportResponseDTO => ({
+  summary: createEmptyCustomerSummary(),
+  customers: [],
+  repeat_interval_buckets: [],
+  meta: {
+    start_date: startDate,
+    end_date: endDate,
+    period_days: Math.max(
+      1,
+      differenceInCalendarDays(
+        startOfDay(parseISO(endDate)),
+        startOfDay(parseISO(startDate))
+      ) + 1
+    ),
+  },
+});
+
+const createEmptyVoucherSummary =
+  (): VoucherReportSummary => ({
+    total_orders: 0,
+    voucher_orders: 0,
+    non_voucher_orders: 0,
+    voucher_order_rate: 0,
+    total_gross_sales: 0,
+    total_net_sales: 0,
+    total_net_profit: 0,
+    total_payment: 0,
+    seller_discount: 0,
+    shopee_discount: 0,
+    total_discount: 0,
+    seller_discount_share: 0,
+    discount_ratio: 0,
+    net_margin: 0,
+    campaign_fee: 0,
+    affiliate_fee: 0,
+    voucher_codes_count: 0,
+  });
+
+const createEmptyVoucherReport = (
+  startDate: string,
+  endDate: string
+): VoucherReportResponseDTO => ({
+  summary: createEmptyVoucherSummary(),
+  vouchers: [],
   meta: {
     start_date: startDate,
     end_date: endDate,

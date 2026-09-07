@@ -1,9 +1,11 @@
 import { z } from 'zod';
 import {
   CreateReportSchema,
+  CustomerReportResponseSchema,
   ProductAnalyticsResponseSchema,
   SalesV2ResponseSchema,
   SalesReportResponseSchema,
+  VoucherReportResponseSchema,
 } from './report.schema';
 
 export * from './report.schema';
@@ -19,4 +21,10 @@ export type ProductAnalyticsResponseDTO = z.infer<
 >;
 export type SalesV2ResponseDTO = z.infer<
   typeof SalesV2ResponseSchema
+>;
+export type CustomerReportResponseDTO = z.infer<
+  typeof CustomerReportResponseSchema
+>;
+export type VoucherReportResponseDTO = z.infer<
+  typeof VoucherReportResponseSchema
 >;

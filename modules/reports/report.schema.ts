@@ -357,3 +357,117 @@ export const SalesV2ResponseSchema = z.object({
     period_days: z.number(),
   }),
 });
+
+export const CustomerReportSummarySchema = z.object({
+  total_customers: z.number(),
+  new_customers: z.number(),
+  repeat_customers: z.number(),
+  returning_customers: z.number(),
+  total_orders: z.number(),
+  total_net_sales: z.number(),
+  total_net_profit: z.number(),
+  total_payment: z.number(),
+  total_units: z.number(),
+  repeat_customer_rate: z.number(),
+  returning_customer_rate: z.number(),
+  average_orders_per_customer: z.number(),
+  average_net_sales_per_customer: z.number(),
+  average_net_profit_per_customer: z.number(),
+  average_days_to_second_order: z.number(),
+});
+
+export const CustomerReportRowSchema = z.object({
+  customer_key: z.string(),
+  username: z.string(),
+  first_order_at: z.string().or(z.date()),
+  last_order_at: z.string().or(z.date()),
+  period_orders: z.number(),
+  period_net_sales: z.number(),
+  period_net_profit: z.number(),
+  period_total_payment: z.number(),
+  period_units: z.number(),
+  lifetime_orders: z.number(),
+  lifetime_net_sales: z.number(),
+  lifetime_net_profit: z.number(),
+  lifetime_total_payment: z.number(),
+  lifetime_units: z.number(),
+  is_new_customer: z.boolean(),
+  is_repeat_customer: z.boolean(),
+  is_returning_customer: z.boolean(),
+  days_between_first_second_order: z.number().nullable(),
+  average_order_value: z.number(),
+  net_margin: z.number(),
+});
+
+export const CustomerReportResponseSchema = z.object({
+  summary: CustomerReportSummarySchema,
+  customers: z.array(CustomerReportRowSchema),
+  repeat_interval_buckets: z.array(
+    z.object({
+      bucket: z.string(),
+      customers: z.number(),
+    })
+  ),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});
+
+export const VoucherReportSummarySchema = z.object({
+  total_orders: z.number(),
+  voucher_orders: z.number(),
+  non_voucher_orders: z.number(),
+  voucher_order_rate: z.number(),
+  total_gross_sales: z.number(),
+  total_net_sales: z.number(),
+  total_net_profit: z.number(),
+  total_payment: z.number(),
+  seller_discount: z.number(),
+  shopee_discount: z.number(),
+  total_discount: z.number(),
+  seller_discount_share: z.number(),
+  discount_ratio: z.number(),
+  net_margin: z.number(),
+  campaign_fee: z.number(),
+  affiliate_fee: z.number(),
+  voucher_codes_count: z.number(),
+});
+
+export const VoucherReportRowSchema = z.object({
+  voucher_code: z.string(),
+  orders: z.number(),
+  buyers: z.number(),
+  gross_sales: z.number(),
+  net_sales: z.number(),
+  total_payment: z.number(),
+  net_profit: z.number(),
+  seller_discount: z.number(),
+  shopee_discount: z.number(),
+  bundle_seller_discount: z.number(),
+  bundle_shopee_discount: z.number(),
+  campaign_fee: z.number(),
+  affiliate_fee: z.number(),
+  total_discount: z.number(),
+  average_order_value: z.number(),
+  net_margin: z.number(),
+  discount_ratio: z.number(),
+  seller_discount_share: z.number(),
+  classification: z.enum([
+    'Profitable',
+    'Growth Driver',
+    'Margin Risk',
+    'Monitor',
+  ]),
+});
+
+export const VoucherReportResponseSchema = z.object({
+  summary: VoucherReportSummarySchema,
+  vouchers: z.array(VoucherReportRowSchema),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});
