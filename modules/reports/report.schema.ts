@@ -280,6 +280,57 @@ export const SalesV2GrowthSchema = z.object({
   }),
 });
 
+export const SalesV2HealthSummarySchema = z.object({
+  headline: z.string(),
+  tone: z.enum(['good', 'warning', 'bad', 'neutral']),
+  notes: z.array(z.string()),
+});
+
+export const SalesV2ProfitLeakageSchema = z.object({
+  total_leakage: z.number(),
+  leakage_ratio: z.number(),
+  items: z.array(
+    z.object({
+      key: z.string(),
+      label: z.string(),
+      value: z.number(),
+      ratio: z.number(),
+    })
+  ),
+});
+
+export const SalesV2DayHighlightSchema = z.object({
+  label: z.string(),
+  date: z.string().nullable(),
+  value: z.number(),
+  metric: z.string(),
+});
+
+export const SalesV2OrderEconomicsSchema = z.object({
+  average_profit_per_unit: z.number(),
+  average_cogs_per_order: z.number(),
+  average_fee_per_order: z.number(),
+  average_seller_discount_per_order: z.number(),
+  payment_to_net_sales_ratio: z.number(),
+});
+
+export const SalesV2AlertSchema = z.object({
+  key: z.string(),
+  severity: z.enum(['info', 'warning', 'danger']),
+  title: z.string(),
+  message: z.string(),
+});
+
+export const SalesV2VoucherSummarySchema = z.object({
+  voucher_codes_count: z.number(),
+  seller_discount: z.number(),
+  shopee_discount: z.number(),
+  total_discount: z.number(),
+  seller_share: z.number(),
+  discount_ratio: z.number(),
+  top_codes: z.array(z.string()),
+});
+
 export const SalesV2ResponseSchema = z.object({
   summary: SalesV2SummarySchema,
   daily_reports: z.array(SalesV2DailyReportSchema),
@@ -292,6 +343,13 @@ export const SalesV2ResponseSchema = z.object({
     })
   ),
   data_quality: SalesV2DataQualitySchema,
+  health_summary: SalesV2HealthSummarySchema,
+  profit_leakage: SalesV2ProfitLeakageSchema,
+  best_days: z.array(SalesV2DayHighlightSchema),
+  worst_days: z.array(SalesV2DayHighlightSchema),
+  order_economics: SalesV2OrderEconomicsSchema,
+  alerts: z.array(SalesV2AlertSchema),
+  voucher_summary: SalesV2VoucherSummarySchema,
   comparison: SalesV2GrowthSchema.optional(),
   meta: z.object({
     start_date: z.string(),

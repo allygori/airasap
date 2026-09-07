@@ -11,9 +11,11 @@ import {
   YAxis,
 } from 'recharts';
 import {
+  AlertTriangle,
   ArrowDownUp,
   BadgePercent,
   Boxes,
+  CalendarDays,
   CircleDollarSign,
   CreditCard,
   Database,
@@ -25,7 +27,9 @@ import {
   ShieldCheck,
   ShoppingBag,
   TicketPercent,
+  Trophy,
   TrendingUp,
+  type LucideIcon,
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -55,7 +59,7 @@ import {
 } from '../_components/report.schema';
 
 type MetricCardProps = {
-  icon: typeof TrendingUp;
+  icon: LucideIcon;
   label: string;
   value: string;
   sub: string;
@@ -252,6 +256,86 @@ const Sales2ReportPage = () => {
             sub={`${formatNumber(summary?.total_units)} units sold`}
           />
         </section>
+
+        {result ? (
+          <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.8fr)]">
+            <div className="bg-card rounded-md border">
+              <div className="border-b px-4 py-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="font-medium">
+                    Sales Health Summary
+                  </h2>
+                  <Badge
+                    variant={
+                      result.health_summary.tone === 'bad'
+                        ? 'destructive'
+                        : 'outline'
+                    }
+                  >
+                    {result.health_summary.tone}
+                  </Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  {result.health_summary.headline}
+                </p>
+              </div>
+              <div className="grid gap-3 p-3 md:grid-cols-2">
+                {result.health_summary.notes.map((note) => (
+                  <div
+                    key={note}
+                    className="bg-background flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
+                  >
+                    <ShieldCheck className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                    <span>{note}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-card rounded-md border">
+              <div className="border-b px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="text-muted-foreground size-4" />
+                  <h2 className="font-medium">
+                    Threshold Alerts
+                  </h2>
+                </div>
+              </div>
+              <div className="divide-y">
+                {result.alerts.length ? (
+                  result.alerts.slice(0, 4).map((alert) => (
+                    <div
+                      key={alert.key}
+                      className="px-4 py-3 text-sm"
+                    >
+                      <div className="mb-1 flex items-center justify-between gap-3">
+                        <span className="font-medium">
+                          {alert.title}
+                        </span>
+                        <Badge
+                          variant={
+                            alert.severity === 'danger'
+                              ? 'destructive'
+                              : 'outline'
+                          }
+                        >
+                          {alert.severity}
+                        </Badge>
+                      </div>
+                      <p className="text-muted-foreground">
+                        {alert.message}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground px-4 py-8 text-center text-sm">
+                    Tidak ada alert penting di periode ini.
+                  </p>
+                )}
+              </div>
+            </div>
+          </section>
+        ) : null}
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <MetricCard
@@ -463,7 +547,7 @@ const Sales2ReportPage = () => {
           </section>
         ) : null}
 
-        {summary ? (
+        {summary && result ? (
           <section className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
             <div className="bg-card rounded-md border">
               <div className="border-b px-4 py-3">
@@ -551,12 +635,71 @@ const Sales2ReportPage = () => {
 
         {result ? (
           <section className="grid gap-3 xl:grid-cols-3">
+            <HighlightPanel
+              title="Best Days"
+              icon={Trophy}
+              rows={result.best_days}
+            />
+            <HighlightPanel
+              title="Worst Days"
+              icon={CalendarDays}
+              rows={result.worst_days}
+            />
+            <div className="bg-card rounded-md border">
+              <div className="border-b px-4 py-3">
+                <h2 className="font-medium">
+                  Order Economics
+                </h2>
+              </div>
+              <div className="grid gap-3 p-3">
+                <MiniMetric
+                  label="Profit / Unit"
+                  value={formatIDR(
+                    result.order_economics
+                      .average_profit_per_unit
+                  )}
+                />
+                <MiniMetric
+                  label="COGS / Order"
+                  value={formatIDR(
+                    result.order_economics
+                      .average_cogs_per_order
+                  )}
+                />
+                <MiniMetric
+                  label="Fee / Order"
+                  value={formatIDR(
+                    result.order_economics
+                      .average_fee_per_order
+                  )}
+                />
+                <MiniMetric
+                  label="Seller Discount / Order"
+                  value={formatIDR(
+                    result.order_economics
+                      .average_seller_discount_per_order
+                  )}
+                />
+              </div>
+            </div>
+          </section>
+        ) : null}
+
+        {result ? (
+          <section className="grid gap-3 xl:grid-cols-3">
+            <ProfitLeakagePanel result={result} />
             <BreakdownTable
               title="Fee Breakdown"
               rows={feeRows}
               emptyText="Belum ada fee di periode ini."
             />
             <StatusBreakdown result={result} />
+          </section>
+        ) : null}
+
+        {result ? (
+          <section className="grid gap-3 xl:grid-cols-[minmax(0,0.75fr)_minmax(0,1.25fr)]">
+            <VoucherSnapshot result={result} />
             <DataQualityPanel result={result} />
           </section>
         ) : null}
@@ -776,7 +919,7 @@ const SignalRow = ({
   value,
   tone,
 }: {
-  icon: typeof TrendingUp;
+  icon: LucideIcon;
   label: string;
   value: string;
   tone: 'good' | 'bad' | 'neutral';
@@ -836,6 +979,163 @@ const BridgeRow = ({
         {formatIDR(value)}
       </span>
     )}
+  </div>
+);
+
+const HighlightPanel = ({
+  title,
+  icon: Icon,
+  rows,
+}: {
+  title: string;
+  icon: LucideIcon;
+  rows: SalesV2ResponseDTO['best_days'];
+}) => (
+  <div className="bg-card rounded-md border">
+    <div className="border-b px-4 py-3">
+      <div className="flex items-center gap-2">
+        <Icon className="text-muted-foreground size-4" />
+        <h2 className="font-medium">{title}</h2>
+      </div>
+    </div>
+    <div className="divide-y">
+      {rows.length ? (
+        rows.map((row) => (
+          <div
+            key={`${row.label}-${row.metric}`}
+            className="flex items-center justify-between gap-3 px-4 py-3 text-sm"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {row.label}
+              </p>
+              <p className="text-muted-foreground truncate text-xs">
+                {row.date ? formatShortDate(row.date) : '-'}
+              </p>
+            </div>
+            <span className="font-medium">
+              {formatHighlightValue(row)}
+            </span>
+          </div>
+        ))
+      ) : (
+        <p className="text-muted-foreground px-4 py-8 text-center text-sm">
+          Belum ada data harian.
+        </p>
+      )}
+    </div>
+  </div>
+);
+
+const MiniMetric = ({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) => (
+  <div className="bg-background rounded-md border px-3 py-2">
+    <p className="text-muted-foreground truncate text-xs">
+      {label}
+    </p>
+    <p className="truncate text-base font-semibold">
+      {value}
+    </p>
+  </div>
+);
+
+const ProfitLeakagePanel = ({
+  result,
+}: {
+  result: SalesV2ResponseDTO;
+}) => (
+  <div className="bg-card rounded-md border">
+    <div className="border-b px-4 py-3">
+      <h2 className="font-medium">Profit Leakage</h2>
+      <p className="text-muted-foreground text-sm">
+        Komponen utama yang mengurangi gross sales.
+      </p>
+    </div>
+    <div className="space-y-3 p-4">
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-muted-foreground text-sm">
+          Total leakage
+        </span>
+        <span className="font-semibold">
+          {formatIDR(result.profit_leakage.total_leakage)}
+        </span>
+      </div>
+      {result.profit_leakage.items.map((item) => (
+        <div key={item.key}>
+          <div className="mb-1 flex items-center justify-between gap-3 text-sm">
+            <span className="text-muted-foreground">
+              {item.label}
+            </span>
+            <span className="font-medium">
+              {formatPercent(item.ratio)}
+            </span>
+          </div>
+          <div className="bg-muted h-2 overflow-hidden rounded-full">
+            <div
+              className="bg-primary h-full rounded-full"
+              style={{
+                width: `${Math.min(item.ratio * 100, 100)}%`,
+              }}
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const VoucherSnapshot = ({
+  result,
+}: {
+  result: SalesV2ResponseDTO;
+}) => (
+  <div className="bg-card rounded-md border">
+    <div className="border-b px-4 py-3">
+      <h2 className="font-medium">Voucher Snapshot</h2>
+      <p className="text-muted-foreground text-sm">
+        Teaser untuk report voucher/campaign nanti.
+      </p>
+    </div>
+    <div className="grid gap-3 p-3 sm:grid-cols-2 xl:grid-cols-1">
+      <MiniMetric
+        label="Voucher Codes"
+        value={formatNumber(
+          result.voucher_summary.voucher_codes_count
+        )}
+      />
+      <MiniMetric
+        label="Total Discount"
+        value={formatIDR(
+          result.voucher_summary.total_discount
+        )}
+      />
+      <MiniMetric
+        label="Seller Share"
+        value={formatPercent(
+          result.voucher_summary.seller_share
+        )}
+      />
+      <MiniMetric
+        label="Discount Ratio"
+        value={formatPercent(
+          result.voucher_summary.discount_ratio
+        )}
+      />
+    </div>
+    {result.voucher_summary.top_codes.length ? (
+      <div className="flex flex-wrap gap-2 border-t p-3">
+        {result.voucher_summary.top_codes.map((code) => (
+          <Badge key={code} variant="outline">
+            {code}
+          </Badge>
+        ))}
+      </div>
+    ) : null}
   </div>
 );
 
@@ -977,6 +1277,24 @@ const getFeeRows = (
     }))
     .filter((row) => row.value > 0)
     .sort((a, b) => b.value - a.value);
+
+const formatHighlightValue = (
+  row: SalesV2ResponseDTO['best_days'][number]
+) => {
+  if (
+    row.metric.includes('sales') ||
+    row.metric.includes('profit') ||
+    row.metric.includes('fee')
+  ) {
+    return formatIDR(row.value);
+  }
+
+  if (row.metric.includes('margin')) {
+    return formatPercent(row.value);
+  }
+
+  return formatNumber(row.value);
+};
 
 const getRatioTone = (value: number, threshold: number) => {
   if (value >= threshold) return 'bad';

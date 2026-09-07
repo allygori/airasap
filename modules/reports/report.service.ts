@@ -16,6 +16,8 @@ import {
 type ProductAnalyticsSummary =
   ProductAnalyticsResponseDTO['summary'];
 type SalesV2Summary = SalesV2ResponseDTO['summary'];
+type SalesV2DailyReport =
+  SalesV2ResponseDTO['daily_reports'][number];
 
 export class ReportService {
   private repository: ReportRepository;
@@ -311,7 +313,7 @@ const withSalesV2Comparison = (
   const currentSummary =
     current.summary || createEmptySalesV2Summary();
 
-  return {
+  return withSalesV2DecisionLayer({
     ...current,
     comparison: {
       previous_period: {
@@ -353,6 +355,327 @@ const withSalesV2Comparison = (
           (previousSummary.net_margin || 0),
       },
     },
+  });
+};
+
+const withSalesV2DecisionLayer = (
+  report: SalesV2ResponseDTO
+): SalesV2ResponseDTO => {
+  return {
+    ...report,
+    health_summary: buildSalesV2HealthSummary(report),
+    profit_leakage: buildSalesV2ProfitLeakage(report),
+    best_days: buildSalesV2BestDays(report.daily_reports),
+    worst_days: buildSalesV2WorstDays(report.daily_reports),
+    order_economics: buildSalesV2OrderEconomics(
+      report.summary
+    ),
+    alerts: buildSalesV2Alerts(report),
+    voucher_summary: buildSalesV2VoucherSummary(
+      report.summary
+    ),
+  };
+};
+
+const buildSalesV2HealthSummary = (
+  report: SalesV2ResponseDTO
+): SalesV2ResponseDTO['health_summary'] => {
+  const { summary, comparison } = report;
+  const notes: string[] = [];
+
+  if (summary.total_orders === 0) {
+    return {
+      headline: 'Belum ada order selesai di periode ini.',
+      tone: 'neutral',
+      notes: [
+        'Financial metrics hanya menghitung order Shopee berstatus selesai.',
+      ],
+    };
+  }
+
+  if (comparison) {
+    notes.push(
+      comparison.changes.net_sales >= 0
+        ? 'Net sales naik dibanding periode sebelumnya.'
+        : 'Net sales turun dibanding periode sebelumnya.'
+    );
+    notes.push(
+      comparison.changes.net_profit >=
+        comparison.changes.net_sales
+        ? 'Profit bergerak lebih baik dari sales.'
+        : 'Profit tertinggal dibanding pertumbuhan sales.'
+    );
+  }
+
+  if (summary.net_margin < 0) {
+    notes.push(
+      'Net margin negatif, profit perlu ditinjau.'
+    );
+  } else if (summary.net_margin < 0.1) {
+    notes.push(
+      'Net margin masih tipis untuk menahan biaya.'
+    );
+  } else {
+    notes.push('Net margin masih positif.');
+  }
+
+  if (summary.fee_ratio >= 0.12) {
+    notes.push(
+      'Fee Shopee cukup tinggi terhadap gross sales.'
+    );
+  }
+
+  if (summary.seller_discount_ratio >= 0.1) {
+    notes.push(
+      'Diskon seller mengambil porsi besar dari gross sales.'
+    );
+  }
+
+  const tone =
+    summary.net_margin < 0
+      ? 'bad'
+      : summary.net_margin < 0.1 ||
+          summary.fee_ratio >= 0.12 ||
+          summary.seller_discount_ratio >= 0.1
+        ? 'warning'
+        : 'good';
+
+  return {
+    headline:
+      tone === 'good'
+        ? 'Sales sehat, profit masih positif.'
+        : tone === 'warning'
+          ? 'Sales berjalan, tapi ada tekanan margin.'
+          : 'Sales menghasilkan rugi di periode ini.',
+    tone,
+    notes: notes.slice(0, 4),
+  };
+};
+
+const buildSalesV2ProfitLeakage = (
+  report: SalesV2ResponseDTO
+): SalesV2ResponseDTO['profit_leakage'] => {
+  const grossSales = report.summary.gross_sales || 0;
+  const items = [
+    {
+      key: 'cogs',
+      label: 'COGS',
+      value: report.summary.cogs || 0,
+    },
+    {
+      key: 'shopee_fee',
+      label: 'Shopee Fee',
+      value: report.summary.shopee_fee || 0,
+    },
+    {
+      key: 'seller_discount',
+      label: 'Seller Discount',
+      value: report.summary.seller_discount || 0,
+    },
+    {
+      key: 'marketplace_deduction',
+      label: 'Marketplace Deduction',
+      value: report.summary.marketplace_deduction || 0,
+    },
+  ].map((item) => ({
+    ...item,
+    ratio: grossSales > 0 ? item.value / grossSales : 0,
+  }));
+  const totalLeakage = items.reduce(
+    (total, item) => total + item.value,
+    0
+  );
+
+  return {
+    total_leakage: totalLeakage,
+    leakage_ratio:
+      grossSales > 0 ? totalLeakage / grossSales : 0,
+    items,
+  };
+};
+
+const buildSalesV2BestDays = (
+  dailyReports: SalesV2DailyReport[]
+): SalesV2ResponseDTO['best_days'] => [
+  getDayHighlight(
+    dailyReports,
+    'Highest Net Sales',
+    'net_sales'
+  ),
+  getDayHighlight(
+    dailyReports,
+    'Highest Net Profit',
+    'net_profit'
+  ),
+  getDayHighlight(dailyReports, 'Most Orders', 'orders'),
+];
+
+const buildSalesV2WorstDays = (
+  dailyReports: SalesV2DailyReport[]
+): SalesV2ResponseDTO['worst_days'] => [
+  getDayHighlight(
+    dailyReports,
+    'Lowest Net Margin',
+    'net_margin',
+    'asc'
+  ),
+  getDayHighlight(
+    dailyReports,
+    'Lowest Net Profit',
+    'net_profit',
+    'asc'
+  ),
+  getDayHighlight(
+    dailyReports,
+    'Highest Fee Day',
+    'shopee_fee'
+  ),
+];
+
+const getDayHighlight = (
+  dailyReports: SalesV2DailyReport[],
+  label: string,
+  metric: keyof SalesV2DailyReport,
+  direction: 'asc' | 'desc' = 'desc'
+) => {
+  const candidates = dailyReports.filter(
+    (row) => typeof row[metric] === 'number'
+  );
+  const selected = candidates.sort((a, b) => {
+    const current = Number(a[metric] || 0);
+    const next = Number(b[metric] || 0);
+    return direction === 'desc'
+      ? next - current
+      : current - next;
+  })[0];
+
+  return {
+    label,
+    date: selected?.date || null,
+    value: Number(selected?.[metric] || 0),
+    metric: String(metric),
+  };
+};
+
+const buildSalesV2OrderEconomics = (
+  summary: SalesV2Summary
+): SalesV2ResponseDTO['order_economics'] => ({
+  average_profit_per_unit:
+    summary.total_units > 0
+      ? summary.net_profit / summary.total_units
+      : 0,
+  average_cogs_per_order:
+    summary.total_orders > 0
+      ? summary.cogs / summary.total_orders
+      : 0,
+  average_fee_per_order:
+    summary.total_orders > 0
+      ? summary.shopee_fee / summary.total_orders
+      : 0,
+  average_seller_discount_per_order:
+    summary.total_orders > 0
+      ? summary.seller_discount / summary.total_orders
+      : 0,
+  payment_to_net_sales_ratio:
+    summary.net_sales > 0
+      ? summary.total_payment / summary.net_sales
+      : 0,
+});
+
+const buildSalesV2Alerts = (
+  report: SalesV2ResponseDTO
+): SalesV2ResponseDTO['alerts'] => {
+  const alerts: SalesV2ResponseDTO['alerts'] = [];
+  const { summary, comparison, data_quality } = report;
+
+  if (summary.net_margin < 0) {
+    alerts.push({
+      key: 'negative-net-margin',
+      severity: 'danger',
+      title: 'Net margin negatif',
+      message:
+        'Net profit periode ini negatif. Cek COGS, fee, dan diskon seller.',
+    });
+  } else if (summary.net_margin < 0.1) {
+    alerts.push({
+      key: 'thin-net-margin',
+      severity: 'warning',
+      title: 'Net margin tipis',
+      message:
+        'Margin di bawah 10%. Kenaikan fee atau diskon kecil bisa langsung menekan profit.',
+    });
+  }
+
+  if (summary.fee_ratio >= 0.12) {
+    alerts.push({
+      key: 'high-fee-ratio',
+      severity: 'warning',
+      title: 'Fee Shopee tinggi',
+      message:
+        'Fee Shopee melewati 12% dari gross sales. Cek admin, processing, affiliate, dan campaign fee.',
+    });
+  }
+
+  if (summary.seller_discount_ratio >= 0.1) {
+    alerts.push({
+      key: 'high-seller-discount',
+      severity: 'warning',
+      title: 'Diskon seller tinggi',
+      message:
+        'Diskon seller melewati 10% gross sales. Pastikan promo masih menghasilkan profit.',
+    });
+  }
+
+  if (
+    comparison &&
+    comparison.changes.orders > 0 &&
+    comparison.changes.net_profit < 0
+  ) {
+    alerts.push({
+      key: 'orders-up-profit-down',
+      severity: 'danger',
+      title: 'Order naik, profit turun',
+      message:
+        'Volume order membaik, tetapi net profit turun. Ini biasanya tanda margin atau fee memburuk.',
+    });
+  }
+
+  if (
+    data_quality.net_sales_coverage < 0.9 ||
+    data_quality.net_profit_coverage < 0.9
+  ) {
+    alerts.push({
+      key: 'low-data-confidence',
+      severity: 'info',
+      title: 'Data confidence belum penuh',
+      message:
+        'Sebagian order belum memakai field financial kanonik. Re-enrich data jika angka terasa berbeda.',
+    });
+  }
+
+  return alerts;
+};
+
+const buildSalesV2VoucherSummary = (
+  summary: SalesV2Summary
+): SalesV2ResponseDTO['voucher_summary'] => {
+  const totalDiscount =
+    summary.seller_discount + summary.shopee_discount;
+
+  return {
+    voucher_codes_count: summary.voucher_codes.length,
+    seller_discount: summary.seller_discount,
+    shopee_discount: summary.shopee_discount,
+    total_discount: totalDiscount,
+    seller_share:
+      totalDiscount > 0
+        ? summary.seller_discount / totalDiscount
+        : 0,
+    discount_ratio:
+      summary.gross_sales > 0
+        ? totalDiscount / summary.gross_sales
+        : 0,
+    top_codes: summary.voucher_codes.slice(0, 5),
   };
 };
 
@@ -396,6 +719,37 @@ const createEmptySalesV2Report = (
     net_sales_coverage: 0,
     net_profit_coverage: 0,
     released_funds_coverage: 0,
+  },
+  health_summary: {
+    headline: 'Belum ada order selesai di periode ini.',
+    tone: 'neutral',
+    notes: [
+      'Financial metrics hanya menghitung order Shopee berstatus selesai.',
+    ],
+  },
+  profit_leakage: {
+    total_leakage: 0,
+    leakage_ratio: 0,
+    items: [],
+  },
+  best_days: [],
+  worst_days: [],
+  order_economics: {
+    average_profit_per_unit: 0,
+    average_cogs_per_order: 0,
+    average_fee_per_order: 0,
+    average_seller_discount_per_order: 0,
+    payment_to_net_sales_ratio: 0,
+  },
+  alerts: [],
+  voucher_summary: {
+    voucher_codes_count: 0,
+    seller_discount: 0,
+    shopee_discount: 0,
+    total_discount: 0,
+    seller_share: 0,
+    discount_ratio: 0,
+    top_codes: [],
   },
   meta: {
     start_date: startDate,
