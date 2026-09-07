@@ -185,3 +185,117 @@ export const ProductAnalyticsResponseSchema = z.object({
     period_days: z.number(),
   }),
 });
+
+export const SalesV2DailyReportSchema = z.object({
+  date: z.string(),
+  gross_sales: z.number(),
+  net_sales: z.number(),
+  total_payment: z.number(),
+  released_funds: z.number(),
+  cogs: z.number(),
+  gross_profit: z.number(),
+  net_profit: z.number(),
+  seller_discount: z.number(),
+  shopee_discount: z.number(),
+  shopee_fee: z.number(),
+  units: z.number(),
+  orders: z.number(),
+  net_margin: z.number(),
+});
+
+export const SalesV2SummarySchema = z.object({
+  total_orders: z.number(),
+  total_buyers: z.number(),
+  total_units: z.number(),
+  total_items: z.number(),
+  gross_sales: z.number(),
+  net_sales: z.number(),
+  total_payment: z.number(),
+  released_funds: z.number(),
+  cogs: z.number(),
+  gross_profit: z.number(),
+  net_profit: z.number(),
+  seller_discount: z.number(),
+  shopee_discount: z.number(),
+  shopee_fee: z.number(),
+  marketplace_deduction: z.number(),
+  average_order_value: z.number(),
+  profit_per_order: z.number(),
+  gross_margin: z.number(),
+  net_margin: z.number(),
+  fee_ratio: z.number(),
+  seller_discount_ratio: z.number(),
+  shopee_discount_ratio: z.number(),
+  voucher_codes: z.array(z.string()),
+});
+
+export const SalesV2FeeBreakdownSchema = z.object({
+  admin_fee: z.number().optional(),
+  processing_fee: z.number().optional(),
+  affiliate_fee: z.number().optional(),
+  gox_fee: z.number().optional(),
+  service_fee: z.number().optional(),
+  transaction_fee: z.number().optional(),
+  campaign_fee: z.number().optional(),
+  shipping_saver_program_fee: z.number().optional(),
+  other_fee: z.number().optional(),
+  premium_fee: z.number().optional(),
+  fbs_fee: z.number().optional(),
+  tax_pph22: z.number().optional(),
+  import_duty_vat_income_tax: z.number().optional(),
+  auto_top_up_fee_from_income: z.number().optional(),
+  return_shipping_fee: z.number().optional(),
+  return_to_sender_shipping_fee: z.number().optional(),
+  shipping_fee_refund: z.number().optional(),
+});
+
+export const SalesV2DataQualitySchema = z.object({
+  total_orders: z.number(),
+  gross_sales_coverage: z.number(),
+  net_sales_coverage: z.number(),
+  net_profit_coverage: z.number(),
+  released_funds_coverage: z.number(),
+});
+
+export const SalesV2GrowthSchema = z.object({
+  previous_period: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+  }),
+  summary: z.object({
+    net_sales: z.number(),
+    net_profit: z.number(),
+    total_payment: z.number(),
+    orders: z.number(),
+    average_order_value: z.number(),
+    net_margin: z.number(),
+  }),
+  changes: z.object({
+    net_sales: z.number(),
+    net_profit: z.number(),
+    total_payment: z.number(),
+    orders: z.number(),
+    average_order_value: z.number(),
+    net_margin: z.number(),
+  }),
+});
+
+export const SalesV2ResponseSchema = z.object({
+  summary: SalesV2SummarySchema,
+  daily_reports: z.array(SalesV2DailyReportSchema),
+  fee_breakdown: SalesV2FeeBreakdownSchema,
+  status_breakdown: z.array(
+    z.object({
+      status: z.string(),
+      orders: z.number(),
+      total_payment: z.number(),
+    })
+  ),
+  data_quality: SalesV2DataQualitySchema,
+  comparison: SalesV2GrowthSchema.optional(),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});

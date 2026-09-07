@@ -46,6 +46,10 @@ export const mainNav = [
         url: '/dashboard/reports/sales',
       },
       {
+        title: 'Sales Report V2',
+        url: '/dashboard/reports/sales-2',
+      },
+      {
         title: 'Products Report',
         url: '/dashboard/reports/products',
       },

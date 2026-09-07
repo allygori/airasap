@@ -1,7 +1,11 @@
 import { aggregateProductSalesReport } from './product/product-report';
-import { type ProductAnalyticsResponseDTO } from './report.dto';
+import {
+  type ProductAnalyticsResponseDTO,
+  type SalesV2ResponseDTO,
+} from './report.dto';
 import { ReportRepository } from './report.repository';
 import { aggregateSalesReport } from './sales/sales-report';
+import { aggregateSalesV2Report } from './sales-v2/sales-report';
 import {
   differenceInCalendarDays,
   parseISO,
@@ -11,6 +15,7 @@ import {
 
 type ProductAnalyticsSummary =
   ProductAnalyticsResponseDTO['summary'];
+type SalesV2Summary = SalesV2ResponseDTO['summary'];
 
 export class ReportService {
   private repository: ReportRepository;
@@ -152,6 +157,50 @@ export class ReportService {
       );
     }
   }
+
+  async generateSalesV2Report(
+    startDate: string,
+    endDate: string
+  ) {
+    try {
+      const currentPipelines = aggregateSalesV2Report({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+      const previousPeriod = getPreviousEquivalentPeriod(
+        startDate,
+        endDate
+      );
+      const previousPipelines = aggregateSalesV2Report({
+        startDate: previousPeriod.startDate,
+        endDate: previousPeriod.endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+
+      const [currentReport, previousReport] =
+        await Promise.all([
+          this.repository.aggregate(currentPipelines),
+          this.repository.aggregate(previousPipelines),
+        ]);
+
+      return withSalesV2Comparison(
+        currentReport[0] || null,
+        previousReport[0] || null,
+        previousPeriod,
+        startDate,
+        endDate
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        `Gagal membuat laporan sales v2: ${getErrorMessage(error)}`
+      );
+    }
+  }
 }
 
 const getPreviousEquivalentPeriod = (
@@ -244,6 +293,122 @@ const calculateGrowthRate = (
 
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
+
+const withSalesV2Comparison = (
+  currentReport: SalesV2ResponseDTO | null,
+  previousReport: SalesV2ResponseDTO | null,
+  previousPeriod: ReturnType<
+    typeof getPreviousEquivalentPeriod
+  >,
+  startDate: string,
+  endDate: string
+) => {
+  const current =
+    currentReport ||
+    createEmptySalesV2Report(startDate, endDate);
+  const previousSummary =
+    previousReport?.summary || createEmptySalesV2Summary();
+  const currentSummary =
+    current.summary || createEmptySalesV2Summary();
+
+  return {
+    ...current,
+    comparison: {
+      previous_period: {
+        start_date: previousPeriod.startDate,
+        end_date: previousPeriod.endDate,
+      },
+      summary: {
+        net_sales: previousSummary.net_sales || 0,
+        net_profit: previousSummary.net_profit || 0,
+        total_payment: previousSummary.total_payment || 0,
+        orders: previousSummary.total_orders || 0,
+        average_order_value:
+          previousSummary.average_order_value || 0,
+        net_margin: previousSummary.net_margin || 0,
+      },
+      changes: {
+        net_sales: calculateGrowthRate(
+          currentSummary.net_sales || 0,
+          previousSummary.net_sales || 0
+        ),
+        net_profit: calculateGrowthRate(
+          currentSummary.net_profit || 0,
+          previousSummary.net_profit || 0
+        ),
+        total_payment: calculateGrowthRate(
+          currentSummary.total_payment || 0,
+          previousSummary.total_payment || 0
+        ),
+        orders: calculateGrowthRate(
+          currentSummary.total_orders || 0,
+          previousSummary.total_orders || 0
+        ),
+        average_order_value: calculateGrowthRate(
+          currentSummary.average_order_value || 0,
+          previousSummary.average_order_value || 0
+        ),
+        net_margin:
+          (currentSummary.net_margin || 0) -
+          (previousSummary.net_margin || 0),
+      },
+    },
+  };
+};
+
+const createEmptySalesV2Summary = (): SalesV2Summary => ({
+  total_orders: 0,
+  total_buyers: 0,
+  total_units: 0,
+  total_items: 0,
+  gross_sales: 0,
+  net_sales: 0,
+  total_payment: 0,
+  released_funds: 0,
+  cogs: 0,
+  gross_profit: 0,
+  net_profit: 0,
+  seller_discount: 0,
+  shopee_discount: 0,
+  shopee_fee: 0,
+  marketplace_deduction: 0,
+  average_order_value: 0,
+  profit_per_order: 0,
+  gross_margin: 0,
+  net_margin: 0,
+  fee_ratio: 0,
+  seller_discount_ratio: 0,
+  shopee_discount_ratio: 0,
+  voucher_codes: [],
+});
+
+const createEmptySalesV2Report = (
+  startDate: string,
+  endDate: string
+): SalesV2ResponseDTO => ({
+  summary: createEmptySalesV2Summary(),
+  daily_reports: [],
+  fee_breakdown: {},
+  status_breakdown: [],
+  data_quality: {
+    total_orders: 0,
+    gross_sales_coverage: 0,
+    net_sales_coverage: 0,
+    net_profit_coverage: 0,
+    released_funds_coverage: 0,
+  },
+  meta: {
+    start_date: startDate,
+    end_date: endDate,
+    period_days: Math.max(
+      1,
+      differenceInCalendarDays(
+        startOfDay(parseISO(endDate)),
+        startOfDay(parseISO(startDate))
+      ) + 1
+    ),
+  },
+});
 
 const createEmptyProductSummary =
   (): ProductAnalyticsSummary => ({
