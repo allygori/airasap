@@ -14,6 +14,7 @@ import {
   AlertTriangle,
   ArrowDownUp,
   BadgePercent,
+  Banknote,
   Boxes,
   CalendarDays,
   CircleDollarSign,
@@ -547,6 +548,129 @@ const Sales2ReportPage = () => {
           </section>
         ) : null}
 
+        {result ? (
+          <section className="bg-card rounded-md border">
+            <div className="flex min-w-0 flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="font-medium">
+                  Shopee Economics
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Estimasi net revenue Shopee dari fee
+                  dikurangi subsidi Shopee.
+                </p>
+              </div>
+              <Badge variant="outline">
+                Estimated take rate{' '}
+                {formatPercent(
+                  result.shopee_economics
+                    .estimated_shopee_take_rate
+                )}
+              </Badge>
+            </div>
+            <div className="grid gap-3 p-3 md:grid-cols-2 xl:grid-cols-4">
+              <SignedMetricCard
+                icon={Banknote}
+                label="Estimated Shopee Net Revenue"
+                value={
+                  result.shopee_economics
+                    .estimated_shopee_net_revenue
+                }
+                sub="Total fee - Shopee subsidy"
+              />
+              <MetricCard
+                icon={ArrowDownUp}
+                label="Total Shopee Fee"
+                value={formatIDR(
+                  result.shopee_economics.total_shopee_fee
+                )}
+                sub="All fee fields"
+              />
+              <SignedMetricCard
+                icon={ShieldCheck}
+                label="Shopee Subsidy"
+                value={
+                  -1 *
+                  result.shopee_economics
+                    .total_shopee_subsidy
+                }
+                sub="Discount + voucher + bundle"
+              />
+              <MetricCard
+                icon={HandCoins}
+                label="Shipping Forwarded"
+                value={formatIDR(
+                  result.shopee_economics
+                    .shipping_forwarded_by_shopee
+                )}
+                sub="Passed to logistics"
+              />
+            </div>
+            <div className="grid gap-3 border-t p-3 md:grid-cols-3">
+              <ShopeeEconomicsGroup
+                title="Fee Components"
+                rows={[
+                  {
+                    label: 'Admin Fee',
+                    value:
+                      result.shopee_economics.admin_fee,
+                  },
+                  {
+                    label: 'Processing Fee',
+                    value:
+                      result.shopee_economics
+                        .processing_fee,
+                  },
+                  {
+                    label: 'GOX Fee',
+                    value: result.shopee_economics.gox_fee,
+                  },
+                  {
+                    label: 'Other Fee',
+                    value:
+                      result.shopee_economics.other_fee,
+                  },
+                ]}
+              />
+              <ShopeeEconomicsGroup
+                title="Shopee Subsidy"
+                rows={[
+                  {
+                    label: 'Discount from Shopee',
+                    value:
+                      result.shopee_economics
+                        .discount_from_shopee,
+                  },
+                  {
+                    label: 'Voucher by Shopee',
+                    value:
+                      result.shopee_economics
+                        .voucher_borne_by_shopee,
+                  },
+                  {
+                    label: 'Bundle Deal by Shopee',
+                    value:
+                      result.shopee_economics
+                        .bundle_deal_discount_from_shopee,
+                  },
+                ]}
+              />
+              <div className="bg-background rounded-md border p-3">
+                <p className="text-muted-foreground mb-3 text-xs font-medium uppercase">
+                  Interpretation
+                </p>
+                <p className="text-sm">
+                  Angka ini adalah estimasi take Shopee dari
+                  order toko: semua fee dikurangi subsidi
+                  Shopee. Ongkir diteruskan ke jasa kirim
+                  ditampilkan sebagai pass-through, bukan
+                  revenue bersih Shopee.
+                </p>
+              </div>
+            </div>
+          </section>
+        ) : null}
+
         {summary && result ? (
           <section className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
             <div className="bg-card rounded-md border">
@@ -942,6 +1066,35 @@ const SignalRow = ({
     >
       {value}
     </span>
+  </div>
+);
+
+const ShopeeEconomicsGroup = ({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { label: string; value: number }[];
+}) => (
+  <div className="bg-background rounded-md border p-3">
+    <p className="text-muted-foreground mb-3 text-xs font-medium uppercase">
+      {title}
+    </p>
+    <div className="space-y-2">
+      {rows.map((row) => (
+        <div
+          key={row.label}
+          className="flex items-center justify-between gap-3 text-sm"
+        >
+          <span className="text-muted-foreground truncate">
+            {row.label}
+          </span>
+          <span className="shrink-0 font-medium">
+            {formatIDR(row.value)}
+          </span>
+        </div>
+      ))}
+    </div>
   </div>
 );
 

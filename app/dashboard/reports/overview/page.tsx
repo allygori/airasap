@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import {
   AlertTriangle,
+  Banknote,
   CircleDollarSign,
   CreditCard,
   Gauge,
@@ -214,7 +215,7 @@ const ReportsOverviewPage = () => {
           </div>
         ) : null}
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
           <MetricCard
             icon={TrendingUp}
             label="Net Sales"
@@ -238,6 +239,15 @@ const ReportsOverviewPage = () => {
             label="Completed Orders"
             value={formatNumber(summary?.total_orders)}
             sub={`${formatNumber(summary?.total_buyers)} buyers`}
+          />
+          <SignedMetricCard
+            icon={Banknote}
+            label="Shopee Net Revenue"
+            value={
+              result?.shopee_economics
+                .estimated_shopee_net_revenue || 0
+            }
+            sub={`${formatPercent(result?.shopee_economics.estimated_shopee_take_rate)} take rate`}
           />
         </section>
 

@@ -467,6 +467,10 @@ const withSalesV2DecisionLayer = (
     voucher_summary: buildSalesV2VoucherSummary(
       report.summary
     ),
+    shopee_economics: buildSalesV2ShopeeEconomics(
+      report.summary,
+      report.fee_breakdown
+    ),
   };
 };
 
@@ -772,6 +776,47 @@ const buildSalesV2VoucherSummary = (
   };
 };
 
+const buildSalesV2ShopeeEconomics = (
+  summary: SalesV2Summary,
+  feeBreakdown: SalesV2ResponseDTO['fee_breakdown']
+): SalesV2ResponseDTO['shopee_economics'] => {
+  const adminFee = feeBreakdown.admin_fee || 0;
+  const processingFee = feeBreakdown.processing_fee || 0;
+  const goxFee = feeBreakdown.gox_fee || 0;
+  const totalShopeeFee = summary.shopee_fee || 0;
+  const totalShopeeSubsidy =
+    (summary.discount_from_shopee || 0) +
+    (summary.voucher_borne_by_shopee || 0) +
+    (summary.bundle_deal_discount_from_shopee || 0);
+  const estimatedShopeeNetRevenue =
+    totalShopeeFee - totalShopeeSubsidy;
+  const otherFee = Math.max(
+    0,
+    totalShopeeFee - adminFee - processingFee - goxFee
+  );
+
+  return {
+    shipping_forwarded_by_shopee:
+      summary.shipping_forwarded_by_shopee || 0,
+    discount_from_shopee: summary.discount_from_shopee || 0,
+    voucher_borne_by_shopee:
+      summary.voucher_borne_by_shopee || 0,
+    bundle_deal_discount_from_shopee:
+      summary.bundle_deal_discount_from_shopee || 0,
+    admin_fee: adminFee,
+    processing_fee: processingFee,
+    gox_fee: goxFee,
+    other_fee: otherFee,
+    total_shopee_fee: totalShopeeFee,
+    total_shopee_subsidy: totalShopeeSubsidy,
+    estimated_shopee_net_revenue: estimatedShopeeNetRevenue,
+    estimated_shopee_take_rate:
+      summary.gross_sales > 0
+        ? estimatedShopeeNetRevenue / summary.gross_sales
+        : 0,
+  };
+};
+
 const createEmptySalesV2Summary = (): SalesV2Summary => ({
   total_orders: 0,
   total_buyers: 0,
@@ -786,6 +831,10 @@ const createEmptySalesV2Summary = (): SalesV2Summary => ({
   net_profit: 0,
   seller_discount: 0,
   shopee_discount: 0,
+  discount_from_shopee: 0,
+  voucher_borne_by_shopee: 0,
+  bundle_deal_discount_from_shopee: 0,
+  shipping_forwarded_by_shopee: 0,
   shopee_fee: 0,
   marketplace_deduction: 0,
   average_order_value: 0,
@@ -843,6 +892,20 @@ const createEmptySalesV2Report = (
     seller_share: 0,
     discount_ratio: 0,
     top_codes: [],
+  },
+  shopee_economics: {
+    shipping_forwarded_by_shopee: 0,
+    discount_from_shopee: 0,
+    voucher_borne_by_shopee: 0,
+    bundle_deal_discount_from_shopee: 0,
+    admin_fee: 0,
+    processing_fee: 0,
+    gox_fee: 0,
+    other_fee: 0,
+    total_shopee_fee: 0,
+    total_shopee_subsidy: 0,
+    estimated_shopee_net_revenue: 0,
+    estimated_shopee_take_rate: 0,
   },
   meta: {
     start_date: startDate,

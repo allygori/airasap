@@ -197,6 +197,10 @@ export const SalesV2DailyReportSchema = z.object({
   net_profit: z.number(),
   seller_discount: z.number(),
   shopee_discount: z.number(),
+  discount_from_shopee: z.number(),
+  voucher_borne_by_shopee: z.number(),
+  bundle_deal_discount_from_shopee: z.number(),
+  shipping_forwarded_by_shopee: z.number(),
   shopee_fee: z.number(),
   units: z.number(),
   orders: z.number(),
@@ -217,6 +221,10 @@ export const SalesV2SummarySchema = z.object({
   net_profit: z.number(),
   seller_discount: z.number(),
   shopee_discount: z.number(),
+  discount_from_shopee: z.number(),
+  voucher_borne_by_shopee: z.number(),
+  bundle_deal_discount_from_shopee: z.number(),
+  shipping_forwarded_by_shopee: z.number(),
   shopee_fee: z.number(),
   marketplace_deduction: z.number(),
   average_order_value: z.number(),
@@ -331,6 +339,21 @@ export const SalesV2VoucherSummarySchema = z.object({
   top_codes: z.array(z.string()),
 });
 
+export const SalesV2ShopeeEconomicsSchema = z.object({
+  shipping_forwarded_by_shopee: z.number(),
+  discount_from_shopee: z.number(),
+  voucher_borne_by_shopee: z.number(),
+  bundle_deal_discount_from_shopee: z.number(),
+  admin_fee: z.number(),
+  processing_fee: z.number(),
+  gox_fee: z.number(),
+  other_fee: z.number(),
+  total_shopee_fee: z.number(),
+  total_shopee_subsidy: z.number(),
+  estimated_shopee_net_revenue: z.number(),
+  estimated_shopee_take_rate: z.number(),
+});
+
 export const SalesV2ResponseSchema = z.object({
   summary: SalesV2SummarySchema,
   daily_reports: z.array(SalesV2DailyReportSchema),
@@ -350,6 +373,7 @@ export const SalesV2ResponseSchema = z.object({
   order_economics: SalesV2OrderEconomicsSchema,
   alerts: z.array(SalesV2AlertSchema),
   voucher_summary: SalesV2VoucherSummarySchema,
+  shopee_economics: SalesV2ShopeeEconomicsSchema,
   comparison: SalesV2GrowthSchema.optional(),
   meta: z.object({
     start_date: z.string(),

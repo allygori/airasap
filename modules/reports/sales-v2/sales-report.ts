@@ -213,6 +213,18 @@ const normalizeSalesV2Order = <F extends string>(
           },
         ],
       },
+      discount_from_shopee: {
+        $ifNull: ['$discount_from_shopee', 0],
+      },
+      voucher_borne_by_shopee: {
+        $ifNull: ['$voucher_borne_by_shopee', 0],
+      },
+      bundle_deal_discount_from_shopee: {
+        $ifNull: ['$bundle_deal_discount_from_shopee', 0],
+      },
+      shipping_forwarded_by_shopee: {
+        $ifNull: ['$shipping_cost_forwarded_by_shopee', 0],
+      },
       voucher_code: { $ifNull: ['$voucher_code', null] },
       units: {
         $sum: {
@@ -357,6 +369,18 @@ const groupDailyFinancials = (): PipelineStage.Group => ({
     shopee_discount: {
       $sum: '$_analytics.shopee_discount',
     },
+    discount_from_shopee: {
+      $sum: '$_analytics.discount_from_shopee',
+    },
+    voucher_borne_by_shopee: {
+      $sum: '$_analytics.voucher_borne_by_shopee',
+    },
+    bundle_deal_discount_from_shopee: {
+      $sum: '$_analytics.bundle_deal_discount_from_shopee',
+    },
+    shipping_forwarded_by_shopee: {
+      $sum: '$_analytics.shipping_forwarded_by_shopee',
+    },
     shopee_fee: { $sum: feeTotalExpression },
     units: { $sum: '$_analytics.units' },
     items_count: { $sum: '$_analytics.items_count' },
@@ -443,6 +467,18 @@ const summarizeFinancials = ({
       net_profit: { $sum: '$net_profit' },
       seller_discount: { $sum: '$seller_discount' },
       shopee_discount: { $sum: '$shopee_discount' },
+      discount_from_shopee: {
+        $sum: '$discount_from_shopee',
+      },
+      voucher_borne_by_shopee: {
+        $sum: '$voucher_borne_by_shopee',
+      },
+      bundle_deal_discount_from_shopee: {
+        $sum: '$bundle_deal_discount_from_shopee',
+      },
+      shipping_forwarded_by_shopee: {
+        $sum: '$shipping_forwarded_by_shopee',
+      },
       shopee_fee: { $sum: '$shopee_fee' },
       total_units: { $sum: '$units' },
       total_items: { $sum: '$items_count' },
@@ -526,6 +562,12 @@ const summarizeFinancials = ({
         net_profit: '$net_profit',
         seller_discount: '$seller_discount',
         shopee_discount: '$shopee_discount',
+        discount_from_shopee: '$discount_from_shopee',
+        voucher_borne_by_shopee: '$voucher_borne_by_shopee',
+        bundle_deal_discount_from_shopee:
+          '$bundle_deal_discount_from_shopee',
+        shipping_forwarded_by_shopee:
+          '$shipping_forwarded_by_shopee',
         shopee_fee: '$shopee_fee',
         marketplace_deduction: {
           $max: [
@@ -699,6 +741,10 @@ const emptyFinancialReport = (
     net_profit: 0,
     seller_discount: 0,
     shopee_discount: 0,
+    discount_from_shopee: 0,
+    voucher_borne_by_shopee: 0,
+    bundle_deal_discount_from_shopee: 0,
+    shipping_forwarded_by_shopee: 0,
     shopee_fee: 0,
     marketplace_deduction: 0,
     average_order_value: 0,
