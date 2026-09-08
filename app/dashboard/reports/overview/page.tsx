@@ -15,6 +15,7 @@ import {
   CircleDollarSign,
   CreditCard,
   Gauge,
+  ClipboardList,
   MoveRight,
   PackageSearch,
   ReceiptText,
@@ -413,7 +414,7 @@ const ReportsOverviewPage = () => {
         ) : null}
 
         {result ? (
-          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <SignalCard
               icon={ReceiptText}
               label="Sales Economics"
@@ -443,6 +444,13 @@ const ReportsOverviewPage = () => {
               )}
               sub={`${formatIDR(result.voucher_summary.total_discount)} total discount`}
               href="/dashboard/reports/vouchers"
+            />
+            <SignalCard
+              icon={ClipboardList}
+              label="Operations Signal"
+              value="Order Quality"
+              sub="Cancellation, return, and refund"
+              href="/dashboard/reports/operations"
             />
           </section>
         ) : null}

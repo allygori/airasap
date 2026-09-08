@@ -471,3 +471,55 @@ export const VoucherReportResponseSchema = z.object({
     period_days: z.number(),
   }),
 });
+
+export const OperationReportSummarySchema = z.object({
+  total_orders: z.number(),
+  completed_orders: z.number(),
+  cancelled_orders: z.number(),
+  return_refund_orders: z.number(),
+  in_progress_orders: z.number(),
+  total_payment: z.number(),
+  completed_payment: z.number(),
+  cancelled_payment: z.number(),
+  return_refund_payment: z.number(),
+  completion_rate: z.number(),
+  cancellation_rate: z.number(),
+  return_refund_rate: z.number(),
+  problem_order_rate: z.number(),
+});
+
+export const OperationStatusBreakdownSchema = z.object({
+  status: z.string(),
+  orders: z.number(),
+  total_payment: z.number(),
+});
+
+export const OperationDailyReportSchema = z.object({
+  date: z.string(),
+  total_orders: z.number(),
+  completed_orders: z.number(),
+  cancelled_orders: z.number(),
+  return_refund_orders: z.number(),
+  completion_rate: z.number(),
+});
+
+export const OperationCancellationReasonSchema = z.object({
+  cancelled_by: z.string(),
+  reason: z.string(),
+  orders: z.number(),
+  total_payment: z.number(),
+});
+
+export const OperationReportResponseSchema = z.object({
+  summary: OperationReportSummarySchema,
+  status_breakdown: z.array(OperationStatusBreakdownSchema),
+  daily_reports: z.array(OperationDailyReportSchema),
+  cancellation_reasons: z.array(
+    OperationCancellationReasonSchema
+  ),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});

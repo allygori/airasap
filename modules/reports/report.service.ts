@@ -1,7 +1,9 @@
 import { aggregateCustomerReport } from './customer/customer-report';
+import { aggregateOperationReport } from './operation/operation-report';
 import { aggregateProductSalesReport } from './product/product-report';
 import {
   type CustomerReportResponseDTO,
+  type OperationReportResponseDTO,
   type ProductAnalyticsResponseDTO,
   type SalesV2ResponseDTO,
   type VoucherReportResponseDTO,
@@ -26,6 +28,8 @@ type CustomerReportSummary =
   CustomerReportResponseDTO['summary'];
 type VoucherReportSummary =
   VoucherReportResponseDTO['summary'];
+type OperationReportSummary =
+  OperationReportResponseDTO['summary'];
 
 export class ReportService {
   private repository: ReportRepository;
@@ -262,6 +266,33 @@ export class ReportService {
     } catch (error: unknown) {
       throw new Error(
         `Gagal membuat voucher report: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async generateOperationReport(
+    startDate: string,
+    endDate: string
+  ) {
+    try {
+      const pipelines = aggregateOperationReport({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: 'Asia/Jakarta',
+      });
+
+      const report =
+        await this.repository.aggregate(pipelines);
+
+      return (
+        report[0] ||
+        createEmptyOperationReport(startDate, endDate)
+      );
+    } catch (error: unknown) {
+      throw new Error(
+        `Gagal membuat operation report: ${getErrorMessage(error)}`
       );
     }
   }
@@ -892,6 +923,44 @@ const createEmptyVoucherReport = (
 ): VoucherReportResponseDTO => ({
   summary: createEmptyVoucherSummary(),
   vouchers: [],
+  meta: {
+    start_date: startDate,
+    end_date: endDate,
+    period_days: Math.max(
+      1,
+      differenceInCalendarDays(
+        startOfDay(parseISO(endDate)),
+        startOfDay(parseISO(startDate))
+      ) + 1
+    ),
+  },
+});
+
+const createEmptyOperationSummary =
+  (): OperationReportSummary => ({
+    total_orders: 0,
+    completed_orders: 0,
+    cancelled_orders: 0,
+    return_refund_orders: 0,
+    in_progress_orders: 0,
+    total_payment: 0,
+    completed_payment: 0,
+    cancelled_payment: 0,
+    return_refund_payment: 0,
+    completion_rate: 0,
+    cancellation_rate: 0,
+    return_refund_rate: 0,
+    problem_order_rate: 0,
+  });
+
+const createEmptyOperationReport = (
+  startDate: string,
+  endDate: string
+): OperationReportResponseDTO => ({
+  summary: createEmptyOperationSummary(),
+  status_breakdown: [],
+  daily_reports: [],
+  cancellation_reasons: [],
   meta: {
     start_date: startDate,
     end_date: endDate,

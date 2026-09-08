@@ -65,6 +65,10 @@ export const mainNav = [
         title: 'Vouchers Report',
         url: '/dashboard/reports/vouchers',
       },
+      {
+        title: 'Operations Report',
+        url: '/dashboard/reports/operations',
+      },
     ],
   },
   // {
