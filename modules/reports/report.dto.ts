@@ -4,7 +4,7 @@ import {
   CustomerReportResponseSchema,
   OperationReportResponseSchema,
   ProductAnalyticsResponseSchema,
-  SalesV2ResponseSchema,
+  OrderReportResponseSchema,
   SalesReportResponseSchema,
   VoucherReportResponseSchema,
 } from './report.schema';
@@ -20,8 +20,8 @@ export type SalesReportResponseDTO = z.infer<
 export type ProductAnalyticsResponseDTO = z.infer<
   typeof ProductAnalyticsResponseSchema
 >;
-export type SalesV2ResponseDTO = z.infer<
-  typeof SalesV2ResponseSchema
+export type OrderReportResponseDTO = z.infer<
+  typeof OrderReportResponseSchema
 >;
 export type CustomerReportResponseDTO = z.infer<
   typeof CustomerReportResponseSchema

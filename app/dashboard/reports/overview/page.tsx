@@ -39,7 +39,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { formatIDR } from '@/lib/formatter/format-idr';
-import { SalesV2ResponseDTO } from '@/modules/reports/report.dto';
+import { OrderReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
   ReportFormSchema,
@@ -76,7 +76,7 @@ const pressureChartConfig = {
 
 const ReportsOverviewPage = () => {
   const [result, setResult] =
-    useState<SalesV2ResponseDTO>();
+    useState<OrderReportResponseDTO>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(
@@ -105,7 +105,7 @@ const ReportsOverviewPage = () => {
 
       try {
         const response = await fetch(
-          '/api/v1/dashboard/reports/sales-2',
+          '/api/v1/dashboard/reports/orders',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -428,10 +428,10 @@ const ReportsOverviewPage = () => {
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <SignalCard
               icon={ReceiptText}
-              label="Sales Economics"
+              label="Order Report"
               value={formatIDR(result.summary.gross_sales)}
               sub={`${formatIDR(result.summary.cogs)} COGS`}
-              href="/dashboard/reports/sales-2"
+              href="/dashboard/reports/orders"
             />
             <SignalCard
               icon={PackageSearch}
@@ -629,7 +629,7 @@ const RatioPanel = ({
   rows,
 }: {
   title: string;
-  rows: SalesV2ResponseDTO['profit_leakage']['items'];
+  rows: OrderReportResponseDTO['profit_leakage']['items'];
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">

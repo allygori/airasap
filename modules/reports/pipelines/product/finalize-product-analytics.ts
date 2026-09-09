@@ -258,7 +258,6 @@ export const finalizeProductAnalytics = ({
         $project: {
           _id: 0,
           order_ids: 0,
-          orders: 0,
           total_net_sales: 0,
           total_net_profit: 0,
           total_units: 0,

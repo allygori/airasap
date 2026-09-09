@@ -32,7 +32,7 @@ const tzMap: Record<TimeZone, string> = {
   'Asia/Jayapura': '+09:00',
 };
 
-export const aggregateSalesV2Report = ({
+export const aggregateOrderReport = ({
   filterBy = DEFAULT_DATE_FIELD,
   startDate,
   endDate,
@@ -62,7 +62,7 @@ export const aggregateSalesV2Report = ({
         },
       },
     })
-    .with(normalizeSalesV2Order(filterBy, tz))
+    .with(normalizeOrderReportOrder(filterBy, tz))
     .with({
       $facet: {
         financial: [
@@ -133,7 +133,7 @@ export const aggregateSalesV2Report = ({
   return pipelines;
 };
 
-const normalizeSalesV2Order = <F extends string>(
+const normalizeOrderReportOrder = <F extends string>(
   field: F,
   timezone: TimeZone
 ): PipelineStage.AddFields => ({

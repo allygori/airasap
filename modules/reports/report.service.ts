@@ -6,12 +6,12 @@ import {
   type CreateReportDTO,
   type OperationReportResponseDTO,
   type ProductAnalyticsResponseDTO,
-  type SalesV2ResponseDTO,
+  type OrderReportResponseDTO,
   type VoucherReportResponseDTO,
 } from './report.dto';
 import { ReportRepository } from './report.repository';
 import { aggregateSalesReport } from './sales/sales-report';
-import { aggregateSalesV2Report } from './sales-v2/sales-report';
+import { aggregateOrderReport } from './orders/order-report';
 import { aggregateVoucherReport } from './voucher/voucher-report';
 import {
   differenceInCalendarDays,
@@ -31,9 +31,9 @@ import {
 
 type ProductAnalyticsSummary =
   ProductAnalyticsResponseDTO['summary'];
-type SalesV2Summary = SalesV2ResponseDTO['summary'];
-type SalesV2DailyReport =
-  SalesV2ResponseDTO['daily_reports'][number];
+type OrderReportSummary = OrderReportResponseDTO['summary'];
+type OrderReportDailyReport =
+  OrderReportResponseDTO['daily_reports'][number];
 type CustomerReportSummary =
   CustomerReportResponseDTO['summary'];
 type VoucherReportSummary =
@@ -185,13 +185,13 @@ export class ReportService {
     }
   }
 
-  async generateSalesV2Report(
+  async generateOrderReport(
     startDate: string,
     endDate: string,
     mode?: ReportPeriodMode
   ) {
     try {
-      const currentPipelines = aggregateSalesV2Report({
+      const currentPipelines = aggregateOrderReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
@@ -203,7 +203,7 @@ export class ReportService {
         endDate,
         mode
       );
-      const previousPipelines = aggregateSalesV2Report({
+      const previousPipelines = aggregateOrderReport({
         startDate: previousPeriod.startDate,
         endDate: previousPeriod.endDate,
         tenantContext: this.tenantContext,
@@ -217,7 +217,7 @@ export class ReportService {
           this.repository.aggregate(previousPipelines),
         ]);
 
-      return withSalesV2Comparison(
+      return withOrderReportComparison(
         currentReport[0] || null,
         previousReport[0] || null,
         previousPeriod,
@@ -226,7 +226,7 @@ export class ReportService {
       );
     } catch (error: unknown) {
       throw new Error(
-        `Gagal membuat laporan sales v2: ${getErrorMessage(error)}`
+        `Gagal membuat laporan Order Report: ${getErrorMessage(error)}`
       );
     }
   }
@@ -497,9 +497,9 @@ const calculateGrowthRate = (
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
-const withSalesV2Comparison = (
-  currentReport: SalesV2ResponseDTO | null,
-  previousReport: SalesV2ResponseDTO | null,
+const withOrderReportComparison = (
+  currentReport: OrderReportResponseDTO | null,
+  previousReport: OrderReportResponseDTO | null,
   previousPeriod: ReturnType<
     typeof getPreviousEquivalentPeriod
   >,
@@ -508,13 +508,14 @@ const withSalesV2Comparison = (
 ) => {
   const current =
     currentReport ||
-    createEmptySalesV2Report(startDate, endDate);
+    createEmptyOrderReport(startDate, endDate);
   const previousSummary =
-    previousReport?.summary || createEmptySalesV2Summary();
+    previousReport?.summary ||
+    createEmptyOrderReportSummary();
   const currentSummary =
-    current.summary || createEmptySalesV2Summary();
+    current.summary || createEmptyOrderReportSummary();
 
-  return withSalesV2DecisionLayer({
+  return withOrderReportDecisionLayer({
     ...current,
     comparison: {
       previous_period: {
@@ -559,32 +560,34 @@ const withSalesV2Comparison = (
   });
 };
 
-const withSalesV2DecisionLayer = (
-  report: SalesV2ResponseDTO
-): SalesV2ResponseDTO => {
+const withOrderReportDecisionLayer = (
+  report: OrderReportResponseDTO
+): OrderReportResponseDTO => {
   return {
     ...report,
-    health_summary: buildSalesV2HealthSummary(report),
-    profit_leakage: buildSalesV2ProfitLeakage(report),
-    best_days: buildSalesV2BestDays(report.daily_reports),
-    worst_days: buildSalesV2WorstDays(report.daily_reports),
-    order_economics: buildSalesV2OrderEconomics(
+    health_summary: buildOrderReportHealthSummary(report),
+    profit_leakage: buildOrderReportProfitLeakage(report),
+    best_days: buildOrderReportBestDays(
+      report.daily_reports
+    ),
+    worst_days: buildOrderReportWorstDays(
+      report.daily_reports
+    ),
+    order_metrics: buildOrderReportMetrics(report.summary),
+    alerts: buildOrderReportAlerts(report),
+    voucher_summary: buildOrderReportVoucherSummary(
       report.summary
     ),
-    alerts: buildSalesV2Alerts(report),
-    voucher_summary: buildSalesV2VoucherSummary(
-      report.summary
-    ),
-    shopee_economics: buildSalesV2ShopeeEconomics(
+    shopee_economics: buildOrderReportShopeeEconomics(
       report.summary,
       report.fee_breakdown
     ),
   };
 };
 
-const buildSalesV2HealthSummary = (
-  report: SalesV2ResponseDTO
-): SalesV2ResponseDTO['health_summary'] => {
+const buildOrderReportHealthSummary = (
+  report: OrderReportResponseDTO
+): OrderReportResponseDTO['health_summary'] => {
   const { summary, comparison } = report;
   const notes: string[] = [];
 
@@ -657,9 +660,9 @@ const buildSalesV2HealthSummary = (
   };
 };
 
-const buildSalesV2ProfitLeakage = (
-  report: SalesV2ResponseDTO
-): SalesV2ResponseDTO['profit_leakage'] => {
+const buildOrderReportProfitLeakage = (
+  report: OrderReportResponseDTO
+): OrderReportResponseDTO['profit_leakage'] => {
   const grossSales = report.summary.gross_sales || 0;
   const items = [
     {
@@ -699,9 +702,9 @@ const buildSalesV2ProfitLeakage = (
   };
 };
 
-const buildSalesV2BestDays = (
-  dailyReports: SalesV2DailyReport[]
-): SalesV2ResponseDTO['best_days'] => [
+const buildOrderReportBestDays = (
+  dailyReports: OrderReportDailyReport[]
+): OrderReportResponseDTO['best_days'] => [
   getDayHighlight(
     dailyReports,
     'Highest Net Sales',
@@ -715,9 +718,9 @@ const buildSalesV2BestDays = (
   getDayHighlight(dailyReports, 'Most Orders', 'orders'),
 ];
 
-const buildSalesV2WorstDays = (
-  dailyReports: SalesV2DailyReport[]
-): SalesV2ResponseDTO['worst_days'] => [
+const buildOrderReportWorstDays = (
+  dailyReports: OrderReportDailyReport[]
+): OrderReportResponseDTO['worst_days'] => [
   getDayHighlight(
     dailyReports,
     'Lowest Net Margin',
@@ -738,9 +741,9 @@ const buildSalesV2WorstDays = (
 ];
 
 const getDayHighlight = (
-  dailyReports: SalesV2DailyReport[],
+  dailyReports: OrderReportDailyReport[],
   label: string,
-  metric: keyof SalesV2DailyReport,
+  metric: keyof OrderReportDailyReport,
   direction: 'asc' | 'desc' = 'desc'
 ) => {
   const candidates = dailyReports.filter(
@@ -762,9 +765,9 @@ const getDayHighlight = (
   };
 };
 
-const buildSalesV2OrderEconomics = (
-  summary: SalesV2Summary
-): SalesV2ResponseDTO['order_economics'] => ({
+const buildOrderReportMetrics = (
+  summary: OrderReportSummary
+): OrderReportResponseDTO['order_metrics'] => ({
   average_profit_per_unit:
     summary.total_units > 0
       ? summary.net_profit / summary.total_units
@@ -787,10 +790,10 @@ const buildSalesV2OrderEconomics = (
       : 0,
 });
 
-const buildSalesV2Alerts = (
-  report: SalesV2ResponseDTO
-): SalesV2ResponseDTO['alerts'] => {
-  const alerts: SalesV2ResponseDTO['alerts'] = [];
+const buildOrderReportAlerts = (
+  report: OrderReportResponseDTO
+): OrderReportResponseDTO['alerts'] => {
+  const alerts: OrderReportResponseDTO['alerts'] = [];
   const { summary, comparison, data_quality } = report;
 
   if (summary.net_margin < 0) {
@@ -861,9 +864,9 @@ const buildSalesV2Alerts = (
   return alerts;
 };
 
-const buildSalesV2VoucherSummary = (
-  summary: SalesV2Summary
-): SalesV2ResponseDTO['voucher_summary'] => {
+const buildOrderReportVoucherSummary = (
+  summary: OrderReportSummary
+): OrderReportResponseDTO['voucher_summary'] => {
   const totalDiscount =
     summary.seller_discount + summary.shopee_discount;
 
@@ -884,10 +887,10 @@ const buildSalesV2VoucherSummary = (
   };
 };
 
-const buildSalesV2ShopeeEconomics = (
-  summary: SalesV2Summary,
-  feeBreakdown: SalesV2ResponseDTO['fee_breakdown']
-): SalesV2ResponseDTO['shopee_economics'] => {
+const buildOrderReportShopeeEconomics = (
+  summary: OrderReportSummary,
+  feeBreakdown: OrderReportResponseDTO['fee_breakdown']
+): OrderReportResponseDTO['shopee_economics'] => {
   const adminFee = feeBreakdown.admin_fee || 0;
   const processingFee = feeBreakdown.processing_fee || 0;
   const goxFee = feeBreakdown.gox_fee || 0;
@@ -925,41 +928,42 @@ const buildSalesV2ShopeeEconomics = (
   };
 };
 
-const createEmptySalesV2Summary = (): SalesV2Summary => ({
-  total_orders: 0,
-  total_buyers: 0,
-  total_units: 0,
-  total_items: 0,
-  gross_sales: 0,
-  net_sales: 0,
-  total_payment: 0,
-  released_funds: 0,
-  cogs: 0,
-  gross_profit: 0,
-  net_profit: 0,
-  seller_discount: 0,
-  shopee_discount: 0,
-  discount_from_shopee: 0,
-  voucher_borne_by_shopee: 0,
-  bundle_deal_discount_from_shopee: 0,
-  shipping_forwarded_by_shopee: 0,
-  shopee_fee: 0,
-  marketplace_deduction: 0,
-  average_order_value: 0,
-  profit_per_order: 0,
-  gross_margin: 0,
-  net_margin: 0,
-  fee_ratio: 0,
-  seller_discount_ratio: 0,
-  shopee_discount_ratio: 0,
-  voucher_codes: [],
-});
+const createEmptyOrderReportSummary =
+  (): OrderReportSummary => ({
+    total_orders: 0,
+    total_buyers: 0,
+    total_units: 0,
+    total_items: 0,
+    gross_sales: 0,
+    net_sales: 0,
+    total_payment: 0,
+    released_funds: 0,
+    cogs: 0,
+    gross_profit: 0,
+    net_profit: 0,
+    seller_discount: 0,
+    shopee_discount: 0,
+    discount_from_shopee: 0,
+    voucher_borne_by_shopee: 0,
+    bundle_deal_discount_from_shopee: 0,
+    shipping_forwarded_by_shopee: 0,
+    shopee_fee: 0,
+    marketplace_deduction: 0,
+    average_order_value: 0,
+    profit_per_order: 0,
+    gross_margin: 0,
+    net_margin: 0,
+    fee_ratio: 0,
+    seller_discount_ratio: 0,
+    shopee_discount_ratio: 0,
+    voucher_codes: [],
+  });
 
-const createEmptySalesV2Report = (
+const createEmptyOrderReport = (
   startDate: string,
   endDate: string
-): SalesV2ResponseDTO => ({
-  summary: createEmptySalesV2Summary(),
+): OrderReportResponseDTO => ({
+  summary: createEmptyOrderReportSummary(),
   daily_reports: [],
   fee_breakdown: {},
   status_breakdown: [],
@@ -984,7 +988,7 @@ const createEmptySalesV2Report = (
   },
   best_days: [],
   worst_days: [],
-  order_economics: {
+  order_metrics: {
     average_profit_per_unit: 0,
     average_cogs_per_order: 0,
     average_fee_per_order: 0,

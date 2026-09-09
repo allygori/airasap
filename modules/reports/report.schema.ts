@@ -201,7 +201,7 @@ export const ProductAnalyticsResponseSchema = z.object({
   }),
 });
 
-export const SalesV2DailyReportSchema = z.object({
+export const OrderReportDailyReportSchema = z.object({
   date: z.string(),
   gross_sales: z.number(),
   net_sales: z.number(),
@@ -222,7 +222,7 @@ export const SalesV2DailyReportSchema = z.object({
   net_margin: z.number(),
 });
 
-export const SalesV2SummarySchema = z.object({
+export const OrderReportSummarySchema = z.object({
   total_orders: z.number(),
   total_buyers: z.number(),
   total_units: z.number(),
@@ -252,7 +252,7 @@ export const SalesV2SummarySchema = z.object({
   voucher_codes: z.array(z.string()),
 });
 
-export const SalesV2FeeBreakdownSchema = z.object({
+export const OrderReportFeeBreakdownSchema = z.object({
   admin_fee: z.number().optional(),
   processing_fee: z.number().optional(),
   affiliate_fee: z.number().optional(),
@@ -272,7 +272,7 @@ export const SalesV2FeeBreakdownSchema = z.object({
   shipping_fee_refund: z.number().optional(),
 });
 
-export const SalesV2DataQualitySchema = z.object({
+export const OrderReportDataQualitySchema = z.object({
   total_orders: z.number(),
   gross_sales_coverage: z.number(),
   net_sales_coverage: z.number(),
@@ -280,7 +280,7 @@ export const SalesV2DataQualitySchema = z.object({
   released_funds_coverage: z.number(),
 });
 
-export const SalesV2GrowthSchema = z.object({
+export const OrderReportGrowthSchema = z.object({
   previous_period: z.object({
     start_date: z.string(),
     end_date: z.string(),
@@ -303,13 +303,13 @@ export const SalesV2GrowthSchema = z.object({
   }),
 });
 
-export const SalesV2HealthSummarySchema = z.object({
+export const OrderReportHealthSummarySchema = z.object({
   headline: z.string(),
   tone: z.enum(['good', 'warning', 'bad', 'neutral']),
   notes: z.array(z.string()),
 });
 
-export const SalesV2ProfitLeakageSchema = z.object({
+export const OrderReportProfitLeakageSchema = z.object({
   total_leakage: z.number(),
   leakage_ratio: z.number(),
   items: z.array(
@@ -322,14 +322,14 @@ export const SalesV2ProfitLeakageSchema = z.object({
   ),
 });
 
-export const SalesV2DayHighlightSchema = z.object({
+export const OrderReportDayHighlightSchema = z.object({
   label: z.string(),
   date: z.string().nullable(),
   value: z.number(),
   metric: z.string(),
 });
 
-export const SalesV2OrderEconomicsSchema = z.object({
+export const OrderReportMetricsSchema = z.object({
   average_profit_per_unit: z.number(),
   average_cogs_per_order: z.number(),
   average_fee_per_order: z.number(),
@@ -337,14 +337,14 @@ export const SalesV2OrderEconomicsSchema = z.object({
   payment_to_net_sales_ratio: z.number(),
 });
 
-export const SalesV2AlertSchema = z.object({
+export const OrderReportAlertSchema = z.object({
   key: z.string(),
   severity: z.enum(['info', 'warning', 'danger']),
   title: z.string(),
   message: z.string(),
 });
 
-export const SalesV2VoucherSummarySchema = z.object({
+export const OrderReportVoucherSummarySchema = z.object({
   voucher_codes_count: z.number(),
   seller_discount: z.number(),
   shopee_discount: z.number(),
@@ -354,7 +354,7 @@ export const SalesV2VoucherSummarySchema = z.object({
   top_codes: z.array(z.string()),
 });
 
-export const SalesV2ShopeeEconomicsSchema = z.object({
+export const OrderReportShopeeEconomicsSchema = z.object({
   shipping_forwarded_by_shopee: z.number(),
   discount_from_shopee: z.number(),
   voucher_borne_by_shopee: z.number(),
@@ -369,10 +369,10 @@ export const SalesV2ShopeeEconomicsSchema = z.object({
   estimated_shopee_take_rate: z.number(),
 });
 
-export const SalesV2ResponseSchema = z.object({
-  summary: SalesV2SummarySchema,
-  daily_reports: z.array(SalesV2DailyReportSchema),
-  fee_breakdown: SalesV2FeeBreakdownSchema,
+export const OrderReportResponseSchema = z.object({
+  summary: OrderReportSummarySchema,
+  daily_reports: z.array(OrderReportDailyReportSchema),
+  fee_breakdown: OrderReportFeeBreakdownSchema,
   status_breakdown: z.array(
     z.object({
       status: z.string(),
@@ -380,16 +380,16 @@ export const SalesV2ResponseSchema = z.object({
       total_payment: z.number(),
     })
   ),
-  data_quality: SalesV2DataQualitySchema,
-  health_summary: SalesV2HealthSummarySchema,
-  profit_leakage: SalesV2ProfitLeakageSchema,
-  best_days: z.array(SalesV2DayHighlightSchema),
-  worst_days: z.array(SalesV2DayHighlightSchema),
-  order_economics: SalesV2OrderEconomicsSchema,
-  alerts: z.array(SalesV2AlertSchema),
-  voucher_summary: SalesV2VoucherSummarySchema,
-  shopee_economics: SalesV2ShopeeEconomicsSchema,
-  comparison: SalesV2GrowthSchema.optional(),
+  data_quality: OrderReportDataQualitySchema,
+  health_summary: OrderReportHealthSummarySchema,
+  profit_leakage: OrderReportProfitLeakageSchema,
+  best_days: z.array(OrderReportDayHighlightSchema),
+  worst_days: z.array(OrderReportDayHighlightSchema),
+  order_metrics: OrderReportMetricsSchema,
+  alerts: z.array(OrderReportAlertSchema),
+  voucher_summary: OrderReportVoucherSummarySchema,
+  shopee_economics: OrderReportShopeeEconomicsSchema,
+  comparison: OrderReportGrowthSchema.optional(),
   meta: z.object({
     start_date: z.string(),
     end_date: z.string(),

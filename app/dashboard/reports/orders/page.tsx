@@ -53,7 +53,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatIDR } from '@/lib/formatter/format-idr';
-import { SalesV2ResponseDTO } from '@/modules/reports/report.dto';
+import { OrderReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
   ReportFormSchema,
@@ -88,9 +88,9 @@ const orderChartConfig = {
   },
 } satisfies ChartConfig;
 
-const Sales2ReportPage = () => {
+const OrderReportPage = () => {
   const [result, setResult] =
-    useState<SalesV2ResponseDTO>();
+    useState<OrderReportResponseDTO>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(
@@ -119,7 +119,7 @@ const Sales2ReportPage = () => {
 
       try {
         const response = await fetch(
-          '/api/v1/dashboard/reports/sales-2',
+          '/api/v1/dashboard/reports/orders',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -135,14 +135,17 @@ const Sales2ReportPage = () => {
 
         if (response.ok && data.success) {
           setResult(data.data);
-          toast.success('Sales report v2 berhasil dibuat.');
+          toast.success(
+            'Order Report Report berhasil dibuat.'
+          );
         } else {
           setError(
             data.message ||
-              'Terjadi kesalahan saat memproses sales report v2.'
+              'Terjadi kesalahan saat memproses Order Report Report.'
           );
           toast.error(
-            data.message || 'Gagal membuat sales report v2.'
+            data.message ||
+              'Gagal membuat Order Report Report.'
           );
         }
       } catch (error) {
@@ -150,7 +153,9 @@ const Sales2ReportPage = () => {
           setError(
             'Terjadi kesalahan teknis. Silakan coba lagi nanti.'
           );
-          toast.error('Gagal memproses sales report v2.');
+          toast.error(
+            'Gagal memproses Order Report Report.'
+          );
         }
       } finally {
         if (abortControllerRef.current === controller) {
@@ -182,7 +187,7 @@ const Sales2ReportPage = () => {
             </div>
             <div className="min-w-0">
               <h1 className="truncate text-xl font-semibold">
-                Sales Report V2
+                Order Report
               </h1>
               <p className="text-muted-foreground line-clamp-2 text-sm">
                 Order-level view for revenue, payout,
@@ -293,7 +298,7 @@ const Sales2ReportPage = () => {
               <div className="border-b px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-medium">
-                    Sales Health Summary
+                    Order Health Summary
                   </h2>
                   <Badge
                     variant={
@@ -453,7 +458,7 @@ const Sales2ReportPage = () => {
             <div className="bg-card rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
-                  Sales Momentum
+                  Orders Momentum
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   Net sales and net profit by order date.
@@ -773,35 +778,35 @@ const Sales2ReportPage = () => {
             <div className="bg-card rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
-                  Order Economics
+                  Order Report
                 </h2>
               </div>
               <div className="grid gap-3 p-3">
                 <MiniMetric
                   label="Profit / Unit"
                   value={formatIDR(
-                    result.order_economics
+                    result.order_metrics
                       .average_profit_per_unit
                   )}
                 />
                 <MiniMetric
                   label="COGS / Order"
                   value={formatIDR(
-                    result.order_economics
+                    result.order_metrics
                       .average_cogs_per_order
                   )}
                 />
                 <MiniMetric
                   label="Fee / Order"
                   value={formatIDR(
-                    result.order_economics
+                    result.order_metrics
                       .average_fee_per_order
                   )}
                 />
                 <MiniMetric
                   label="Seller Discount / Order"
                   value={formatIDR(
-                    result.order_economics
+                    result.order_metrics
                       .average_seller_discount_per_order
                   )}
                 />
@@ -833,7 +838,7 @@ const Sales2ReportPage = () => {
           <div className="flex min-w-0 flex-col gap-2 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h2 className="font-medium">
-                Daily Sales Table
+                Daily Orders Table
               </h2>
               <p className="text-muted-foreground text-sm">
                 Order-level daily totals from completed
@@ -1143,7 +1148,7 @@ const HighlightPanel = ({
 }: {
   title: string;
   icon: LucideIcon;
-  rows: SalesV2ResponseDTO['best_days'];
+  rows: OrderReportResponseDTO['best_days'];
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
@@ -1201,7 +1206,7 @@ const MiniMetric = ({
 const ProfitLeakagePanel = ({
   result,
 }: {
-  result: SalesV2ResponseDTO;
+  result: OrderReportResponseDTO;
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
@@ -1246,7 +1251,7 @@ const ProfitLeakagePanel = ({
 const VoucherSnapshot = ({
   result,
 }: {
-  result: SalesV2ResponseDTO;
+  result: OrderReportResponseDTO;
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
@@ -1333,7 +1338,7 @@ const BreakdownTable = ({
 const StatusBreakdown = ({
   result,
 }: {
-  result: SalesV2ResponseDTO;
+  result: OrderReportResponseDTO;
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
@@ -1366,7 +1371,7 @@ const StatusBreakdown = ({
 const DataQualityPanel = ({
   result,
 }: {
-  result: SalesV2ResponseDTO;
+  result: OrderReportResponseDTO;
 }) => {
   const rows = [
     {
@@ -1422,7 +1427,7 @@ const DataQualityPanel = ({
 };
 
 const getFeeRows = (
-  breakdown?: SalesV2ResponseDTO['fee_breakdown']
+  breakdown?: OrderReportResponseDTO['fee_breakdown']
 ) =>
   Object.entries(breakdown || {})
     .map(([key, value]) => ({
@@ -1433,7 +1438,7 @@ const getFeeRows = (
     .sort((a, b) => b.value - a.value);
 
 const formatHighlightValue = (
-  row: SalesV2ResponseDTO['best_days'][number]
+  row: OrderReportResponseDTO['best_days'][number]
 ) => {
   if (
     row.metric.includes('sales') ||
@@ -1474,4 +1479,4 @@ const formatShortDate = (date: string) =>
     year: 'numeric',
   }).format(new Date(date));
 
-export default Sales2ReportPage;
+export default OrderReportPage;

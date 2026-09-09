@@ -82,4 +82,24 @@ describe('Product Sales Report', () => {
       }),
     });
   });
+
+  it('keeps product order counts in the product table output', () => {
+    const facetStage = pipeline.find(
+      (stage) => '$facet' in stage
+    );
+    const productsPipeline = (
+      facetStage as {
+        $facet: { products: unknown[] };
+      }
+    ).$facet.products;
+    const productProjectStage = productsPipeline.find(
+      (stage) => '$project' in (stage as object)
+    );
+
+    expect(productProjectStage).toEqual({
+      $project: expect.not.objectContaining({
+        orders: 0,
+      }),
+    });
+  });
 });

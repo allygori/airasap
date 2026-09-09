@@ -50,23 +50,23 @@ export const mainNav = [
       //   url: '/dashboard/reports/sales',
       // },
       {
-        title: 'Sales Report',
-        url: '/dashboard/reports/sales-2',
+        title: 'Orders Performance',
+        url: '/dashboard/reports/orders',
       },
       {
-        title: 'Products Report',
+        title: 'Product Performance',
         url: '/dashboard/reports/products',
       },
       {
-        title: 'Customers Report',
+        title: 'Customer Performance',
         url: '/dashboard/reports/customers',
       },
       {
-        title: 'Vouchers Report',
+        title: 'Voucher Performance',
         url: '/dashboard/reports/vouchers',
       },
       {
-        title: 'Operations Report',
+        title: 'Operations Quality',
         url: '/dashboard/reports/operations',
       },
     ],

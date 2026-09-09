@@ -1,6 +1,6 @@
 /**
- * Sales Report V2 API Routes
- * POST /api/v1/dashboard/reports/sales-2
+ * Order Report Report API Routes
+ * POST /api/v1/dashboard/reports/orders
  */
 
 import { getTenantContext } from '@/lib/api/tenant-context';
@@ -14,7 +14,7 @@ import { db } from '@/lib/db/connection';
 import {
   CreateReportDTO,
   CreateReportSchema,
-  SalesV2ResponseDTO,
+  OrderReportResponseDTO,
 } from '@/modules/reports/report.dto';
 import { ReportService } from '@/modules/reports/report.service';
 
@@ -47,27 +47,27 @@ export const POST = withValidation(
       );
       const body = validatedBody as CreateReportDTO;
       const report =
-        await reportService.generateSalesV2Report(
+        await reportService.generateOrderReport(
           body.startDate,
           body.endDate,
           body.mode
         );
 
-      return apiSuccess<SalesV2ResponseDTO>(
-        report as SalesV2ResponseDTO,
+      return apiSuccess<OrderReportResponseDTO>(
+        report as OrderReportResponseDTO,
         undefined,
         201
       );
     } catch (error) {
       console.error(
-        '[POST /api/v1/dashboard/reports/sales-2]',
+        '[POST /api/v1/dashboard/reports/orders]',
         error
       );
 
       const message =
         error instanceof Error
           ? error.message
-          : 'Gagal menghasilkan laporan sales v2';
+          : 'Gagal menghasilkan laporan Order Report';
 
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
