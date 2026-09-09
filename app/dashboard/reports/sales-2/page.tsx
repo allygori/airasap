@@ -200,9 +200,9 @@ const Sales2ReportPage = () => {
             className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center xl:w-[520px]"
           >
             <div className="border-input bg-background flex min-w-0 items-center gap-2 rounded-md border px-2 py-1">
-              <span className="text-muted-foreground shrink-0 text-xs font-medium">
+              {/* <span className="text-muted-foreground shrink-0 text-xs font-medium">
                 Periode
-              </span>
+              </span> */}
               <form.AppField name="date">
                 {(field) => (
                   <field.DateRangePresetsField
@@ -256,6 +256,34 @@ const Sales2ReportPage = () => {
             label="COGS"
             value={formatIDR(summary?.cogs || 0)}
             sub={`${formatNumber(summary?.total_units)} units sold`}
+          />
+        </section>
+
+        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            icon={ShieldCheck}
+            label="Order Selesai"
+            value={formatNumber(summary?.total_orders)}
+            sub={`${formatNumber(summary?.total_buyers)} buyers`}
+          />
+          <SignedMetricCard
+            icon={CircleDollarSign}
+            label="Net Profit"
+            value={summary?.net_profit || 0}
+            sub={`${formatIDR(summary?.profit_per_order || 0)} / order`}
+          />
+
+          <SignedMetricCard
+            icon={ArrowDownUp}
+            label="Shopee Fee"
+            value={-1 * (summary?.shopee_fee || 0)}
+            sub={`${formatPercent(summary?.fee_ratio)} of gross sales`}
+          />
+          <SignedMetricCard
+            icon={TicketPercent}
+            label="Seller Discount"
+            value={-1 * (summary?.seller_discount || 0)}
+            sub={`${formatPercent(summary?.seller_discount_ratio)} of gross sales`}
           />
         </section>
 
@@ -338,34 +366,6 @@ const Sales2ReportPage = () => {
             </div>
           </section>
         ) : null}
-
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            icon={ShieldCheck}
-            label="Order Selesai"
-            value={formatNumber(summary?.total_orders)}
-            sub={`${formatNumber(summary?.total_buyers)} buyers`}
-          />
-          <SignedMetricCard
-            icon={CircleDollarSign}
-            label="Net Profit"
-            value={summary?.net_profit || 0}
-            sub={`${formatIDR(summary?.profit_per_order || 0)} / order`}
-          />
-
-          <SignedMetricCard
-            icon={ArrowDownUp}
-            label="Shopee Fee"
-            value={-1 * (summary?.shopee_fee || 0)}
-            sub={`${formatPercent(summary?.fee_ratio)} of gross sales`}
-          />
-          <SignedMetricCard
-            icon={TicketPercent}
-            label="Seller Discount"
-            value={-1 * (summary?.seller_discount || 0)}
-            sub={`${formatPercent(summary?.seller_discount_ratio)} of gross sales`}
-          />
-        </section>
 
         {comparison && summary ? (
           <section className="bg-card rounded-md border">

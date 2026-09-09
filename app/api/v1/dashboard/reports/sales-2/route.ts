@@ -49,7 +49,8 @@ export const POST = withValidation(
       const report =
         await reportService.generateSalesV2Report(
           body.startDate,
-          body.endDate
+          body.endDate,
+          body.mode
         );
 
       return apiSuccess<SalesV2ResponseDTO>(

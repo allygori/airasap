@@ -1,8 +1,23 @@
 import z from 'zod';
 
+export const ReportPeriodModeSchema = z.enum([
+  'today',
+  'yesterday',
+  '7-days',
+  '30-days',
+  'daily',
+  'weekly',
+  'monthly',
+  'quarterly',
+  'semiannually',
+  'annually',
+  'range',
+]);
+
 export const CreateReportSchema = z.object({
   startDate: z.string(),
   endDate: z.string(),
+  mode: ReportPeriodModeSchema.optional(),
 });
 
 export const SalesReportResponseSchema = z.object({

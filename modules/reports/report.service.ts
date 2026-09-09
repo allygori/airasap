@@ -3,6 +3,7 @@ import { aggregateOperationReport } from './operation/operation-report';
 import { aggregateProductSalesReport } from './product/product-report';
 import {
   type CustomerReportResponseDTO,
+  type CreateReportDTO,
   type OperationReportResponseDTO,
   type ProductAnalyticsResponseDTO,
   type SalesV2ResponseDTO,
@@ -14,9 +15,18 @@ import { aggregateSalesV2Report } from './sales-v2/sales-report';
 import { aggregateVoucherReport } from './voucher/voucher-report';
 import {
   differenceInCalendarDays,
+  endOfMonth,
+  endOfQuarter,
+  endOfYear,
   parseISO,
+  startOfMonth,
+  startOfQuarter,
+  startOfYear,
   startOfDay,
   subDays,
+  subMonths,
+  subQuarters,
+  subYears,
 } from 'date-fns';
 
 type ProductAnalyticsSummary =
@@ -30,6 +40,7 @@ type VoucherReportSummary =
   VoucherReportResponseDTO['summary'];
 type OperationReportSummary =
   OperationReportResponseDTO['summary'];
+type ReportPeriodMode = CreateReportDTO['mode'];
 
 export class ReportService {
   private repository: ReportRepository;
@@ -114,7 +125,8 @@ export class ReportService {
 
   async generateProductSalesReport(
     startDate: string,
-    endDate: string
+    endDate: string,
+    mode?: ReportPeriodMode
   ) {
     try {
       const currentPipelines = aggregateProductSalesReport({
@@ -126,7 +138,8 @@ export class ReportService {
       });
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
-        endDate
+        endDate,
+        mode
       );
       const previousPipelines = aggregateProductSalesReport(
         {
@@ -174,7 +187,8 @@ export class ReportService {
 
   async generateSalesV2Report(
     startDate: string,
-    endDate: string
+    endDate: string,
+    mode?: ReportPeriodMode
   ) {
     try {
       const currentPipelines = aggregateSalesV2Report({
@@ -186,7 +200,8 @@ export class ReportService {
       });
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
-        endDate
+        endDate,
+        mode
       );
       const previousPipelines = aggregateSalesV2Report({
         startDate: previousPeriod.startDate,
@@ -300,10 +315,24 @@ export class ReportService {
 
 const getPreviousEquivalentPeriod = (
   startDate: string,
-  endDate: string
+  endDate: string,
+  mode?: ReportPeriodMode
 ) => {
   const currentStart = startOfDay(parseISO(startDate));
   const currentEnd = startOfDay(parseISO(endDate));
+  const previousRange = getPreviousRangeByMode(
+    currentStart,
+    currentEnd,
+    mode
+  );
+
+  if (previousRange) {
+    return {
+      startDate: previousRange.startDate.toISOString(),
+      endDate: previousRange.endDate.toISOString(),
+    };
+  }
+
   const periodDays = Math.max(
     1,
     differenceInCalendarDays(currentEnd, currentStart) + 1
@@ -318,6 +347,85 @@ const getPreviousEquivalentPeriod = (
     startDate: previousStart.toISOString(),
     endDate: previousEnd.toISOString(),
   };
+};
+
+const getPreviousRangeByMode = (
+  currentStart: Date,
+  currentEnd: Date,
+  mode?: ReportPeriodMode
+) => {
+  switch (mode) {
+    case 'today':
+    case 'yesterday':
+    case 'daily': {
+      const previousDay = subDays(currentStart, 1);
+
+      return {
+        startDate: startOfDay(previousDay),
+        endDate: startOfDay(previousDay),
+      };
+    }
+    case '7-days': {
+      const previousEnd = subDays(currentStart, 1);
+
+      return {
+        startDate: subDays(previousEnd, 6),
+        endDate: previousEnd,
+      };
+    }
+    case '30-days': {
+      const previousEnd = subDays(currentStart, 1);
+
+      return {
+        startDate: subDays(previousEnd, 29),
+        endDate: previousEnd,
+      };
+    }
+    case 'weekly': {
+      const previousEnd = subDays(currentStart, 1);
+
+      return {
+        startDate: subDays(previousEnd, 6),
+        endDate: previousEnd,
+      };
+    }
+    case 'monthly': {
+      const previousMonth = subMonths(currentStart, 1);
+
+      return {
+        startDate: startOfMonth(previousMonth),
+        endDate: startOfMonth(endOfMonth(previousMonth)),
+      };
+    }
+    case 'quarterly': {
+      const previousQuarter = subQuarters(currentStart, 1);
+
+      return {
+        startDate: startOfQuarter(previousQuarter),
+        endDate: startOfDay(endOfQuarter(previousQuarter)),
+      };
+    }
+    case 'semiannually': {
+      const previousStart = subMonths(currentStart, 6);
+      const previousEnd = subDays(currentStart, 1);
+
+      return {
+        startDate: startOfMonth(previousStart),
+        endDate: startOfDay(previousEnd),
+      };
+    }
+    case 'annually': {
+      const previousYear = subYears(currentStart, 1);
+
+      return {
+        startDate: startOfYear(previousYear),
+        endDate: startOfDay(endOfYear(previousYear)),
+      };
+    }
+    case 'range':
+    default:
+      return null;
+  }
 };
 
 const withProductComparison = (

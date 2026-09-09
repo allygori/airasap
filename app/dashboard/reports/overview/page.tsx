@@ -192,7 +192,7 @@ const ReportsOverviewPage = () => {
                 {(field) => (
                   <field.DateRangePresetsField
                     label={undefined}
-                    placeholder="Pilih tanggal"
+                    placeholder="Periode: - Pilih tanggal"
                     className="min-w-0"
                   />
                 )}

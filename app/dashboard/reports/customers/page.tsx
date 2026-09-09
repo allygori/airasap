@@ -166,9 +166,9 @@ const CustomersReportPage = () => {
             className="grid min-w-0 grid-cols-1 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center xl:w-[520px]"
           >
             <div className="border-input bg-background flex min-w-0 items-center gap-2 rounded-md border px-2 py-1">
-              <span className="text-muted-foreground shrink-0 text-xs font-medium">
+              {/* <span className="text-muted-foreground shrink-0 text-xs font-medium">
                 Periode
-              </span>
+              </span> */}
               <form.AppField name="date">
                 {(field) => (
                   <field.DateRangePresetsField
