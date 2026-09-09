@@ -6,7 +6,7 @@ import {
 
 export type FieldConfig = {
   header: string;
-  parser: (val: unknown) => any;
+  parser: (val: unknown) => string | number | Date | null;
   columnIndex?: number;
 };
 
@@ -67,7 +67,7 @@ export const INCOME_FIELD_MAP = {
     header: 'Ongkir Dibayar Pembeli',
     parser: numberParser,
   },
-  shippingCostPaidToLogistics: {
+  shippingCostForwardedByShopee: {
     header: 'Ongkos Kirim yang Dibayarkan ke Jasa Kirim',
     parser: numberParser,
   },

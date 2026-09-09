@@ -176,7 +176,7 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Total Pembayaran',
     parser: numberParser,
   },
-  estimatedShippingCosts: {
+  estimatedShippingCost: {
     header: 'Perkiraan Ongkos Kirim',
     parser: numberParser,
   },

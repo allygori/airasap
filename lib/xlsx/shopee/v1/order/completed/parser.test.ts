@@ -8,7 +8,7 @@ describe('Shopee Order Completed Parser', () => {
   const excelPath = path.join(
     process.cwd(),
     // '.data/tool-marketplace-income-report/Order.completed.20260501_20260522.xlsx'
-    '.data/2026/2026-06--june--order-completed--20260601_20260630.xlsx'
+    '.data/2026/orders/2026-06--june--order-completed--20260601_20260630.xlsx'
   );
 
   it('should parse the mock excel file correctly with field mapping', () => {

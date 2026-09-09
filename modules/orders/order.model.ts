@@ -35,7 +35,6 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: Types.ObjectId,
       ref: 'Product',
       required: false, // Not required because there are possibility user rename product name and can't find and match product by name, solution is user select the right product
-      alias: 'productId',
     },
     product_id: {
       type: String,
@@ -106,6 +105,11 @@ const OrderItemSchema = new Schema<TOrderItem>(
     subtotal: {
       type: Number,
       alias: 'orderSubtotal',
+    },
+    processing_fee: {
+      type: Number,
+      default: 0,
+      required: false,
     },
     returned_quantity: {
       type: Number,
@@ -423,7 +427,6 @@ const OrderSchema = new Schema<TOrder>(
     },
     compensation: {
       type: Number,
-      alias: 'freeShippingPromoFromSeller',
       default: 0,
     },
     product_weight: {

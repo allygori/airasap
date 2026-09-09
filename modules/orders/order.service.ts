@@ -133,6 +133,17 @@ export class OrderService {
       : Number(value || 0) || 0;
   }
 
+  private valueOrEmpty(...values: unknown[]) {
+    for (const value of values) {
+      if (value === undefined || value === null) continue;
+
+      const parsed = String(value).trim();
+      if (parsed !== '') return parsed;
+    }
+
+    return '';
+  }
+
   private cleanOrderItemFinancialFields(
     item: Record<string, any>
   ) {
@@ -141,6 +152,63 @@ export class OrderService {
     delete cleanItem.profit;
     delete cleanItem.estimated_profit;
     delete cleanItem.product_key;
+    delete cleanItem.number;
+    delete cleanItem.rowType;
+    delete cleanItem.orderId;
+    delete cleanItem.noSubmission;
+    delete cleanItem.productId;
+    delete cleanItem.productName;
+    delete cleanItem.productPrice;
+    delete cleanItem.orderCreationDate;
+    delete cleanItem.releasedFundDate;
+    delete cleanItem.releasedFundMethod;
+    delete cleanItem.orderType;
+    delete cleanItem.releasedFundsAmount;
+    delete cleanItem.refundToBuyer;
+    delete cleanItem.shippingCostPaidByBuyer;
+    delete cleanItem.shippingCostForwardedByShopee;
+    delete cleanItem.shippingCostDiscountFromLogistics;
+    delete cleanItem.shippingCostDiscountByLogistics;
+    delete cleanItem.freeShippingFromShopee;
+    delete cleanItem.returnShippingFee;
+    delete cleanItem.returnToSellerFee;
+    delete cleanItem.returnToSenderShippingFee;
+    delete cleanItem.shippingFeeRefund;
+    delete cleanItem.sellerSponsoredVoucher;
+    delete cleanItem.sellerSponsoredCoinCashback;
+    delete cleanItem.productDiscountFromShopee;
+    delete cleanItem.sellerSponsoredCoFundVoucher;
+    delete cleanItem.sellerSponsoredCoFundCoinCashback;
+    delete cleanItem.adminFee;
+    delete cleanItem.orderProcessingFee;
+    delete cleanItem.GOXFee;
+    delete cleanItem.AMSServiceFee;
+    delete cleanItem.campaignFee;
+    delete cleanItem.AMSCommissionFee;
+    delete cleanItem.amsCommissionFee;
+    delete cleanItem.autoTopUpFeeFromIncome;
+    delete cleanItem.otherFee;
+    delete cleanItem.transactionFee;
+    delete cleanItem.fbsFee;
+    delete cleanItem.taxPPH22;
+    delete cleanItem.importDutyVatIncomeTax;
+    delete cleanItem.username;
+    delete cleanItem.buyerPayment;
+    delete cleanItem.paymentMethod;
+    delete cleanItem.paymentMethodDetail;
+    delete cleanItem.installmentPlan;
+    delete cleanItem.freeShippingPromoFromSeller;
+    delete cleanItem.shippingService;
+    delete cleanItem.shippingServiceName;
+    delete cleanItem.courierName;
+    delete cleanItem.voucherCode;
+    delete cleanItem.compensation;
+    delete cleanItem.buyerRefund;
+    delete cleanItem.buyerRefundAmount;
+    delete cleanItem.proRatedRedeemedCoinForReturn;
+    delete cleanItem.proRatedShopeeVoucherForReturn;
+    delete cleanItem.proRatedBankPaymentPromotionForReturn;
+    delete cleanItem.proRatedShopeePaymentPromotionForReturn;
 
     return cleanItem;
   }
@@ -947,7 +1015,7 @@ export class OrderService {
           credit_card_discount: order.creditCardDiscount,
           shipping_option: order.shippingOption,
           estimated_shipping_cost:
-            order.estimatedShippingCosts,
+            order.estimatedShippingCost,
           shipping_cost_paid_by_buyer:
             order.shippingCostPaidByBuyer,
           estimated_shipping_cost_discount:
@@ -1541,13 +1609,16 @@ export class OrderService {
           $set.shipping_cost_paid_by_buyer =
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
-            order.shippingCostDiscountByLogistics || 0;
+            order.shippingCostDiscountFromLogistics || 0;
           $set.shipping_cost_forwarded_by_shopee =
             order.shippingCostForwardedByShopee || 0;
+          $set.free_shipping_from_shopee =
+            order.freeShippingFromShopee || 0;
           $set.free_shipping_promo_from_seller =
             order.freeShippingPromoFromSeller || 0;
           $set.compensation = order.compensation || 0;
-          $set.voucher_code = order.voucherCode || null;
+          $set.voucher_code =
+            this.valueOrEmpty(order.voucherCode) || null;
           $set.total_product_cost = totalProductCost || 0;
           $set.total_gross_sales = items.reduce(
             (acc, item) => acc + (item.gross_sales || 0),
@@ -1892,12 +1963,15 @@ export class OrderService {
             order.shippingCostPaidByBuyer || 0;
           $set.shipping_cost_discount_by_logistics =
             order.shippingCostDiscountFromLogistics || 0;
-          // $set.shipping_cost_forwarded_by_shopee =
-          //   order.shippingCostForwardedByShopee || 0;
+          $set.shipping_cost_forwarded_by_shopee =
+            order.shippingCostForwardedByShopee || 0;
+          $set.free_shipping_from_shopee =
+            order.freeShippingFromShopee || 0;
           $set.free_shipping_promo_from_seller =
             order.freeShippingPromoFromSeller || 0;
           $set.compensation = order.compensation || 0;
-          $set.voucher_code = order.voucherCode || null;
+          $set.voucher_code =
+            this.valueOrEmpty(order.voucherCode) || null;
           $set.total_product_cost = totalProductCost || 0;
           $set.total_gross_sales = items.reduce(
             (acc, item) => acc + (item.gross_sales || 0),

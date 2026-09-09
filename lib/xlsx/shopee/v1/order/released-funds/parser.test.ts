@@ -3,11 +3,11 @@ import path from 'path';
 import reader from './reader';
 import parser from './parser';
 
-// How to run: pnpm jest -- lib/xlsx/shopee/profit-intelligence/v3/income/parser.test.ts
-describe('Shopee Income Parser v3', () => {
+// How to run: pnpm test -- lib/xlsx/shopee/v1/order/released-funds/parser.test.ts
+describe('Shopee Released Funds Parser v1', () => {
   const excelPath = path.join(
     process.cwd(),
-    '.data/tool-marketplace-income-report/Income.sudah dilepas.id.xlsx'
+    '.data/2026/orders/2026-04--april--released-funds--20260401_20260430.xlsx'
   );
 
   it('should parse all worksheets from income released excel', () => {
@@ -19,8 +19,6 @@ describe('Shopee Income Parser v3', () => {
 
     const { raw_data } = reader(arrayBuffer);
     const result = parser(raw_data);
-
-    console.log('result:', result);
 
     expect(result.summary.metadata.sellerUsername).toBe(
       'katalis.dental'
@@ -36,31 +34,34 @@ describe('Shopee Income Parser v3', () => {
     ).toEqual(
       expect.objectContaining({
         label: '1. Total Pendapatan',
-        value: 2739786,
+        value: 1693110,
       })
     );
 
     expect(Array.isArray(result.income)).toBe(true);
-    expect(result.income.length).toBeGreaterThan(0);
+    expect(result.income.length).toBe(16);
     expect(result.income[0]).toEqual(
       expect.objectContaining({
-        noOrder: '260517KK7XQP5E',
-        buyerUsername: 'dipokentjono',
-        buyerPaymentMethod: 'Online Payment',
-        originalProductPrice: 130000,
-        totalProductDiscount: -66300,
-        totalIncome: 56717,
+        orderId: '260421DBBWYGAW',
+        buyerUsername: 'yusrianas15',
+        buyerPaymentMethod: 'Saldo ShopeePay',
+        originalProductPrice: 64900,
+        totalProductDiscount: -14927,
+        shippingCostPaidByBuyer: 24000,
+        freeShippingFromShopee: 15000,
+        shippingCostForwardedByShopee: -39000,
+        totalIncome: 44225,
         courierName: 'SPX Standard',
       })
     );
 
     expect(Array.isArray(result.sellerFee)).toBe(true);
-    expect(result.sellerFee.length).toBeGreaterThan(0);
+    expect(result.sellerFee.length).toBe(41);
     expect(result.sellerFee[0]).toEqual(
       expect.objectContaining({
         number: 1,
         rowType: 'Order',
-        noOrder: '2604281E6F28GG',
+        orderId: '26032792XER8VH',
         productId: '-',
         productName: '-',
         orderProcessingFee: -1250,
