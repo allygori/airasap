@@ -126,6 +126,7 @@ const Sales2ReportPage = () => {
             body: JSON.stringify({
               startDate: value.date.from,
               endDate: value.date.to,
+              mode: value.date.mode,
             }),
             signal: controller.signal,
           }

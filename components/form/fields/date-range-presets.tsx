@@ -15,6 +15,10 @@ import {
   endOfWeek,
   startOfMonth,
   endOfMonth,
+  startOfQuarter,
+  endOfQuarter,
+  startOfYear,
+  endOfYear,
   startOfDay,
   endOfDay,
   getYear,
@@ -34,11 +38,86 @@ import {
 } from '@/components/ui/popover';
 import { cn } from '@/lib/utils/ui';
 
+type DateRangePresetMode =
+  | 'today'
+  | 'yesterday'
+  | '7-days'
+  | '30-days'
+  | 'daily'
+  | 'weekly'
+  | 'monthly'
+  | 'quarterly'
+  | 'semiannually'
+  | 'annually'
+  | 'range';
+
+type DateRangePresetValue = DateRange & {
+  mode?: DateRangePresetMode;
+};
+
+type PresetOption = {
+  label: string;
+  mode: DateRangePresetMode;
+  value: DateRangePresetValue;
+};
+
 type DateRangePresetsFieldProps =
   ComponentProps<'input'> & {
     label?: string;
     description?: string;
   };
+
+const modeLabels: Record<DateRangePresetMode, string> = {
+  today: 'Hari Ini',
+  yesterday: 'Kemarin',
+  '7-days': '7 Hari Terakhir',
+  '30-days': '30 Hari Terakhir',
+  daily: 'Per Hari',
+  weekly: 'Per Minggu',
+  monthly: 'Per Bulan',
+  quarterly: 'Per Quarter',
+  semiannually: 'Per Semester',
+  annually: 'Per Tahun',
+  range: 'Free Range',
+};
+
+const monthLabels = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
+const quarters = [
+  { label: 'Q1', month: 0 },
+  { label: 'Q2', month: 3 },
+  { label: 'Q3', month: 6 },
+  { label: 'Q4', month: 9 },
+];
+
+const semesters = [
+  { label: 'S1', fromMonth: 0, toMonth: 5 },
+  { label: 'S2', fromMonth: 6, toMonth: 11 },
+];
+
+const yearOffsets = [-3, -2, -1, 0, 1, 2];
+
+const createSemesterRange = (
+  year: number,
+  fromMonth: number,
+  toMonth: number
+) => ({
+  from: startOfDay(new Date(year, fromMonth, 1)),
+  to: endOfDay(new Date(year, toMonth + 1, 0)),
+});
 
 export function DateRangePresetsField({
   label,
@@ -47,13 +126,14 @@ export function DateRangePresetsField({
   className,
   ...props
 }: DateRangePresetsFieldProps) {
-  const field = useFieldContext<DateRange | undefined>();
+  const field = useFieldContext<
+    DateRangePresetValue | undefined
+  >();
   const [open, setOpen] = useState(false);
-  const [selectionMode, setSelectionMode] = useState<
-    'day' | 'week' | 'month' | 'range'
-  >('range');
 
   const value = field.state.value;
+  const selectionMode = value?.mode || 'range';
+  const selectedModeLabel = modeLabels[selectionMode];
 
   const [currentYear, setCurrentYear] = useState<number>(
     () => {
@@ -63,49 +143,127 @@ export function DateRangePresetsField({
     }
   );
 
-  const presets = [
+  const handleChange = (
+    nextValue: DateRange | undefined,
+    mode: DateRangePresetMode
+  ) => {
+    field.handleChange(
+      nextValue
+        ? {
+            ...nextValue,
+            mode,
+          }
+        : undefined
+    );
+  };
+
+  const today = new Date();
+  const currentSemester =
+    today.getMonth() < 6
+      ? createSemesterRange(getYear(today), 0, 5)
+      : createSemesterRange(getYear(today), 6, 11);
+
+  const quickPresets: PresetOption[] = [
     {
       label: 'Hari Ini',
       value: {
-        from: startOfDay(new Date()),
-        to: endOfDay(new Date()),
+        from: startOfDay(today),
+        to: endOfDay(today),
+        mode: 'today',
       },
-      mode: 'day' as const,
+      mode: 'today',
+    },
+    {
+      label: 'Kemarin',
+      value: {
+        from: startOfDay(subDays(today, 1)),
+        to: endOfDay(subDays(today, 1)),
+        mode: 'yesterday',
+      },
+      mode: 'yesterday',
     },
     {
       label: '7 Hari Terakhir',
       value: {
-        from: startOfDay(subDays(new Date(), 6)),
-        to: endOfDay(new Date()),
+        from: startOfDay(subDays(today, 6)),
+        to: endOfDay(today),
+        mode: '7-days',
       },
-      mode: 'range' as const,
+      mode: '7-days',
     },
     {
       label: '30 Hari Terakhir',
       value: {
-        from: startOfDay(subDays(new Date(), 29)),
-        to: endOfDay(new Date()),
+        from: startOfDay(subDays(today, 29)),
+        to: endOfDay(today),
+        mode: '30-days',
       },
-      mode: 'range' as const,
+      mode: '30-days',
     },
+    {
+      label: 'Free Range',
+      value: {
+        from: value?.from,
+        to: value?.to,
+        mode: 'range',
+      },
+      mode: 'range',
+    },
+  ];
 
+  const periodPresets: PresetOption[] = [
+    {
+      label: 'Per Hari',
+      value: {
+        from: startOfDay(today),
+        to: endOfDay(today),
+        mode: 'daily',
+      },
+      mode: 'daily',
+    },
     {
       label: 'Per Minggu',
       value: {
-        from: startOfWeek(new Date(), {
-          weekStartsOn: 1,
-        }),
-        to: endOfWeek(new Date(), { weekStartsOn: 1 }),
+        from: startOfWeek(today, { weekStartsOn: 1 }),
+        to: endOfWeek(today, { weekStartsOn: 1 }),
+        mode: 'weekly',
       },
-      mode: 'week' as const,
+      mode: 'weekly',
     },
     {
       label: 'Per Bulan',
       value: {
-        from: startOfMonth(new Date()),
-        to: endOfMonth(new Date()),
+        from: startOfMonth(today),
+        to: endOfMonth(today),
+        mode: 'monthly',
       },
-      mode: 'month' as const,
+      mode: 'monthly',
+    },
+    {
+      label: 'Per Quarter',
+      value: {
+        from: startOfQuarter(today),
+        to: endOfQuarter(today),
+        mode: 'quarterly',
+      },
+      mode: 'quarterly',
+    },
+    {
+      label: 'Per Semester',
+      value: {
+        ...currentSemester,
+        mode: 'semiannually',
+      },
+      mode: 'semiannually',
+    },
+    {
+      label: 'Per Tahun',
+      value: {
+        from: startOfYear(today),
+        to: endOfYear(today),
+        mode: 'annually',
+      },
+      mode: 'annually',
     },
   ];
 
@@ -113,7 +271,7 @@ export function DateRangePresetsField({
     <Field className={cn('w-full', className)}>
       {label && (
         <FieldLabel htmlFor={`${field.name}`}>
-          {label}
+          {/* {label} */}
         </FieldLabel>
       )}
       <Popover open={open} onOpenChange={setOpen}>
@@ -123,93 +281,100 @@ export function DateRangePresetsField({
               variant="ghost"
               id={`${field.name}`}
               className={cn(
-                'w-full justify-between text-left font-normal',
+                'w-full justify-between gap-2 text-left font-normal',
                 !value && 'text-muted-foreground'
               )}
             >
-              <span className="flex items-center gap-2">
-                <CalendarIcon className="text-muted-foreground h-4 w-4 font-light" />
+              <span className="flex min-w-0 items-center gap-2">
+                <CalendarIcon className="text-muted-foreground h-4 w-4 shrink-0 font-light" />
                 {value?.from ? (
-                  value.to ? (
-                    <>
-                      {format(value.from, 'dd.LL.y')} -{' '}
-                      {format(value.to, 'dd.LL.y')}
-                    </>
-                  ) : (
-                    format(value.from, 'LLL dd, y')
-                  )
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span className="shrink-0">
+                      Periode:{' '}
+                      <strong className="font-medium">
+                        {selectedModeLabel}
+                      </strong>
+                    </span>
+                    <span className="text-muted-foreground truncate">
+                      {value.to
+                        ? `${format(value.from, 'dd.LL.y')} - ${format(
+                            value.to,
+                            'dd.LL.y'
+                          )}`
+                        : format(value.from, 'LLL dd, y')}
+                    </span>
+                  </span>
                 ) : (
-                  <span>{placeholder}</span>
+                  <span className="truncate">
+                    {placeholder}
+                  </span>
                 )}
               </span>
-              <ChevronDownIcon data-icon="inline-end" />
+              <ChevronDownIcon
+                className="shrink-0"
+                data-icon="inline-end"
+              />
+
+              {/* <CalendarIcon className="text-muted-foreground h-4 w-4 shrink-0 font-light" /> */}
             </Button>
           }
         />
         <PopoverContent
-          className="flex w-auto flex-col overflow-hidden p-0"
+          className="flex w-[max(var(--anchor-width),26.25rem)] max-w-(--available-width) flex-col overflow-hidden p-0"
           align="start"
         >
-          {/* Tabs for Selection Mode */}
-          {/* <div className="bg-muted/10 flex items-center justify-between gap-1 border-b p-1.5">
-            <span className="text-muted-foreground px-2 text-[10px] font-bold tracking-wider uppercase">
-              Mode
-            </span>
-            <div className="bg-muted/40 flex gap-0.5 rounded-md p-0.5">
-              {(
-                [
-                  { id: 'day', label: 'Hari' },
-                  { id: 'week', label: 'Minggu' },
-                  { id: 'month', label: 'Bulan' },
-                  { id: 'range', label: 'Range' },
-                ] as const
-              ).map((modeOption) => (
+          <div className="flex min-w-0 flex-row">
+            <div className="bg-muted/20 flex w-[8.75rem] shrink-0 flex-col gap-1 border-r p-2">
+              {quickPresets.map((preset) => (
                 <Button
-                  key={modeOption.id}
+                  key={preset.label}
                   variant={
-                    selectionMode === modeOption.id
+                    selectionMode === preset.mode
                       ? 'secondary'
                       : 'ghost'
                   }
-                  className="h-6 px-2 text-[11px] font-medium"
+                  className="h-8 w-full justify-start truncate px-2 text-xs font-normal"
                   onClick={() => {
-                    setSelectionMode(modeOption.id);
+                    handleChange(preset.value, preset.mode);
                   }}
                 >
-                  {modeOption.label}
+                  <span className="truncate">
+                    {preset.label}
+                  </span>
                 </Button>
               ))}
-            </div>
-          </div> */}
-
-          <div className="flex flex-row">
-            {/* Sidebar for Predefined Ranges */}
-            <div className="bg-muted/20 flex w-[140px] flex-col gap-1 border-r p-2">
-              {presets.map((preset) => (
+              <div className="bg-border my-1 h-px" />
+              {periodPresets.map((preset) => (
                 <Button
                   key={preset.label}
-                  variant="ghost"
-                  className="h-8 justify-start text-xs font-normal"
+                  variant={
+                    selectionMode === preset.mode
+                      ? 'secondary'
+                      : 'ghost'
+                  }
+                  className="h-8 w-full justify-start truncate px-2 text-xs font-normal"
                   onClick={() => {
-                    field.handleChange(preset.value);
-                    setSelectionMode(preset.mode);
+                    handleChange(preset.value, preset.mode);
                   }}
                 >
-                  {preset.label}
+                  <span className="truncate">
+                    {preset.label}
+                  </span>
                 </Button>
               ))}
             </div>
 
-            {/* Calendar / Month Picker */}
-            {selectionMode === 'month' ? (
-              <div className="flex w-[280px] flex-col p-3">
-                {/* Year Navigation */}
+            {selectionMode === 'monthly' ||
+            selectionMode === 'quarterly' ||
+            selectionMode === 'semiannually' ||
+            selectionMode === 'annually' ? (
+              <div className="flex min-w-[12rem] flex-1 flex-col p-3">
                 <div className="mb-4 flex items-center justify-between">
                   <Button
                     variant="outline"
                     className="h-7 w-7 p-0"
                     onClick={() =>
-                      setCurrentYear((y) => y - 1)
+                      setCurrentYear((year) => year - 1)
                     }
                   >
                     &lt;
@@ -221,95 +386,220 @@ export function DateRangePresetsField({
                     variant="outline"
                     className="h-7 w-7 p-0"
                     onClick={() =>
-                      setCurrentYear((y) => y + 1)
+                      setCurrentYear((year) => year + 1)
                     }
                   >
                     &gt;
                   </Button>
                 </div>
-                {/* Month Grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    'Jan',
-                    'Feb',
-                    'Mar',
-                    'Apr',
-                    'May',
-                    'Jun',
-                    'Jul',
-                    'Aug',
-                    'Sep',
-                    'Oct',
-                    'Nov',
-                    'Dec',
-                  ].map((monthLabel, idx) => {
-                    const monthDate = new Date(
-                      currentYear,
-                      idx,
-                      1
-                    );
-                    const isSelected =
-                      value?.from &&
-                      value?.to &&
-                      format(value.from, 'yyyy-MM') ===
-                        format(monthDate, 'yyyy-MM') &&
-                      format(value.to, 'yyyy-MM') ===
-                        format(monthDate, 'yyyy-MM');
 
-                    return (
-                      <Button
-                        key={monthLabel}
-                        variant={
-                          isSelected ? 'default' : 'outline'
-                        }
-                        className="h-9 text-xs"
-                        onClick={() => {
-                          const start =
-                            startOfMonth(monthDate);
-                          const end = endOfMonth(monthDate);
-                          field.handleChange({
-                            from: start,
-                            to: end,
-                          });
-                        }}
-                      >
-                        {monthLabel}
-                      </Button>
-                    );
-                  })}
-                </div>
+                {selectionMode === 'monthly' ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {monthLabels.map((monthLabel, idx) => {
+                      const monthDate = new Date(
+                        currentYear,
+                        idx,
+                        1
+                      );
+                      const isSelected =
+                        value?.from &&
+                        value?.to &&
+                        format(value.from, 'yyyy-MM') ===
+                          format(monthDate, 'yyyy-MM') &&
+                        format(value.to, 'yyyy-MM') ===
+                          format(monthDate, 'yyyy-MM');
+
+                      return (
+                        <Button
+                          key={monthLabel}
+                          variant={
+                            isSelected
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className="h-9 text-xs"
+                          onClick={() => {
+                            handleChange(
+                              {
+                                from: startOfMonth(
+                                  monthDate
+                                ),
+                                to: endOfMonth(monthDate),
+                              },
+                              'monthly'
+                            );
+                          }}
+                        >
+                          {monthLabel}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {selectionMode === 'quarterly' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {quarters.map((quarter) => {
+                      const quarterDate = new Date(
+                        currentYear,
+                        quarter.month,
+                        1
+                      );
+                      const isSelected =
+                        value?.from &&
+                        format(value.from, 'yyyy-MM') ===
+                          format(quarterDate, 'yyyy-MM');
+
+                      return (
+                        <Button
+                          key={quarter.label}
+                          variant={
+                            isSelected
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className="h-9 text-xs"
+                          onClick={() => {
+                            handleChange(
+                              {
+                                from: startOfQuarter(
+                                  quarterDate
+                                ),
+                                to: endOfQuarter(
+                                  quarterDate
+                                ),
+                              },
+                              'quarterly'
+                            );
+                          }}
+                        >
+                          {quarter.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {selectionMode === 'semiannually' ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {semesters.map((semester) => {
+                      const range = createSemesterRange(
+                        currentYear,
+                        semester.fromMonth,
+                        semester.toMonth
+                      );
+                      const isSelected =
+                        value?.from &&
+                        format(value.from, 'yyyy-MM') ===
+                          format(range.from, 'yyyy-MM');
+
+                      return (
+                        <Button
+                          key={semester.label}
+                          variant={
+                            isSelected
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className="h-9 text-xs"
+                          onClick={() => {
+                            handleChange(
+                              range,
+                              'semiannually'
+                            );
+                          }}
+                        >
+                          {semester.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+
+                {selectionMode === 'annually' ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {yearOffsets.map((offset) => {
+                      const year = currentYear + offset;
+                      const yearDate = new Date(year, 0, 1);
+                      const isSelected =
+                        value?.from &&
+                        getYear(value.from) === year;
+
+                      return (
+                        <Button
+                          key={year}
+                          variant={
+                            isSelected
+                              ? 'default'
+                              : 'outline'
+                          }
+                          className="h-9 text-xs"
+                          onClick={() => {
+                            handleChange(
+                              {
+                                from: startOfYear(yearDate),
+                                to: endOfYear(yearDate),
+                              },
+                              'annually'
+                            );
+                          }}
+                        >
+                          {year}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </div>
+            ) : selectionMode === 'today' ||
+              selectionMode === 'daily' ||
+              selectionMode === 'yesterday' ? (
+              <div className="min-w-[17.5rem] flex-1 p-1">
+                <Calendar
+                  mode="single"
+                  defaultMonth={value?.from}
+                  selected={value?.from}
+                  onSelect={(selectedDate) => {
+                    if (selectedDate) {
+                      handleChange(
+                        {
+                          from: startOfDay(selectedDate),
+                          to: endOfDay(selectedDate),
+                        },
+                        selectionMode
+                      );
+                    }
+                  }}
+                  numberOfMonths={1}
+                  disabled={{ after: new Date() }}
+                  endMonth={new Date()}
+                />
               </div>
             ) : (
-              <div className="p-1">
+              <div className="min-w-[17.5rem] flex-1 p-1">
                 <Calendar
                   mode="range"
                   defaultMonth={value?.from}
                   selected={value}
                   onSelect={(selectedRange) => {
-                    if (selectionMode === 'day') {
+                    if (selectionMode === 'weekly') {
                       if (selectedRange?.from) {
-                        field.handleChange({
-                          from: startOfDay(
-                            selectedRange.from
-                          ),
-                          to: endOfDay(selectedRange.from),
-                        });
-                      }
-                    } else if (selectionMode === 'week') {
-                      if (selectedRange?.from) {
-                        field.handleChange({
-                          from: startOfWeek(
-                            selectedRange.from,
-                            { weekStartsOn: 1 }
-                          ),
-                          to: endOfWeek(
-                            selectedRange.from,
-                            { weekStartsOn: 1 }
-                          ),
-                        });
+                        handleChange(
+                          {
+                            from: startOfWeek(
+                              selectedRange.from,
+                              { weekStartsOn: 1 }
+                            ),
+                            to: endOfWeek(
+                              selectedRange.from,
+                              { weekStartsOn: 1 }
+                            ),
+                          },
+                          'weekly'
+                        );
                       }
                     } else {
-                      field.handleChange(selectedRange);
+                      handleChange(selectedRange, 'range');
                     }
                   }}
                   numberOfMonths={1}

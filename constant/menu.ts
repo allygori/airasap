@@ -45,12 +45,12 @@ export const mainNav = [
         title: 'Overview',
         url: '/dashboard/reports/overview',
       },
+      // {
+      //   title: 'Sales Report',
+      //   url: '/dashboard/reports/sales',
+      // },
       {
         title: 'Sales Report',
-        url: '/dashboard/reports/sales',
-      },
-      {
-        title: 'Sales Report V2',
         url: '/dashboard/reports/sales-2',
       },
       {
