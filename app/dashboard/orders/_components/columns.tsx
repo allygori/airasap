@@ -201,7 +201,7 @@ export const getProductsColumn = (
               className={cn(
                 'text-base font-medium',
                 !isStatusNotCanceled
-                  ? 'text-yellow-400'
+                  ? 'text-accent-foreground/50'
                   : totalProfit > 0
                     ? 'text-green-400'
                     : totalProfit < 0

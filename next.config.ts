@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     '10.93.72.146',
     '10.64.190.146',
     '10.18.93.146',
+    '10.68.13.146',
   ],
   images: {
     remotePatterns: [

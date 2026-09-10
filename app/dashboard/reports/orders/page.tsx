@@ -281,13 +281,18 @@ const OrderReportPage = () => {
           <SignedMetricCard
             icon={ArrowDownUp}
             label="Shopee Fee"
-            value={-1 * (summary?.shopee_fee || 0)}
+            value={summary?.shopee_fee || 0}
             sub={`${formatPercent(summary?.fee_ratio)} of gross sales`}
           />
           <SignedMetricCard
             icon={TicketPercent}
             label="Seller Discount"
-            value={-1 * (summary?.seller_discount || 0)}
+            value={
+              summary?.seller_discount &&
+              summary?.seller_discount > 0
+                ? -1 * summary?.seller_discount
+                : summary?.seller_discount || 0
+            }
             sub={`${formatPercent(summary?.seller_discount_ratio)} of gross sales`}
           />
         </section>
