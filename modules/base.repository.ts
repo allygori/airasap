@@ -3,7 +3,12 @@ import {
   Document,
   QueryFilter,
   UpdateQuery,
+  PopulateOptions,
 } from 'mongoose';
+import {
+  paginatedQuery,
+  type QueryOptions,
+} from '@/lib/api/query-builder';
 
 export abstract class BaseRepository<T extends Document> {
   protected model: Model<T>;
@@ -124,5 +129,45 @@ export abstract class BaseRepository<T extends Document> {
         ...this.getTenantFilter(),
       })
       .lean();
+  }
+
+  async findWithQueryOptions(
+    queryOptions: QueryOptions,
+    options?: {
+      baseFilter?: QueryFilter<T>;
+      searchFields?: string[];
+      populate?:
+        | string
+        | string[]
+        | PopulateOptions
+        | PopulateOptions[];
+      select?: string | string[] | Record<string, unknown>;
+    }
+  ) {
+    const baseFilter = {
+      ...(options?.baseFilter || {}),
+      ...this.getTenantFilter(),
+    } as QueryFilter<T>;
+
+    const result = await paginatedQuery(
+      this.model as any,
+      baseFilter,
+      queryOptions,
+      {
+        searchFields: options?.searchFields,
+        populate: options?.populate,
+        select: options?.select as any,
+      }
+    );
+
+    return {
+      data: result.data,
+      pagination: {
+        page: result.meta.page,
+        limit: result.meta.limit,
+        total: result.meta.total,
+        totalPages: result.meta.total_pages,
+      },
+    };
   }
 }

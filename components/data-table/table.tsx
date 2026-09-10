@@ -45,8 +45,18 @@ type CollectionTableProps<TData extends { _id: string }> = {
   isLoading?: boolean;
   error?: string | null;
   searchFields?: string[];
+  searchOptions?: {
+    label: string;
+    value: string;
+  }[];
   primarySearchField?: string;
   placeholder?: string;
+  filters?: (args: {
+    pendingFilters: Record<string, string>;
+    setPendingFilters: React.Dispatch<
+      React.SetStateAction<Record<string, string>>
+    >;
+  }) => React.ReactNode;
   isSortable?: boolean;
   onRowClick?: (row: TData) => void;
   updateQueryParams: (
@@ -99,8 +109,10 @@ export function CollectionTable<
   isLoading,
   error,
   searchFields,
+  searchOptions,
   primarySearchField,
   placeholder,
+  filters,
   isSortable = false,
   onRowClick,
   updateQueryParams,
@@ -227,8 +239,10 @@ export function CollectionTable<
       <CollectionToolbar
         table={table}
         searchFields={searchFields}
+        searchOptions={searchOptions}
         primarySearchField={primarySearchField}
         placeholder={placeholder}
+        filters={filters}
         updateQueryParams={updateQueryParams}
       />
       <div className="rounded-md border">

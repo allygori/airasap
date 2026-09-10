@@ -30,6 +30,7 @@ export interface QueryOptions {
   limit: number;
   sort: Record<string, 1 | -1>;
   search?: string;
+  searchField?: string;
   filters: Record<string, unknown>;
 }
 
@@ -82,6 +83,8 @@ export function parseQueryParams(
   // Search
   const search =
     params.get('search') || params.get('q') || undefined;
+  const searchField =
+    params.get('search_field') || undefined;
 
   // Filters — only allow specific keys
   const filters: Record<string, unknown> = {};
@@ -93,7 +96,14 @@ export function parseQueryParams(
     }
   }
 
-  return { page, limit, sort, search, filters };
+  return {
+    page,
+    limit,
+    sort,
+    search,
+    searchField,
+    filters,
+  };
 }
 
 /**
@@ -116,7 +126,10 @@ export async function paginatedQuery<T extends Document>(
       | Record<string, number | boolean | object>;
   }
 ) {
-  let filter: QueryFilter<T> = { ...baseFilter };
+  let filter: QueryFilter<T> = {
+    ...baseFilter,
+    ...queryOptions.filters,
+  };
 
   // Full-text search
   if (
@@ -127,11 +140,16 @@ export async function paginatedQuery<T extends Document>(
       queryOptions.search,
       'i'
     );
-    const searchConditions = options.searchFields.map(
-      (field) => ({
-        [field]: searchRegex,
-      })
-    );
+    const fields =
+      queryOptions.searchField &&
+      options.searchFields.includes(
+        queryOptions.searchField
+      )
+        ? [queryOptions.searchField]
+        : options.searchFields;
+    const searchConditions = fields.map((field) => ({
+      [field]: searchRegex,
+    }));
     filter = {
       ...filter,
       $or: searchConditions,

@@ -65,6 +65,9 @@ type DateRangePresetsFieldProps =
   ComponentProps<'input'> & {
     label?: string;
     description?: string;
+    onValueChange?: (
+      value: DateRangePresetValue | undefined
+    ) => void;
   };
 
 const modeLabels: Record<DateRangePresetMode, string> = {
@@ -124,6 +127,7 @@ export function DateRangePresetsField({
   description,
   placeholder,
   className,
+  onValueChange,
   ...props
 }: DateRangePresetsFieldProps) {
   const field = useFieldContext<
@@ -147,14 +151,15 @@ export function DateRangePresetsField({
     nextValue: DateRange | undefined,
     mode: DateRangePresetMode
   ) => {
-    field.handleChange(
-      nextValue
-        ? {
-            ...nextValue,
-            mode,
-          }
-        : undefined
-    );
+    const value = nextValue
+      ? {
+          ...nextValue,
+          mode,
+        }
+      : undefined;
+
+    field.handleChange(value);
+    onValueChange?.(value);
   };
 
   const today = new Date();

@@ -24,11 +24,21 @@ type DataTableShellProps<TData extends { _id: string }> = {
   endpoint: string;
   columns: ColumnDef<TData, unknown>[];
   searchFields?: string[];
+  searchOptions?: {
+    label: string;
+    value: string;
+  }[];
   primarySearchField?: string;
   showCreateButton?: boolean;
   createUrl?: string;
   createText?: string;
   isSortable?: boolean;
+  filters?: (args: {
+    pendingFilters: Record<string, string>;
+    setPendingFilters: React.Dispatch<
+      React.SetStateAction<Record<string, string>>
+    >;
+  }) => React.ReactNode;
   onRowClick?: (row: TData) => void;
   onDataUpdate?: (data: TData[]) => void;
 };
@@ -40,11 +50,13 @@ export function DataTableShell<
   endpoint,
   columns,
   searchFields,
+  searchOptions,
   primarySearchField,
   showCreateButton = true,
   createUrl,
   createText,
   isSortable = false,
+  filters,
   onRowClick,
   onDataUpdate,
 }: DataTableShellProps<TData>) {
@@ -129,8 +141,11 @@ export function DataTableShell<
           newParams.set(key, value);
         }
       });
-      // Always reset page to 1 when changing filters or sorting, unless page is explicitly updated
-      if (!updates.hasOwnProperty('page')) {
+      // Reset only when the current URL already has pagination state.
+      if (
+        !updates.hasOwnProperty('page') &&
+        newParams.has('page')
+      ) {
         newParams.set('page', '1');
       }
       router.push(`${pathname}?${newParams.toString()}`, {
@@ -289,8 +304,10 @@ export function DataTableShell<
               isLoading={isLoading}
               error={error}
               searchFields={searchFields}
+              searchOptions={searchOptions}
               primarySearchField={primarySearchField}
               isSortable={isSortable}
+              filters={filters}
               onRowClick={onRowClick}
               updateQueryParams={updateQueryParams}
             />

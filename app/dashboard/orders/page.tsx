@@ -8,6 +8,7 @@ import { getProductsColumn } from './_components/columns';
 import { OrderResponseDTO } from '@/modules/orders/order.dto';
 import { FileSpreadsheet, FileText } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
+import { OrderListFilters } from './_components/filters';
 
 export default function OrderIndexPage() {
   const columns = useMemo(
@@ -83,8 +84,31 @@ export default function OrderIndexPage() {
         title="Orders"
         endpoint="/api/v1/dashboard/orders?sort=-placed_at"
         columns={columns}
-        searchFields={['order_id']}
-        primarySearchField="order_id"
+        searchFields={[
+          'order_id',
+          'username',
+          'items.product_name',
+          'tracking_number',
+        ]}
+        searchOptions={[
+          { label: 'Order ID', value: 'order_id' },
+          { label: 'Username', value: 'username' },
+          { label: 'Produk', value: 'items.product_name' },
+          {
+            label: 'Nomor Resi',
+            value: 'tracking_number',
+          },
+        ]}
+        primarySearchField={undefined}
+        filters={({
+          pendingFilters,
+          setPendingFilters,
+        }) => (
+          <OrderListFilters
+            pendingFilters={pendingFilters}
+            setPendingFilters={setPendingFilters}
+          />
+        )}
         showCreateButton={false}
         createUrl="/dashboard/orders/create"
         createText="Create Order"

@@ -345,32 +345,43 @@ export class OrderService {
   async getWithPagination(filter: OrderFilterDTO) {
     try {
       const queryFilter: any = {
-        // ...filter,
         deleted_at: null,
       };
 
-      if (filter.search) {
-        const searchRegex = {
-          $regex: filter.search,
-          $options: 'i',
-        };
-        queryFilter.$or = [
-          { name: searchRegex },
-          { order_id: searchRegex },
-        ];
+      if (filter.platform) {
+        queryFilter.platform = filter.platform;
       }
 
-      // if (filter.sort) {
-      //   // queryFilter.sort = (filter.sort.slice(',').)
-      //   queryFilter.sort = filter.sort;
-      // }
+      if (filter.status) {
+        queryFilter.status = filter.status;
+      }
+
+      if (filter.date_from || filter.date_to) {
+        queryFilter.placed_at = {};
+
+        if (filter.date_from) {
+          queryFilter.placed_at.$gte = new Date(
+            filter.date_from
+          );
+        }
+
+        if (filter.date_to) {
+          const endDate = new Date(filter.date_to);
+          endDate.setHours(23, 59, 59, 999);
+          queryFilter.placed_at.$lte = endDate;
+        }
+      }
+
+      const search = filter.search || filter.q;
 
       return await this.repository.findWithPagination(
         filter.page || 1,
         filter.limit || 10,
         queryFilter,
         filter.sort,
-        filter.populate
+        filter.populate,
+        search,
+        filter.search_field
       );
     } catch (error: any) {
       throw new Error(

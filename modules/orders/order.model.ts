@@ -391,6 +391,10 @@ const OrderSchema = new Schema<TOrder>(
       type: String,
       alias: 'shippingOption',
     },
+    tracking_number: {
+      type: String,
+      alias: 'trackingNumber',
+    },
     estimated_shipping_cost: {
       type: Number,
       alias: 'estimatedShippingCost',

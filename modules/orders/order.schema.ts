@@ -168,6 +168,7 @@ export const OrderBaseSchema = z.object({
   shopee_coin_offset: z.number().int().optional(),
   credit_card_discount: z.number().int().optional(),
   shipping_option: z.string().optional(),
+  tracking_number: z.string().optional(),
   estimated_shipping_cost: z.number().int().optional(),
   free_shipping_from_shopee: z.number().int().optional(),
   shipping_cost_paid_by_buyer: z.number().int().optional(),
@@ -292,6 +293,10 @@ export const OrderFilterSchema = z.object({
   status: z.string().optional(),
   q: z.string().optional(),
   search: z.string().optional(),
+  search_field: z.string().optional(),
+  date_from: z.string().optional(),
+  date_to: z.string().optional(),
+  date_mode: z.string().optional(),
   populate: z.string().optional(),
   sort: z.string().optional(),
   page: z.preprocess((v) => {
