@@ -134,7 +134,7 @@ export default function MassUploadAllOrderPage() {
             <span>Mass Upload</span>
           </div> */}
           <h1 className="bg-gradient-to-r from-slate-900 to-indigo-950 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent dark:from-white dark:to-indigo-200">
-            Upload Massal Order Selesai
+            Upload Massal Semua Order
           </h1>
           <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
             Upload file excel dari hasil export order

@@ -211,24 +211,33 @@ const ProductsReportPage = () => {
         ) : null}
 
         <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          {summary ? (
+            <>
+              <MetricCard
+                icon={ReceiptText}
+                label="Gross Sales"
+                value={formatIDR(
+                  summary.total_gross_sales ||
+                    summary.gross_sales ||
+                    0
+                )}
+                sub="Order-level gross sales"
+              />
+              <MetricCard
+                icon={HandCoins}
+                label="Pembayaran Pembeli"
+                value={formatIDR(summary.total_payment)}
+                sub="Dari total_payment"
+              />
+            </>
+          ) : null}
           <MetricCard
             icon={TrendingUp}
             label="Net Sales"
             value={formatIDR(summary?.net_sales || 0)}
             sub={`${formatPercent(summary?.gross_margin)} gross margin`}
           />
-          <MetricCard
-            icon={BadgePercent}
-            label="Net Profit"
-            value={formatIDR(summary?.net_profit || 0)}
-            sub={`${formatPercent(summary?.net_margin)} net margin`}
-          />
-          <MetricCard
-            icon={Boxes}
-            label="Units Sold"
-            value={formatNumber(summary?.total_units)}
-            sub={`${formatNumber(summary?.total_orders)} product orders`}
-          />
+
           <MetricCard
             icon={ArrowDownUp}
             label="COGS + Deductions"
@@ -243,21 +252,12 @@ const ProductsReportPage = () => {
         {summary ? (
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <MetricCard
-              icon={ReceiptText}
-              label="Gross Sales"
-              value={formatIDR(
-                summary.total_gross_sales ||
-                  summary.gross_sales ||
-                  0
-              )}
-              sub="Order-level gross sales"
+              icon={BadgePercent}
+              label="Net Profit"
+              value={formatIDR(summary?.net_profit || 0)}
+              sub={`${formatPercent(summary?.net_margin)} net margin`}
             />
-            <MetricCard
-              icon={HandCoins}
-              label="Pembayaran Pembeli"
-              value={formatIDR(summary.total_payment)}
-              sub="Dari total_payment"
-            />
+
             <SignedMetricCard
               icon={ArrowDownUp}
               label="Total Shopee Fee"
@@ -276,6 +276,7 @@ const ProductsReportPage = () => {
               value={-1 * summary.shopee_discount}
               sub="Voucher Shopee + paket diskon"
             />
+
             <MetricCard
               icon={ShieldCheck}
               label="Order Selesai"
@@ -286,6 +287,13 @@ const ProductsReportPage = () => {
                 summary.product_order_count ||
                   summary.total_orders
               )} product-order count`}
+            />
+
+            <MetricCard
+              icon={Boxes}
+              label="Units Sold"
+              value={formatNumber(summary?.total_units)}
+              sub={`${formatNumber(summary?.total_orders)} product orders`}
             />
           </section>
         ) : null}

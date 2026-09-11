@@ -281,7 +281,11 @@ const OrderReportPage = () => {
           <SignedMetricCard
             icon={ArrowDownUp}
             label="Shopee Fee"
-            value={summary?.shopee_fee || 0}
+            value={
+              summary?.shopee_fee && summary?.shopee_fee > 0
+                ? -1 * summary?.shopee_fee
+                : summary?.shopee_fee || 0
+            }
             sub={`${formatPercent(summary?.fee_ratio)} of gross sales`}
           />
           <SignedMetricCard
