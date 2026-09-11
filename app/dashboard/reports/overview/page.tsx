@@ -159,7 +159,7 @@ const ReportsOverviewPage = () => {
 
   return (
     <div className="bg-background text-foreground min-h-screen w-full overflow-x-hidden">
-      <header className="bg-card/80 border-b px-4 py-4 backdrop-blur sm:px-6">
+      <header className="bg-card/80 border-b px-3 py-4 backdrop-blur sm:px-6">
         <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-center">
           <div className="flex min-w-0 items-center gap-3">
             <div className="bg-primary text-primary-foreground flex size-10 shrink-0 items-center justify-center rounded-md">
@@ -193,7 +193,7 @@ const ReportsOverviewPage = () => {
                   <field.DateRangePresetsField
                     label={undefined}
                     placeholder="Periode: Pilih tanggal"
-                    className="min-w-0"
+                    className="max-w-full min-w-0"
                   />
                 )}
               </form.AppField>
@@ -209,14 +209,14 @@ const ReportsOverviewPage = () => {
         </div>
       </header>
 
-      <main className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
+      <main className="flex min-w-0 flex-col gap-4 p-3 sm:p-6">
         {error ? (
           <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
             {error}
           </div>
         ) : null}
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard
             icon={TrendingUp}
             label="Net Sales"
@@ -253,8 +253,8 @@ const ReportsOverviewPage = () => {
         </section>
 
         {result ? (
-          <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.75fr)]">
-            <div className="bg-card rounded-md border">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.75fr)]">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <h2 className="font-medium">
@@ -287,7 +287,7 @@ const ReportsOverviewPage = () => {
               </div>
             </div>
 
-            <div className="bg-card rounded-md border">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="text-muted-foreground size-4" />
@@ -334,8 +334,8 @@ const ReportsOverviewPage = () => {
         ) : null}
 
         {result ? (
-          <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
-            <div className="bg-card rounded-md border">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Sales and Profit Momentum
@@ -345,10 +345,10 @@ const ReportsOverviewPage = () => {
                   completed Shopee orders.
                 </p>
               </div>
-              <div className="p-3">
+              <div className="min-w-0 p-3">
                 <ChartContainer
                   config={overviewChartConfig}
-                  className="h-72 w-full"
+                  className="h-56 w-full min-w-0 sm:h-72"
                 >
                   <AreaChart data={dailyReports}>
                     <CartesianGrid vertical={false} />
@@ -356,7 +356,9 @@ const ReportsOverviewPage = () => {
                       dataKey="date"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={6}
+                      tick={{ fontSize: 10 }}
+                      minTickGap={16}
                     />
                     <YAxis hide />
                     <ChartTooltip
@@ -381,7 +383,7 @@ const ReportsOverviewPage = () => {
               </div>
             </div>
 
-            <div className="bg-card rounded-md border">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Profit Pressure
@@ -390,10 +392,10 @@ const ReportsOverviewPage = () => {
                   Fee and seller discount trend.
                 </p>
               </div>
-              <div className="p-3">
+              <div className="min-w-0 p-3">
                 <ChartContainer
                   config={pressureChartConfig}
-                  className="h-72 w-full"
+                  className="h-56 w-full min-w-0 sm:h-72"
                 >
                   <BarChart data={dailyReports}>
                     <CartesianGrid vertical={false} />
@@ -401,7 +403,9 @@ const ReportsOverviewPage = () => {
                       dataKey="date"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={6}
+                      tick={{ fontSize: 10 }}
+                      minTickGap={16}
                     />
                     <YAxis hide />
                     <ChartTooltip
@@ -425,7 +429,7 @@ const ReportsOverviewPage = () => {
         ) : null}
 
         {result ? (
-          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          <section className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-5">
             <SignalCard
               icon={ReceiptText}
               label="Order Report"
@@ -467,7 +471,7 @@ const ReportsOverviewPage = () => {
         ) : null}
 
         {summary ? (
-          <section className="grid gap-3 xl:grid-cols-3">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-3">
             <RatioPanel
               title="Profit Leakage"
               rows={result?.profit_leakage.items || []}
@@ -635,7 +639,7 @@ const RatioPanel = ({
     <div className="border-b px-4 py-3">
       <h2 className="font-medium">{title}</h2>
     </div>
-    <div className="space-y-3 p-4">
+    <div className="flex flex-col gap-3 p-4">
       {rows.length ? (
         rows.map((row) => (
           <div key={row.key}>

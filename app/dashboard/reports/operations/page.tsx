@@ -181,7 +181,7 @@ const OperationsReportPage = () => {
                   <field.DateRangePresetsField
                     label={undefined}
                     placeholder="Pilih tanggal"
-                    className="min-w-0"
+                    className="max-w-full min-w-0"
                   />
                 )}
               </form.AppField>
@@ -197,14 +197,14 @@ const OperationsReportPage = () => {
         </div>
       </header>
 
-      <main className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
+      <main className="flex min-w-0 flex-col gap-4 p-3 sm:p-6">
         {error ? (
           <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
             {error}
           </div>
         ) : null}
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             icon={ShieldCheck}
             label="Completion Rate"
@@ -237,7 +237,7 @@ const OperationsReportPage = () => {
           />
         </section>
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             icon={ClipboardList}
             label="Total Orders"
@@ -276,8 +276,8 @@ const OperationsReportPage = () => {
         </section>
 
         {result ? (
-          <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
-            <div className="bg-card rounded-md border">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+            <div className="bg-card min-w-0 overflow-hidden rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Order Quality Trend
@@ -287,10 +287,10 @@ const OperationsReportPage = () => {
                   order count by day.
                 </p>
               </div>
-              <div className="p-3">
+              <div className="min-w-0 overflow-hidden p-3">
                 <ChartContainer
                   config={statusChartConfig}
-                  className="h-72 w-full"
+                  className="h-56 w-full min-w-0 overflow-hidden sm:h-72"
                 >
                   <BarChart data={dailyReports}>
                     <CartesianGrid vertical={false} />
@@ -298,7 +298,13 @@ const OperationsReportPage = () => {
                       dataKey="date"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={6}
+                      tick={{ fontSize: 10 }}
+                      minTickGap={16}
+                      interval="preserveStartEnd"
+                      tickFormatter={(value) =>
+                        String(value).slice(5, 10)
+                      }
                     />
                     <YAxis hide />
                     <ChartTooltip
@@ -324,7 +330,7 @@ const OperationsReportPage = () => {
               </div>
             </div>
 
-            <div className="bg-card rounded-md border">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Status Funnel
@@ -333,7 +339,7 @@ const OperationsReportPage = () => {
                   Distribution of all Shopee order statuses.
                 </p>
               </div>
-              <div className="space-y-3 p-4">
+              <div className="flex flex-col gap-3 p-4">
                 {statusRows.length ? (
                   statusRows.map((row) => (
                     <RatioRow

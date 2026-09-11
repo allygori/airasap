@@ -190,7 +190,7 @@ const VouchersReportPage = () => {
                   <field.DateRangePresetsField
                     label={undefined}
                     placeholder="Pilih tanggal"
-                    className="min-w-0"
+                    className="max-w-full min-w-0"
                   />
                 )}
               </form.AppField>
@@ -206,14 +206,14 @@ const VouchersReportPage = () => {
         </div>
       </header>
 
-      <main className="flex min-w-0 flex-col gap-4 p-4 sm:p-6">
+      <main className="flex min-w-0 flex-col gap-4 p-3 sm:p-6">
         {error ? (
           <div className="border-destructive/30 bg-destructive/10 text-destructive rounded-md border px-4 py-3 text-sm">
             {error}
           </div>
         ) : null}
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <MetricCard
             icon={TicketPercent}
             label="Voucher Orders"
@@ -242,7 +242,7 @@ const VouchersReportPage = () => {
           />
         </section>
 
-        <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <SignedMetricCard
             icon={HandCoins}
             label="Seller Discount"
@@ -270,8 +270,8 @@ const VouchersReportPage = () => {
         </section>
 
         {result ? (
-          <section className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
-            <div className="bg-card rounded-md border">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.8fr)]">
+            <div className="bg-card min-w-0 overflow-hidden rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Voucher Profitability
@@ -281,10 +281,10 @@ const VouchersReportPage = () => {
                   promo bucket.
                 </p>
               </div>
-              <div className="p-3">
+              <div className="min-w-0 overflow-hidden p-3">
                 <ChartContainer
                   config={voucherChartConfig}
-                  className="h-72 w-full"
+                  className="h-56 w-full min-w-0 overflow-hidden sm:h-72"
                 >
                   <BarChart data={vouchers.slice(0, 10)}>
                     <CartesianGrid vertical={false} />
@@ -292,7 +292,13 @@ const VouchersReportPage = () => {
                       dataKey="voucher_code"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={6}
+                      tick={{ fontSize: 10 }}
+                      minTickGap={12}
+                      interval="preserveStartEnd"
+                      tickFormatter={(value) =>
+                        String(value).slice(0, 9)
+                      }
                     />
                     <YAxis hide />
                     <ChartTooltip
@@ -313,7 +319,7 @@ const VouchersReportPage = () => {
               </div>
             </div>
 
-            <div className="bg-card rounded-md border">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Promo Decisions
@@ -354,8 +360,8 @@ const VouchersReportPage = () => {
         ) : null}
 
         {result ? (
-          <section className="grid gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
-            <div className="bg-card rounded-md border">
+          <section className="grid min-w-0 gap-3 xl:grid-cols-[minmax(18rem,0.8fr)_minmax(0,1.2fr)]">
+            <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Discount Split
@@ -364,7 +370,7 @@ const VouchersReportPage = () => {
                   Seller vs Shopee discount contribution.
                 </p>
               </div>
-              <div className="space-y-4 p-4">
+              <div className="flex flex-col gap-4 p-4">
                 <RatioRow
                   label="Seller Discount"
                   value={summary?.seller_discount || 0}
@@ -383,7 +389,7 @@ const VouchersReportPage = () => {
               </div>
             </div>
 
-            <div className="bg-card rounded-md border">
+            <div className="bg-card min-w-0 overflow-hidden rounded-md border">
               <div className="border-b px-4 py-3">
                 <h2 className="font-medium">
                   Discount Pressure
@@ -392,10 +398,10 @@ const VouchersReportPage = () => {
                   Highest discount buckets by voucher.
                 </p>
               </div>
-              <div className="p-3">
+              <div className="min-w-0 overflow-hidden p-3">
                 <ChartContainer
                   config={discountChartConfig}
-                  className="h-72 w-full"
+                  className="h-56 w-full min-w-0 overflow-hidden sm:h-72"
                 >
                   <BarChart data={vouchers.slice(0, 10)}>
                     <CartesianGrid vertical={false} />
@@ -403,7 +409,13 @@ const VouchersReportPage = () => {
                       dataKey="voucher_code"
                       tickLine={false}
                       axisLine={false}
-                      tickMargin={8}
+                      tickMargin={6}
+                      tick={{ fontSize: 10 }}
+                      minTickGap={12}
+                      interval="preserveStartEnd"
+                      tickFormatter={(value) =>
+                        String(value).slice(0, 9)
+                      }
                     />
                     <YAxis hide />
                     <ChartTooltip
