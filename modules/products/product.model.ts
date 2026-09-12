@@ -39,6 +39,11 @@ const ProductSchema = new Schema<TProduct>(
       required: true,
     },
     name: { type: String, required: true },
+    name_history: {
+      type: [String],
+      required: true,
+      default: [],
+    },
     // key: { type: String },
     product_id: {
       type: String,
@@ -66,6 +71,11 @@ const ProductSchema = new Schema<TProduct>(
       {
         variant_id: { type: String, unique: true }, // variation id
         name: { type: String, required: true },
+        name_history: {
+          type: [String],
+          required: true,
+          default: [],
+        },
         // key: { type: String }, // product_id::variation name
         price: { type: Number, required: true },
         // quantity: { type: Number, default: 0 },
@@ -86,6 +96,11 @@ const ProductSchema = new Schema<TProduct>(
         },
         sku: { type: String, required: false },
         gtin: { type: String, required: false },
+        is_native: {
+          type: Boolean,
+          required: true,
+          default: true,
+        },
         is_default: {
           type: Boolean,
           required: true,
@@ -94,12 +109,11 @@ const ProductSchema = new Schema<TProduct>(
         default_cost: { type: Number, required: false },
         costs: [
           {
-            // apakah perlu flag mana harga yang saat ini sedang aktif?
-            // apakah `effective_from` tetap diperlukan?
-            // effective_from: {
-            //   type: Date,
-            //   alias: 'effectiveFrom',
-            // },
+            effective_from: {
+              type: Date,
+              required: true,
+              default: Date.now,
+            },
             cogs_unit: {
               type: Number,
               // unique: true, // unique price

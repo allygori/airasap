@@ -58,6 +58,10 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Waktu Pembayaran Dilakukan',
     parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
   },
+  type: {
+    header: 'Tipe Pesanan',
+    parser: stringParser,
+  },
   paymentMethod: {
     header: 'Metode Pembayaran',
     parser: stringParser,
@@ -166,6 +170,10 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Estimasi Potongan Biaya Pengiriman',
     parser: numberParser,
   },
+  returnShippingCosts: {
+    header: 'Ongkos Kirim Pengembalian Barang',
+    parser: numberParser,
+  },
   totalPayment: {
     header: 'Total Pembayaran',
     parser: numberParser,
@@ -210,13 +218,4 @@ export const ALL_ORDER_FIELD_MAP = {
     header: 'Waktu Pesanan Selesai',
     parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
   },
-
-  // type: {
-  //   header: 'Tipe Pesanan',
-  //   parser: stringParser,
-  // },
-  // returnShippingCosts: {
-  //   header: 'Ongkos Kirim Pengembalian Barang',
-  //   parser: numberParser,
-  // },
 } satisfies Record<string, FieldConfig>;

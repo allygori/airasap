@@ -4,7 +4,6 @@
 import { ArrowLeft } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { useStore } from '@tanstack/react-form';
 import { withForm } from '@/components/form/form.hook';
 import {
   Card,
@@ -39,6 +38,7 @@ export const ProductForm = withForm({
     id: '',
     platform: undefined,
     name: '',
+    name_history: [],
     product_id: '',
     parent_sku: '',
     has_variation: false,
@@ -92,7 +92,7 @@ export const ProductForm = withForm({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <FieldGroup className="grid grid-cols-2 gap-6">
+                <FieldGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
                   <form.AppField
                     name="name"
                     children={(field) => (
@@ -100,6 +100,19 @@ export const ProductForm = withForm({
                         label="Product Name"
                         autoComplete="off"
                         className="col-span-full text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
+                      />
+                    )}
+                  />
+
+                  <form.AppField
+                    name="name_history"
+                    children={(field) => (
+                      <field.StringArrayField
+                        label="Riwayat Judul Produk"
+                        description="Satu judul lama per baris. Dipakai importer sebagai fallback pencarian."
+                        placeholder="Satu judul lama per baris"
+                        rows={3}
+                        className="col-span-full"
                       />
                     )}
                   />
@@ -172,7 +185,7 @@ export const ProductForm = withForm({
                 <VariantsSubForm form={form} />
               </CardContent>
               <CardFooter>
-                <div className="bg-background/95 mt-6 flex w-full flex-row items-center justify-end justify-items-end gap-6 overflow-hidden rounded-b-lg border-t p-4 shadow-lg backdrop-blur-xs">
+                <div className="bg-background/95 mt-6 flex w-full flex-col items-stretch justify-end gap-3 overflow-hidden rounded-b-lg border-t p-4 shadow-lg backdrop-blur-xs sm:flex-row sm:items-center sm:gap-6">
                   <Button
                     type="button"
                     variant="outline"
@@ -183,7 +196,7 @@ export const ProductForm = withForm({
                     Kembali
                   </Button>
 
-                  <div className="w-4/12">
+                  <div className="w-full sm:w-4/12">
                     <form.AppForm>
                       <form.SubmitButton text="Save Product" />
                     </form.AppForm>

@@ -51,7 +51,7 @@ export default function ProductIndexPage() {
 
       <DataTableShell
         title="Products"
-        endpoint="/api/v1/dashboard/products?sort=created_at"
+        endpoint="/api/v1/dashboard/products?sort=updated_at"
         columns={columns}
         searchFields={['name']}
         primarySearchField="name"

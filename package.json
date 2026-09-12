@@ -11,7 +11,8 @@
     "prettier:write": "npx prettier . --write",
     "test": "jest",
     "test:watch": "jest --watch",
-    "typecheck": "tsc --noEmit",
+    "typecheck:old": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "prepare": "husky"
   },
   "lint-staged": {
@@ -75,5 +76,6 @@
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
-  }
+  },
+  "packageManager": "pnpm@11.19.0"
 }

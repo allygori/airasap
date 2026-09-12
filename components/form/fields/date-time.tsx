@@ -20,6 +20,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { cn } from '@/lib/utils/ui';
 
 type DateTimeFieldProps = ComponentProps<'input'> & {
   label?: string;
@@ -29,6 +30,7 @@ type DateTimeFieldProps = ComponentProps<'input'> & {
 export function DateTimeField({
   label,
   description,
+  className,
   ...props
 }: DateTimeFieldProps) {
   const field = useFieldContext<string | undefined>();
@@ -70,57 +72,61 @@ export function DateTimeField({
   }, [date, time]);
 
   return (
-    <FieldGroup className="flex-row">
-      <Field className="flex-1">
-        <FieldLabel htmlFor={`${field.name}-date-picker`}>
-          {label || 'Date'}
-        </FieldLabel>
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger
-            render={
-              <Button
-                variant="outline"
-                id={`${field.name}-date-picker`}
-                className="w-full justify-between font-normal"
-              >
-                {date ? format(date, 'PPP') : 'Select date'}
-                <ChevronDownIcon data-icon="inline-end" />
-              </Button>
-            }
-          />
-          <PopoverContent
-            className="w-auto overflow-hidden p-0"
-            align="start"
-          >
-            <Calendar
-              mode="single"
-              selected={date}
-              captionLayout="dropdown"
-              defaultMonth={date}
-              onSelect={(selectedDate) => {
-                if (selectedDate) {
-                  setDate(selectedDate);
-                }
-                setOpen(false);
-              }}
+    <FieldGroup className={cn(className)}>
+      <div className="flex flex-row gap-2 md:gap-4">
+        <Field className="flex-1">
+          <FieldLabel htmlFor={`${field.name}-date-picker`}>
+            {label || 'Date'}
+          </FieldLabel>
+          <Popover open={open} onOpenChange={setOpen}>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="outline"
+                  id={`${field.name}-date-picker`}
+                  className="w-full justify-between font-normal"
+                >
+                  {date
+                    ? format(date, 'PPP')
+                    : 'Select date'}
+                  <ChevronDownIcon data-icon="inline-end" />
+                </Button>
+              }
             />
-          </PopoverContent>
-        </Popover>
-      </Field>
-      <Field className="flex-1">
-        <FieldLabel htmlFor={`${field.name}-time-picker`}>
-          Time
-        </FieldLabel>
-        <Input
-          type="time"
-          id={`${field.name}-time-picker`}
-          step="1"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-          className="bg-background min-w-30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
-          {...(props as any)}
-        />
-      </Field>
+            <PopoverContent
+              className="w-auto overflow-hidden p-0"
+              align="start"
+            >
+              <Calendar
+                mode="single"
+                selected={date}
+                captionLayout="dropdown"
+                defaultMonth={date}
+                onSelect={(selectedDate) => {
+                  if (selectedDate) {
+                    setDate(selectedDate);
+                  }
+                  setOpen(false);
+                }}
+              />
+            </PopoverContent>
+          </Popover>
+        </Field>
+        <Field className="flex-1">
+          <FieldLabel htmlFor={`${field.name}-time-picker`}>
+            Time
+          </FieldLabel>
+          <Input
+            type="time"
+            id={`${field.name}-time-picker`}
+            step="1"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="bg-background min-w-30 appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
+            {...(props as any)}
+          />
+        </Field>
+      </div>
 
       {description && (
         <FieldDescription className="w-full">

@@ -63,6 +63,10 @@ export const COMPLETED_ORDER_FIELD_MAP = {
     header: 'Waktu Pembayaran Dilakukan',
     parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
   },
+  type: {
+    header: 'Tipe Pesanan',
+    parser: stringParser,
+  },
   paymentMethod: {
     header: 'Metode Pembayaran',
     parser: stringParser,

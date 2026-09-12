@@ -13,9 +13,11 @@ import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 
 export const VariantSchema = z.object({
   name: z.string().min(1, 'Nama variant wajib diisi'),
+  name_history: z.array(z.string()).default([]),
   variant_id: z.string().min(1, 'Variant ID wajib diisi'),
   child_sku: z.string().optional().nullable(), // child_sku
   gtin: z.string().nullable().optional(),
+  is_native: z.boolean().default(true),
 
   // key: z.string().min(1, 'Variant key wajib diisi'),
   price: z
@@ -42,7 +44,10 @@ export const VariantSchema = z.object({
   costs: z
     .array(
       z.object({
-        // effective_from: z.coerce.date(),
+        effective_from: z
+          .string()
+          .datetime({ offset: true })
+          .default(() => new Date().toISOString()),
         cogs_unit: z.number().int().nonnegative(),
         notes: z.string().nullable().optional(),
       })
@@ -65,6 +70,7 @@ export const ProductBaseSchema = z.object({
     .enum(ORDER_PLATFORM_VALUES, 'Platform tidak valid')
     .optional(),
   name: z.string().min(3, 'Nama minimal 3 karakter'),
+  name_history: z.array(z.string()).default([]),
   product_id: z.string().min(1, 'Product ID wajib diisi'),
   parent_sku: z.string().optional(),
   has_variation: z.boolean().default(false),

@@ -96,6 +96,7 @@ function EditPostFormWrapper({
       id: initialData._id || initialData.id || '',
       platform: initialData.platform || '',
       name: initialData.name || '',
+      name_history: initialData.name_history || [],
       product_id: String(initialData.product_id || ''),
       parent_sku: String(initialData.parent_sku || ''),
       options: initialData.options || [],
@@ -103,17 +104,19 @@ function EditPostFormWrapper({
         (variant: any) => ({
           variant_id: variant.variant_id || '',
           name: variant.name || '',
+          name_history: variant.name_history || [],
           price: Number(variant.price || 0),
           discount: Number(variant.discount || 0),
           final_price: Number(variant.final_price || 0),
           parent_sku: variant.parent_sku || '',
           child_sku: variant.child_sku || '',
           gtin: variant.gtin || '',
+          is_native: variant.is_native ?? true,
           is_default: Boolean(variant.is_default),
           costs: (variant.costs || []).map((cost: any) => ({
             effective_from: cost.effective_from
-              ? String(cost.effective_from).substring(0, 10)
-              : new Date().toISOString().substring(0, 10),
+              ? new Date(cost.effective_from).toISOString()
+              : new Date().toISOString(),
             cogs_unit: Number(cost.cogs_unit || 0),
             notes: cost.notes || '',
           })),
@@ -137,6 +140,7 @@ function EditPostFormWrapper({
         const payload = {
           platform: value.platform,
           name: value.name,
+          name_history: value.name_history,
           product_id: value.product_id,
           variants: value.variants,
           options: value.options,

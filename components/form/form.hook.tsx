@@ -24,6 +24,16 @@ const TextareaField = lazy(() =>
     default: m.TextareaField,
   }))
 );
+const StringArrayField = lazy(() =>
+  import('../form/fields/string-array').then((m) => ({
+    default: m.StringArrayField,
+  }))
+);
+const SwitchField = lazy(() =>
+  import('../form/fields/switch').then((m) => ({
+    default: m.SwitchField,
+  }))
+);
 const SelectField = lazy(() =>
   import('../form/fields/select').then((m) => ({
     default: m.SelectField,
@@ -62,6 +72,8 @@ export const { useAppForm, withForm, withFieldGroup } =
       TextField,
       PasswordField,
       TextareaField,
+      StringArrayField,
+      SwitchField,
       SelectField,
       MultiselectField,
       DateTimeField,
