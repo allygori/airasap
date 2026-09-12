@@ -1,4 +1,3 @@
-import Fuse from 'fuse.js';
 import {
   shopeeV1AllOrderParser,
   type ParsedAllOrderRow,
@@ -14,6 +13,10 @@ import {
   getCancelledBy,
   getBuyerUsername,
 } from './utils';
+import {
+  matchProductAndVariant,
+  resolveProductCost,
+} from './product-matching';
 
 export type ShopeeAllOrderImporterDependencies = {
   repository: OrderRepository;
@@ -48,6 +51,8 @@ export async function massUploadAllOrderShopeeV1(
       ParsedAllOrderRow[]
     >();
     const productNames = new Set<string>();
+    const parentSkus = new Set<string>();
+    const childSkus = new Set<string>();
     for (const order of orders) {
       const orderId = String(order.id);
       const productName = String(order.productName);
@@ -57,14 +62,26 @@ export async function massUploadAllOrderShopeeV1(
       }
       ordersMap.get(orderId)!.push(order);
       productNames.add(productName);
+      if (String(order.parentSku || '').trim()) {
+        parentSkus.add(String(order.parentSku).trim());
+      }
+      if (String(order.skuReferenceNumber || '').trim()) {
+        childSkus.add(
+          String(order.skuReferenceNumber).trim()
+        );
+      }
     }
 
     // console.log('productNames', productNames);
 
     const products =
-      await dependencies.productService.getProductsByNames([
-        ...productNames,
-      ]);
+      await dependencies.productService.getProductsForOrderMatching(
+        {
+          names: [...productNames],
+          parentSkus: [...parentSkus],
+          childSkus: [...childSkus],
+        }
+      );
 
     // saveJson('.data/json-logs/all-order-products.json', {
     //   productNames,
@@ -113,34 +130,17 @@ export async function massUploadAllOrderShopeeV1(
         //   `[${order.id}] Discount: ${discount}`
         // );
 
-        let product;
-        if (productName !== '') {
-          const fuseResult = new Fuse(products, {
-            keys: ['name'],
-            includeScore: true,
-          }).search(productName);
-
-          if (fuseResult.length > 0) {
-            product = fuseResult[0].item;
-          } else {
-            console.warn(
-              `[OrderService.massUploadAllOrderShopeeV1] fuse result for ${productName} not found`
-            );
-          }
-        } else {
+        const match = matchProductAndVariant(products, {
+          productName,
+          variationName: variantName,
+          parentSku: item.parentSku,
+          childSku: item.skuReferenceNumber,
+        });
+        const product = match.product;
+        const variant = match.variant;
+        if (match.productMatchStatus !== 'matched') {
           console.warn(
-            `[OrderService.massUploadAllOrderShopeeV1] fuse search cancelled, productName is empty`
-          );
-        }
-
-        const variant = (product?.variants || []).find(
-          (v) =>
-            v.name === variantName || v.name === productName
-        );
-
-        if (!variant) {
-          console.warn(
-            `[OrderService.massUploadAllOrderShopeeV1] Variant name: ${variantName} or Product Name ${productName} not found`
+            `[OrderService.massUploadAllOrderShopeeV1] ${match.productMatchStatus} match for ${productName}`
           );
         }
 
@@ -148,10 +148,13 @@ export async function massUploadAllOrderShopeeV1(
         //   `[OrderService.massUploadAllOrderShopeeV1] ${order.id} variant`,
         //   JSON.stringify(variant, null, 2)
         // );
-        const productCost =
-          product?.variants?.length === 1
-            ? product?.variants[0]?.default_cost || 0
-            : variant?.default_cost || 0;
+        const cost = resolveProductCost(
+          variant ||
+            (product?.variants?.length === 1
+              ? product.variants[0]
+              : undefined),
+          order.orderCreationTime
+        );
 
         // console.log({
         //   variant,
@@ -171,7 +174,7 @@ export async function massUploadAllOrderShopeeV1(
           quantity,
           returnedQuantity,
           subtotal: Number(item.orderSubtotal || 0),
-          productCostUnit: productCost,
+          productCostUnit: cost.productCost,
         });
 
         return {
@@ -190,6 +193,8 @@ export async function massUploadAllOrderShopeeV1(
           quantity: quantity,
           subtotal: item.orderSubtotal,
           returned_quantity: item.returnedQuantity,
+          product_match_status: match.productMatchStatus,
+          cogs_status: cost.cogsStatus,
           ...financials,
         };
       });

@@ -51,6 +51,58 @@ export class ProductRepository extends BaseRepository<TProduct> {
     return await query.lean();
   }
 
+  async findForOrderMatching(input: {
+    names?: string[];
+    parentSkus?: string[];
+    childSkus?: string[];
+    productIds?: string[];
+  }) {
+    const names = (input.names ?? []).filter(Boolean);
+    const parentSkus = (input.parentSkus ?? []).filter(
+      Boolean
+    );
+    const childSkus = (input.childSkus ?? []).filter(
+      Boolean
+    );
+    const productIds = (input.productIds ?? []).filter(
+      Boolean
+    );
+    const or: QueryFilter<TProduct>[] = [];
+
+    if (names.length > 0) {
+      or.push(
+        { name: { $in: names } } as QueryFilter<TProduct>,
+        {
+          name_history: { $in: names },
+        } as QueryFilter<TProduct>
+      );
+    }
+    if (parentSkus.length > 0) {
+      or.push({
+        parent_sku: { $in: parentSkus },
+      } as QueryFilter<TProduct>);
+    }
+    if (childSkus.length > 0) {
+      or.push({
+        'variants.child_sku': { $in: childSkus },
+      } as QueryFilter<TProduct>);
+    }
+    if (productIds.length > 0) {
+      or.push({
+        product_id: { $in: productIds },
+      } as QueryFilter<TProduct>);
+    }
+
+    if (or.length === 0) return [];
+
+    return await this.model
+      .find({
+        ...this.getTenantFilter(),
+        $or: or,
+      })
+      .lean();
+  }
+
   /**
    * Find products by platform
    */

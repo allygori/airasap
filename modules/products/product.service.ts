@@ -405,6 +405,17 @@ export class ProductService {
     }
   }
 
+  async getProductsForOrderMatching(input: {
+    names?: string[];
+    parentSkus?: string[];
+    childSkus?: string[];
+    productIds?: string[];
+  }) {
+    return await this.repository.findForOrderMatching(
+      input
+    );
+  }
+
   /**
    * Get active products only
    */

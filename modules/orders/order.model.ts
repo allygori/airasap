@@ -60,6 +60,14 @@ const OrderItemSchema = new Schema<TOrderItem>(
       type: String,
       alias: 'skuReferenceNumber',
     },
+    product_match_status: {
+      type: String,
+      enum: ['matched', 'unresolved', 'ambiguous'],
+    },
+    cogs_status: {
+      type: String,
+      enum: ['resolved', 'unresolved'],
+    },
 
     product_cost: {
       type: Number,

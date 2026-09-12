@@ -13,9 +13,14 @@ import {
   cleanOrderItemFinancialFields,
   getBuyerUsername,
 } from './utils';
+import {
+  matchProductAndVariant,
+  resolveProductCost,
+} from './product-matching';
 
 export type ShopeeCompletedOrderImporterDependencies = {
   repository: OrderRepository;
+  productService: import('@/modules/products/product.service').ProductService;
   tenantContext: ConstructorParameters<
     typeof OrderService
   >[0];
@@ -56,6 +61,22 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
 
     let createdCount = 0;
     let updatedCount = 0;
+    const products =
+      await dependencies.productService.getProductsForOrderMatching(
+        {
+          names: orders
+            .map((order) => String(order.productName || ''))
+            .filter(Boolean),
+          parentSkus: orders
+            .map((order) => String(order.parentSku || ''))
+            .filter(Boolean),
+          childSkus: orders
+            .map((order) =>
+              String(order.skuReferenceNumber || '')
+            )
+            .filter(Boolean),
+        }
+      );
     for (const [orderId, group] of ordersMap.entries()) {
       const order = group[0] || {};
       const existingOrder =
@@ -66,18 +87,42 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
       const enrichments = existingOrder?.enrichments || [];
 
       if (existingOrder) {
-        await dependencies.repository.update(
-          existingOrder._id.toString(),
-          // payload
+        // Existing orders may contain edits from the UI/API. Only update
+        // the completed timestamp and append this enrichment atomically;
+        // never replace items or other user-managed fields here.
+        await dependencies.repository.bulkWrite([
           {
-            status:
-              Object.values(SHOPEE_ORDER_STATUS).find(
-                (s: { label: string }) =>
-                  s.label === order.orderStatus
-              )?.value ?? null,
-            completed_at: order.orderCompletionTime,
-          }
-        );
+            updateOne: {
+              filter: {
+                _id: existingOrder._id,
+                enrichments: {
+                  $not: {
+                    $elemMatch: {
+                      kind: 'completed',
+                      file: fileId,
+                    },
+                  },
+                },
+              },
+              update: {
+                $set: {
+                  completed_at: order.orderCompletionTime
+                    ? String(order.orderCompletionTime)
+                    : undefined,
+                },
+                $addToSet: {
+                  enrichments: {
+                    kind: 'completed',
+                    file: fileId,
+                    enriched_by:
+                      dependencies.tenantContext.userId,
+                    enriched_at: new Date(),
+                  },
+                },
+              },
+            },
+          },
+        ]);
         updatedCount++;
         continue;
       }
@@ -106,16 +151,37 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         const returnedQuantity = item.returnedQuantity
           ? Number(item.returnedQuantity)
           : existingItem?.returned_quantity || 0;
+        const match = matchProductAndVariant(products, {
+          productName: item.productName,
+          variationName: item.variationName,
+          parentSku: item.parentSku,
+          childSku: item.skuReferenceNumber,
+        });
+        const cost = resolveProductCost(
+          match.variant ||
+            (match.product?.variants?.length === 1
+              ? match.product.variants[0]
+              : undefined),
+          order.orderCreationTime
+        );
         const financials = calculateOrderItemFinancials({
           priceAfterDiscount,
           quantity,
           returnedQuantity,
           subtotal: Number(item.orderSubtotal || 0),
-          productCostUnit: existingItem?.product_cost || 0,
+          productCostUnit: cost.productCost,
         });
 
         return cleanOrderItemFinancialFields({
           ...existingItem,
+          product:
+            match.product?._id || existingItem?.product,
+          product_id:
+            match.product?.product_id ||
+            existingItem?.product_id,
+          variation_id:
+            match.variant?.variant_id ||
+            existingItem?.variation_id,
           // Don't update product and product_cost?
           parent_sku: item.parentSku,
           child_sku: item.skuReferenceNumber,
@@ -128,6 +194,8 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
           quantity,
           subtotal: item.orderSubtotal,
           returned_quantity: returnedQuantity,
+          product_match_status: match.productMatchStatus,
+          cogs_status: cost.cogsStatus,
           ...financials,
         });
       });

@@ -533,6 +533,7 @@ export class OrderService {
     return runCompletedOrderEnrichment(
       {
         repository: this.repository,
+        productService: this.productService,
         tenantContext: this.tenantContext,
       },
       fileBuffer,

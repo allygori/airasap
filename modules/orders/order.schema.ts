@@ -32,6 +32,12 @@ export const OrderItemSchema = z.object({
   variation_name: z.string().optional(),
   parent_sku: z.string().optional(),
   child_sku: z.string().optional(), // child_sku
+  product_match_status: z
+    .enum(['matched', 'unresolved', 'ambiguous'])
+    .optional(),
+  cogs_status: z
+    .enum(['resolved', 'unresolved'])
+    .optional(),
 
   product_cost: z.number().int().optional(),
   total_product_cost: z.number().int().optional(),

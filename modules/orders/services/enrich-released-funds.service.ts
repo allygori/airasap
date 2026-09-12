@@ -16,6 +16,10 @@ import {
   toNumber,
   valueOrEmpty,
 } from './utils';
+import {
+  matchProductAndVariant,
+  resolveProductCost,
+} from './product-matching';
 
 export type ReleasedFundsImporterDependencies = {
   repository: OrderRepository;
@@ -59,28 +63,29 @@ function getOrderItems(order: ParsedReleasedFundsOrder) {
 function getProductCost(
   products: any[],
   productId: unknown,
-  item: Record<string, any>
+  item: Record<string, any>,
+  orderCreatedAt: unknown
 ) {
-  const product = products.find(
-    (candidate) => candidate.product_id === productId
+  const match = matchProductAndVariant(products, {
+    productId,
+    productName: item.product_name,
+    variationName: item.variation_name,
+    parentSku: item.parent_sku,
+    childSku: item.child_sku,
+  });
+  const cost = resolveProductCost(
+    match.variant ||
+      (match.product?.variants?.length === 1
+        ? match.product.variants[0]
+        : undefined),
+    orderCreatedAt
   );
-
-  const variantName =
-    item.variation_name || item.product_name;
-  const variant = (product?.variants || []).find(
-    (candidate: any) => candidate.name === variantName
-  );
-
-  const resolvedCost =
-    product?.variants?.length === 1
-      ? product.variants[0]?.default_cost
-      : variant?.default_cost;
 
   return {
-    product,
-    productCost: toNumber(
-      resolvedCost ?? item.product_cost
-    ),
+    product: match.product,
+    productMatchStatus: match.productMatchStatus,
+    cogsStatus: cost.cogsStatus,
+    productCost: toNumber(cost.productCost),
   };
 }
 
@@ -125,7 +130,8 @@ async function buildItemsForOrder(
   order: ParsedReleasedFundsOrder,
   existingItems: Record<string, any>[],
   products: any[],
-  version: ReleasedFundsVersion
+  version: ReleasedFundsVersion,
+  orderCreatedAt: unknown
 ) {
   const sourceItems = getOrderItems(order);
   const searchIndex = new Fuse(sourceItems, {
@@ -149,10 +155,16 @@ async function buildItemsForOrder(
       any
     >;
     const productId = releasedItem.productId;
-    const { product, productCost } = getProductCost(
+    const {
+      product,
+      productCost,
+      productMatchStatus,
+      cogsStatus,
+    } = getProductCost(
       products,
       productId,
-      baseItem
+      baseItem,
+      orderCreatedAt
     );
 
     if (productName && !match) {
@@ -183,6 +195,8 @@ async function buildItemsForOrder(
       ...(version === 2 && productId
         ? { product_id: productId }
         : {}),
+      product_match_status: productMatchStatus,
+      cogs_status: cogsStatus,
       processing_fee: toNumber(
         releasedItem.orderProcessingFee
       ),
@@ -202,9 +216,23 @@ async function processReleasedFundsOrders(
   fileId: string,
   version: ReleasedFundsVersion
 ) {
+  const releasedItems = orders.flatMap(getOrderItems);
   const products =
-    await dependencies.productService.getByMultipleIds(
-      productIds
+    await dependencies.productService.getProductsForOrderMatching(
+      {
+        productIds,
+        names: releasedItems
+          .map((item) => String(item.productName || ''))
+          .filter(Boolean),
+        parentSkus: releasedItems
+          .map((item) => String(item.parentSku || ''))
+          .filter(Boolean),
+        childSkus: releasedItems
+          .map((item) =>
+            String(item.skuReferenceNumber || '')
+          )
+          .filter(Boolean),
+      }
     );
   const operations: AnyBulkWriteOperation<TOrder>[] = [];
 
@@ -227,7 +255,8 @@ async function processReleasedFundsOrders(
       order,
       existingItems,
       products,
-      version
+      version,
+      existingOrder.placed_at
     );
     const releasedFundsAmount =
       calculateReleasedFundsAmount(order);
