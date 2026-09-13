@@ -25,6 +25,10 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import {
+  MassUploadResultView,
+  type MassUploadResult,
+} from './_components/import-result';
 
 type Store = {
   _id: string;
@@ -42,10 +46,8 @@ export default function MassUploadAllOrderPage() {
     React.useState(false);
   const [isFetchingStores, setIsFetchingStores] =
     React.useState(true);
-  const [result, setResult] = React.useState<{
-    created: number;
-    updated: number;
-  } | null>(null);
+  const [result, setResult] =
+    React.useState<MassUploadResult | null>(null);
   const [error, setError] = React.useState<string | null>(
     null
   );
@@ -215,22 +217,6 @@ export default function MassUploadAllOrderPage() {
                 </div>
               )}
 
-              {result && (
-                <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
-                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                      Upload Berhasil!
-                    </span>
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                      {result.created} produk baru
-                      ditambahkan, {result.updated} produk
-                      diperbarui.
-                    </span>
-                  </div>
-                </div>
-              )}
-
               <Button
                 type="submit"
                 disabled={isUploading || !file}
@@ -248,6 +234,13 @@ export default function MassUploadAllOrderPage() {
                   </>
                 )}
               </Button>
+
+              {result && (
+                <div className="flex items-start gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/20">
+                  <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-emerald-600" />
+                  <MassUploadResultView result={result} />
+                </div>
+              )}
             </form>
           </CardContent>
         </Card>

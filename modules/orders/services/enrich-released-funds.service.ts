@@ -20,6 +20,7 @@ import {
   matchProductAndVariant,
   resolveProductCost,
 } from './product-matching';
+import type { MassUploadResponseDTO } from '../order.dto';
 
 export type ReleasedFundsImporterDependencies = {
   repository: OrderRepository;
@@ -215,7 +216,7 @@ async function processReleasedFundsOrders(
   productIds: string[],
   fileId: string,
   version: ReleasedFundsVersion
-) {
+): Promise<MassUploadResponseDTO> {
   const releasedItems = orders.flatMap(getOrderItems);
   const products =
     await dependencies.productService.getProductsForOrderMatching(
@@ -235,6 +236,8 @@ async function processReleasedFundsOrders(
       }
     );
   const operations: AnyBulkWriteOperation<TOrder>[] = [];
+  const orderResults: MassUploadResponseDTO['order_results'] =
+    [];
 
   for (const order of orders) {
     const orderId = String(order.orderId);
@@ -245,6 +248,11 @@ async function processReleasedFundsOrders(
       console.warn(
         `[OrderService.enrichWithReleasedFunds] Order ID: ${orderId} not found`
       );
+      orderResults.push({
+        order_id: orderId,
+        status: 'ignored',
+        message: 'Order tidak ditemukan di database.',
+      });
       continue;
     }
 
@@ -329,9 +337,23 @@ async function processReleasedFundsOrders(
         upsert: true,
       },
     });
+    orderResults.push({
+      order_id: orderId,
+      status: 'updated',
+    });
   }
 
-  return dependencies.repository.bulkWrite(operations);
+  if (operations.length > 0) {
+    await dependencies.repository.bulkWrite(operations);
+  }
+
+  return {
+    created_count: 0,
+    updated_count: operations.length,
+    total_rows: orders.length,
+    total_orders: orders.length,
+    order_results: orderResults,
+  };
 }
 
 export async function enrichWithReleasedFunds(
@@ -363,7 +385,13 @@ export async function enrichWithReleasedFunds(
         console.warn(
           'Tidak ada data order yang valid di file Excel.'
         );
-        return true;
+        return {
+          created_count: 0,
+          updated_count: 0,
+          total_rows: 0,
+          total_orders: 0,
+          order_results: [],
+        } satisfies MassUploadResponseDTO;
       }
 
       return processReleasedFundsOrders(
@@ -382,7 +410,13 @@ export async function enrichWithReleasedFunds(
       console.warn(
         'Tidak ada data order yang valid di file Excel.'
       );
-      return true;
+      return {
+        created_count: 0,
+        updated_count: 0,
+        total_rows: 0,
+        total_orders: 0,
+        order_results: [],
+      };
     }
 
     return processReleasedFundsOrders(

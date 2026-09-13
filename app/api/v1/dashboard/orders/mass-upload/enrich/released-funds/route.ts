@@ -117,9 +117,8 @@ export const POST = withValidation({}, async (request) => {
 
     return apiSuccess(
       {
-        // fileId: fileDoc._id.toString(),
-        // ...result,
-        result,
+        fileId: fileDoc._id.toString(),
+        ...result,
       },
       undefined,
       201

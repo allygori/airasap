@@ -342,9 +342,16 @@ export const BulkUpdateStatusSchema = z.object({
   is_active: z.boolean(),
 });
 
+export const MassUploadOrderResultSchema = z.object({
+  order_id: z.string(),
+  status: z.enum(['created', 'updated', 'ignored']),
+  message: z.string().optional(),
+});
+
 export const MassUploadResponseSchema = z.object({
   created_count: z.number(),
   updated_count: z.number(),
   total_rows: z.number(),
   total_orders: z.number(),
+  order_results: z.array(MassUploadOrderResultSchema),
 });

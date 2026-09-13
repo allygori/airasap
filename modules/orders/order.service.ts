@@ -547,7 +547,7 @@ export class OrderService {
   async enrichWithReleasedFunds(
     fileBuffer: ArrayBuffer,
     fileId: string
-  ) {
+  ): Promise<MassUploadResponseDTO> {
     return runReleasedFundsEnrichment(
       {
         repository: this.repository,

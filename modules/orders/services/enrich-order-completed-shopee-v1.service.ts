@@ -61,6 +61,8 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
 
     let createdCount = 0;
     let updatedCount = 0;
+    const orderResults: MassUploadResponseDTO['order_results'] =
+      [];
     const products =
       await dependencies.productService.getProductsForOrderMatching(
         {
@@ -90,40 +92,54 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         // Existing orders may contain edits from the UI/API. Only update
         // the completed timestamp and append this enrichment atomically;
         // never replace items or other user-managed fields here.
-        await dependencies.repository.bulkWrite([
-          {
-            updateOne: {
-              filter: {
-                _id: existingOrder._id,
-                enrichments: {
-                  $not: {
-                    $elemMatch: {
+        const updateResult =
+          await dependencies.repository.bulkWrite([
+            {
+              updateOne: {
+                filter: {
+                  _id: existingOrder._id,
+                  enrichments: {
+                    $not: {
+                      $elemMatch: {
+                        kind: 'completed',
+                        file: fileId,
+                      },
+                    },
+                  },
+                },
+                update: {
+                  $set: {
+                    completed_at: order.orderCompletionTime
+                      ? String(order.orderCompletionTime)
+                      : undefined,
+                  },
+                  $addToSet: {
+                    enrichments: {
                       kind: 'completed',
                       file: fileId,
+                      enriched_by:
+                        dependencies.tenantContext.userId,
+                      enriched_at: new Date(),
                     },
                   },
                 },
               },
-              update: {
-                $set: {
-                  completed_at: order.orderCompletionTime
-                    ? String(order.orderCompletionTime)
-                    : undefined,
-                },
-                $addToSet: {
-                  enrichments: {
-                    kind: 'completed',
-                    file: fileId,
-                    enriched_by:
-                      dependencies.tenantContext.userId,
-                    enriched_at: new Date(),
-                  },
-                },
-              },
             },
-          },
-        ]);
-        updatedCount++;
+          ]);
+        if (updateResult.modifiedCount > 0) {
+          updatedCount++;
+        }
+        orderResults.push({
+          order_id: orderId,
+          status:
+            updateResult.modifiedCount > 0
+              ? 'updated'
+              : 'ignored',
+          message:
+            updateResult.modifiedCount > 0
+              ? 'Data order completed diperbarui tanpa menimpa perubahan manual.'
+              : 'Enrichment completed sudah pernah diproses untuk file ini.',
+        });
         continue;
       }
 
@@ -390,6 +406,10 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
 
       await dependencies.repository.create(payload);
       createdCount++;
+      orderResults.push({
+        order_id: orderId,
+        status: 'created',
+      });
     }
 
     return {
@@ -397,6 +417,7 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
       updated_count: updatedCount,
       total_rows: orders.length,
       total_orders: ordersMap.size,
+      order_results: orderResults,
     };
   } catch (error: any) {
     throw new Error(

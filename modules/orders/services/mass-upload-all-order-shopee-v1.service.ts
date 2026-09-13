@@ -90,6 +90,8 @@ export async function massUploadAllOrderShopeeV1(
 
     let createdCount = 0;
     let updatedCount = 0;
+    const orderResults: MassUploadResponseDTO['order_results'] =
+      [];
     for (const [orderId, group] of ordersMap.entries()) {
       const order = group[0] || {};
 
@@ -355,6 +357,16 @@ export async function massUploadAllOrderShopeeV1(
       if (!existingOrder) {
         await dependencies.repository.create(payload);
         createdCount++;
+        orderResults.push({
+          order_id: orderId,
+          status: 'created',
+        });
+      } else {
+        orderResults.push({
+          order_id: orderId,
+          status: 'ignored',
+          message: 'Order sudah ada dan tidak ditimpa.',
+        });
       }
 
       // if (existingOrder) {
@@ -374,6 +386,7 @@ export async function massUploadAllOrderShopeeV1(
       updated_count: updatedCount,
       total_rows: orders.length,
       total_orders: ordersMap.size,
+      order_results: orderResults,
     };
   } catch (error: any) {
     throw new Error(
