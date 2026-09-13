@@ -116,7 +116,7 @@ function EditPostFormWrapper({
           costs: (variant.costs || []).map((cost: any) => ({
             effective_from: cost.effective_from
               ? new Date(cost.effective_from).toISOString()
-              : new Date().toISOString(),
+              : null,
             cogs_unit: Number(cost.cogs_unit || 0),
             notes: cost.notes || '',
           })),

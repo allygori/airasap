@@ -593,31 +593,36 @@ const OrderReportPage = () => {
             </div>
             <div className="grid gap-3 p-3 md:grid-cols-2 xl:grid-cols-4">
               <SignedMetricCard
-                icon={Banknote}
-                label="Estimated Shopee Net Revenue"
-                value={
-                  result.shopee_economics
-                    .estimated_shopee_net_revenue
-                }
-                sub="Total fee - Shopee subsidy"
-              />
-              <MetricCard
                 icon={ArrowDownUp}
                 label="Total Shopee Fee"
-                value={formatIDR(
+                color="yellow"
+                value={
                   result.shopee_economics.total_shopee_fee
-                )}
+                }
+                // value={formatIDR(
+                //   result.shopee_economics.total_shopee_fee
+                // )}
                 sub="All fee fields"
               />
               <SignedMetricCard
                 icon={ShieldCheck}
                 label="Shopee Subsidy"
+                color="blue"
                 value={
-                  -1 *
                   result.shopee_economics
                     .total_shopee_subsidy
                 }
                 sub="Discount + voucher + bundle"
+              />
+              <SignedMetricCard
+                icon={Banknote}
+                label="Estimated Shopee Net Revenue"
+                color="red"
+                value={
+                  result.shopee_economics
+                    .estimated_shopee_net_revenue
+                }
+                sub="Total fee - Shopee subsidy"
               />
               <MetricCard
                 icon={HandCoins}
@@ -980,8 +985,12 @@ const SignedMetricCard = ({
   icon: Icon,
   label,
   value,
+  color,
   sub,
-}: Omit<MetricCardProps, 'value'> & { value: number }) => (
+}: Omit<MetricCardProps, 'value'> & {
+  value: number;
+  color?: 'red' | 'green' | 'yellow' | 'blue' | null;
+}) => (
   <Card className="bg-card rounded-md">
     <CardContent className="flex items-center gap-3">
       <div className="bg-muted text-muted-foreground flex size-9 shrink-0 items-center justify-center rounded-md">
@@ -994,6 +1003,7 @@ const SignedMetricCard = ({
         <FinancialDisplay
           value={value}
           formatter={formatIDR}
+          color={color}
           className="truncate text-lg font-semibold"
         />
         <p className="text-muted-foreground truncate text-xs">

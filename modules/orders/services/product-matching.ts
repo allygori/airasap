@@ -26,7 +26,7 @@ type VariantLike = {
 };
 
 type CostLike = {
-  effective_from?: string | Date;
+  effective_from?: string | Date | null;
   cogs_unit?: number;
 };
 

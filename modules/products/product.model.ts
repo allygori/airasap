@@ -111,8 +111,7 @@ const ProductSchema = new Schema<TProduct>(
           {
             effective_from: {
               type: Date,
-              required: true,
-              default: Date.now,
+              required: false,
             },
             cogs_unit: {
               type: Number,

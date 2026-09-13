@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils/ui';
 type FinancialDisplayProps = {
   value: number;
   formatter?: (v: number) => ReactNode;
+  color?: 'red' | 'green' | 'yellow' | 'blue' | null;
   fallback?: number | string;
   showSign?: boolean;
   prefix?: ReactNode;
@@ -16,6 +17,7 @@ const FinancialDisplay = ({
   value,
   // fallback = 0,
   formatter,
+  color,
   showSign = false,
   Prefix,
   prefix,
@@ -23,6 +25,15 @@ const FinancialDisplay = ({
   className = '',
 }: FinancialDisplayProps) => {
   const getColor = () => {
+    if (color) {
+      return {
+        red: 'text-destructive',
+        green: 'text-constructive',
+        yellow: 'text-yellow-500',
+        blue: 'text-blue-500',
+      }[color];
+    }
+
     if (value < 0) return 'text-destructive';
     if (value > 0) return 'text-constructive';
 

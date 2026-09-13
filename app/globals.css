@@ -384,3 +384,25 @@ html {
   border: none;
   outline: none;
 }
+
+/** debug */
+.debug,
+.debug1 {
+  outline: 1px solid blue !important;
+}
+
+.debug2 {
+  outline: 1px solid green !important;
+}
+
+.debug3 {
+  outline: 1px solid yellow !important;
+}
+
+.debug4 {
+  outline: 1px solid purple !important;
+}
+
+.debug5 {
+  outline: 1px solid red !important;
+}

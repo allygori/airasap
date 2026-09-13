@@ -47,7 +47,8 @@ export const VariantSchema = z.object({
         effective_from: z
           .string()
           .datetime({ offset: true })
-          .default(() => new Date().toISOString()),
+          .nullable()
+          .optional(),
         cogs_unit: z.number().int().nonnegative(),
         notes: z.string().nullable().optional(),
       })

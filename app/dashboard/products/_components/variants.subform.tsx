@@ -20,7 +20,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils/ui';
 
 const newCost = () => ({
-  effective_from: new Date().toISOString(),
+  effective_from: null,
   cogs_unit: 0,
   notes: '',
 });
@@ -53,7 +53,7 @@ export function VariantsSubForm({ form }: { form: any }) {
     defaultValues: {
       cogs_unit: 0,
       notes: '',
-      effective_from: new Date().toISOString(),
+      effective_from: null as string | null | undefined,
       set_as_default: false,
     },
     onSubmit: async ({ value }) => {

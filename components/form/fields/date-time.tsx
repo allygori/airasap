@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/field';
 import { FieldInfo } from '../partials/field-info';
 import { format } from 'date-fns';
-import { ChevronDownIcon } from 'lucide-react';
+import { ChevronDownIcon, XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -33,7 +33,9 @@ export function DateTimeField({
   className,
   ...props
 }: DateTimeFieldProps) {
-  const field = useFieldContext<string | undefined>();
+  const field = useFieldContext<
+    string | null | undefined
+  >();
   const [open, setOpen] = useState(false);
 
   // Parse initial value from field.state.value if available
@@ -50,7 +52,7 @@ export function DateTimeField({
   const [time, setTime] = useState<string>(
     initialValue && !isNaN(initialValue.getTime())
       ? format(initialValue, 'HH:mm:ss')
-      : '10:30:00'
+      : ''
   );
 
   // Combine local state and notify form
@@ -69,50 +71,56 @@ export function DateTimeField({
         field.handleChange(isoString);
       }
     }
-  }, [date, time]);
+  }, [date, time, field]);
 
   return (
     <FieldGroup className={cn(className)}>
-      <div className="flex flex-row gap-2 md:gap-4">
-        <Field className="flex-1">
+      <div className="grid grid-cols-12 gap-2 md:gap-4">
+        <Field className="col-span-5 flex-1">
           <FieldLabel htmlFor={`${field.name}-date-picker`}>
             {label || 'Date'}
           </FieldLabel>
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger
-              render={
-                <Button
-                  variant="outline"
-                  id={`${field.name}-date-picker`}
-                  className="w-full justify-between font-normal"
-                >
-                  {date
-                    ? format(date, 'PPP')
-                    : 'Select date'}
-                  <ChevronDownIcon data-icon="inline-end" />
-                </Button>
-              }
-            />
-            <PopoverContent
-              className="w-auto overflow-hidden p-0"
-              align="start"
-            >
-              <Calendar
-                mode="single"
-                selected={date}
-                captionLayout="dropdown"
-                defaultMonth={date}
-                onSelect={(selectedDate) => {
-                  if (selectedDate) {
-                    setDate(selectedDate);
-                  }
-                  setOpen(false);
-                }}
+          <div className="flex gap-2">
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    id={`${field.name}-date-picker`}
+                    className="w-full justify-between font-normal"
+                  >
+                    {date
+                      ? format(date, 'PPP')
+                      : 'Select date'}
+                    <ChevronDownIcon data-icon="inline-end" />
+                  </Button>
+                }
               />
-            </PopoverContent>
-          </Popover>
+              <PopoverContent
+                className="w-auto overflow-hidden p-0"
+                align="start"
+              >
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  captionLayout="dropdown"
+                  defaultMonth={date}
+                  onSelect={(selectedDate) => {
+                    if (selectedDate) {
+                      setDate(selectedDate);
+                      setTime(
+                        (currentTime) =>
+                          currentTime || '10:30:00'
+                      );
+                    }
+                    setOpen(false);
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </Field>
-        <Field className="flex-1">
+        <Field className="col-span-5 flex-1">
           <FieldLabel htmlFor={`${field.name}-time-picker`}>
             Time
           </FieldLabel>
@@ -126,6 +134,25 @@ export function DateTimeField({
             {...(props as any)}
           />
         </Field>
+
+        {(date || field.state.value) && (
+          <div className="relative col-span-2 flex h-full w-full items-center justify-center">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label="Hapus tanggal dan waktu"
+              className="border-accent-foreground/50 absolute bottom-0 left-2 cursor-pointer rounded-md border"
+              onClick={() => {
+                setDate(undefined);
+                setTime('');
+                field.handleChange(null);
+              }}
+            >
+              <XIcon />
+            </Button>
+          </div>
+        )}
       </div>
 
       {description && (
