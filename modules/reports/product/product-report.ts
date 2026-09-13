@@ -64,6 +64,7 @@ export const aggregateProductSalesReport = ({
         dateFilterBy: filterBy,
         startDate,
         endDate,
+        timezone: tz,
         statuses: [...REPORTABLE_SHOPEE_ORDER_STATUSES],
       })
     )

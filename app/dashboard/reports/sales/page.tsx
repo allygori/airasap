@@ -1,3 +1,5 @@
+/** DEPRECATED */
+
 import ReportClient from '../_components/report.client';
 
 const SalesReportPage = () => {

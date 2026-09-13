@@ -2,6 +2,7 @@ import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
+import { getReportDateRange } from '@/lib/utils/date/report-range';
 import {
   differenceInCalendarDays,
   endOfDay,
@@ -43,6 +44,11 @@ export const aggregateOperationReport = ({
       startOfDay(parseISO(startDate))
     ) + 1
   );
+  const dateRange = getReportDateRange(
+    startDate,
+    endDate,
+    tz
+  );
 
   return new AggregateBuilder()
     .with({
@@ -54,8 +60,8 @@ export const aggregateOperationReport = ({
         platform: ORDER_PLATFORMS.shopee.value,
         deleted_at: null,
         [filterBy]: {
-          $gte: startOfDay(parseISO(startDate)),
-          $lte: endOfDay(parseISO(endDate)),
+          $gte: dateRange.startDate,
+          $lte: dateRange.endDate,
         },
       },
     })

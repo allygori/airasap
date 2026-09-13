@@ -1,5 +1,6 @@
 import { Types, type PipelineStage } from 'mongoose';
-import { endOfDay, parseISO, startOfDay } from 'date-fns';
+import { getReportDateRange } from '@/lib/utils/date/report-range';
+import type { TimeZone } from '@/constant/timezone';
 
 type Args = {
   organizationId: string;
@@ -8,6 +9,7 @@ type Args = {
   dateFilterBy: string;
   startDate: string;
   endDate: string;
+  timezone: TimeZone;
   statuses?: string[];
 };
 
@@ -18,8 +20,15 @@ export const filterProductAnalyticsOrders = ({
   dateFilterBy,
   startDate,
   endDate,
+  timezone,
   statuses,
 }: Args): PipelineStage.Match => {
+  const dateRange = getReportDateRange(
+    startDate,
+    endDate,
+    timezone
+  );
+
   return {
     $match: {
       organization: new Types.ObjectId(organizationId),
@@ -27,8 +36,8 @@ export const filterProductAnalyticsOrders = ({
       platform,
       deleted_at: null,
       [dateFilterBy]: {
-        $gte: startOfDay(parseISO(startDate)),
-        $lte: endOfDay(parseISO(endDate)),
+        $gte: dateRange.startDate,
+        $lte: dateRange.endDate,
       },
       ...(statuses?.length
         ? { status: { $in: statuses } }

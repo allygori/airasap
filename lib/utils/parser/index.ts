@@ -1,5 +1,5 @@
 import { parse } from 'date-fns';
-import { tz, TZDate } from '@date-fns/tz';
+import { tz } from '@date-fns/tz';
 
 export const stringParser = (val: unknown): string => {
   if (val === undefined || val === null) return '';
@@ -105,33 +105,22 @@ export const dateParser = (
 
     if (typeof val === 'string') {
       try {
-        // Memaksa date-fns untuk membaca string "2026-06-02 07:18"
-        // langsung dalam konteks zona waktu Asia/Jakarta (WIB)
-        // const parsedLocal = parse(val, format, new Date(), {
-        //   in: tz('Asia/Jakarta'),
-        //   // inTimeZone: tz('Asia/Jakarta'),
-        // });
+        const parsed = parse(val, format, new Date(0), {
+          in: tz('Asia/Jakarta'),
+        });
 
-        const date = parse(
-          val,
-          format,
-          new Date()
-        ).toISOString();
-        const parsedLocal = new TZDate(
-          date,
-          'Asia/Jakarta'
-        );
-
-        return isNaN(parsedLocal.getTime())
+        return isNaN(parsed.getTime())
           ? null
-          : parsedLocal;
+          : new Date(parsed);
       } catch {
         return null;
       }
     }
 
     if (typeof val === 'number') {
-      const d = new Date(val);
+      const d = new Date(
+        Date.UTC(1899, 11, 30) + val * 24 * 60 * 60 * 1000
+      );
       return isNaN(d.getTime()) ? null : d;
     }
 
@@ -145,38 +134,30 @@ export const dateParserToISOString = (
 ) => {
   return (val: unknown): string | null => {
     if (!val) return null;
-    if (val instanceof Date) return val.toISOString();
+    if (val instanceof Date) {
+      return isNaN(val.getTime())
+        ? null
+        : val.toISOString();
+    }
 
     if (typeof val === 'string') {
       try {
-        // Memaksa date-fns untuk membaca string "2026-06-02 07:18"
-        // langsung dalam konteks zona waktu Asia/Jakarta (WIB)
-        // const parsedLocal = parse(val, format, new Date(), {
-        //   in: tz('Asia/Jakarta'),
-        //   // inTimeZone: tz('Asia/Jakarta'),
-        // });
+        const parsed = parse(val, format, new Date(0), {
+          in: tz('Asia/Jakarta'),
+        });
 
-        const date = parse(
-          val,
-          format,
-          new Date()
-        ).toISOString();
-        // const date = new Date(val, format);
-        const parsedLocal = new TZDate(
-          date,
-          'Asia/Jakarta'
-        );
-
-        return isNaN(parsedLocal.getTime())
+        return isNaN(parsed.getTime())
           ? null
-          : parsedLocal.toISOString();
+          : new Date(parsed).toISOString();
       } catch {
         return null;
       }
     }
 
     if (typeof val === 'number') {
-      const d = new Date(val);
+      const d = new Date(
+        Date.UTC(1899, 11, 30) + val * 24 * 60 * 60 * 1000
+      );
       return isNaN(d.getTime()) ? null : d.toISOString();
     }
 

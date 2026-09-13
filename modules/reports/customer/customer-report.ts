@@ -2,6 +2,7 @@ import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
+import { getReportDateRange } from '@/lib/utils/date/report-range';
 import {
   differenceInCalendarDays,
   endOfDay,
@@ -46,6 +47,11 @@ export const aggregateCustomerReport = ({
       startOfDay(parseISO(startDate))
     ) + 1
   );
+  const dateRange = getReportDateRange(
+    startDate,
+    endDate,
+    tz
+  );
 
   return new AggregateBuilder()
     .with({
@@ -60,14 +66,19 @@ export const aggregateCustomerReport = ({
           $in: [...REPORTABLE_SHOPEE_ORDER_STATUSES],
         },
         [filterBy]: {
-          $lte: endOfDay(parseISO(endDate)),
+          $lte: dateRange.endDate,
         },
         username: { $type: 'string', $ne: '' },
       },
     })
     .with(normalizeCustomerOrder(filterBy, tz))
-    .with(groupByCustomer(startDate, endDate))
-    .with(addCustomerDerivedMetrics(startDate))
+    .with(
+      groupByCustomer(
+        dateRange.startDate,
+        dateRange.endDate
+      )
+    )
+    .with(addCustomerDerivedMetrics(dateRange.startDate))
     .with({
       $facet: {
         summary:
@@ -232,8 +243,8 @@ const normalizeCustomerOrder = <F extends string>(
 });
 
 const groupByCustomer = (
-  startDate: string,
-  endDate: string
+  startDate: Date,
+  endDate: Date
 ): PipelineStage.Group => ({
   $group: {
     _id: '$_customer_report.customer_key',
@@ -308,21 +319,15 @@ const groupByCustomer = (
 });
 
 const isOrderInPeriod = (
-  startDate: string,
-  endDate: string
+  startDate: Date,
+  endDate: Date
 ) => ({
   $and: [
     {
-      $gte: [
-        '$_customer_report.order_date',
-        startOfDay(parseISO(startDate)),
-      ],
+      $gte: ['$_customer_report.order_date', startDate],
     },
     {
-      $lte: [
-        '$_customer_report.order_date',
-        endOfDay(parseISO(endDate)),
-      ],
+      $lte: ['$_customer_report.order_date', endDate],
     },
   ],
 });
@@ -466,7 +471,7 @@ const summarizeCustomers = (): PipelineStage[] => [
 ];
 
 const addCustomerDerivedMetrics = (
-  startDate: string
+  startDate: Date
 ): PipelineStage.AddFields => ({
   $addFields: {
     sorted_order_dates: {
@@ -482,17 +487,11 @@ const addCustomerDerivedMetrics = (
       },
     },
     is_new_customer: {
-      $gte: [
-        '$first_order_at',
-        startOfDay(parseISO(startDate)),
-      ],
+      $gte: ['$first_order_at', startDate],
     },
     is_repeat_customer: { $gt: ['$period_orders', 1] },
     is_returning_customer: {
-      $lt: [
-        '$first_order_at',
-        startOfDay(parseISO(startDate)),
-      ],
+      $lt: ['$first_order_at', startDate],
     },
   },
 });

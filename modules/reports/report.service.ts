@@ -13,6 +13,11 @@ import { ReportRepository } from './report.repository';
 import { aggregateSalesReport } from './sales/sales-report';
 import { aggregateOrderReport } from './orders/order-report';
 import { aggregateVoucherReport } from './voucher/voucher-report';
+import { StoreModel } from '@/modules/stores/store.model';
+import {
+  TIMEZONES,
+  type TimeZone,
+} from '@/constant/timezone';
 import {
   differenceInCalendarDays,
   endOfMonth,
@@ -48,6 +53,7 @@ export class ReportService {
     organizationId: string;
     storeId: string;
   };
+  private storeTimezone?: TimeZone;
 
   constructor(tenantContext: {
     organizationId: string;
@@ -55,6 +61,24 @@ export class ReportService {
   }) {
     this.repository = new ReportRepository(tenantContext);
     this.tenantContext = tenantContext;
+  }
+
+  private async getStoreTimezone(): Promise<TimeZone> {
+    if (this.storeTimezone) return this.storeTimezone;
+
+    const store = await StoreModel.findOne({
+      _id: this.tenantContext.storeId,
+      organization: this.tenantContext.organizationId,
+      deleted_at: null,
+    })
+      .select({ timezone: 1 })
+      .lean();
+
+    this.storeTimezone =
+      (store?.timezone as TimeZone | undefined) ||
+      TIMEZONES.WIB.value;
+
+    return this.storeTimezone;
   }
 
   // async generateReport(
@@ -129,12 +153,13 @@ export class ReportService {
     mode?: ReportPeriodMode
   ) {
     try {
+      const timezone = await this.getStoreTimezone();
       const currentPipelines = aggregateProductSalesReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
@@ -147,7 +172,7 @@ export class ReportService {
           endDate: previousPeriod.endDate,
           tenantContext: this.tenantContext,
           filterBy: 'placed_at',
-          tz: 'Asia/Jakarta',
+          tz: timezone,
         }
       );
 
@@ -191,12 +216,13 @@ export class ReportService {
     mode?: ReportPeriodMode
   ) {
     try {
+      const timezone = await this.getStoreTimezone();
       const currentPipelines = aggregateOrderReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
@@ -208,7 +234,7 @@ export class ReportService {
         endDate: previousPeriod.endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
 
       const [currentReport, previousReport] =
@@ -236,12 +262,13 @@ export class ReportService {
     endDate: string
   ) {
     try {
+      const timezone = await this.getStoreTimezone();
       const pipelines = aggregateCustomerReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
 
       const report =
@@ -263,12 +290,13 @@ export class ReportService {
     endDate: string
   ) {
     try {
+      const timezone = await this.getStoreTimezone();
       const pipelines = aggregateVoucherReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
 
       const report =
@@ -290,12 +318,13 @@ export class ReportService {
     endDate: string
   ) {
     try {
+      const timezone = await this.getStoreTimezone();
       const pipelines = aggregateOperationReport({
         startDate,
         endDate,
         tenantContext: this.tenantContext,
         filterBy: 'placed_at',
-        tz: 'Asia/Jakarta',
+        tz: timezone,
       });
 
       const report =
