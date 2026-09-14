@@ -397,6 +397,110 @@ export const OrderReportResponseSchema = z.object({
   }),
 });
 
+export const OverviewReportResponseSchema = z.object({
+  summary: z.object({
+    potential_gross_sales: z.number(),
+    realized_gross_sales: z.number(),
+    cancelled_gross_sales: z.number(),
+    in_progress_gross_sales: z.number(),
+    return_refund_gross_sales: z.number(),
+    net_sales: z.number(),
+    total_payment: z.number(),
+    released_funds: z.number(),
+    cogs: z.number(),
+    gross_profit: z.number(),
+    net_profit: z.number(),
+    seller_voucher: z.number(),
+    seller_bundle_discount: z.number(),
+    seller_discount: z.number(),
+    shopee_voucher: z.number(),
+    shopee_bundle_discount: z.number(),
+    shopee_discount: z.number(),
+    shopee_fee: z.number(),
+    marketplace_deduction: z.number(),
+    total_discount: z.number(),
+    total_orders: z.number(),
+    completed_orders: z.number(),
+    cancelled_orders: z.number(),
+    in_progress_orders: z.number(),
+    return_refund_orders: z.number(),
+    total_buyers: z.number(),
+    completed_buyers: z.number(),
+    total_units: z.number(),
+    completed_units: z.number(),
+    total_items: z.number(),
+    completed_items: z.number(),
+    average_order_value: z.number(),
+    profit_per_order: z.number(),
+    gross_margin: z.number(),
+    net_margin: z.number(),
+    fee_ratio: z.number(),
+    seller_discount_ratio: z.number(),
+    shopee_discount_ratio: z.number(),
+    cancellation_rate_by_orders: z.number(),
+    cancellation_rate_by_value: z.number(),
+    sales_realization_rate: z.number(),
+    net_sales_coverage: z.number(),
+    net_profit_coverage: z.number(),
+    released_funds_coverage: z.number(),
+    voucher_codes: z.array(z.string()),
+  }),
+  funnel: z.array(
+    z.object({
+      bucket: z.string(),
+      orders: z.number(),
+      gross_sales: z.number(),
+      total_payment: z.number(),
+      units: z.number(),
+    })
+  ),
+  status_breakdown: z.array(
+    z.object({
+      status: z.string(),
+      orders: z.number(),
+      gross_sales: z.number(),
+      total_payment: z.number(),
+    })
+  ),
+  daily_reports: z.array(
+    z.object({
+      date: z.string(),
+      orders: z.number(),
+      potential_gross_sales: z.number(),
+      cancelled_orders: z.number(),
+      cancelled_gross_sales: z.number(),
+      completed_orders: z.number(),
+      realized_gross_sales: z.number(),
+      net_sales: z.number(),
+      net_profit: z.number(),
+      shopee_fee: z.number(),
+      seller_discount: z.number(),
+      cancellation_rate: z.number(),
+      sales_realization_rate: z.number(),
+      net_margin: z.number(),
+    })
+  ),
+  cancellation_by_actor: z.array(
+    z.object({
+      cancelled_by: z.string(),
+      orders: z.number(),
+      cancelled_gross_sales: z.number(),
+    })
+  ),
+  cancellation_by_reason: z.array(
+    z.object({
+      reason: z.string(),
+      orders: z.number(),
+      cancelled_gross_sales: z.number(),
+    })
+  ),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});
+
 export const CustomerReportSummarySchema = z.object({
   total_customers: z.number(),
   new_customers: z.number(),

@@ -8,11 +8,13 @@ import {
   type ProductAnalyticsResponseDTO,
   type OrderReportResponseDTO,
   type VoucherReportResponseDTO,
+  type OverviewReportResponseDTO,
 } from './report.dto';
 import { ReportRepository } from './report.repository';
 import { aggregateSalesReport } from './sales/sales-report';
 import { aggregateOrderReport } from './orders/order-report';
 import { aggregateVoucherReport } from './voucher/voucher-report';
+import { aggregateOverviewReport } from './overview/overview-report';
 import { StoreModel } from '@/modules/stores/store.model';
 import {
   TIMEZONES,
@@ -340,6 +342,31 @@ export class ReportService {
     } catch (error: unknown) {
       throw new Error(
         `Gagal membuat operation report: ${getErrorMessage(error)}`
+      );
+    }
+  }
+
+  async generateOverviewReport(
+    startDate: string,
+    endDate: string
+  ): Promise<OverviewReportResponseDTO> {
+    try {
+      const timezone = await this.getStoreTimezone();
+      const pipelines = aggregateOverviewReport({
+        startDate,
+        endDate,
+        tenantContext: this.tenantContext,
+        filterBy: 'placed_at',
+        tz: timezone,
+      });
+
+      const report =
+        await this.repository.aggregate(pipelines);
+
+      return report[0] as OverviewReportResponseDTO;
+    } catch (error: unknown) {
+      throw new Error(
+        `Gagal membuat overview report: ${getErrorMessage(error)}`
       );
     }
   }

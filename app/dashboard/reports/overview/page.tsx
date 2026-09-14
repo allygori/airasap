@@ -39,7 +39,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { formatIDR } from '@/lib/formatter/format-idr';
-import { OrderReportResponseDTO } from '@/modules/reports/report.dto';
+import { OverviewReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
   ReportFormSchema,
@@ -53,13 +53,21 @@ type MetricCardProps = {
 };
 
 const overviewChartConfig = {
-  net_sales: {
-    label: 'Net Sales',
+  potential_gross_sales: {
+    label: 'Potential Gross Sales',
     color: 'var(--chart-1)',
+  },
+  realized_gross_sales: {
+    label: 'Realized Gross Sales',
+    color: 'var(--chart-2)',
+  },
+  cancelled_gross_sales: {
+    label: 'Cancelled Sales',
+    color: 'var(--chart-3)',
   },
   net_profit: {
     label: 'Net Profit',
-    color: 'var(--chart-2)',
+    color: 'var(--chart-4)',
   },
 } satisfies ChartConfig;
 
@@ -76,7 +84,7 @@ const pressureChartConfig = {
 
 const ReportsOverviewPage = () => {
   const [result, setResult] =
-    useState<OrderReportResponseDTO>();
+    useState<OverviewReportResponseDTO>();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(
@@ -105,7 +113,7 @@ const ReportsOverviewPage = () => {
 
       try {
         const response = await fetch(
-          '/api/v1/dashboard/reports/orders',
+          '/api/v1/dashboard/reports/overview',
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -153,8 +161,12 @@ const ReportsOverviewPage = () => {
     [result?.daily_reports]
   );
   const topAlerts = useMemo(
-    () => result?.alerts.slice(0, 3) || [],
-    [result?.alerts]
+    () => buildOverviewAlerts(result),
+    [result]
+  );
+  const readout = useMemo(
+    () => buildOverviewReadout(result),
+    [result]
   );
 
   return (
@@ -219,6 +231,30 @@ const ReportsOverviewPage = () => {
         <section className="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5">
           <MetricCard
             icon={TrendingUp}
+            label="Potential Gross Sales"
+            value={formatIDR(
+              summary?.potential_gross_sales || 0
+            )}
+            sub={`${formatNumber(summary?.total_orders)} total orders`}
+          />
+          <MetricCard
+            icon={AlertTriangle}
+            label="Cancelled Sales"
+            value={formatIDR(
+              summary?.cancelled_gross_sales || 0
+            )}
+            sub={`${formatPercent(summary?.cancellation_rate_by_value)} by value`}
+          />
+          <MetricCard
+            icon={ShieldCheck}
+            label="Realized Gross Sales"
+            value={formatIDR(
+              summary?.realized_gross_sales || 0
+            )}
+            sub={`${formatPercent(summary?.sales_realization_rate)} realization`}
+          />
+          <MetricCard
+            icon={TrendingUp}
             label="Net Sales"
             value={formatIDR(summary?.net_sales || 0)}
             sub={`${formatPercent(summary?.net_margin)} net margin`}
@@ -237,18 +273,65 @@ const ReportsOverviewPage = () => {
           />
           <MetricCard
             icon={ShieldCheck}
-            label="Completed Orders"
-            value={formatNumber(summary?.total_orders)}
-            sub={`${formatNumber(summary?.total_buyers)} buyers`}
+            label="Completed Buyers"
+            value={formatNumber(summary?.completed_buyers)}
+            sub={`${formatNumber(summary?.completed_units)} realized units`}
           />
           <SignedMetricCard
             icon={Banknote}
-            label="Shopee Net Revenue"
-            value={
-              result?.shopee_economics
-                .estimated_shopee_net_revenue || 0
-            }
-            sub={`${formatPercent(result?.shopee_economics.estimated_shopee_take_rate)} take rate`}
+            label="Shopee Fee"
+            value={summary?.shopee_fee || 0}
+            sub={`${formatPercent(summary?.fee_ratio)} of realized gross sales`}
+          />
+          <MetricCard
+            icon={ReceiptText}
+            label="All Orders"
+            value={formatNumber(summary?.total_orders)}
+            sub={`${formatNumber(summary?.total_buyers)} buyers`}
+          />
+          <MetricCard
+            icon={ShieldCheck}
+            label="Completed Orders"
+            value={formatNumber(summary?.completed_orders)}
+            sub={`${formatNumber(summary?.completed_buyers)} buyers`}
+          />
+          <MetricCard
+            icon={AlertTriangle}
+            label="Cancelled Orders"
+            value={formatNumber(summary?.cancelled_orders)}
+            sub={`${formatPercent(summary?.cancellation_rate_by_orders)} by order count`}
+          />
+          <MetricCard
+            icon={ClipboardList}
+            label="In Progress Orders"
+            value={formatNumber(
+              summary?.in_progress_orders
+            )}
+            sub={formatIDR(
+              summary?.in_progress_gross_sales || 0
+            )}
+          />
+          <MetricCard
+            icon={ClipboardList}
+            label="Return / Refund Orders"
+            value={formatNumber(
+              summary?.return_refund_orders
+            )}
+            sub={formatIDR(
+              summary?.return_refund_gross_sales || 0
+            )}
+          />
+          <MetricCard
+            icon={TicketPercent}
+            label="Seller Discount"
+            value={formatIDR(summary?.seller_discount || 0)}
+            sub={`${formatPercent(summary?.seller_discount_ratio)} of realized gross sales`}
+          />
+          <MetricCard
+            icon={TicketPercent}
+            label="Shopee Discount"
+            value={formatIDR(summary?.shopee_discount || 0)}
+            sub={`${formatPercent(summary?.shopee_discount_ratio)} of realized gross sales`}
           />
         </section>
 
@@ -262,20 +345,20 @@ const ReportsOverviewPage = () => {
                   </h2>
                   <Badge
                     variant={
-                      result.health_summary.tone === 'bad'
+                      readout.tone === 'bad'
                         ? 'destructive'
                         : 'outline'
                     }
                   >
-                    {result.health_summary.tone}
+                    {readout.tone}
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  {result.health_summary.headline}
+                  {readout.headline}
                 </p>
               </div>
               <div className="grid gap-3 p-3 md:grid-cols-2">
-                {result.health_summary.notes.map((note) => (
+                {readout.notes.map((note) => (
                   <div
                     key={note}
                     className="bg-background flex items-start gap-2 rounded-md border px-3 py-2 text-sm"
@@ -341,8 +424,8 @@ const ReportsOverviewPage = () => {
                   Sales and Profit Momentum
                 </h2>
                 <p className="text-muted-foreground text-sm">
-                  Daily net sales and net profit from
-                  completed Shopee orders.
+                  Potential, realized, cancelled sales, and
+                  net profit by local store date.
                 </p>
               </div>
               <div className="min-w-0 p-3">
@@ -365,11 +448,25 @@ const ReportsOverviewPage = () => {
                       content={<ChartTooltipContent />}
                     />
                     <Area
-                      dataKey="net_sales"
+                      dataKey="potential_gross_sales"
                       type="monotone"
-                      stroke="var(--color-net_sales)"
-                      fill="var(--color-net_sales)"
+                      stroke="var(--color-potential_gross_sales)"
+                      fill="var(--color-potential_gross_sales)"
                       fillOpacity={0.16}
+                    />
+                    <Area
+                      dataKey="realized_gross_sales"
+                      type="monotone"
+                      stroke="var(--color-realized_gross_sales)"
+                      fill="var(--color-realized_gross_sales)"
+                      fillOpacity={0.12}
+                    />
+                    <Area
+                      dataKey="cancelled_gross_sales"
+                      type="monotone"
+                      stroke="var(--color-cancelled_gross_sales)"
+                      fill="var(--color-cancelled_gross_sales)"
+                      fillOpacity={0.1}
                     />
                     <Area
                       dataKey="net_profit"
@@ -433,7 +530,9 @@ const ReportsOverviewPage = () => {
             <SignalCard
               icon={ReceiptText}
               label="Order Report"
-              value={formatIDR(result.summary.gross_sales)}
+              value={formatIDR(
+                result.summary.realized_gross_sales
+              )}
               sub={`${formatIDR(result.summary.cogs)} COGS`}
               href="/dashboard/reports/orders"
             />
@@ -455,16 +554,18 @@ const ReportsOverviewPage = () => {
               icon={TicketPercent}
               label="Voucher Signal"
               value={formatPercent(
-                result.voucher_summary.discount_ratio
+                result.summary.seller_discount_ratio
               )}
-              sub={`${formatIDR(result.voucher_summary.total_discount)} total discount`}
+              sub={`${formatIDR(result.summary.seller_discount)} seller discount`}
               href="/dashboard/reports/vouchers"
             />
             <SignalCard
               icon={ClipboardList}
               label="Operations Signal"
-              value="Order Quality"
-              sub="Cancellation, return, and refund"
+              value={formatNumber(
+                result.summary.cancelled_orders
+              )}
+              sub={`${formatIDR(result.summary.cancelled_gross_sales)} cancelled sales`}
               href="/dashboard/reports/operations"
             />
           </section>
@@ -474,7 +575,7 @@ const ReportsOverviewPage = () => {
           <section className="grid min-w-0 gap-3 xl:grid-cols-3">
             <RatioPanel
               title="Profit Leakage"
-              rows={result?.profit_leakage.items || []}
+              rows={buildOverviewLeakage(result?.summary)}
             />
             <div className="bg-card rounded-md border">
               <div className="border-b px-4 py-3">
@@ -483,17 +584,18 @@ const ReportsOverviewPage = () => {
                 </h2>
               </div>
               <div className="divide-y">
-                {result?.status_breakdown.length ? (
-                  result.status_breakdown.map((status) => (
+                {result?.funnel.length ? (
+                  result.funnel.map((status) => (
                     <div
-                      key={status.status}
+                      key={status.bucket}
                       className="flex items-center justify-between gap-3 px-4 py-2 text-sm"
                     >
                       <span className="text-muted-foreground capitalize">
-                        {status.status.replace(/-/g, ' ')}
+                        {status.bucket.replace(/_/g, ' ')}
                       </span>
                       <Badge variant="outline">
-                        {formatNumber(status.orders)}
+                        {formatNumber(status.orders)} ·{' '}
+                        {formatIDR(status.gross_sales)}
                       </Badge>
                     </div>
                   ))
@@ -514,20 +616,19 @@ const ReportsOverviewPage = () => {
                 <MiniMetric
                   label="Net Sales Coverage"
                   value={formatPercent(
-                    result?.data_quality.net_sales_coverage
+                    result?.summary.net_sales_coverage
                   )}
                 />
                 <MiniMetric
                   label="Net Profit Coverage"
                   value={formatPercent(
-                    result?.data_quality.net_profit_coverage
+                    result?.summary.net_profit_coverage
                   )}
                 />
                 <MiniMetric
                   label="Released Funds Coverage"
                   value={formatPercent(
-                    result?.data_quality
-                      .released_funds_coverage
+                    result?.summary.released_funds_coverage
                   )}
                 />
               </div>
@@ -628,12 +729,165 @@ const SignalCard = ({
   );
 };
 
+type OverviewAlert = {
+  key: string;
+  severity: 'info' | 'warning' | 'danger';
+  title: string;
+  message: string;
+};
+
+const buildOverviewAlerts = (
+  report?: OverviewReportResponseDTO
+): OverviewAlert[] => {
+  if (!report) return [];
+
+  const { summary } = report;
+  const alerts: OverviewAlert[] = [];
+
+  if (summary.net_margin < 0) {
+    alerts.push({
+      key: 'negative-net-margin',
+      severity: 'danger',
+      title: 'Net margin negatif',
+      message:
+        'Net profit negatif setelah COGS, fee, dan diskon.',
+    });
+  } else if (summary.net_margin < 0.1) {
+    alerts.push({
+      key: 'thin-net-margin',
+      severity: 'warning',
+      title: 'Net margin tipis',
+      message:
+        'Margin di bawah 10% dan rentan tertekan biaya.',
+    });
+  }
+
+  if (summary.cancellation_rate_by_value >= 0.1) {
+    alerts.push({
+      key: 'high-cancellation-value',
+      severity: 'danger',
+      title: 'Potential sales banyak hilang',
+      message: `${formatPercent(summary.cancellation_rate_by_value)} potential gross sales berasal dari order batal.`,
+    });
+  }
+
+  if (summary.fee_ratio >= 0.12) {
+    alerts.push({
+      key: 'high-fee-ratio',
+      severity: 'warning',
+      title: 'Fee Shopee tinggi',
+      message:
+        'Fee Shopee melewati 12% dari realized gross sales.',
+    });
+  }
+
+  if (summary.seller_discount_ratio >= 0.1) {
+    alerts.push({
+      key: 'high-seller-discount',
+      severity: 'warning',
+      title: 'Diskon seller tinggi',
+      message:
+        'Diskon seller melewati 10% dari realized gross sales.',
+    });
+  }
+
+  if (
+    summary.net_sales_coverage < 0.9 ||
+    summary.net_profit_coverage < 0.9
+  ) {
+    alerts.push({
+      key: 'low-data-confidence',
+      severity: 'info',
+      title: 'Data confidence belum penuh',
+      message:
+        'Sebagian order selesai masih memakai fallback financial.',
+    });
+  }
+
+  return alerts.slice(0, 5);
+};
+
+const buildOverviewReadout = (
+  report?: OverviewReportResponseDTO
+) => {
+  if (!report) {
+    return {
+      tone: 'neutral' as const,
+      headline:
+        'Belum ada data overview untuk periode ini.',
+      notes: [],
+    };
+  }
+
+  const { summary } = report;
+  const tone =
+    summary.net_margin < 0
+      ? 'bad'
+      : summary.net_margin < 0.1 ||
+          summary.cancellation_rate_by_value >= 0.1 ||
+          summary.fee_ratio >= 0.12
+        ? 'warning'
+        : 'good';
+
+  const notes = [
+    `${formatIDR(summary.realized_gross_sales)} realized gross sales dari ${formatIDR(summary.potential_gross_sales)} potential sales.`,
+    `${formatIDR(summary.cancelled_gross_sales)} potential sales hilang karena cancellation.`,
+    `${formatNumber(summary.completed_orders)} order selesai dari ${formatNumber(summary.total_orders)} seluruh order.`,
+    `Net profit ${formatIDR(summary.net_profit)} dengan margin ${formatPercent(summary.net_margin)}.`,
+  ];
+
+  return {
+    tone: tone as 'good' | 'warning' | 'bad',
+    headline:
+      tone === 'bad'
+        ? 'Sales menghasilkan rugi dan perlu segera ditinjau.'
+        : tone === 'warning'
+          ? 'Sales berjalan, tetapi ada tekanan cancellation atau margin.'
+          : 'Sales dan profit berada dalam kondisi sehat.',
+    notes,
+  };
+};
+
+const buildOverviewLeakage = (
+  summary?: OverviewReportResponseDTO['summary']
+) => {
+  if (!summary) return [];
+
+  const grossSales = summary.realized_gross_sales || 0;
+  return [
+    { key: 'cogs', label: 'COGS', value: summary.cogs },
+    {
+      key: 'shopee_fee',
+      label: 'Shopee Fee',
+      value: summary.shopee_fee,
+    },
+    {
+      key: 'seller_discount',
+      label: 'Seller Discount',
+      value: summary.seller_discount,
+    },
+    {
+      key: 'marketplace_deduction',
+      label: 'Marketplace Deduction',
+      value: summary.marketplace_deduction,
+    },
+  ].map((item) => ({
+    ...item,
+    ratio: grossSales > 0 ? item.value / grossSales : 0,
+  }));
+};
+
 const RatioPanel = ({
   title,
   rows,
 }: {
   title: string;
-  rows: OrderReportResponseDTO['profit_leakage']['items'];
+  rows: Array<{
+    key: string;
+    label: string;
+    value: number;
+    ratio: number;
+  }>;
 }) => (
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
