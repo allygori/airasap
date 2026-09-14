@@ -18,6 +18,7 @@ import {
   TIMEZONES,
   type TimeZone,
 } from '@/constant/timezone';
+import { TZDate } from '@date-fns/tz';
 import {
   differenceInCalendarDays,
   endOfMonth,
@@ -164,7 +165,8 @@ export class ReportService {
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
         endDate,
-        mode
+        mode,
+        timezone
       );
       const previousPipelines = aggregateProductSalesReport(
         {
@@ -227,7 +229,8 @@ export class ReportService {
       const previousPeriod = getPreviousEquivalentPeriod(
         startDate,
         endDate,
-        mode
+        mode,
+        timezone
       );
       const previousPipelines = aggregateOrderReport({
         startDate: previousPeriod.startDate,
@@ -345,10 +348,15 @@ export class ReportService {
 const getPreviousEquivalentPeriod = (
   startDate: string,
   endDate: string,
-  mode?: ReportPeriodMode
+  mode?: ReportPeriodMode,
+  timezone: TimeZone = TIMEZONES.WIB.value
 ) => {
-  const currentStart = startOfDay(parseISO(startDate));
-  const currentEnd = startOfDay(parseISO(endDate));
+  const currentStart = startOfDay(
+    new TZDate(startDate, timezone)
+  );
+  const currentEnd = startOfDay(
+    new TZDate(endDate, timezone)
+  );
   const previousRange = getPreviousRangeByMode(
     currentStart,
     currentEnd,
@@ -423,7 +431,7 @@ const getPreviousRangeByMode = (
 
       return {
         startDate: startOfMonth(previousMonth),
-        endDate: startOfMonth(endOfMonth(previousMonth)),
+        endDate: endOfMonth(previousMonth),
       };
     }
     case 'quarterly': {
