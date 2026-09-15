@@ -69,22 +69,22 @@ type MetricCardProps = {
 const moneyChartConfig = {
   net_sales: {
     label: 'Net Sales',
-    color: 'var(--chart-1)',
+    color: 'var(--color-success)',
   },
   net_profit: {
     label: 'Net Profit',
-    color: 'var(--chart-2)',
+    color: 'var(--color-info)',
   },
 } satisfies ChartConfig;
 
 const orderChartConfig = {
   orders: {
     label: 'Orders',
-    color: 'var(--chart-3)',
+    color: 'var(--color-info)',
   },
   units: {
     label: 'Units',
-    color: 'var(--chart-4)',
+    color: 'var(--color-success)',
   },
 } satisfies ChartConfig;
 
@@ -313,7 +313,13 @@ const OrderReportPage = () => {
                     variant={
                       result.health_summary.tone === 'bad'
                         ? 'destructive'
-                        : 'outline'
+                        : result.health_summary.tone ===
+                            'warning'
+                          ? 'warning'
+                          : result.health_summary.tone ===
+                              'good'
+                            ? 'success'
+                            : 'outline'
                     }
                   >
                     {result.health_summary.tone}
@@ -339,7 +345,7 @@ const OrderReportPage = () => {
             <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="text-muted-foreground size-4" />
+                  <AlertTriangle className="text-warning size-4" />
                   <h2 className="font-medium">
                     Threshold Alerts
                   </h2>
@@ -360,7 +366,9 @@ const OrderReportPage = () => {
                           variant={
                             alert.severity === 'danger'
                               ? 'destructive'
-                              : 'outline'
+                              : alert.severity === 'warning'
+                                ? 'warning'
+                                : 'info'
                           }
                         >
                           {alert.severity}
@@ -1047,7 +1055,11 @@ const GrowthCard = ({
         </p>
         <Badge
           variant={
-            direction === 'down' ? 'destructive' : 'outline'
+            direction === 'down'
+              ? 'destructive'
+              : direction === 'up'
+                ? 'success'
+                : 'outline'
           }
           className="gap-1"
         >
@@ -1093,7 +1105,7 @@ const SignalRow = ({
     <span
       className={
         tone === 'good'
-          ? 'text-constructive font-medium'
+          ? 'text-success font-medium'
           : tone === 'bad'
             ? 'text-destructive font-medium'
             : 'font-medium'
@@ -1182,7 +1194,13 @@ const HighlightPanel = ({
   <div className="bg-card rounded-md border">
     <div className="border-b px-4 py-3">
       <div className="flex items-center gap-2">
-        <Icon className="text-muted-foreground size-4" />
+        <Icon
+          className={
+            title === 'Best Days'
+              ? 'text-success size-4'
+              : 'text-danger size-4'
+          }
+        />
         <h2 className="font-medium">{title}</h2>
       </div>
     </div>
@@ -1265,7 +1283,7 @@ const ProfitLeakagePanel = ({
           </div>
           <div className="bg-muted h-2 overflow-hidden rounded-full">
             <div
-              className="bg-primary h-full rounded-full"
+              className="bg-danger h-full rounded-full"
               style={{
                 width: `${Math.min(item.ratio * 100, 100)}%`,
               }}
@@ -1436,13 +1454,27 @@ const DataQualityPanel = ({
               <span className="text-muted-foreground">
                 {row.label}
               </span>
-              <span className="font-medium">
+              <span
+                className={
+                  row.value >= 0.9
+                    ? 'text-success font-medium'
+                    : row.value >= 0.75
+                      ? 'text-warning font-medium'
+                      : 'text-info font-medium'
+                }
+              >
                 {formatPercent(row.value)}
               </span>
             </div>
             <div className="bg-muted h-2 overflow-hidden rounded-full">
               <div
-                className="bg-primary h-full rounded-full"
+                className={
+                  row.value >= 0.9
+                    ? 'bg-success h-full rounded-full'
+                    : row.value >= 0.75
+                      ? 'bg-warning h-full rounded-full'
+                      : 'bg-info h-full rounded-full'
+                }
                 style={{
                   width: `${Math.min(row.value * 100, 100)}%`,
                 }}

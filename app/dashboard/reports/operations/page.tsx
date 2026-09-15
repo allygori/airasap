@@ -47,15 +47,15 @@ import {
 const statusChartConfig = {
   completed_orders: {
     label: 'Completed',
-    color: 'var(--chart-1)',
+    color: 'var(--color-success)',
   },
   cancelled_orders: {
     label: 'Cancelled',
-    color: 'var(--chart-2)',
+    color: 'var(--color-danger)',
   },
   return_refund_orders: {
     label: 'Return/Refund',
-    color: 'var(--chart-3)',
+    color: 'var(--color-warning)',
   },
 } satisfies ChartConfig;
 

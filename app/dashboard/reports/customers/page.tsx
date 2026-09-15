@@ -51,7 +51,7 @@ type CustomerRow =
 const repeatChartConfig = {
   customers: {
     label: 'Customers',
-    color: 'var(--chart-1)',
+    color: 'var(--color-info)',
   },
 } satisfies ChartConfig;
 
@@ -565,10 +565,10 @@ const CustomerBadge = ({
   customer: CustomerRow;
 }) => {
   if (customer.is_returning_customer) {
-    return <Badge variant="default">Returning</Badge>;
+    return <Badge variant="success">Returning</Badge>;
   }
   if (customer.is_repeat_customer) {
-    return <Badge variant="secondary">Repeat</Badge>;
+    return <Badge variant="info">Repeat</Badge>;
   }
   if (customer.is_new_customer) {
     return <Badge variant="outline">New</Badge>;

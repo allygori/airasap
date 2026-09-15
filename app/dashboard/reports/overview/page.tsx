@@ -377,7 +377,7 @@ const ReportsOverviewPage = () => {
             <div className="bg-card min-w-0 rounded-md border">
               <div className="border-b px-4 py-3">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="text-muted-foreground size-4" />
+                  <AlertTriangle className="text-warning size-4" />
                   <h2 className="font-medium">
                     Action Queue
                   </h2>
@@ -922,7 +922,7 @@ const RatioPanel = ({
             </div>
             <div className="bg-muted h-2 overflow-hidden rounded-full">
               <div
-                className="bg-primary h-full rounded-full"
+                className="bg-danger h-full rounded-full"
                 style={{
                   width: `${Math.min(row.ratio * 100, 100)}%`,
                 }}

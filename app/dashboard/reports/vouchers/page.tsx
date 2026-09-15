@@ -52,22 +52,22 @@ type VoucherRow =
 const voucherChartConfig = {
   net_sales: {
     label: 'Net Sales',
-    color: 'var(--chart-1)',
+    color: 'var(--color-success)',
   },
   net_profit: {
     label: 'Net Profit',
-    color: 'var(--chart-2)',
+    color: 'var(--color-info)',
   },
 } satisfies ChartConfig;
 
 const discountChartConfig = {
   seller_discount: {
     label: 'Seller Discount',
-    color: 'var(--chart-3)',
+    color: 'var(--color-danger)',
   },
   shopee_discount: {
     label: 'Shopee Discount',
-    color: 'var(--chart-4)',
+    color: 'var(--color-warning)',
   },
 } satisfies ChartConfig;
 
@@ -682,9 +682,8 @@ const getVoucherInsights = (vouchers: VoucherRow[]) => ({
 const getVoucherVariant = (
   classification: VoucherRow['classification']
 ) => {
-  if (classification === 'Profitable') return 'default';
-  if (classification === 'Growth Driver')
-    return 'secondary';
+  if (classification === 'Profitable') return 'success';
+  if (classification === 'Growth Driver') return 'info';
   if (classification === 'Margin Risk')
     return 'destructive';
   return 'outline';

@@ -58,10 +58,9 @@ const formatNumber = (value?: number) =>
 const classificationVariant = (
   classification: ProductRow['classification']
 ) => {
-  if (classification === 'Star') return 'default';
-  if (classification === 'Revenue Driver')
-    return 'secondary';
-  if (classification === 'Profit Driver') return 'outline';
+  if (classification === 'Star') return 'success';
+  if (classification === 'Revenue Driver') return 'info';
+  if (classification === 'Profit Driver') return 'success';
   return 'destructive';
 };
 
@@ -560,7 +559,11 @@ const ProductsReportPage = () => {
                     <h2 className="font-medium">
                       Data Confidence
                     </h2>
-                    <Badge variant="outline">
+                    <Badge
+                      variant={getQualityVariant(
+                        summary.data_quality_score
+                      )}
+                    >
                       {getQualityLabel(
                         summary.data_quality_score
                       )}
@@ -945,7 +948,11 @@ const GrowthCard = ({
         </p>
         <Badge
           variant={
-            direction === 'down' ? 'destructive' : 'outline'
+            direction === 'down'
+              ? 'destructive'
+              : direction === 'up'
+                ? 'success'
+                : 'outline'
           }
           className="gap-1"
         >
@@ -1191,6 +1198,13 @@ const getQualityLabel = (score: number) => {
   if (score >= 0.75) return 'Good coverage';
   if (score >= 0.5) return 'Mixed sources';
   return 'Needs re-enrich';
+};
+
+const getQualityVariant = (score: number) => {
+  if (score >= 0.95) return 'success' as const;
+  if (score >= 0.75) return 'info' as const;
+  if (score >= 0.5) return 'warning' as const;
+  return 'destructive' as const;
 };
 
 const formatShortDate = (date: string) =>
