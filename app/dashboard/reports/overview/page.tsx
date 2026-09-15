@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import {
   AlertTriangle,
+  Ban,
   Banknote,
   CircleDollarSign,
   CreditCard,
@@ -572,6 +573,15 @@ const ReportsOverviewPage = () => {
               )}
               sub={`${formatIDR(result.summary.cancelled_gross_sales)} cancelled sales`}
               href="/dashboard/reports/operations"
+            />
+            <SignalCard
+              icon={Ban}
+              label="Cancellation Signal"
+              value={formatPercent(
+                result.summary.cancellation_rate_by_value
+              )}
+              sub={`${formatIDR(result.summary.cancelled_gross_sales)} potential sales lost`}
+              href="/dashboard/reports/cancellations"
             />
           </section>
         ) : null}

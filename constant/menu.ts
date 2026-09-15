@@ -69,6 +69,10 @@ export const mainNav = [
         title: 'Operations Quality',
         url: '/dashboard/reports/operations',
       },
+      {
+        title: 'Cancellations Report',
+        url: '/dashboard/reports/cancellations',
+      },
     ],
   },
   // {

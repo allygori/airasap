@@ -501,6 +501,67 @@ export const OverviewReportResponseSchema = z.object({
   }),
 });
 
+export const CancellationReportResponseSchema = z.object({
+  summary: z.object({
+    total_orders: z.number(),
+    cancelled_orders: z.number(),
+    non_cancelled_orders: z.number(),
+    potential_gross_sales: z.number(),
+    cancelled_gross_sales: z.number(),
+    cancelled_payment: z.number(),
+    cancelled_cogs: z.number(),
+    cancelled_gross_profit: z.number(),
+    cancelled_net_profit: z.number(),
+    cancelled_seller_discount: z.number(),
+    cancelled_shopee_discount: z.number(),
+    cancelled_units: z.number(),
+    cancellation_rate_by_orders: z.number(),
+    cancellation_rate_by_value: z.number(),
+    average_cancelled_order_value: z.number(),
+  }),
+  daily_reports: z.array(
+    z.object({
+      date: z.string(),
+      orders: z.number(),
+      cancelled_orders: z.number(),
+      potential_gross_sales: z.number(),
+      cancelled_gross_sales: z.number(),
+      cancellation_rate: z.number(),
+      cancellation_rate_by_value: z.number(),
+    })
+  ),
+  cancellation_by_actor: z.array(
+    z.object({
+      label: z.string(),
+      orders: z.number(),
+      cancelled_gross_sales: z.number(),
+      cancelled_payment: z.number(),
+    })
+  ),
+  cancellation_by_reason: z.array(
+    z.object({
+      label: z.string(),
+      orders: z.number(),
+      cancelled_gross_sales: z.number(),
+      cancelled_payment: z.number(),
+    })
+  ),
+  data_quality: z.object({
+    cancelled_orders: z.number(),
+    orders_with_reason: z.number(),
+    orders_with_actor: z.number(),
+    orders_with_gross_sales: z.number(),
+    reason_coverage: z.number(),
+    actor_coverage: z.number(),
+    gross_sales_coverage: z.number(),
+  }),
+  meta: z.object({
+    start_date: z.string(),
+    end_date: z.string(),
+    period_days: z.number(),
+  }),
+});
+
 export const CustomerReportSummarySchema = z.object({
   total_customers: z.number(),
   new_customers: z.number(),
