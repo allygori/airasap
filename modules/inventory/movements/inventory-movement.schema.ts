@@ -35,6 +35,7 @@ export const InventoryMovementBaseSchema = z.object({
   occurred_at: z.string().min(1),
   source_type: z.string().trim().min(1).optional(),
   source_id: z.string().trim().min(1).optional(),
+  offset_account: z.string().min(1).optional(),
   idempotency_key: z.string().trim().min(1).optional(),
   reference: z.string().trim().optional(),
   notes: z.string().trim().optional(),
@@ -48,6 +49,7 @@ export const UpdateInventoryMovementSchema =
 export const InventoryMovementResponseSchema =
   InventoryMovementBaseSchema.extend({
     _id: z.string(),
+    journal_entry: z.string().optional(),
     created_at: z.string().optional(),
     updated_at: z.string().optional(),
   });

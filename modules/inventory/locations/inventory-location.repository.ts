@@ -1,0 +1,25 @@
+import type { ClientSession } from 'mongoose';
+import { BaseRepository } from '../../base.repository';
+import {
+  InventoryLocationModel,
+  type TInventoryLocation,
+} from './inventory-location.model';
+import type { AccountingTenantContext } from '@/modules/accounting/accounting.types';
+
+export class InventoryLocationRepository extends BaseRepository<TInventoryLocation> {
+  constructor(context: AccountingTenantContext) {
+    super(InventoryLocationModel, context);
+  }
+
+  async findLocationById(
+    id: string,
+    session?: ClientSession
+  ) {
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      _id: id,
+    });
+    if (session) query.session(session);
+    return query.lean();
+  }
+}

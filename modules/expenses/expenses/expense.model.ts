@@ -21,6 +21,7 @@ export type TExpense = Document &
     payment_account?: Types.ObjectId;
     attachment?: Types.ObjectId;
     expense_date: Date;
+    journal_entry?: Types.ObjectId;
     created_at?: Date;
     updated_at?: Date;
   };
@@ -63,6 +64,10 @@ const ExpenseSchema = new Schema<TExpense>(
       type: Schema.Types.ObjectId,
       ref: 'File',
     },
+    journal_entry: {
+      type: Schema.Types.ObjectId,
+      ref: 'JournalEntry',
+    },
     status: {
       type: String,
       enum: ['draft', 'posted', 'voided'],
@@ -80,6 +85,10 @@ const ExpenseSchema = new Schema<TExpense>(
 ExpenseSchema.index({
   organization: 1,
   expense_date: -1,
+});
+ExpenseSchema.index({
+  organization: 1,
+  journal_entry: 1,
 });
 ExpenseSchema.index(
   { organization: 1, idempotency_key: 1 },

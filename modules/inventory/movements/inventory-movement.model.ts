@@ -11,12 +11,17 @@ import { InventoryMovementBaseDTO } from './inventory-movement.dto';
 export type TInventoryMovement = Document &
   Omit<
     InventoryMovementBaseDTO,
-    'inventory_item' | 'location' | 'occurred_at'
+    | 'inventory_item'
+    | 'location'
+    | 'occurred_at'
+    | 'offset_account'
   > & {
     organization: Types.ObjectId;
     inventory_item: Types.ObjectId;
     location: Types.ObjectId;
     occurred_at: Date;
+    offset_account?: Types.ObjectId;
+    journal_entry?: Types.ObjectId;
     created_at?: Date;
     updated_at?: Date;
   };
@@ -47,6 +52,10 @@ const InventoryMovementSchema =
       occurred_at: { type: Date, required: true },
       source_type: { type: String },
       source_id: { type: String },
+      offset_account: {
+        type: Schema.Types.ObjectId,
+        ref: 'AccountingAccount',
+      },
       idempotency_key: { type: String },
       reference: { type: String },
       notes: { type: String },
@@ -54,6 +63,10 @@ const InventoryMovementSchema =
         type: String,
         enum: ['draft', 'posted', 'voided'],
         default: 'draft',
+      },
+      journal_entry: {
+        type: Schema.Types.ObjectId,
+        ref: 'JournalEntry',
       },
     },
     {
@@ -68,6 +81,10 @@ InventoryMovementSchema.index({
   organization: 1,
   inventory_item: 1,
   occurred_at: 1,
+});
+InventoryMovementSchema.index({
+  organization: 1,
+  journal_entry: 1,
 });
 InventoryMovementSchema.index(
   { organization: 1, idempotency_key: 1 },

@@ -38,6 +38,7 @@ export const UpdateExpenseSchema =
 export const ExpenseResponseSchema =
   ExpenseBaseSchema.extend({
     _id: z.string(),
+    journal_entry: z.string().optional(),
     created_at: z.string().optional(),
     updated_at: z.string().optional(),
   });

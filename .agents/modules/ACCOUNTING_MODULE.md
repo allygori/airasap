@@ -309,6 +309,25 @@ Dr Inventory Asset
     Cr Cash / Accounts Payable
 ```
 
+### Phase 3 implementation status
+
+- Added `ExpenseService` with draft, post, and record workflows. Posting
+  creates `Dr Expense / Cr Payment Account`; when no payment account is
+  supplied, account `2100 Utang Usaha` is used.
+- Added `InventoryMovementService` with purchase and packaging-consumption
+  workflows.
+- Purchase posting creates `Dr Inventory Asset / Cr Cash, Bank, or Accounts
+  Payable` and links the journal entry back to the movement.
+- Packaging consumption calculates weighted-average cost from posted movement
+  history, validates available quantity, creates `Dr HPP Bahan Packing
+  Terpakai / Cr Persediaan Bahan Packing`, and links the journal entry back to
+  the movement.
+- Added inventory and expense repositories, journal references, idempotency,
+  tenant-scoped validation, and audit log events.
+- Purchase and consumption services accept an optional `ClientSession`; callers
+  should use a MongoDB transaction when atomic multi-document behavior is
+  required and transaction support is enabled.
+
 ## Phase 4 — Order integration
 
 Orders progress through:
