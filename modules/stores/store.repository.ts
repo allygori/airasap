@@ -21,7 +21,10 @@ export class StoreRepository extends BaseRepository<TStore> {
    */
   async findCurrentStore() {
     return await this.model
-      .findById(this.tenantContext.storeId)
+      .findOne({
+        _id: this.tenantContext.storeId,
+        ...this.getTenantFilter(),
+      })
       .lean();
   }
 

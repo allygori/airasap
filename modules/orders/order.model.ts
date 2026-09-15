@@ -13,6 +13,7 @@ import {
   OrderFeeDTO,
   OrderBaseDTO,
 } from './order.dto';
+import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
 
 export type TOrderItem = OrderItemDTO;
 export type TOrderAddress = OrderAddressDTO;
@@ -622,6 +623,8 @@ OrderSchema.index({
   store: 1,
   placed_at: -1,
 });
+
+OrderSchema.plugin(multiTenancyPlugin);
 
 OrderSchema.index(
   {

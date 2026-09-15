@@ -10,6 +10,7 @@ import {
   STORAGE_PROVIDERS_KV,
 } from './file.constant';
 import { BaseFileDTO } from './file.dto';
+import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
 
 // const ObjectId = Schema.Types.ObjectId;
 // const fileTypes = [
@@ -134,6 +135,8 @@ const FileSchema = new Schema<TFile>(
     },
   }
 );
+
+FileSchema.plugin(multiTenancyPlugin);
 
 export const FileModel =
   models.File || model<TFile>('File', FileSchema, 'files');

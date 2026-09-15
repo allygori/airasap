@@ -32,10 +32,6 @@ import '@/modules/products/product.model';
 // import '@/modules/product-costs/product-cost.model';
 import '@/modules/orders/order.model';
 import '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
-import { multiTenancyPlugin } from './plugins/multi-tenancy';
-
-// Init global plugins
-mongoose.plugin(multiTenancyPlugin);
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -11,6 +11,7 @@ import {
   TIMEZONE_VALUES,
 } from '@/constant/timezone';
 import { StoreBaseDTO } from './store.dto';
+import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
 
 // const ObjectId = Schema.Types.ObjectId;
 
@@ -83,6 +84,8 @@ const StoreSchema = new Schema<TStore>(
     },
   }
 );
+
+StoreSchema.plugin(multiTenancyPlugin);
 
 export const StoreModel =
   models.Store ||

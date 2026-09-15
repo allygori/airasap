@@ -215,7 +215,96 @@ export class OrderRepository extends BaseRepository<TOrder> {
   async bulkWrite(
     operations: AnyBulkWriteOperation<TOrder>[]
   ) {
-    return await this.model.bulkWrite(operations);
+    const tenantFilter = this.getTenantFilter();
+    const scopedOperations = operations.map((operation) => {
+      if ('insertOne' in operation) {
+        return {
+          insertOne: {
+            ...operation.insertOne,
+            document: {
+              ...operation.insertOne.document,
+              organization:
+                this.tenantContext.organizationId,
+              ...(this.tenantContext.storeId && {
+                store: this.tenantContext.storeId,
+              }),
+            },
+          },
+        } as unknown as AnyBulkWriteOperation<TOrder>;
+      }
+
+      if ('updateOne' in operation) {
+        return {
+          updateOne: {
+            ...operation.updateOne,
+            filter: {
+              ...operation.updateOne.filter,
+              ...tenantFilter,
+            },
+          },
+        } as unknown as AnyBulkWriteOperation<TOrder>;
+      }
+
+      if ('updateMany' in operation) {
+        return {
+          updateMany: {
+            ...operation.updateMany,
+            filter: {
+              ...operation.updateMany.filter,
+              ...tenantFilter,
+            },
+          },
+        } as unknown as AnyBulkWriteOperation<TOrder>;
+      }
+
+      if ('replaceOne' in operation) {
+        return {
+          replaceOne: {
+            ...operation.replaceOne,
+            filter: {
+              ...operation.replaceOne.filter,
+              ...tenantFilter,
+            },
+            replacement: {
+              ...operation.replaceOne.replacement,
+              organization:
+                this.tenantContext.organizationId,
+              ...(this.tenantContext.storeId && {
+                store: this.tenantContext.storeId,
+              }),
+            },
+          },
+        } as unknown as AnyBulkWriteOperation<TOrder>;
+      }
+
+      if ('deleteOne' in operation) {
+        return {
+          deleteOne: {
+            ...operation.deleteOne,
+            filter: {
+              ...operation.deleteOne.filter,
+              ...tenantFilter,
+            },
+          },
+        } as AnyBulkWriteOperation<TOrder>;
+      }
+
+      if ('deleteMany' in operation) {
+        return {
+          deleteMany: {
+            ...operation.deleteMany,
+            filter: {
+              ...operation.deleteMany.filter,
+              ...tenantFilter,
+            },
+          },
+        } as AnyBulkWriteOperation<TOrder>;
+      }
+
+      return operation;
+    });
+
+    return await this.model.bulkWrite(scopedOperations);
   }
 
   // async unsetDeprecatedItemProfitField() {

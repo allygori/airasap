@@ -3,6 +3,7 @@ import {
   AggregateOptions,
   Model,
   PipelineStage,
+  Types,
   // Document,
   // QueryFilter,
   // UpdateQuery,
@@ -29,20 +30,34 @@ export class ReportRepository {
     pipeline?: PipelineStage[],
     options?: AggregateOptions
   ) {
-    // startDate: string | Date,
-    // endDate: string | Date
-    // aggregate
+    if (
+      !Types.ObjectId.isValid(
+        this.tenantContext.organizationId
+      ) ||
+      !Types.ObjectId.isValid(
+        this.tenantContext.storeId || ''
+      )
+    ) {
+      throw new Error(
+        'Invalid tenant context for report aggregation.'
+      );
+    }
 
-    // Guard
-    // const guard = {
-    //   $match: {
-    //     organization: this.tenantContext.organizationId,
-    //     store: this.tenantContext.storeId,
-    //   },
-    // };
+    // Aggregate middleware cannot reliably infer the tenant from a regular
+    // query option, so the repository owns this boundary explicitly.
+    const tenantMatch: PipelineStage.Match = {
+      $match: {
+        organization: new Types.ObjectId(
+          this.tenantContext.organizationId
+        ),
+        store: new Types.ObjectId(
+          this.tenantContext.storeId!
+        ),
+      },
+    };
 
     return await this.orderModel.aggregate(
-      pipeline,
+      [tenantMatch, ...(pipeline || [])],
       options
     );
   }

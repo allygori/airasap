@@ -46,8 +46,10 @@ export abstract class BaseRepository<T extends Document> {
   async create(data: any) {
     return this.model.create({
       ...data,
-      organizationId: this.tenantContext.organizationId,
-      storeId: this.tenantContext.storeId,
+      organization: this.tenantContext.organizationId,
+      ...(this.tenantContext.storeId && {
+        store: this.tenantContext.storeId,
+      }),
     });
   }
 

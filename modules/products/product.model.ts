@@ -7,6 +7,7 @@ import {
 } from 'mongoose';
 import { ProductBaseDTO } from './product.dto';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
+import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
 
 export type TProduct = Document &
   ProductBaseDTO & {
@@ -167,6 +168,8 @@ ProductSchema.index({
   store: 1,
   platform: 1,
 });
+
+ProductSchema.plugin(multiTenancyPlugin);
 
 export const ProductModel =
   models.Product ||
