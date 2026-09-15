@@ -55,30 +55,30 @@ type MetricCardProps = {
 const overviewChartConfig = {
   potential_gross_sales: {
     label: 'Potential Gross Sales',
-    color: 'var(--chart-1)',
+    color: 'var(--color-info)',
   },
   realized_gross_sales: {
     label: 'Realized Gross Sales',
-    color: 'var(--chart-2)',
+    color: 'var(--color-success)',
   },
   cancelled_gross_sales: {
     label: 'Cancelled Sales',
-    color: 'var(--chart-3)',
+    color: 'var(--color-danger)',
   },
   net_profit: {
     label: 'Net Profit',
-    color: 'var(--chart-4)',
+    color: 'var(--color-warning)',
   },
 } satisfies ChartConfig;
 
 const pressureChartConfig = {
   shopee_fee: {
     label: 'Shopee Fee',
-    color: 'var(--chart-3)',
+    color: 'var(--color-warning)',
   },
   seller_discount: {
     label: 'Seller Discount',
-    color: 'var(--chart-4)',
+    color: 'var(--color-danger)',
   },
 } satisfies ChartConfig;
 
@@ -272,18 +272,6 @@ const ReportsOverviewPage = () => {
             sub={`${formatIDR(summary?.average_order_value || 0)} AOV`}
           />
           <MetricCard
-            icon={ShieldCheck}
-            label="Completed Buyers"
-            value={formatNumber(summary?.completed_buyers)}
-            sub={`${formatNumber(summary?.completed_units)} realized units`}
-          />
-          <SignedMetricCard
-            icon={Banknote}
-            label="Shopee Fee"
-            value={summary?.shopee_fee || 0}
-            sub={`${formatPercent(summary?.fee_ratio)} of realized gross sales`}
-          />
-          <MetricCard
             icon={ReceiptText}
             label="All Orders"
             value={formatNumber(summary?.total_orders)}
@@ -301,6 +289,19 @@ const ReportsOverviewPage = () => {
             value={formatNumber(summary?.cancelled_orders)}
             sub={`${formatPercent(summary?.cancellation_rate_by_orders)} by order count`}
           />
+          <MetricCard
+            icon={ShieldCheck}
+            label="Completed Buyers"
+            value={formatNumber(summary?.completed_buyers)}
+            sub={`${formatNumber(summary?.completed_units)} realized units`}
+          />
+          <MetricCard
+            icon={Banknote}
+            label="Shopee Fee"
+            value={formatIDR(summary?.shopee_fee || 0)}
+            sub={`${formatPercent(summary?.fee_ratio)} of realized gross sales`}
+          />
+
           <MetricCard
             icon={ClipboardList}
             label="In Progress Orders"
@@ -347,7 +348,9 @@ const ReportsOverviewPage = () => {
                     variant={
                       readout.tone === 'bad'
                         ? 'destructive'
-                        : 'outline'
+                        : readout.tone === 'warning'
+                          ? 'warning'
+                          : 'success'
                     }
                   >
                     {readout.tone}
@@ -394,7 +397,9 @@ const ReportsOverviewPage = () => {
                           variant={
                             alert.severity === 'danger'
                               ? 'destructive'
-                              : 'outline'
+                              : alert.severity === 'warning'
+                                ? 'warning'
+                                : 'info'
                           }
                         >
                           {alert.severity}
