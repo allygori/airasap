@@ -32,6 +32,14 @@ import '@/modules/products/product.model';
 // import '@/modules/product-costs/product-cost.model';
 import '@/modules/orders/order.model';
 import '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
+import '@/modules/accounting/accounts/account.model';
+import '@/modules/accounting/journal-entries/journal-entry.model';
+import '@/modules/accounting/periods/accounting-period.model';
+import '@/modules/accounting/opening-balances/opening-balance.model';
+import '@/modules/inventory/items/inventory-item.model';
+import '@/modules/inventory/locations/inventory-location.model';
+import '@/modules/inventory/movements/inventory-movement.model';
+import '@/modules/expenses/expenses/expense.model';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
