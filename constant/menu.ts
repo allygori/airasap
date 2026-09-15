@@ -18,6 +18,7 @@ import {
   ShoppingBagIcon,
   // FileTextIcon,
   ChartPieIcon,
+  Landmark,
 } from 'lucide-react';
 
 export const mainNav = [
@@ -35,6 +36,11 @@ export const mainNav = [
     title: 'Orders',
     url: '/dashboard/orders',
     icon: ShoppingBagIcon,
+  },
+  {
+    title: 'Accounting',
+    url: '/dashboard/accounting',
+    icon: Landmark,
   },
   {
     title: 'Reports',

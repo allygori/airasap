@@ -1,6 +1,6 @@
 # Pasaria Accounting Module Implementation Plan
 
-Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented.
+Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented; Phase 3 implemented; Phase 6A implemented.
 
 Pasaria should evolve from a marketplace analytics dashboard into a commerce operating system. The accounting foundation follows the standard accounting-software approach used by QuickBooks, Xero, Accurate Online, and Mekari Jurnal:
 
@@ -27,6 +27,23 @@ The General Ledger is the accounting source of truth. Operational modules retain
 - Business-domain Mongoose models use `organization` as their tenant reference.
 - Better Auth internal models continue to use `organizationId`.
 - The business supports accrual-capable accounting, with cash flow reported separately.
+
+## Current implementation order
+
+The implementation order is intentionally not strictly numerical:
+
+```text
+Phase 0 → Phase 1 → Phase 2 → Phase 3
+                              ↘ Phase 6A — operational UI/widgets
+                                → Phase 4 — order integration
+                                → Phase 5 — settlement/reconciliation
+                                → Phase 6B — financial reporting UI
+                                → Phase 7 — manual accounting and adjustments
+```
+
+Phase 4 can be implemented after Phase 6A because it reuses the posting and
+inventory services. Phase 5 follows Phase 4 because marketplace settlement
+needs completed-order and marketplace-receivable events.
 
 ## Phase 0 — Tenancy alignment
 
@@ -328,6 +345,39 @@ Dr Inventory Asset
   should use a MongoDB transaction when atomic multi-document behavior is
   required and transaction support is enabled.
 
+## Phase 6A — Operational UI and widgets
+
+Potential widgets:
+
+- Buy packaging materials.
+- Buy inventory.
+- Record expense.
+- Contribute capital.
+- Withdraw owner funds.
+- Pay supplier.
+- Record salary.
+- Adjust inventory.
+- Record marketplace payout.
+- Transfer between accounts.
+
+Widgets are interfaces for source transactions. They must not bypass domain services or write journal lines directly.
+
+### Phase 6A implementation status
+
+- Added the `/dashboard/accounting` Finance Desk using the existing
+  Shadcn/Base UI components.
+- Added tenant-scoped bootstrap and setup endpoints for default CoA, current
+  accounting period, accounts, inventory items, and inventory locations.
+- Added operational API endpoints for expense posting, inventory purchase, and
+  packaging consumption.
+- Added UI flows for `Catat expense`, `Beli inventory`, and `Pakai packaging`.
+- The UI displays the active period and setup state, and sends all writes
+  through Phase 2–3 domain services.
+- Added Accounting navigation entry in the dashboard sidebar.
+
+Phase 6A deliberately does not provide direct journal or ledger input. That
+belongs to Phase 7.
+
 ## Phase 4 — Order integration
 
 Orders progress through:
@@ -362,22 +412,29 @@ Dr Marketplace Fee
 - Shopee balance reconciliation.
 - Transaction matching.
 
-## Phase 6 — UI and operational widgets
+## Phase 6B — Financial reporting UI
 
-Potential widgets:
+After Phases 4 and 5, add ledger detail, trial balance, P&L, cash-flow, stock
+valuation, marketplace receivable, settlement, and reconciliation screens.
 
-- Buy packaging materials.
-- Buy inventory.
-- Record expense.
-- Contribute capital.
-- Withdraw owner funds.
-- Pay supplier.
-- Record salary.
-- Adjust inventory.
-- Record marketplace payout.
-- Transfer between accounts.
+## Phase 7 — Manual accounting and adjustments
 
-Widgets are interfaces for source transactions. They must not bypass domain services or write journal lines directly.
+Users may create manual journal entries, but they must always enter through the
+same journal posting service used by operational workflows:
+
+```text
+Manual Journal Entry
+  → double-entry validation
+  → open-period validation
+  → posted journal
+  → derived General Ledger
+  → trial balance and financial statements
+```
+
+The General Ledger is not a direct input table. It is derived from posted
+journals. Phase 7 may include manual journals, capital contributions, owner
+withdrawals, salary/compensation, account transfers, adjustments, approval
+controls, and journal reversal.
 
 ## Recommended decisions before Phase 1
 
