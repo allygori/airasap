@@ -459,6 +459,24 @@ Dr Marketplace Fee
 After Phases 4 and 5, add ledger detail, trial balance, P&L, cash-flow, stock
 valuation, marketplace receivable, settlement, and reconciliation screens.
 
+### Phase 6B implementation status
+
+- Added tenant-scoped `GET /api/v1/dashboard/accounting/reports` with period
+  filtering (`YYYY-MM`) and optional custom `from`/`to` dates.
+- Added a reporting service that derives trial balance, P&L, cash movement,
+  marketplace receivable, inventory valuation, recent journal activity, and
+  settlement summary from posted domain records.
+- Added `/dashboard/accounting/reports` with Shadcn/Base UI tabs for overview,
+  trial balance, inventory valuation, and journal activity.
+- Added period selection, KPI cards, P&L chart, settlement exception alert, and
+  empty states for tenants that do not yet have posted activity.
+- Reporting is read-only. It does not create journal entries or write ledger
+  rows; all values are derived from posted journals and posted inventory or
+  settlement records.
+- Bank reconciliation detail, export/print formats, comparative periods, and
+  balance-sheet presentation remain follow-up work after the first reporting
+  screen.
+
 ## Phase 7 — Manual accounting and adjustments
 
 Users may create manual journal entries, but they must always enter through the

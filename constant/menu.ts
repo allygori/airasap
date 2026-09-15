@@ -41,6 +41,16 @@ export const mainNav = [
     title: 'Accounting',
     url: '/dashboard/accounting',
     icon: Landmark,
+    items: [
+      {
+        title: 'Finance Desk',
+        url: '/dashboard/accounting',
+      },
+      {
+        title: 'Financial Reports',
+        url: '/dashboard/accounting/reports',
+      },
+    ],
   },
   {
     title: 'Reports',
