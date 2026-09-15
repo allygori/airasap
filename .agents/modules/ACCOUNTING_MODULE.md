@@ -1,6 +1,6 @@
 # Pasaria Accounting Module Implementation Plan
 
-Status: Phase 0 completed; Phase 1 schema/model implementation completed.
+Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented.
 
 Pasaria should evolve from a marketplace analytics dashboard into a commerce operating system. The accounting foundation follows the standard accounting-software approach used by QuickBooks, Xero, Accurate Online, and Mekari Jurnal:
 
@@ -275,6 +275,24 @@ Expenses reference an expense account rather than relying only on free-text cate
 - Idempotency enforcement.
 - Audit log.
 - Opening-balance initialization.
+
+### Phase 2 implementation status
+
+- Added tenant-scoped repositories for accounts, periods, journal entries, and
+  opening balances.
+- Added default CoA seeding from `account.seed.json`; seeding is idempotent and
+  resolves `parent_code` to organization-specific `parent_account` ObjectIds.
+- Added journal posting validation for account ownership, postable/active
+  accounts, balanced debit-credit totals, source/reference pairs, date ranges,
+  and open periods.
+- Added idempotent journal posting and reversal services.
+- Added opening-balance initialization that creates and posts its journal entry.
+- Added accounting audit logs for journal posting, journal reversal, opening
+  balance posting, and period closing.
+- Services accept an optional Mongoose `ClientSession` so callers can wrap
+  multi-document workflows in a MongoDB transaction when the deployment runs
+  with transaction support. No automatic transaction is forced because the
+  current project configuration may run without a replica set.
 
 ## Phase 3 — Expense, purchase, and inventory workflow
 

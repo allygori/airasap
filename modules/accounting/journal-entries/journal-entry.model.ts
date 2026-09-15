@@ -147,6 +147,10 @@ JournalEntrySchema.index({
   period: 1,
   transaction_date: 1,
 });
+JournalEntrySchema.index({
+  organization: 1,
+  reversal_of: 1,
+});
 JournalEntrySchema.index(
   { organization: 1, idempotency_key: 1 },
   {

@@ -36,6 +36,7 @@ import '@/modules/accounting/accounts/account.model';
 import '@/modules/accounting/journal-entries/journal-entry.model';
 import '@/modules/accounting/periods/accounting-period.model';
 import '@/modules/accounting/opening-balances/opening-balance.model';
+import '@/modules/accounting/audit/audit-log.model';
 import '@/modules/inventory/items/inventory-item.model';
 import '@/modules/inventory/locations/inventory-location.model';
 import '@/modules/inventory/movements/inventory-movement.model';
