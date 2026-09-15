@@ -30,6 +30,7 @@ import { massUploadAllOrderShopeeV1 as runAllOrderImport } from './services/mass
 import { massUploadEnrichWithOrderCompletedShopeeV1 as runCompletedOrderEnrichment } from './services/enrich-order-completed-shopee-v1.service';
 import { enrichWithReleasedFunds as runReleasedFundsEnrichment } from './services/enrich-released-funds.service';
 import { OrderAccountingIntegrationService } from './services/order-accounting-integration.service';
+import { MarketplaceSettlementService } from '@/modules/accounting/settlements/settlement.service';
 
 export class OrderService {
   private tenantContext;
@@ -572,7 +573,8 @@ export class OrderService {
    */
   async enrichWithReleasedFunds(
     fileBuffer: ArrayBuffer,
-    fileId: string
+    fileId: string,
+    destinationAccountId?: string
   ): Promise<MassUploadResponseDTO> {
     return runReleasedFundsEnrichment(
       {
@@ -580,6 +582,10 @@ export class OrderService {
         productService: this.productService,
         storeService: this.storeService,
         tenantContext: this.tenantContext,
+        settlementService: new MarketplaceSettlementService(
+          this.tenantContext
+        ),
+        destinationAccountId,
       },
       fileBuffer,
       fileId

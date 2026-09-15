@@ -21,6 +21,7 @@ import {
   resolveProductCost,
 } from './product-matching';
 import type { MassUploadResponseDTO } from '../order.dto';
+import type { MarketplaceSettlementService } from '@/modules/accounting/settlements/settlement.service';
 
 export type ReleasedFundsImporterDependencies = {
   repository: OrderRepository;
@@ -29,6 +30,8 @@ export type ReleasedFundsImporterDependencies = {
   tenantContext: ConstructorParameters<
     typeof OrderService
   >[0];
+  settlementService?: MarketplaceSettlementService;
+  destinationAccountId?: string;
 };
 
 type ReleasedFundsVersion = 1 | 2;
@@ -327,6 +330,8 @@ async function processReleasedFundsOrders(
         0
       ),
       released_funds_at: order.releasedFundDate,
+      settlement_reference:
+        valueOrEmpty(order.noSubmission) || undefined,
       enrichments,
     };
 
@@ -345,6 +350,46 @@ async function processReleasedFundsOrders(
 
   if (operations.length > 0) {
     await dependencies.repository.bulkWrite(operations);
+  }
+
+  if (dependencies.settlementService) {
+    for (const order of orders) {
+      const orderId = String(order.orderId);
+      const storedOrder =
+        await dependencies.repository.findByOrderId(
+          orderId
+        );
+      if (!storedOrder) continue;
+
+      const result = orderResults.find(
+        (item) => item.order_id === orderId
+      );
+      try {
+        const settlement =
+          await dependencies.settlementService.recordFromOrder(
+            String(storedOrder._id),
+            {
+              source_file: fileId,
+              destination_account_id:
+                dependencies.destinationAccountId,
+            }
+          );
+        if (result) {
+          result.message =
+            settlement.status === 'posted'
+              ? 'Released funds diperbarui dan settlement berhasil diposting.'
+              : `Released funds diperbarui, settlement tertahan dengan status ${settlement.status}.`;
+        }
+      } catch (error) {
+        if (result) {
+          result.message = `Released funds diperbarui, tetapi settlement tertahan: ${
+            error instanceof Error
+              ? error.message
+              : 'validasi belum lengkap'
+          }`;
+        }
+      }
+    }
   }
 
   return {

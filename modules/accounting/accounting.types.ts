@@ -34,7 +34,8 @@ export type AuditEntityType =
   | 'journal_entry'
   | 'opening_balance'
   | 'expense'
-  | 'inventory_movement';
+  | 'inventory_movement'
+  | 'settlement';
 
 export type AccountingSessionOptions = {
   session?: import('mongoose').ClientSession;

@@ -231,18 +231,15 @@ export const OrderBaseSchema = z.object({
   shipping_arranged_at: z.string().optional(),
   placed_at: z.string().optional(),
   released_funds_at: z.string().optional(),
+  settlement_reference: z.string().trim().optional(),
   completed_at: z.string().optional(),
 
-  accounting_status:
-    OrderAccountingStatusSchema.optional().default(
-      'pending'
-    ),
+  accounting_status: OrderAccountingStatusSchema.optional(),
   accounting_error: z.string().optional(),
   accounting_journal_entry: ObjectIdStringSchema.optional(),
   accounting_inventory_movements: z
     .array(ObjectIdStringSchema)
-    .optional()
-    .default([]),
+    .optional(),
   accounting_posted_at: z.string().optional(),
 
   // additional fields

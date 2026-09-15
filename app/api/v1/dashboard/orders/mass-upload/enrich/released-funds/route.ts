@@ -44,6 +44,14 @@ export const POST = withValidation({}, async (request) => {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const destinationAccountValue = formData.get(
+      'destination_account_id'
+    );
+    const destinationAccountId =
+      typeof destinationAccountValue === 'string' &&
+      destinationAccountValue.trim()
+        ? destinationAccountValue.trim()
+        : undefined;
 
     if (!file) {
       return apiError(
@@ -112,7 +120,8 @@ export const POST = withValidation({}, async (request) => {
     const result =
       await orderService.enrichWithReleasedFunds(
         buffer,
-        fileDoc._id
+        fileDoc._id,
+        destinationAccountId
       );
 
     return apiSuccess(

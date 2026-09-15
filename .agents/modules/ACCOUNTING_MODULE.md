@@ -1,6 +1,6 @@
 # Pasaria Accounting Module Implementation Plan
 
-Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented; Phase 3 implemented; Phase 6A implemented; Phase 4 implemented.
+Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented; Phase 3 implemented; Phase 6A implemented; Phase 4 implemented; Phase 5 settlement foundation implemented.
 
 Pasaria should evolve from a marketplace analytics dashboard into a commerce operating system. The accounting foundation follows the standard accounting-software approach used by QuickBooks, Xero, Accurate Online, and Mekari Jurnal:
 
@@ -432,6 +432,27 @@ Dr Marketplace Fee
 - Bank reconciliation.
 - Shopee balance reconciliation.
 - Transaction matching.
+
+### Phase 5 settlement foundation implementation status
+
+- Added tenant-scoped marketplace settlement records with settlement lines,
+  destination account, source file, idempotency key, and reconciliation
+  status.
+- Released-funds enrichment now attempts settlement posting after the order
+  data is updated.
+- The default destination is `1130 Saldo Marketplace`; callers may provide a
+  bank or cash account explicitly through `destination_account_id`.
+- A matched settlement posts `Dr Cash/Saldo Marketplace`, `Dr Marketplace
+  Fees`, and `Cr Piutang Marketplace`.
+- Settlement posting is blocked when the order recognition is not posted or
+  when `net payout + fees` does not equal the marketplace receivable amount.
+  The difference is stored for reconciliation instead of being silently
+  forced into the ledger.
+- Added a retry endpoint for blocked settlements:
+  `POST /api/v1/dashboard/accounting/settlements/[id]/retry`.
+- Bank-statement ingestion and broader transaction matching remain separate
+  follow-up work within this phase because the project does not yet have a
+  bank statement source adapter.
 
 ## Phase 6B — Financial reporting UI
 

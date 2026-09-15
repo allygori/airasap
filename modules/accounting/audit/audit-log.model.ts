@@ -41,6 +41,7 @@ const AuditLogSchema = new Schema<TAuditLog>(
         'opening_balance',
         'expense',
         'inventory_movement',
+        'settlement',
       ],
     },
     entity_id: {

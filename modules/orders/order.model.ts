@@ -542,6 +542,9 @@ const OrderSchema = new Schema<TOrder>(
       type: Date,
       alias: 'releasedFundDate',
     },
+    settlement_reference: {
+      type: String,
+    },
     completed_at: {
       type: Date,
       alias: 'orderCompletionTime',
