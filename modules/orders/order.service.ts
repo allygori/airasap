@@ -29,6 +29,7 @@ import {
 import { massUploadAllOrderShopeeV1 as runAllOrderImport } from './services/mass-upload-all-order-shopee-v1.service';
 import { massUploadEnrichWithOrderCompletedShopeeV1 as runCompletedOrderEnrichment } from './services/enrich-order-completed-shopee-v1.service';
 import { enrichWithReleasedFunds as runReleasedFundsEnrichment } from './services/enrich-released-funds.service';
+import { OrderAccountingIntegrationService } from './services/order-accounting-integration.service';
 
 export class OrderService {
   private tenantContext;
@@ -509,16 +510,35 @@ export class OrderService {
    * @returns
    */
   async massUploadAllOrderShopeeV1(
-    fileBuffer: ArrayBuffer
+    fileBuffer: ArrayBuffer,
+    inventoryLocationId?: string
   ): Promise<MassUploadResponseDTO> {
     return runAllOrderImport(
       {
         repository: this.repository,
         productService: this.productService,
         tenantContext: this.tenantContext,
+        accountingService:
+          new OrderAccountingIntegrationService(
+            this.tenantContext
+          ),
+        inventoryLocationId,
       },
       fileBuffer
     );
+  }
+
+  async postCompletedOrderToAccounting(
+    orderId: string,
+    inventoryLocationId?: string
+  ) {
+    const accountingService =
+      new OrderAccountingIntegrationService(
+        this.tenantContext
+      );
+    return accountingService.postCompletedOrder(orderId, {
+      location_id: inventoryLocationId,
+    });
   }
 
   /**
@@ -528,13 +548,19 @@ export class OrderService {
    */
   async massUploadEnrichWithOrderCompletedShopeeV1(
     fileBuffer: ArrayBuffer,
-    fileId: string
+    fileId: string,
+    inventoryLocationId?: string
   ): Promise<MassUploadResponseDTO> {
     return runCompletedOrderEnrichment(
       {
         repository: this.repository,
         productService: this.productService,
         tenantContext: this.tenantContext,
+        accountingService:
+          new OrderAccountingIntegrationService(
+            this.tenantContext
+          ),
+        inventoryLocationId,
       },
       fileBuffer,
       fileId

@@ -23,6 +23,9 @@ export type TOrder = Document &
   OrderBaseDTO & {
     organization: Types.ObjectId;
     store: Types.ObjectId;
+    accounting_journal_entry?: Types.ObjectId;
+    accounting_inventory_movements?: Types.ObjectId[];
+    accounting_posted_at?: Date;
     deleted_at?: Date | null;
     created_at?: Date;
     updated_at?: Date;
@@ -542,6 +545,27 @@ const OrderSchema = new Schema<TOrder>(
     completed_at: {
       type: Date,
       alias: 'orderCompletionTime',
+    },
+    accounting_status: {
+      type: String,
+      enum: ['pending', 'posted', 'blocked'],
+      default: 'pending',
+    },
+    accounting_error: {
+      type: String,
+    },
+    accounting_journal_entry: {
+      type: Types.ObjectId,
+      ref: 'JournalEntry',
+    },
+    accounting_inventory_movements: [
+      {
+        type: Types.ObjectId,
+        ref: 'InventoryMovement',
+      },
+    ],
+    accounting_posted_at: {
+      type: Date,
     },
 
     // additional fields

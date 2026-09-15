@@ -43,6 +43,14 @@ export const POST = withValidation({}, async (request) => {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const inventoryLocationValue = formData.get(
+      'inventory_location_id'
+    );
+    const inventoryLocationId =
+      typeof inventoryLocationValue === 'string' &&
+      inventoryLocationValue.trim()
+        ? inventoryLocationValue.trim()
+        : undefined;
 
     if (!file) {
       return apiError(
@@ -101,7 +109,10 @@ export const POST = withValidation({}, async (request) => {
     const buffer = await file.arrayBuffer();
     const orderService = new OrderService(tenantContext);
     const result =
-      await orderService.massUploadAllOrderShopeeV1(buffer);
+      await orderService.massUploadAllOrderShopeeV1(
+        buffer,
+        inventoryLocationId
+      );
 
     return apiSuccess(
       {

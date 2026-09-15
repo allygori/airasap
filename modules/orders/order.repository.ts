@@ -7,12 +7,21 @@
 import {
   QueryFilter,
   AnyBulkWriteOperation,
+  ClientSession,
 } from 'mongoose';
 import { saveJson } from '@/lib/file/save-json';
 import { BaseRepository } from '../base.repository';
 import { OrderModel, TOrder } from './order.model';
 import { type OrderPlatform } from '@/constant/order-platform';
 import { type QueryOptions } from '@/lib/api/query-builder';
+
+type OrderAccountingState = {
+  accounting_status: 'pending' | 'posted' | 'blocked';
+  accounting_error?: string | null;
+  accounting_journal_entry?: string;
+  accounting_inventory_movements?: string[];
+  accounting_posted_at?: Date;
+};
 
 export class OrderRepository extends BaseRepository<TOrder> {
   constructor(tenantContext: {
@@ -98,6 +107,55 @@ export class OrderRepository extends BaseRepository<TOrder> {
     }
 
     return await query.lean();
+  }
+
+  async updateAccountingState(
+    id: string,
+    state: OrderAccountingState,
+    session?: ClientSession
+  ) {
+    return await this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          _id: id,
+        },
+        {
+          $set: {
+            accounting_status: state.accounting_status,
+            ...(state.accounting_error !== undefined
+              ? { accounting_error: state.accounting_error }
+              : {}),
+            ...(state.accounting_journal_entry
+              ? {
+                  accounting_journal_entry:
+                    state.accounting_journal_entry,
+                }
+              : {}),
+            ...(state.accounting_inventory_movements
+              ? {
+                  accounting_inventory_movements:
+                    state.accounting_inventory_movements,
+                }
+              : {}),
+            ...(state.accounting_posted_at
+              ? {
+                  accounting_posted_at:
+                    state.accounting_posted_at,
+                }
+              : {}),
+          },
+          ...(state.accounting_status === 'posted'
+            ? { $unset: { accounting_error: 1 } }
+            : {}),
+        },
+        {
+          new: true,
+          runValidators: true,
+          ...(session ? { session } : {}),
+        }
+      )
+      .lean();
   }
 
   /**

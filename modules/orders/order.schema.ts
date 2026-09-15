@@ -9,6 +9,16 @@ const ObjectIdStringSchema = z
     'Mongoose ObjectId tidak valid'
   );
 
+export const ORDER_ACCOUNTING_STATUS_VALUES = [
+  'pending',
+  'posted',
+  'blocked',
+] as const;
+
+export const OrderAccountingStatusSchema = z.enum(
+  ORDER_ACCOUNTING_STATUS_VALUES
+);
+
 export const OrderItemSchema = z.object({
   // product: z.string().min(1, 'Product ID wajib diisi'),
   // product: z
@@ -222,6 +232,18 @@ export const OrderBaseSchema = z.object({
   placed_at: z.string().optional(),
   released_funds_at: z.string().optional(),
   completed_at: z.string().optional(),
+
+  accounting_status:
+    OrderAccountingStatusSchema.optional().default(
+      'pending'
+    ),
+  accounting_error: z.string().optional(),
+  accounting_journal_entry: ObjectIdStringSchema.optional(),
+  accounting_inventory_movements: z
+    .array(ObjectIdStringSchema)
+    .optional()
+    .default([]),
+  accounting_posted_at: z.string().optional(),
 
   // additional fields
   total_product_cost: z.number().int().optional(),

@@ -22,4 +22,13 @@ export class InventoryLocationRepository extends BaseRepository<TInventoryLocati
     if (session) query.session(session);
     return query.lean();
   }
+
+  async findAllActive(session?: ClientSession) {
+    const query = this.model.find({
+      ...this.getTenantFilter(),
+      is_active: true,
+    });
+    if (session) query.session(session);
+    return query.lean();
+  }
 }

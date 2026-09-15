@@ -17,6 +17,7 @@ import {
   matchProductAndVariant,
   resolveProductCost,
 } from './product-matching';
+import type { OrderAccountingIntegrationService } from './order-accounting-integration.service';
 
 export type ShopeeCompletedOrderImporterDependencies = {
   repository: OrderRepository;
@@ -24,6 +25,8 @@ export type ShopeeCompletedOrderImporterDependencies = {
   tenantContext: ConstructorParameters<
     typeof OrderService
   >[0];
+  accountingService?: OrderAccountingIntegrationService;
+  inventoryLocationId?: string;
 };
 
 export async function massUploadEnrichWithOrderCompletedShopeeV1(
@@ -87,6 +90,11 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         );
       const existingItems = existingOrder?.items || [];
       const enrichments = existingOrder?.enrichments || [];
+      const completedStatus =
+        Object.values(SHOPEE_ORDER_STATUS).find(
+          (s: { label: string }) =>
+            s.label === order.orderStatus
+        )?.value ?? null;
 
       if (existingOrder) {
         // Existing orders may contain edits from the UI/API. Only update
@@ -109,6 +117,9 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
                 },
                 update: {
                   $set: {
+                    ...(completedStatus
+                      ? { status: completedStatus }
+                      : {}),
                     completed_at: order.orderCompletionTime
                       ? String(order.orderCompletionTime)
                       : undefined,
@@ -129,6 +140,30 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         if (updateResult.modifiedCount > 0) {
           updatedCount++;
         }
+        let accountingMessage: string | undefined;
+        if (
+          completedStatus ===
+            SHOPEE_ORDER_STATUS.completed.value &&
+          dependencies.accountingService
+        ) {
+          try {
+            await dependencies.accountingService.postCompletedOrder(
+              String(existingOrder._id),
+              {
+                location_id:
+                  dependencies.inventoryLocationId,
+              }
+            );
+            accountingMessage =
+              ' Accounting berhasil diposting atau dikonfirmasi idempotent.';
+          } catch (error) {
+            accountingMessage = ` Accounting tertahan: ${
+              error instanceof Error
+                ? error.message
+                : 'validasi belum lengkap'
+            }`;
+          }
+        }
         orderResults.push({
           order_id: orderId,
           status:
@@ -136,9 +171,10 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
               ? 'updated'
               : 'ignored',
           message:
-            updateResult.modifiedCount > 0
+            (updateResult.modifiedCount > 0
               ? 'Data order completed diperbarui tanpa menimpa perubahan manual.'
-              : 'Enrichment completed sudah pernah diproses untuk file ini.',
+              : 'Enrichment completed sudah pernah diproses untuk file ini.') +
+            (accountingMessage ?? ''),
         });
         continue;
       }
@@ -272,11 +308,7 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         // },
         platform: ORDER_PLATFORMS.shopee.value,
         order_id: orderId,
-        status:
-          Object.values(SHOPEE_ORDER_STATUS).find(
-            (s: { label: string }) =>
-              s.label === order.orderStatus
-          )?.value ?? null,
+        status: completedStatus,
 
         cancellation_return_status:
           order.cancellationReturnStatus,
@@ -404,11 +436,38 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
       //   createdCount++;
       // }
 
-      await dependencies.repository.create(payload);
+      const createdOrder =
+        await dependencies.repository.create(payload);
       createdCount++;
+      let accountingMessage: string | undefined;
+      if (
+        completedStatus ===
+          SHOPEE_ORDER_STATUS.completed.value &&
+        dependencies.accountingService
+      ) {
+        try {
+          await dependencies.accountingService.postCompletedOrder(
+            String(createdOrder._id),
+            {
+              location_id: dependencies.inventoryLocationId,
+            }
+          );
+          accountingMessage =
+            ' Accounting berhasil diposting.';
+        } catch (error) {
+          accountingMessage = ` Accounting tertahan: ${
+            error instanceof Error
+              ? error.message
+              : 'validasi belum lengkap'
+          }`;
+        }
+      }
       orderResults.push({
         order_id: orderId,
         status: 'created',
+        ...(accountingMessage
+          ? { message: accountingMessage.trim() }
+          : {}),
       });
     }
 

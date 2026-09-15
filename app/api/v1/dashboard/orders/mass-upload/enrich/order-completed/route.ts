@@ -44,6 +44,14 @@ export const POST = withValidation({}, async (request) => {
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
+    const inventoryLocationValue = formData.get(
+      'inventory_location_id'
+    );
+    const inventoryLocationId =
+      typeof inventoryLocationValue === 'string' &&
+      inventoryLocationValue.trim()
+        ? inventoryLocationValue.trim()
+        : undefined;
 
     if (!file) {
       return apiError(
@@ -108,7 +116,8 @@ export const POST = withValidation({}, async (request) => {
     const result =
       await orderService.massUploadEnrichWithOrderCompletedShopeeV1(
         buffer,
-        fileDoc._id
+        fileDoc._id,
+        inventoryLocationId
       );
 
     return apiSuccess(

@@ -147,10 +147,11 @@ export class InventoryMovementService {
     }
     if (
       movement.movement_type !== 'purchase' &&
-      movement.movement_type !== 'consumption'
+      movement.movement_type !== 'consumption' &&
+      movement.movement_type !== 'sale'
     ) {
       throw new AccountingDomainError(
-        `Movement type ${movement.movement_type} belum didukung pada Phase 3.`,
+        `Movement type ${movement.movement_type} belum didukung pada Phase 4.`,
         'INVENTORY_MOVEMENT_TYPE_NOT_SUPPORTED'
       );
     }
@@ -175,12 +176,19 @@ export class InventoryMovementService {
             postedBy,
             session
           )
-        : await this.postConsumption(
-            movement,
-            item,
-            postedBy,
-            session
-          );
+        : movement.movement_type === 'sale'
+          ? await this.postSale(
+              movement,
+              item,
+              postedBy,
+              session
+            )
+          : await this.postConsumption(
+              movement,
+              item,
+              postedBy,
+              session
+            );
 
     const posted = await this.repository.markPosted(
       movementId,
@@ -248,6 +256,21 @@ export class InventoryMovementService {
       {
         ...(input as Record<string, unknown>),
         movement_type: 'consumption',
+      },
+      session
+    );
+    return this.post(String(draft._id), postedBy, session);
+  }
+
+  async sellMerchandise(
+    input: unknown,
+    postedBy?: string,
+    session?: ClientSession
+  ) {
+    const draft = await this.createDraft(
+      {
+        ...(input as Record<string, unknown>),
+        movement_type: 'sale',
       },
       session
     );
@@ -429,6 +452,107 @@ export class InventoryMovementService {
         source_id: String(movement._id),
         source_event: 'consumption_posted',
         idempotency_key: `inventory-consumption:${String(
+          movement._id
+        )}`,
+        status: 'draft',
+        lines: [
+          {
+            account: String(cogsAccount._id),
+            debit: costs.total_cost,
+            credit: 0,
+          },
+          {
+            account: String(inventoryAccount._id),
+            debit: 0,
+            credit: costs.total_cost,
+          },
+        ],
+      },
+      postedBy,
+      session
+    );
+
+    return { journalEntry, costs };
+  }
+
+  private async postSale(
+    movement: {
+      _id: unknown;
+      inventory_item: unknown;
+      location: unknown;
+      occurred_at: Date;
+      quantity: number;
+      unit_cost?: number;
+      total_cost?: number;
+      reference?: string;
+    },
+    item: {
+      _id: unknown;
+      item_type: string;
+      inventory_account?: unknown;
+      cogs_account?: unknown;
+      track_quantity: boolean;
+      track_value: boolean;
+    },
+    postedBy: string | undefined,
+    session?: ClientSession
+  ) {
+    if (item.item_type !== 'merchandise') {
+      throw new AccountingDomainError(
+        'Order sale hanya dapat mengurangi inventory merchandise.',
+        'MERCHANDISE_SALE_ONLY'
+      );
+    }
+    if (!item.track_quantity || !item.track_value) {
+      throw new AccountingDomainError(
+        'Sale inventory membutuhkan tracking quantity dan value.',
+        'INVENTORY_TRACKING_REQUIRED'
+      );
+    }
+
+    const balance = await this.repository.getPostedBalance(
+      String(movement.inventory_item),
+      String(movement.location),
+      session
+    );
+    if (balance.quantity < movement.quantity) {
+      throw new AccountingDomainError(
+        `Stok tidak cukup. Tersedia ${balance.quantity}, dibutuhkan ${movement.quantity}.`,
+        'INSUFFICIENT_INVENTORY'
+      );
+    }
+
+    const costs = this.resolveConsumptionCost(
+      movement.quantity,
+      movement.unit_cost,
+      movement.total_cost,
+      balance.quantity,
+      balance.value
+    );
+    const inventoryAccount =
+      await this.resolveInventoryAccount(item, session);
+    const cogsAccount = await this.resolveCogsAccount(
+      item,
+      session
+    );
+    const occurredAt = parseAccountingDate(
+      movement.occurred_at,
+      'occurred_at'
+    );
+
+    const journalEntry = await this.journalService.postNew(
+      {
+        entry_number: `INV-${String(movement._id)}`,
+        transaction_date: occurredAt.toISOString(),
+        posting_date: occurredAt.toISOString(),
+        period: getPeriodKeyFromDate(occurredAt),
+        description: movement.reference
+          ? `Merchandise sale: ${movement.reference}`
+          : 'Merchandise sale',
+        source_type: 'inventory_movement',
+        source_id: String(movement._id),
+        source_event: 'sale_posted',
+        idempotency_key: `inventory-sale:${String(
           movement._id
         )}`,
         status: 'draft',

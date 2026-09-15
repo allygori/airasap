@@ -19,4 +19,24 @@ export class InventoryItemRepository extends BaseRepository<TInventoryItem> {
     if (session) query.session(session);
     return query.lean();
   }
+
+  async findActiveBySkus(
+    skus: string[],
+    session?: ClientSession
+  ) {
+    const normalizedSkus = [
+      ...new Set(
+        skus.map((sku) => sku.trim()).filter(Boolean)
+      ),
+    ];
+    if (normalizedSkus.length === 0) return [];
+
+    const query = this.model.find({
+      ...this.getTenantFilter(),
+      sku: { $in: normalizedSkus },
+      is_active: true,
+    });
+    if (session) query.session(session);
+    return query.lean();
+  }
 }

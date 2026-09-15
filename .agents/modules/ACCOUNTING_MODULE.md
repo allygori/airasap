@@ -1,6 +1,6 @@
 # Pasaria Accounting Module Implementation Plan
 
-Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented; Phase 3 implemented; Phase 6A implemented.
+Status: Phase 0 completed; Phase 1 schema/model implementation completed; Phase 2 domain foundation implemented; Phase 3 implemented; Phase 6A implemented; Phase 4 implemented.
 
 Pasaria should evolve from a marketplace analytics dashboard into a commerce operating system. The accounting foundation follows the standard accounting-software approach used by QuickBooks, Xero, Accurate Online, and Mekari Jurnal:
 
@@ -401,6 +401,27 @@ Dr Bank
 Dr Marketplace Fee
     Cr Marketplace Receivable
 ```
+
+### Phase 4 implementation status
+
+- Added order accounting state fields: `pending`, `posted`, and `blocked`, with
+  references to the sales journal and inventory movements.
+- Completed orders imported through the Shopee order import or completed-order
+  enrichment attempt accounting integration automatically.
+- Added `POST /api/v1/dashboard/orders/[id]/accounting` as an explicit retry
+  endpoint for orders blocked by incomplete mapping, missing location, or
+  insufficient stock.
+- Added SKU-based order-item to merchandise-inventory mapping. Child SKU is
+  preferred, followed by parent SKU; unresolved mappings are blocked instead
+  of silently reducing the wrong stock.
+- Added `sale` inventory movements. The movement posts `Dr HPP Barang Dagang /
+  Cr Persediaan Barang Dagang` using the inventory weighted-average value.
+- Completed-order recognition posts `Dr Piutang Marketplace / Cr Penjualan
+  Barang Dagang`. Marketplace payout and fee recognition remain in Phase 5.
+- Import retries are idempotent through order-scoped inventory and journal
+  idempotency keys. The services accept an optional MongoDB `ClientSession` so
+  callers can wrap the workflow in a transaction when replica-set support is
+  available.
 
 ## Phase 5 — Cash, settlement, and reconciliation
 

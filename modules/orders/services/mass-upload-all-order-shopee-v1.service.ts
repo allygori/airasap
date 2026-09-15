@@ -17,6 +17,7 @@ import {
   matchProductAndVariant,
   resolveProductCost,
 } from './product-matching';
+import type { OrderAccountingIntegrationService } from './order-accounting-integration.service';
 
 export type ShopeeAllOrderImporterDependencies = {
   repository: OrderRepository;
@@ -26,6 +27,8 @@ export type ShopeeAllOrderImporterDependencies = {
     storeId?: string;
     userId?: string;
   };
+  accountingService?: OrderAccountingIntegrationService;
+  inventoryLocationId?: string;
 };
 
 export async function massUploadAllOrderShopeeV1(
@@ -355,17 +358,68 @@ export async function massUploadAllOrderShopeeV1(
         );
 
       if (!existingOrder) {
-        await dependencies.repository.create(payload);
+        const createdOrder =
+          await dependencies.repository.create(payload);
+        let message: string | undefined;
+        if (
+          payload.status ===
+            SHOPEE_ORDER_STATUS.completed.value &&
+          dependencies.accountingService
+        ) {
+          try {
+            await dependencies.accountingService.postCompletedOrder(
+              String(createdOrder._id),
+              {
+                location_id:
+                  dependencies.inventoryLocationId,
+              }
+            );
+            message =
+              'Order dibuat dan accounting berhasil diposting.';
+          } catch (error) {
+            message = `Order dibuat, tetapi accounting tertahan: ${
+              error instanceof Error
+                ? error.message
+                : 'validasi belum lengkap'
+            }`;
+          }
+        }
         createdCount++;
         orderResults.push({
           order_id: orderId,
           status: 'created',
+          ...(message ? { message } : {}),
         });
       } else {
+        let message: string | undefined;
+        if (
+          existingOrder.status ===
+            SHOPEE_ORDER_STATUS.completed.value &&
+          dependencies.accountingService
+        ) {
+          try {
+            await dependencies.accountingService.postCompletedOrder(
+              String(existingOrder._id),
+              {
+                location_id:
+                  dependencies.inventoryLocationId,
+              }
+            );
+            message =
+              'Order sudah ada; accounting berhasil diposting atau dikonfirmasi idempotent.';
+          } catch (error) {
+            message = `Order sudah ada, tetapi accounting tertahan: ${
+              error instanceof Error
+                ? error.message
+                : 'validasi belum lengkap'
+            }`;
+          }
+        }
         orderResults.push({
           order_id: orderId,
           status: 'ignored',
-          message: 'Order sudah ada dan tidak ditimpa.',
+          message:
+            message ?? 'Order sudah ada dan tidak ditimpa.',
         });
       }
 
