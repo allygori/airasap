@@ -641,6 +641,25 @@ Source records should carry the workspace and platform attribution so journal
 dimensions can be derived from the source transaction rather than from the
 currently active UI store alone.
 
+#### Phase 7B implementation status
+
+- Order accounting conversion now reads the order's `store` and `platform`
+  as the source of truth. It no longer attributes the journal to the active
+  UI store.
+- Order-generated merchandise sale movements now persist `store` and
+  `platform`, and their HPP/inventory journals include
+  `inventory_location` plus the source dimensions.
+- Marketplace settlements now persist the order's `store` and derive their
+  journal dimensions from that source order.
+- Inventory movement journals now consistently carry canonical dimensions for
+  store, platform when applicable, and inventory location.
+- Expense posting accepts the same canonical dimensions and validates an
+  explicitly supplied store against the active organization.
+- Store references are checked against the active organization before source
+  postings are created. Platform connection enforcement remains an integration
+  concern and will be added when channel-specific credentials/import flows are
+  implemented.
+
 ### Phase 7C — Store-aware reporting and controls
 
 Extend the reporting and explorer pages with:

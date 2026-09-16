@@ -28,6 +28,7 @@ export const SettlementFeeLineSchema = z.object({
 
 export const SettlementBaseSchema = z.object({
   order: z.string().regex(/^[0-9a-fA-F]{24}$/),
+  store: z.string().regex(/^[0-9a-fA-F]{24}$/),
   order_id: z.string().trim().min(1),
   platform: z.enum(ORDER_PLATFORM_VALUES),
   settlement_reference: z.string().trim().min(1),

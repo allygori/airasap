@@ -13,12 +13,14 @@ export type TInventoryMovement = Document &
     InventoryMovementBaseDTO,
     | 'inventory_item'
     | 'location'
+    | 'store'
     | 'occurred_at'
     | 'offset_account'
   > & {
     organization: Types.ObjectId;
     inventory_item: Types.ObjectId;
     location: Types.ObjectId;
+    store?: Types.ObjectId;
     occurred_at: Date;
     offset_account?: Types.ObjectId;
     journal_entry?: Types.ObjectId;
@@ -45,6 +47,11 @@ const InventoryMovementSchema =
         ref: 'InventoryLocation',
         required: true,
       },
+      store: {
+        type: Schema.Types.ObjectId,
+        ref: 'Store',
+      },
+      platform: { type: String },
       movement_type: { type: String, required: true },
       quantity: { type: Number, required: true, min: 0 },
       unit_cost: { type: Number, min: 0 },
@@ -80,6 +87,11 @@ const InventoryMovementSchema =
 InventoryMovementSchema.index({
   organization: 1,
   inventory_item: 1,
+  occurred_at: 1,
+});
+InventoryMovementSchema.index({
+  organization: 1,
+  store: 1,
   occurred_at: 1,
 });
 InventoryMovementSchema.index({

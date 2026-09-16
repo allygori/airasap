@@ -3,6 +3,7 @@ import { CreateExpenseSchema } from './expense.schema';
 import { ExpenseRepository } from './expense.repository';
 import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
+import { StoreRepository } from '@/modules/stores/store.repository';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 import {
   assertAccountingTenant,
@@ -20,6 +21,7 @@ export class ExpenseService {
   private readonly repository: ExpenseRepository;
   private readonly accountRepository: AccountingAccountRepository;
   private readonly journalService: JournalEntryService;
+  private readonly storeRepository: StoreRepository;
   private readonly context: AccountingTenantContext;
 
   constructor(context: AccountingTenantContext) {
@@ -29,6 +31,9 @@ export class ExpenseService {
     this.accountRepository =
       new AccountingAccountRepository(context);
     this.journalService = new JournalEntryService(context);
+    this.storeRepository = new StoreRepository({
+      organizationId: context.organizationId,
+    });
   }
 
   async createDraft(
@@ -44,6 +49,17 @@ export class ExpenseService {
     }
 
     validateSourceReference(data);
+    if (data.dimensions?.store) {
+      const store = await this.storeRepository.findById(
+        data.dimensions.store
+      );
+      if (!store) {
+        throw new AccountingDomainError(
+          'Store/workspace expense tidak ditemukan dalam organization aktif.',
+          'EXPENSE_STORE_NOT_FOUND'
+        );
+      }
+    }
 
     if (data.idempotency_key) {
       const existing =

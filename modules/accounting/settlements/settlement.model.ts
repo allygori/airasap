@@ -12,6 +12,7 @@ export type TSettlement = Document &
   Omit<
     SettlementBaseDTO,
     | 'order'
+    | 'store'
     | 'destination_account'
     | 'settled_at'
     | 'source_file'
@@ -20,6 +21,7 @@ export type TSettlement = Document &
   > & {
     organization: Types.ObjectId;
     order: Types.ObjectId;
+    store: Types.ObjectId;
     destination_account: Types.ObjectId;
     settled_at: Date;
     source_file?: Types.ObjectId;
@@ -57,6 +59,11 @@ const SettlementSchema = new Schema<TSettlement>(
     order: {
       type: Schema.Types.ObjectId,
       ref: 'Order',
+      required: true,
+    },
+    store: {
+      type: Schema.Types.ObjectId,
+      ref: 'Store',
       required: true,
     },
     order_id: { type: String, required: true },
@@ -111,6 +118,11 @@ const SettlementSchema = new Schema<TSettlement>(
 SettlementSchema.index({
   organization: 1,
   order: 1,
+  settled_at: 1,
+});
+SettlementSchema.index({
+  organization: 1,
+  store: 1,
   settled_at: 1,
 });
 SettlementSchema.index(

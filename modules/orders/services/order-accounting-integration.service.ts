@@ -4,6 +4,7 @@ import {
 } from 'mongoose';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
+import { createAccountingDimensions } from '@/modules/accounting/accounting-dimensions';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
 import {
   getPeriodKeyFromDate,
@@ -15,6 +16,7 @@ import { InventoryItemMappingRepository } from '@/modules/inventory/mappings/inv
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 import { InventoryMovementService } from '@/modules/inventory/movements/inventory-movement.service';
 import { ProductRepository } from '@/modules/products/product.repository';
+import { StoreRepository } from '@/modules/stores/store.repository';
 import { matchProductAndVariant } from './product-matching';
 import { OrderRepository } from '../order.repository';
 
@@ -35,27 +37,41 @@ export class OrderAccountingIntegrationService {
   private readonly orderRepository: OrderRepository;
   private readonly itemRepository: InventoryItemRepository;
   private readonly mappingRepository: InventoryItemMappingRepository;
-  private readonly productRepository: ProductRepository;
+  private productRepository: ProductRepository;
   private readonly locationRepository: InventoryLocationRepository;
   private readonly accountRepository: AccountingAccountRepository;
   private readonly movementService: InventoryMovementService;
   private readonly journalService: JournalEntryService;
+  private readonly storeRepository: StoreRepository;
 
   constructor(context: OrderAccountingContext) {
     this.context = context;
-    this.orderRepository = new OrderRepository(context);
+    const organizationContext: AccountingTenantContext = {
+      organizationId: context.organizationId,
+      ...(context.userId ? { userId: context.userId } : {}),
+    };
+    // The active UI store must not determine the accounting dimension of an
+    // order. The source order's store is authoritative.
+    this.orderRepository = new OrderRepository({
+      organizationId: context.organizationId,
+    });
+    this.storeRepository = new StoreRepository({
+      organizationId: context.organizationId,
+    });
     this.itemRepository = new InventoryItemRepository(
       context
     );
     this.mappingRepository =
       new InventoryItemMappingRepository(context);
-    this.productRepository = new ProductRepository(context);
+    this.productRepository = new ProductRepository(
+      organizationContext
+    );
     this.locationRepository =
       new InventoryLocationRepository(context);
     this.accountRepository =
       new AccountingAccountRepository(context);
     this.movementService = new InventoryMovementService(
-      context
+      organizationContext
     );
     this.journalService = new JournalEntryService(context);
   }
@@ -87,6 +103,24 @@ export class OrderAccountingIntegrationService {
     }
 
     try {
+      const sourceStore =
+        await this.storeRepository.findById(
+          String(order.store)
+        );
+      if (!sourceStore) {
+        throw new AccountingDomainError(
+          'Store/workspace pada order tidak ditemukan dalam organization aktif.',
+          'ORDER_STORE_NOT_FOUND'
+        );
+      }
+      const storeId = String(sourceStore._id);
+      // Product matching is store-scoped. Rebind it after resolving the source
+      // order so an active UI store cannot cause cross-store matching.
+      this.productRepository = new ProductRepository({
+        organizationId: this.context.organizationId,
+        storeId,
+      });
+
       if (order.status !== 'selesai') {
         throw new AccountingDomainError(
           'Order harus berstatus selesai sebelum diintegrasikan ke accounting.',
@@ -127,6 +161,8 @@ export class OrderAccountingIntegrationService {
               location: locationId,
               quantity,
               occurred_at: occurredAt.toISOString(),
+              store: storeId,
+              platform: order.platform,
               source_type: 'order',
               source_id: String(order._id),
               idempotency_key: `order:${String(
@@ -167,12 +203,10 @@ export class OrderAccountingIntegrationService {
         );
       }
 
-      const dimensions = {
+      const dimensions = createAccountingDimensions({
+        store: storeId,
         platform: order.platform,
-        ...(this.context.storeId
-          ? { store: this.context.storeId }
-          : {}),
-      };
+      });
 
       const journalEntry =
         await this.journalService.postNew(

@@ -17,6 +17,15 @@ export class InventoryMovementRepository extends BaseRepository<TInventoryMoveme
     super(InventoryMovementModel, context);
   }
 
+  protected override getTenantFilter() {
+    // A movement's workspace is source data, not the active UI scope. Keep
+    // repository reads organization-scoped until an explicit store filter is
+    // added to the inventory explorer in Phase 7C.
+    return {
+      organization: this.tenantContext.organizationId,
+    };
+  }
+
   async findMovementById(
     id: string,
     session?: ClientSession

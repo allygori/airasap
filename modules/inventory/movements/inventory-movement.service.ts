@@ -3,7 +3,9 @@ import { CreateInventoryMovementSchema } from './inventory-movement.schema';
 import { InventoryMovementRepository } from './inventory-movement.repository';
 import { InventoryItemRepository } from '../items/inventory-item.repository';
 import { InventoryLocationRepository } from '../locations/inventory-location.repository';
+import { StoreRepository } from '@/modules/stores/store.repository';
 import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
+import { createAccountingDimensions } from '@/modules/accounting/accounting-dimensions';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 import {
@@ -38,6 +40,7 @@ export class InventoryMovementService {
   private readonly repository: InventoryMovementRepository;
   private readonly itemRepository: InventoryItemRepository;
   private readonly locationRepository: InventoryLocationRepository;
+  private readonly storeRepository: StoreRepository;
   private readonly accountRepository: AccountingAccountRepository;
   private readonly journalService: JournalEntryService;
   private readonly context: AccountingTenantContext;
@@ -53,6 +56,9 @@ export class InventoryMovementService {
     );
     this.locationRepository =
       new InventoryLocationRepository(context);
+    this.storeRepository = new StoreRepository({
+      organizationId: context.organizationId,
+    });
     this.accountRepository =
       new AccountingAccountRepository(context);
     this.journalService = new JournalEntryService(context);
@@ -76,6 +82,17 @@ export class InventoryMovementService {
       data.location,
       session
     );
+    if (data.store) {
+      const store = await this.storeRepository.findById(
+        data.store
+      );
+      if (!store) {
+        throw new AccountingDomainError(
+          'Store/workspace inventory tidak ditemukan dalam organization aktif.',
+          'INVENTORY_MOVEMENT_STORE_NOT_FOUND'
+        );
+      }
+    }
 
     if (data.idempotency_key) {
       const existing =
@@ -91,6 +108,8 @@ export class InventoryMovementService {
       {
         inventory_item: data.inventory_item,
         location: data.location,
+        store: data.store,
+        platform: data.platform,
         movement_type: data.movement_type,
         quantity: data.quantity,
         unit_cost: costs.unit_cost,
@@ -281,6 +300,9 @@ export class InventoryMovementService {
     movement: {
       _id: unknown;
       inventory_item: unknown;
+      location: unknown;
+      store?: unknown;
+      platform?: string;
       occurred_at: Date;
       quantity: number;
       unit_cost?: number;
@@ -325,6 +347,7 @@ export class InventoryMovementService {
       movement.occurred_at,
       'occurred_at'
     );
+    const dimensions = this.getJournalDimensions(movement);
 
     const journalEntry = await this.journalService.postNew(
       {
@@ -347,11 +370,13 @@ export class InventoryMovementService {
             account: String(inventoryAccount._id),
             debit: movement.total_cost,
             credit: 0,
+            dimensions,
           },
           {
             account: String(offsetAccount._id),
             debit: 0,
             credit: movement.total_cost,
+            dimensions,
           },
         ],
       },
@@ -373,6 +398,8 @@ export class InventoryMovementService {
       _id: unknown;
       inventory_item: unknown;
       location: unknown;
+      store?: unknown;
+      platform?: string;
       occurred_at: Date;
       quantity: number;
       unit_cost?: number;
@@ -438,6 +465,7 @@ export class InventoryMovementService {
       movement.occurred_at,
       'occurred_at'
     );
+    const dimensions = this.getJournalDimensions(movement);
 
     const journalEntry = await this.journalService.postNew(
       {
@@ -460,11 +488,13 @@ export class InventoryMovementService {
             account: String(cogsAccount._id),
             debit: costs.total_cost,
             credit: 0,
+            dimensions,
           },
           {
             account: String(inventoryAccount._id),
             debit: 0,
             credit: costs.total_cost,
+            dimensions,
           },
         ],
       },
@@ -480,6 +510,8 @@ export class InventoryMovementService {
       _id: unknown;
       inventory_item: unknown;
       location: unknown;
+      store?: unknown;
+      platform?: string;
       occurred_at: Date;
       quantity: number;
       unit_cost?: number;
@@ -539,6 +571,7 @@ export class InventoryMovementService {
       movement.occurred_at,
       'occurred_at'
     );
+    const dimensions = this.getJournalDimensions(movement);
 
     const journalEntry = await this.journalService.postNew(
       {
@@ -561,11 +594,13 @@ export class InventoryMovementService {
             account: String(cogsAccount._id),
             debit: costs.total_cost,
             credit: 0,
+            dimensions,
           },
           {
             account: String(inventoryAccount._id),
             debit: 0,
             credit: costs.total_cost,
+            dimensions,
           },
         ],
       },
@@ -835,6 +870,22 @@ export class InventoryMovementService {
       );
     }
     return { unit_cost: unitCost, total_cost: totalCost };
+  }
+
+  private getJournalDimensions(movement: {
+    location: unknown;
+    store?: unknown;
+    platform?: string;
+  }) {
+    return createAccountingDimensions({
+      ...(movement.store
+        ? { store: String(movement.store) }
+        : {}),
+      ...(movement.platform
+        ? { platform: movement.platform }
+        : {}),
+      inventory_location: String(movement.location),
+    });
   }
 
   private resolveConsumptionCost(

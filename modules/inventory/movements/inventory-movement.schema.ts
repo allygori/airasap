@@ -28,6 +28,8 @@ export const InventoryMovementStatusSchema = z.enum(
 export const InventoryMovementBaseSchema = z.object({
   inventory_item: z.string().min(1),
   location: z.string().min(1),
+  store: z.string().min(1).optional(),
+  platform: z.string().min(1).optional(),
   movement_type: InventoryMovementTypeSchema,
   quantity: z.number().int().positive(),
   unit_cost: z.number().int().nonnegative().optional(),

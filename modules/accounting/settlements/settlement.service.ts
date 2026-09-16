@@ -1,6 +1,7 @@
 import type { ClientSession } from 'mongoose';
 import { AccountingDomainError } from '../accounting.error';
 import { AccountingAccountRepository } from '../accounts/account.repository';
+import { createAccountingDimensions } from '../accounting-dimensions';
 import { JournalEntryService } from '../journal-entries/journal-entry.service';
 import {
   getPeriodKeyFromDate,
@@ -11,6 +12,7 @@ import {
 import { createAuditLog } from '../audit/audit-log.model';
 import { SettlementRepository } from './settlement.repository';
 import { OrderRepository } from '@/modules/orders/order.repository';
+import { StoreRepository } from '@/modules/stores/store.repository';
 
 const DEFAULT_DESTINATION_ACCOUNT = '1130';
 const MARKETPLACE_RECEIVABLE_ACCOUNT = '1210';
@@ -121,11 +123,21 @@ export class MarketplaceSettlementService {
   private readonly orderRepository: OrderRepository;
   private readonly accountRepository: AccountingAccountRepository;
   private readonly journalService: JournalEntryService;
+  private readonly storeRepository: StoreRepository;
 
   constructor(context: SettlementContext) {
     this.context = context;
-    this.repository = new SettlementRepository(context);
-    this.orderRepository = new OrderRepository(context);
+    this.repository = new SettlementRepository({
+      organizationId: context.organizationId,
+    });
+    // Settlement dimensions must come from the source order, even when the
+    // settlement action is initiated from another active UI store.
+    this.orderRepository = new OrderRepository({
+      organizationId: context.organizationId,
+    });
+    this.storeRepository = new StoreRepository({
+      organizationId: context.organizationId,
+    });
     this.accountRepository =
       new AccountingAccountRepository(context);
     this.journalService = new JournalEntryService(context);
@@ -143,6 +155,17 @@ export class MarketplaceSettlementService {
         'SETTLEMENT_ORDER_NOT_FOUND'
       );
     }
+
+    const sourceStore = await this.storeRepository.findById(
+      String(order.store)
+    );
+    if (!sourceStore) {
+      throw new AccountingDomainError(
+        'Store/workspace pada order settlement tidak ditemukan dalam organization aktif.',
+        'SETTLEMENT_STORE_NOT_FOUND'
+      );
+    }
+    const storeId = String(sourceStore._id);
 
     if (!order.released_funds_at) {
       throw new AccountingDomainError(
@@ -225,6 +248,7 @@ export class MarketplaceSettlementService {
       (await this.repository.createSettlement(
         {
           order: order._id,
+          store: sourceStore._id,
           order_id: order.order_id,
           platform: order.platform,
           settlement_reference: settlementReference,
@@ -250,6 +274,7 @@ export class MarketplaceSettlementService {
           String(existing._id),
           {
             destination_account: destinationAccount._id,
+            store: sourceStore._id,
             settled_at: settledAt,
             gross_amount: grossAmount,
             fee_amount: feeAmount,
@@ -295,12 +320,10 @@ export class MarketplaceSettlementService {
     }
 
     const occurredAt = settledAt;
-    const dimensions = {
+    const dimensions = createAccountingDimensions({
+      store: storeId,
       platform: order.platform,
-      ...(this.context.storeId
-        ? { store: this.context.storeId }
-        : {}),
-    };
+    });
     const lines = [
       ...(netAmount > 0
         ? [
