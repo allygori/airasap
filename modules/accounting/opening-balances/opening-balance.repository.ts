@@ -23,6 +23,18 @@ export class OpeningBalanceRepository extends BaseRepository<TOpeningBalance> {
     return query.lean();
   }
 
+  async findByNumber(
+    openingBalanceNumber: string,
+    session?: ClientSession
+  ) {
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      opening_balance_number: openingBalanceNumber,
+    });
+    if (session) query.session(session);
+    return query.lean();
+  }
+
   async createOpeningBalance(
     data: Record<string, unknown>,
     session?: ClientSession

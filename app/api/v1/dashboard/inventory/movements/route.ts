@@ -80,8 +80,25 @@ export const GET = withValidation(
             {
               path: 'inventory_item',
               select: 'sku name unit',
+              match: {
+                organization: tenantContext.organizationId,
+              },
+              options: {
+                organizationId:
+                  tenantContext.organizationId,
+              },
             },
-            { path: 'location', select: 'code name type' },
+            {
+              path: 'location',
+              select: 'code name type',
+              match: {
+                organization: tenantContext.organizationId,
+              },
+              options: {
+                organizationId:
+                  tenantContext.organizationId,
+              },
+            },
           ],
         }
       );

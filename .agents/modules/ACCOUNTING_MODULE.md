@@ -592,9 +592,24 @@ adjustment account may be used only with explicit documentation and a later
 reconciliation plan. The system must not silently treat estimates as verified
 historical balances.
 
-The existing `OpeningBalanceService` is the backend foundation for this path,
-but the cutover UI, organization onboarding choice, opening inventory workflow,
-and historical-order boundary controls remain future implementation work.
+The existing `OpeningBalanceService` is the backend foundation for this path.
+The first accounting-only cutover slice is now implemented:
+
+- `/dashboard/accounting/onboarding` is a dedicated accounting onboarding page;
+  it does not create or modify organizations, stores, or users.
+- `POST /api/v1/dashboard/accounting/cutover` creates the selected open
+  accounting period when it does not exist and posts a deterministic,
+  idempotent opening balance through the normal journal service.
+- The onboarding captures organization-level monetary opening balances and
+  uses the same searchable account-line form pattern as manual journals.
+- Existing closed periods are rejected; the system never reopens a closed
+  period implicitly.
+
+Opening inventory quantity/cost movements, the organization-level onboarding
+choice, and historical-order boundary controls remain future slices. Until
+those are implemented, inventory opening quantities must be initialized through
+the inventory workflow separately and should not be represented only by a
+journal balance.
 
 ### Phase 7A — Store-aware accounting foundation
 

@@ -6,12 +6,12 @@ import {
 } from '@/lib/api/response';
 import { withValidation } from '@/lib/api/validate';
 import { db } from '@/lib/db/connection';
-import { ManualJournalService } from '@/modules/accounting/manual-journal.service';
-import { PostManualJournalSchema } from '@/modules/accounting/manual-journal.schema';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
+import { AccountingCutoverService } from '@/modules/accounting/accounting-cutover.service';
+import { AccountingCutoverSchema } from '@/modules/accounting/accounting-cutover.schema';
 
 export const POST = withValidation(
-  PostManualJournalSchema,
+  AccountingCutoverSchema,
   async (_request, { validatedBody }) => {
     try {
       const tenantContext = await getTenantContext();
@@ -24,9 +24,9 @@ export const POST = withValidation(
       }
 
       await db.connect();
-      const result = await new ManualJournalService(
+      const result = await new AccountingCutoverService(
         tenantContext
-      ).post(validatedBody);
+      ).initialize(validatedBody);
 
       return apiSuccess(result, undefined, 201);
     } catch (error) {
@@ -35,14 +35,14 @@ export const POST = withValidation(
       }
 
       console.error(
-        '[POST /api/v1/dashboard/accounting/journal-entries/manual]',
+        '[POST /api/v1/dashboard/accounting/cutover]',
         error
       );
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
         error instanceof Error
           ? error.message
-          : 'Gagal memposting manual journal.',
+          : 'Gagal menyiapkan accounting cutover.',
         500
       );
     }

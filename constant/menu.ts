@@ -48,6 +48,10 @@ export const mainNav = [
         url: '/dashboard/accounting',
       },
       {
+        title: 'Accounting Onboarding',
+        url: '/dashboard/accounting/onboarding',
+      },
+      {
         title: 'Accounting Widgets',
         url: '/dashboard/accounting/widgets',
       },
