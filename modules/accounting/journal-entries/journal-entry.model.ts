@@ -14,9 +14,9 @@ export type TJournalLine = {
   credit: number;
   description?: string;
   dimensions?: {
-    channel?: string;
+    platform?: string;
     store?: string;
-    warehouse?: string;
+    inventory_location?: string;
     product?: string;
   };
 };
@@ -53,9 +53,9 @@ const JournalLineMongooseSchema = new Schema<TJournalLine>(
     credit: { type: Number, required: true, min: 0 },
     description: { type: String },
     dimensions: {
-      channel: { type: String },
+      platform: { type: String },
       store: { type: String },
-      warehouse: { type: String },
+      inventory_location: { type: String },
       product: { type: String },
     },
   },

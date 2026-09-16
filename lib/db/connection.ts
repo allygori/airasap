@@ -28,6 +28,7 @@ import '@/modules/sessions/session.model';
 import '@/modules/verifications/verifications.model';
 import '@/modules/files/file.model';
 import '@/modules/stores/store.model';
+import '@/modules/stores/channels/store-channel.model';
 import '@/modules/products/product.model';
 // import '@/modules/product-costs/product-cost.model';
 import '@/modules/orders/order.model';

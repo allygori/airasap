@@ -3,17 +3,14 @@ import {
   DEFAULT_CURRENCY,
   JOURNAL_ENTRY_STATUS_VALUES,
 } from '../accounting.constant';
+import { AccountingDimensionsSchema } from '../accounting-dimensions';
 
 export const JournalEntryStatusSchema = z.enum(
   JOURNAL_ENTRY_STATUS_VALUES
 );
 
-export const JournalDimensionsSchema = z.object({
-  channel: z.string().min(1).optional(),
-  store: z.string().min(1).optional(),
-  warehouse: z.string().min(1).optional(),
-  product: z.string().min(1).optional(),
-});
+export const JournalDimensionsSchema =
+  AccountingDimensionsSchema;
 
 export const JournalLineSchema = z
   .object({

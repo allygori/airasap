@@ -296,7 +296,7 @@ export class MarketplaceSettlementService {
 
     const occurredAt = settledAt;
     const dimensions = {
-      channel: order.platform,
+      platform: order.platform,
       ...(this.context.storeId
         ? { store: this.context.storeId }
         : {}),

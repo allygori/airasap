@@ -208,7 +208,7 @@ Support opening balances for cash, bank, marketplace receivable, inventory, liab
 
 Do not create separate accounts such as `Shopee Sales`, `TikTok Sales`, and
 `Website Sales`. Use shared accounts such as `Sales Revenue` with dimensions
-such as `store`/workspace, `platform`, `warehouse`, and `product`.
+such as `store`/workspace, `platform`, `inventory_location`, and `product`.
 
 The business meaning of these terms is:
 
@@ -610,6 +610,23 @@ Finalize the business model and vocabulary before adding manual input:
   organization-wide for each transaction type.
 - Keep physical stock locations under `inventory_locations`; do not introduce a
   separate warehouse module until warehouse workflows require it.
+
+#### Phase 7A implementation status
+
+- Added canonical journal dimensions: `store`, `platform`, `product`, and
+  `inventory_location`.
+- Removed unused `channel` and journal-dimension `warehouse` fields from the
+  new accounting and expense schemas. Source postings now use the canonical
+  `platform` dimension, while physical stock continues to use
+  `inventory_location`.
+- Added organization/store-scoped `store_channel_connections` as the registry
+  for a store's platform accounts. The model stores platform identity and
+  external account identity, but does not store marketplace credentials.
+- Added tenant-scoped list, create, update, and archive API endpoints for
+  store-channel connections.
+- Platform values remain extensible slugs rather than a hardcoded enum so new
+  channels can be added without a schema migration. Supported platform
+  connections should still be validated by the relevant integration module.
 
 ### Phase 7B — Store/platform-aware source postings
 

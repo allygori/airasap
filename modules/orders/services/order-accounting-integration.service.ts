@@ -168,7 +168,7 @@ export class OrderAccountingIntegrationService {
       }
 
       const dimensions = {
-        channel: order.platform,
+        platform: order.platform,
         ...(this.context.storeId
           ? { store: this.context.storeId }
           : {}),

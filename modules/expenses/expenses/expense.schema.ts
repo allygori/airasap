@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AccountingDimensionsSchema } from '@/modules/accounting/accounting-dimensions';
 
 export const EXPENSE_STATUS_VALUES = [
   'draft',
@@ -10,11 +11,8 @@ export const ExpenseStatusSchema = z.enum(
   EXPENSE_STATUS_VALUES
 );
 
-export const ExpenseDimensionsSchema = z.object({
-  channel: z.string().min(1).optional(),
-  store: z.string().min(1).optional(),
-  warehouse: z.string().min(1).optional(),
-});
+export const ExpenseDimensionsSchema =
+  AccountingDimensionsSchema;
 
 export const ExpenseBaseSchema = z.object({
   expense_account: z.string().min(1),

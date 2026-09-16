@@ -56,9 +56,10 @@ const ExpenseSchema = new Schema<TExpense>(
     source_id: { type: String },
     idempotency_key: { type: String },
     dimensions: {
-      channel: { type: String },
+      platform: { type: String },
       store: { type: String },
-      warehouse: { type: String },
+      inventory_location: { type: String },
+      product: { type: String },
     },
     attachment: {
       type: Schema.Types.ObjectId,
