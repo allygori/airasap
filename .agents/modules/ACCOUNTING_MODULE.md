@@ -226,10 +226,11 @@ the operating workspace or brand inside the organization; it may sell through
 multiple platforms. `platform` identifies the sales channel or integration,
 not a separate accounting book.
 
-The current `Store` schema still has a required `platform` field, which
-reflects the older one-store-per-platform assumption. This is a documented
-model mismatch to resolve in the store/platform foundation work; no accounting
-code should treat that field as the final business model.
+The old required `platform` field has been removed from the `Store` schema and
+model. `Store` now represents the workspace or brand only. A future platform
+or channel-connection concept will hold Shopee, Tokopedia, Website, WhatsApp,
+and other integration identifiers and metadata; accounting code should not
+treat platform as a property of `Store`.
 
 For accounting, the intended policy is:
 

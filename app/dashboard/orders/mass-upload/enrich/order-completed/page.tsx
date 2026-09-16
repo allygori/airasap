@@ -29,7 +29,6 @@ import {
 type Store = {
   _id: string;
   name: string;
-  platform: string;
 };
 
 export default function MassUploadEnrichWithOrderCompletedPage() {
@@ -261,8 +260,8 @@ export default function MassUploadEnrichWithOrderCompletedPage() {
               </h4>
               <ol className="list-decimal space-y-1 pl-4">
                 <li>
-                  Export template "Informasi Penjualan" dari
-                  Seller Centre Shopee.
+                  Export template &quot;Informasi
+                  Penjualan&quot; dari Seller Centre Shopee.
                 </li>
                 <li>
                   Pilih toko target yang sesuai di form

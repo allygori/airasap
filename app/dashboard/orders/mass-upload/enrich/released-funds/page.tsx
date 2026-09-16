@@ -29,7 +29,6 @@ import {
 type Store = {
   _id: string;
   name: string;
-  platform: string;
 };
 
 export default function MassUploadEnrichWithReleasedFundsPage() {
@@ -183,7 +182,7 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
                   ) : (
                     stores.map((s) => (
                       <option key={s._id} value={s._id}>
-                        {s.name} ({s.platform})
+                        {s.name}
                       </option>
                     ))
                   )}
@@ -292,8 +291,8 @@ export default function MassUploadEnrichWithReleasedFundsPage() {
               </h4>
               <ol className="list-decimal space-y-1 pl-4">
                 <li>
-                  Export template "Informasi Penjualan" dari
-                  Seller Centre Shopee.
+                  Export template &quot;Informasi
+                  Penjualan&quot; dari Seller Centre Shopee.
                 </li>
                 <li>
                   Pilih toko target yang sesuai di form

@@ -1,9 +1,7 @@
 import { z } from 'zod';
-import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 import { TIMEZONE_VALUES } from '@/constant/timezone';
 
 export const BaseStoreSchema = z.object({
-  platform: z.enum(ORDER_PLATFORM_VALUES),
   name: z.string().min(1, 'Nama toko wajib diisi'),
   code: z.string(), // 2 chars code, e.g: 'KD'
   timezone: z.enum(TIMEZONE_VALUES),

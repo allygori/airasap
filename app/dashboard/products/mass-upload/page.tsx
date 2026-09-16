@@ -25,7 +25,6 @@ import { toast } from 'sonner';
 type Store = {
   _id: string;
   name: string;
-  platform: string;
 };
 
 export default function MassUploadPage() {
@@ -207,7 +206,7 @@ export default function MassUploadPage() {
                   ) : (
                     stores.map((s) => (
                       <option key={s._id} value={s._id}>
-                        {s.name} ({s.platform})
+                        {s.name}
                       </option>
                     ))
                   )}
@@ -326,8 +325,8 @@ export default function MassUploadPage() {
               </h4>
               <ol className="list-decimal space-y-1 pl-4">
                 <li>
-                  Export template "Informasi Penjualan" dari
-                  Seller Centre Shopee.
+                  Export template &quot;Informasi
+                  Penjualan&quot; dari Seller Centre Shopee.
                 </li>
                 <li>
                   Pilih toko target yang sesuai di form

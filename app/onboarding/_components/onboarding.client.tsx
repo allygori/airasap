@@ -11,7 +11,6 @@ import {
   ZodOnboardingInput,
   ZodOnboardingSchema,
 } from '@/app/onboarding/_components/onboarding.schema';
-import { ORDER_PLATFORMS } from '@/constant/order-platform';
 
 type OnboardingClientProps = {
   className?: string;
@@ -148,7 +147,6 @@ export default function OnboardingClient({
             body: JSON.stringify({
               // organization: newOrg.id,
               name: firstStore || newOrg?.name || '',
-              platform: ORDER_PLATFORMS.shopee.value,
               timezone: timezone,
             }),
           }

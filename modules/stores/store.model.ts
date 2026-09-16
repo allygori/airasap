@@ -5,25 +5,9 @@ import {
   Document,
   Types,
 } from 'mongoose';
-import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
-import {
-  type TimeZone,
-  TIMEZONE_VALUES,
-} from '@/constant/timezone';
+import { TIMEZONE_VALUES } from '@/constant/timezone';
 import { StoreBaseDTO } from './store.dto';
 import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
-
-// const ObjectId = Schema.Types.ObjectId;
-
-// export type TStore = Document & {
-//   organization: typeof ObjectId;
-//   user: typeof ObjectId;
-//   platform: (typeof ORDER_PLATFORM_VALUES)[number];
-//   name: string;
-//   timezone: TimeZone;
-//   is_active: boolean;
-//   deleted_at?: Date;
-// };
 
 export type TStore = Document &
   StoreBaseDTO & {
@@ -40,17 +24,6 @@ const StoreSchema = new Schema<TStore>(
       ref: 'Organization',
       required: true,
       alias: 'organizationId',
-    },
-    // user: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'User',
-    //   required: true,
-    //   alias: 'userId',
-    // },
-    platform: {
-      type: String,
-      enum: ORDER_PLATFORM_VALUES,
-      required: true,
     },
     name: {
       type: String,
