@@ -2,20 +2,17 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 import {
-  CheckCircle2,
-  Loader2,
   GripVertical,
   CheckCircleIcon,
 } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-// import { BlogPostType, CategoryType, UserType } from "@/components/blog/types"
-import { CollectionRowActions } from '@/components/dashboard/collection/row-actions';
 // import { ViewDrawer } from '@/components/dashboard/collection/view-drawer';
 import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
+import { OrderRowActions } from './order-row-actions';
+import type { OrderResponseDTO } from '@/modules/orders/order.dto';
 import { formatIDR } from '@/lib/formatter';
 import { cn } from '@/lib/utils/ui';
 import { formatDate } from '@/lib/formatter/date';
@@ -50,8 +47,8 @@ function DragHandle({ id }: { id: string }) {
 
 export const getProductsColumn = (
   isSortable: boolean = false
-): ColumnDef<Record<string, any>>[] => {
-  const baseColumns: ColumnDef<Record<string, any>>[] = [
+): ColumnDef<OrderResponseDTO>[] => {
+  const baseColumns: ColumnDef<OrderResponseDTO>[] = [
     {
       id: 'select',
       header: ({ table }) => (
@@ -142,7 +139,7 @@ export const getProductsColumn = (
                 : [
                       'pengembalian',
                       'pengembalian-dana',
-                    ].includes(row.original.status)
+                    ].includes(row.original.status ?? '')
                   ? 'text-yellow-400'
                   : 'text-blue-500'
           )}
@@ -185,15 +182,16 @@ export const getProductsColumn = (
       accessorKey: 'total_net_profit',
       header: 'Profit',
       cell: ({ row }) => {
-        let isStatusNotCanceled =
+        const isStatusNotCanceled =
           row.original.status !== 'batal';
-        let releasedFundsAmount =
+        const releasedFundsAmount =
           row.original.released_funds || 0;
-        let totalProfit =
+        const totalProfit =
           isStatusNotCanceled &&
           row.original.total_net_profit === 0
             ? row.original.total_gross_profit
             : row.original.total_net_profit;
+        const normalizedProfit = totalProfit ?? 0;
 
         return (
           <div className="flex flex-row items-center">
@@ -202,14 +200,14 @@ export const getProductsColumn = (
                 'text-base font-medium',
                 !isStatusNotCanceled
                   ? 'text-accent-foreground/50'
-                  : totalProfit > 0
+                  : normalizedProfit > 0
                     ? 'text-green-400'
-                    : totalProfit < 0
+                    : normalizedProfit < 0
                       ? 'text-red-400'
                       : ''
               )}
             >
-              {formatIDR(totalProfit ?? 0)}
+              {formatIDR(normalizedProfit)}
             </span>
             <span className="text-tiny pl-1.5">
               {/* &nbsp; */}
@@ -229,15 +227,11 @@ export const getProductsColumn = (
       cell: ({ row }) => {
         const completed = (
           row.original.enrichments || []
-        ).findIndex(
-          (item: { kind: string }) =>
-            item.kind === 'completed'
-        );
+        ).findIndex((item) => item.kind === 'completed');
         const releasedFunds = (
           row.original.enrichments || []
         ).findIndex(
-          (item: { kind: string }) =>
-            item.kind === 'released-funds'
+          (item) => item.kind === 'released-funds'
         );
 
         return (
@@ -349,15 +343,12 @@ export const getProductsColumn = (
         </div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   cell: ({ row }) => <CollectionRowActions
-    //     row={row}
-    //     editUrl="/dashboard/posts"
-    //     viewUrl="/posts"
-    //     label="Article"
-    //   />,
-    // },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => <OrderRowActions row={row} />,
+      enableHiding: false,
+    },
   ];
 
   if (isSortable) {

@@ -3,10 +3,8 @@
 import { useMemo } from 'react';
 import Link from 'next/link';
 import { DataTableShell } from '@/components/data-table/shell';
-import { ColumnDef } from '@tanstack/react-table';
 import { getProductsColumn } from './_components/columns';
-import { OrderResponseDTO } from '@/modules/orders/order.dto';
-import { FileSpreadsheet, FileText } from 'lucide-react';
+import { FileSpreadsheet } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { OrderListFilters } from './_components/filters';
 
@@ -14,7 +12,7 @@ export default function OrderIndexPage() {
   const columns = useMemo(
     () => getProductsColumn(false),
     []
-  ) as ColumnDef<OrderResponseDTO>[];
+  );
 
   return (
     <>
