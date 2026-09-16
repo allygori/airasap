@@ -15,6 +15,7 @@ import {
   // LayoutGrid,
   // TagIcon,
   BoxIcon,
+  Boxes,
   ShoppingBagIcon,
   // FileTextIcon,
   ChartPieIcon,
@@ -61,6 +62,25 @@ export const mainNav = [
       {
         title: 'General Ledger',
         url: '/dashboard/accounting/ledger',
+      },
+    ],
+  },
+  {
+    title: 'Inventory',
+    url: '/dashboard/inventory',
+    icon: Boxes,
+    items: [
+      {
+        title: 'Inventory Items',
+        url: '/dashboard/inventory/items',
+      },
+      {
+        title: 'Locations',
+        url: '/dashboard/inventory/locations',
+      },
+      {
+        title: 'Movements',
+        url: '/dashboard/inventory/movements',
       },
     ],
   },

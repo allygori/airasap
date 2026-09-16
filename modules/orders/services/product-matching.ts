@@ -21,6 +21,7 @@ type VariantLike = {
   name?: string;
   name_history?: string[];
   child_sku?: string | null;
+  sku?: string | null;
   default_cost?: number;
   costs?: CostLike[];
 };
@@ -91,9 +92,10 @@ function matchVariant(
   const productName = normalizeMatchText(input.productName);
 
   if (childSku) {
-    const skuVariant = variants.find(
-      (variant) =>
-        normalizeMatchText(variant.child_sku) === childSku
+    const skuVariant = variants.find((variant) =>
+      [variant.child_sku, variant.sku].some(
+        (sku) => normalizeMatchText(sku) === childSku
+      )
     );
     if (skuVariant) return skuVariant;
   }

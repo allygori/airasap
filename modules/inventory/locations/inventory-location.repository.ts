@@ -1,4 +1,7 @@
-import type { ClientSession } from 'mongoose';
+import {
+  type ClientSession,
+  type UpdateQuery,
+} from 'mongoose';
 import { BaseRepository } from '../../base.repository';
 import {
   InventoryLocationModel,
@@ -59,5 +62,28 @@ export class InventoryLocationRepository extends BaseRepository<TInventoryLocati
     });
     if (session) query.session(session);
     return query.lean();
+  }
+
+  async updateLocation(
+    id: string,
+    data: UpdateQuery<TInventoryLocation>
+  ) {
+    return this.model
+      .findOneAndUpdate(
+        { ...this.getTenantFilter(), _id: id },
+        { $set: data },
+        { new: true, runValidators: true }
+      )
+      .lean();
+  }
+
+  async archiveLocation(id: string) {
+    return this.model
+      .findOneAndUpdate(
+        { ...this.getTenantFilter(), _id: id },
+        { $set: { is_active: false } },
+        { new: true, runValidators: true }
+      )
+      .lean();
   }
 }

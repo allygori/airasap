@@ -1,4 +1,7 @@
-import type { ClientSession } from 'mongoose';
+import {
+  isValidObjectId,
+  type ClientSession,
+} from 'mongoose';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
@@ -10,6 +13,8 @@ import {
 import { InventoryItemRepository } from '@/modules/inventory/items/inventory-item.repository';
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 import { InventoryMovementService } from '@/modules/inventory/movements/inventory-movement.service';
+import { ProductRepository } from '@/modules/products/product.repository';
+import { matchProductAndVariant } from './product-matching';
 import { OrderRepository } from '../order.repository';
 
 const MARKETPLACE_RECEIVABLE_ACCOUNT = '1210';
@@ -28,6 +33,7 @@ export class OrderAccountingIntegrationService {
   private readonly context: OrderAccountingContext;
   private readonly orderRepository: OrderRepository;
   private readonly itemRepository: InventoryItemRepository;
+  private readonly productRepository: ProductRepository;
   private readonly locationRepository: InventoryLocationRepository;
   private readonly accountRepository: AccountingAccountRepository;
   private readonly movementService: InventoryMovementService;
@@ -39,6 +45,7 @@ export class OrderAccountingIntegrationService {
     this.itemRepository = new InventoryItemRepository(
       context
     );
+    this.productRepository = new ProductRepository(context);
     this.locationRepository =
       new InventoryLocationRepository(context);
     this.accountRepository =
@@ -106,8 +113,7 @@ export class OrderAccountingIntegrationService {
 
         const inventoryItem =
           await this.resolveInventoryItem(
-            item.child_sku,
-            item.parent_sku,
+            item,
             input.session
           );
         const movement =
@@ -270,11 +276,17 @@ export class OrderAccountingIntegrationService {
   }
 
   private async resolveInventoryItem(
-    childSku: string | undefined,
-    parentSku: string | undefined,
+    item: {
+      product?: unknown;
+      product_id?: string;
+      product_name?: string;
+      variation_name?: string;
+      parent_sku?: string;
+      child_sku?: string;
+    },
     session?: ClientSession
   ) {
-    const preferredSkus = [childSku, parentSku]
+    const preferredSkus = [item.child_sku, item.parent_sku]
       .map((sku) => String(sku ?? '').trim())
       .filter(Boolean);
     const candidates =
@@ -290,8 +302,73 @@ export class OrderAccountingIntegrationService {
       );
       if (item) return item;
     }
+
+    const products = [];
+    const productReference = String(
+      item.product ?? ''
+    ).trim();
+    if (isValidObjectId(productReference)) {
+      const product = await this.productRepository.findById(
+        productReference
+      );
+      if (product) products.push(product);
+    }
+
+    const matchingProducts =
+      await this.productRepository.findForOrderMatching({
+        names: item.product_name ? [item.product_name] : [],
+        parentSkus: item.parent_sku
+          ? [item.parent_sku]
+          : [],
+        childSkus: item.child_sku ? [item.child_sku] : [],
+        productIds: item.product_id
+          ? [item.product_id]
+          : [],
+      });
+    const knownProductIds = new Set(
+      products.map((product) => String(product._id))
+    );
+    for (const product of matchingProducts) {
+      if (!knownProductIds.has(String(product._id))) {
+        products.push(product);
+      }
+    }
+
+    if (products.length > 0) {
+      const match = matchProductAndVariant(products, {
+        productId: item.product_id,
+        productName: item.product_name,
+        variationName: item.variation_name,
+        parentSku: item.parent_sku,
+        childSku: item.child_sku,
+      });
+
+      if (match.productMatchStatus === 'matched') {
+        const fallbackSkus = [
+          match.variant?.child_sku,
+          match.variant?.sku,
+          match.product?.parent_sku,
+        ]
+          .map((sku) => String(sku ?? '').trim())
+          .filter(Boolean);
+        const fallbackCandidates =
+          await this.itemRepository.findActiveBySkus(
+            fallbackSkus,
+            session
+          );
+        for (const sku of fallbackSkus) {
+          const inventoryItem = fallbackCandidates.find(
+            (candidate) =>
+              candidate.sku === sku &&
+              candidate.item_type === 'merchandise'
+          );
+          if (inventoryItem) return inventoryItem;
+        }
+      }
+    }
+
     throw new AccountingDomainError(
-      `Inventory merchandise tidak ditemukan untuk SKU ${preferredSkus.join(' / ') || '(kosong)'}.`,
+      `Inventory merchandise tidak ditemukan untuk SKU ${preferredSkus.join(' / ') || '(kosong)'}. Isi SKU order atau mapping product/variant ke inventory item terlebih dahulu.`,
       'ORDER_INVENTORY_ITEM_NOT_MAPPED'
     );
   }
