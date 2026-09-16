@@ -43,35 +43,27 @@ export function multiTenancyPlugin(
     schema.pre(
       // Mongoose's overloads do not expose the complete query-operation
       // union, although these operation names are supported at runtime.
-      method as any,
-      function (
-        this: TenantQuery,
-        next: (error?: Error) => void
-      ) {
-        const query = this;
-        const options = query.getOptions();
-        const filter = query.getQuery();
+      method as mongoose.MongooseQueryOrDocumentMiddleware,
+      function (this: TenantQuery) {
+        const options = this.getOptions();
+        const filter = this.getQuery();
         const organizationId =
           options.organizationId ?? filter[TENANT_PATH];
 
         if (!organizationId) {
-          return next(
-            new Error(
-              `CRITICAL: Tenant-scoped ${String(
-                this.op
-              )} query requires an organization context.`
-            )
+          throw new Error(
+            `CRITICAL: Tenant-scoped ${String(
+              this.op
+            )} query requires an organization context.`
           );
         }
 
         // Prefer the repository-provided option when available. This prevents
         // a caller from overriding the active tenant through a query filter.
-        query.setQuery({
+        this.setQuery({
           ...filter,
           [TENANT_PATH]: organizationId,
         });
-
-        next();
       }
     );
   }
