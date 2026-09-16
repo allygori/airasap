@@ -102,6 +102,7 @@ type StoreOption = {
 type ManualJournalFormProps = {
   accounts: AccountOption[];
   stores: StoreOption[];
+  lineDirections?: Array<'debit' | 'credit' | undefined>;
   title?: string;
   description?: string;
   onCancel?: () => void;
@@ -130,6 +131,7 @@ export const ManualJournalForm = withForm({
   props: {
     accounts: [] as AccountOption[],
     stores: [] as StoreOption[],
+    lineDirections: undefined,
     title: undefined,
     description: undefined,
     onCancel: undefined,
@@ -138,6 +140,7 @@ export const ManualJournalForm = withForm({
     form,
     accounts,
     stores,
+    lineDirections,
     title,
     description,
     onCancel,
@@ -215,6 +218,7 @@ export const ManualJournalForm = withForm({
                 children={(field) => (
                   <field.JournalLinesField
                     accounts={accounts}
+                    lineDirections={lineDirections}
                   />
                 )}
               />

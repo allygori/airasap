@@ -10,6 +10,10 @@ import { revalidateLogic } from '@tanstack/react-form';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import {
+  MANUAL_JOURNAL_TEMPLATES,
+  type ManualJournalTemplateKey,
+} from '@/constant/accounting/manual-journal-templates';
+import {
   ManualJournalForm,
   ManualJournalFormSchema,
 } from '../../_components/manual-journal.form';
@@ -57,6 +61,11 @@ export default function CreateManualJournalPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const template = searchParams.get('template');
+  const selectedTemplate = template
+    ? MANUAL_JOURNAL_TEMPLATES[
+        template as ManualJournalTemplateKey
+      ]
+    : undefined;
   const [bootstrap, setBootstrap] =
     useState<BootstrapData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -150,7 +159,7 @@ export default function CreateManualJournalPage() {
   useEffect(() => {
     if (
       !bootstrap ||
-      !template ||
+      !selectedTemplate ||
       templateDefaultsApplied.current
     ) {
       return;
@@ -159,69 +168,30 @@ export default function CreateManualJournalPage() {
     const postableAccounts = bootstrap.accounts.filter(
       (account) => account.is_postable
     );
-    const cashAccount = postableAccounts.find(
-      (account) =>
-        ['1110', '1120', '1130', '1140'].includes(
-          account.code
-        ) ||
-        [
-          'cash',
-          'bank',
-          'marketplace_balance',
-          'e_wallet',
-        ].includes(account.subtype || '')
+
+    const findAccount = (match: {
+      codes: readonly string[];
+      subtypes: readonly string[];
+    }) =>
+      postableAccounts.find((account) =>
+        match.codes.includes(account.code)
+      ) ??
+      postableAccounts.find((account) =>
+        match.subtypes.includes(account.subtype || '')
+      );
+
+    form.setFieldValue(
+      'lines',
+      selectedTemplate.lines.map((line) => ({
+        account: findAccount(line.account)?._id ?? '',
+        debit: '',
+        credit: '',
+        description: '',
+      }))
     );
 
-    if (template === 'capital-contribution') {
-      const capitalAccount = postableAccounts.find(
-        (account) =>
-          account.subtype === 'owner_capital' ||
-          ['3110', '3120'].includes(account.code)
-      );
-      if (cashAccount && capitalAccount) {
-        form.setFieldValue('lines', [
-          {
-            account: cashAccount._id,
-            debit: '',
-            credit: '',
-            description: '',
-          },
-          {
-            account: capitalAccount._id,
-            debit: '',
-            credit: '',
-            description: '',
-          },
-        ]);
-      }
-    }
-
-    if (template === 'owner-distribution') {
-      const drawingsAccount = postableAccounts.find(
-        (account) =>
-          account.subtype === 'owner_drawings' ||
-          ['3310', '3320'].includes(account.code)
-      );
-      if (cashAccount && drawingsAccount) {
-        form.setFieldValue('lines', [
-          {
-            account: drawingsAccount._id,
-            debit: '',
-            credit: '',
-            description: '',
-          },
-          {
-            account: cashAccount._id,
-            debit: '',
-            credit: '',
-            description: '',
-          },
-        ]);
-      }
-    }
-
     templateDefaultsApplied.current = true;
-  }, [bootstrap, form, template]);
+  }, [bootstrap, form, selectedTemplate]);
 
   if (loading) {
     return (
@@ -239,31 +209,17 @@ export default function CreateManualJournalPage() {
     );
   }
 
-  const templateCopy: Record<
-    string,
-    { title: string; description: string }
-  > = {
-    'capital-contribution': {
-      title: 'Catat Setoran Modal',
-      description:
-        'Gunakan debit pada kas/bank yang menerima dana dan credit pada subakun modal pemilik yang sesuai.',
-    },
-    'owner-distribution': {
-      title: 'Catat Penarikan Pemilik',
-      description:
-        'Gunakan debit pada subakun prive/distribusi pemilik dan credit pada kas/bank yang digunakan.',
-    },
-  };
-  const copy = template
-    ? templateCopy[template]
-    : undefined;
+  const lineDirections = selectedTemplate?.lines.map(
+    (line) => line.direction
+  );
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 p-4 md:gap-6 md:p-6">
         <div>
           <h2 className="mb-1 text-xl font-semibold">
-            {copy?.title || 'Tambah Manual Journal'}
+            {selectedTemplate?.title ||
+              'Tambah Manual Journal'}
           </h2>
           <p className="text-muted-foreground text-sm">
             Input manual melalui journal posting service
@@ -277,8 +233,9 @@ export default function CreateManualJournalPage() {
             (account) => account.is_postable
           )}
           stores={bootstrap.scopeOptions?.stores ?? []}
-          title={copy?.title}
-          description={copy?.description}
+          lineDirections={lineDirections}
+          title={selectedTemplate?.title}
+          description={selectedTemplate?.description}
           onCancel={() => router.back()}
         />
       </div>
