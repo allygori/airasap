@@ -79,6 +79,10 @@ export const mainNav = [
         url: '/dashboard/inventory/locations',
       },
       {
+        title: 'Product Mappings',
+        url: '/dashboard/inventory/mappings',
+      },
+      {
         title: 'Movements',
         url: '/dashboard/inventory/movements',
       },

@@ -1,10 +1,10 @@
 import { z } from 'zod';
 
 export const INVENTORY_ITEM_TYPE_VALUES = [
-  'merchandise',
-  'packaging',
-  'supplies',
-  'fixed_asset',
+  'merchandise', // barang yang dijual ke customer
+  'packaging', // dipakai untuk mengirim merchandise
+  'supplies', // dipakai untuk operasional
+  'fixed_asset', // digunakan jangka panjang
 ] as const;
 
 export const InventoryItemTypeSchema = z.enum(

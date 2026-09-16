@@ -464,9 +464,17 @@ Dr Marketplace Fee
 - Added `POST /api/v1/dashboard/orders/[id]/accounting` as an explicit retry
   endpoint for orders blocked by incomplete mapping, missing location, or
   insufficient stock.
-- Added SKU-based order-item to merchandise-inventory mapping. Child SKU is
-  preferred, followed by parent SKU; unresolved mappings are blocked instead
-  of silently reducing the wrong stock.
+- Added tenant-scoped `inventory_item_mappings` as the explicit relationship
+  between imported products/variants and internal merchandise inventory items.
+  One active product/variant mapping is allowed, while one inventory item may
+  be shared by multiple channel listings.
+- Added `/dashboard/inventory/mappings` with list, create, edit, and archive
+  flows so mappings can be inspected and maintained without editing MongoDB
+  directly.
+- Order integration now resolves product/variant mappings first and keeps the
+  existing product-matching and SKU fallback for migration compatibility.
+  Unresolved mappings are blocked instead of silently reducing the wrong
+  stock.
 - Added `sale` inventory movements. The movement posts `Dr HPP Barang Dagang /
   Cr Persediaan Barang Dagang` using the inventory weighted-average value.
 - Completed-order recognition posts `Dr Piutang Marketplace / Cr Penjualan
@@ -540,6 +548,53 @@ valuation, marketplace receivable, settlement, and reconciliation screens.
 Phase 7 is split because manual journals should not be built on top of an
 ambiguous store/platform model. The accounting book remains organization-level,
 while store/workspace and platform become validated reporting dimensions.
+
+The project supports two onboarding paths for businesses that already operate
+before Pasaria accounting is enabled:
+
+1. Use the optional `Phase 7A-0` cutover path and start with verified opening
+   balances as of a chosen date.
+2. Use a historical migration/re-entry path when the business has complete
+   exports or reliable records from an earlier system. Historical transactions
+   may then be imported and posted according to their original periods.
+
+Neither path is mandatory for every organization. The selected path must be
+recorded per organization so historical orders are not accidentally posted
+twice or mixed with opening balances.
+
+### Phase 7A-0 — Optional accounting cutover and initialization
+
+This is an optional onboarding phase, not a prerequisite for the rest of
+Phase 7. It is intended for organizations that want to begin accounting from
+the current state without reconstructing every historical transaction.
+
+The cutover workflow should:
+
+- Let the organization choose and record a cutover date.
+- Capture verified opening balances for bank, cash, marketplace balances,
+  receivables, payables, loans, fixed assets, and owner equity.
+- Capture opening inventory quantities and cost per inventory item and
+  inventory location, not only the total inventory asset journal balance.
+- Create a balanced, auditable opening journal through the same posting engine
+  used by other accounting workflows.
+- Keep historical orders before the cutover date outside automatic order
+  posting unless the organization explicitly chooses historical migration.
+- Provide reconciliation information showing the source, date, value, and
+  unresolved difference for each opening balance.
+
+Opening inventory must create both a quantity subledger movement and the
+corresponding accounting value. A journal-only inventory opening balance is
+insufficient because order integration and stock valuation depend on movement
+history.
+
+If records are incomplete, a temporary opening-balance clearing or historical
+adjustment account may be used only with explicit documentation and a later
+reconciliation plan. The system must not silently treat estimates as verified
+historical balances.
+
+The existing `OpeningBalanceService` is the backend foundation for this path,
+but the cutover UI, organization onboarding choice, opening inventory workflow,
+and historical-order boundary controls remain future implementation work.
 
 ### Phase 7A — Store-aware accounting foundation
 

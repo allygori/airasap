@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import {
   ArrowRight,
+  ArrowLeftRight,
   Boxes,
   MapPin,
   PackageSearch,
@@ -33,6 +34,13 @@ const sections = [
     icon: MapPin,
   },
   {
+    href: '/dashboard/inventory/mappings',
+    title: 'Product mappings',
+    description:
+      'Hubungkan product/variant dari store dengan inventory item internal.',
+    icon: ArrowLeftRight,
+  },
+  {
     href: '/dashboard/inventory/movements',
     title: 'Inventory movements',
     description:
@@ -57,7 +65,7 @@ export default function InventoryPage() {
           accounting dan order integration.
         </p>
       </div>
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-4">
         {sections.map((section) => {
           const Icon = section.icon;
           return (

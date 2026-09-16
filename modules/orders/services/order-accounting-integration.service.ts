@@ -11,6 +11,7 @@ import {
   type AccountingTenantContext,
 } from '@/modules/accounting/accounting.types';
 import { InventoryItemRepository } from '@/modules/inventory/items/inventory-item.repository';
+import { InventoryItemMappingRepository } from '@/modules/inventory/mappings/inventory-item-mapping.repository';
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 import { InventoryMovementService } from '@/modules/inventory/movements/inventory-movement.service';
 import { ProductRepository } from '@/modules/products/product.repository';
@@ -33,6 +34,7 @@ export class OrderAccountingIntegrationService {
   private readonly context: OrderAccountingContext;
   private readonly orderRepository: OrderRepository;
   private readonly itemRepository: InventoryItemRepository;
+  private readonly mappingRepository: InventoryItemMappingRepository;
   private readonly productRepository: ProductRepository;
   private readonly locationRepository: InventoryLocationRepository;
   private readonly accountRepository: AccountingAccountRepository;
@@ -45,6 +47,8 @@ export class OrderAccountingIntegrationService {
     this.itemRepository = new InventoryItemRepository(
       context
     );
+    this.mappingRepository =
+      new InventoryItemMappingRepository(context);
     this.productRepository = new ProductRepository(context);
     this.locationRepository =
       new InventoryLocationRepository(context);
@@ -279,6 +283,7 @@ export class OrderAccountingIntegrationService {
     item: {
       product?: unknown;
       product_id?: string;
+      variation_id?: string;
       product_name?: string;
       variation_name?: string;
       parent_sku?: string;
@@ -286,23 +291,6 @@ export class OrderAccountingIntegrationService {
     },
     session?: ClientSession
   ) {
-    const preferredSkus = [item.child_sku, item.parent_sku]
-      .map((sku) => String(sku ?? '').trim())
-      .filter(Boolean);
-    const candidates =
-      await this.itemRepository.findActiveBySkus(
-        preferredSkus,
-        session
-      );
-    for (const sku of preferredSkus) {
-      const item = candidates.find(
-        (candidate) =>
-          candidate.sku === sku &&
-          candidate.item_type === 'merchandise'
-      );
-      if (item) return item;
-    }
-
     const products = [];
     const productReference = String(
       item.product ?? ''
@@ -311,7 +299,21 @@ export class OrderAccountingIntegrationService {
       const product = await this.productRepository.findById(
         productReference
       );
-      if (product) products.push(product);
+      if (product) {
+        products.push(product);
+        const directMapping =
+          await this.mappingRepository.findActiveByProductVariant(
+            String(product._id),
+            item.variation_id,
+            session
+          );
+        const mappedInventoryItem =
+          await this.resolveMappedInventoryItem(
+            directMapping,
+            session
+          );
+        if (mappedInventoryItem) return mappedInventoryItem;
+      }
     }
 
     const matchingProducts =
@@ -332,6 +334,54 @@ export class OrderAccountingIntegrationService {
       if (!knownProductIds.has(String(product._id))) {
         products.push(product);
       }
+    }
+
+    if (products.length > 0) {
+      const match = matchProductAndVariant(products, {
+        productId: item.product_id,
+        productName: item.product_name,
+        variationName: item.variation_name,
+        parentSku: item.parent_sku,
+        childSku: item.child_sku,
+      });
+
+      if (
+        match.productMatchStatus === 'matched' &&
+        match.product?._id
+      ) {
+        const variantId =
+          match.variant?.variant_id ?? item.variation_id;
+        const mapping =
+          await this.mappingRepository.findActiveByProductVariant(
+            String(match.product._id),
+            variantId,
+            session
+          );
+
+        const mappedInventoryItem =
+          await this.resolveMappedInventoryItem(
+            mapping,
+            session
+          );
+        if (mappedInventoryItem) return mappedInventoryItem;
+      }
+    }
+
+    const preferredSkus = [item.child_sku, item.parent_sku]
+      .map((sku) => String(sku ?? '').trim())
+      .filter(Boolean);
+    const candidates =
+      await this.itemRepository.findActiveBySkus(
+        preferredSkus,
+        session
+      );
+    for (const sku of preferredSkus) {
+      const item = candidates.find(
+        (candidate) =>
+          candidate.sku === sku &&
+          candidate.item_type === 'merchandise'
+      );
+      if (item) return item;
     }
 
     if (products.length > 0) {
@@ -371,6 +421,40 @@ export class OrderAccountingIntegrationService {
       `Inventory merchandise tidak ditemukan untuk SKU ${preferredSkus.join(' / ') || '(kosong)'}. Isi SKU order atau mapping product/variant ke inventory item terlebih dahulu.`,
       'ORDER_INVENTORY_ITEM_NOT_MAPPED'
     );
+  }
+
+  private async resolveMappedInventoryItem(
+    mapping: Awaited<
+      ReturnType<
+        InventoryItemMappingRepository['findActiveByProductVariant']
+      >
+    >,
+    session?: ClientSession
+  ) {
+    if (!mapping) return null;
+
+    const populatedInventoryItem =
+      mapping.inventory_item as unknown as {
+        _id?: unknown;
+      };
+    const inventoryItemId =
+      populatedInventoryItem &&
+      typeof populatedInventoryItem === 'object' &&
+      populatedInventoryItem._id
+        ? String(populatedInventoryItem._id)
+        : String(mapping.inventory_item);
+    const inventoryItem =
+      await this.itemRepository.findItemById(
+        inventoryItemId,
+        session
+      );
+    if (
+      inventoryItem?.is_active &&
+      inventoryItem.item_type === 'merchandise'
+    ) {
+      return inventoryItem;
+    }
+    return null;
   }
 
   private getFinalQuantity(item: {
