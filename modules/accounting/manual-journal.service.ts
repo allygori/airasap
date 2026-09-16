@@ -37,7 +37,7 @@ export class ManualJournalService {
     const period = getPeriodKeyFromDate(transactionDate);
     const manualSourceId = `manual:${randomUUID()}`;
     const scopeDimensions = scope.store
-      ? { store: scope.store }
+      ? { store: String(scope.store) }
       : undefined;
 
     if (

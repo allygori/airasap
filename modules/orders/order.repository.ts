@@ -9,7 +9,6 @@ import {
   AnyBulkWriteOperation,
   ClientSession,
 } from 'mongoose';
-import { saveJson } from '@/lib/file/save-json';
 import { BaseRepository } from '../base.repository';
 import { OrderModel, TOrder } from './order.model';
 import { type OrderPlatform } from '@/constant/order-platform';
@@ -29,6 +28,26 @@ export class OrderRepository extends BaseRepository<TOrder> {
     storeId?: string;
   }) {
     super(OrderModel, tenantContext);
+  }
+
+  async findById(id: string, populate?: string) {
+    let query = this.model
+      .findOne({
+        _id: id,
+        ...this.getTenantFilter(),
+      })
+      .select('+store');
+
+    if (populate) {
+      const fields = populate
+        .split(',')
+        .map((field) => field.trim());
+      fields.forEach((field) => {
+        query = query.populate(field);
+      });
+    }
+
+    return query.lean();
   }
 
   /**
@@ -102,7 +121,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
         .split(',')
         .map((f) => f.trim());
       fields.forEach((field) => {
-        query = query.populate(field) as any;
+        query = query.populate(field);
       });
     }
 

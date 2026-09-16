@@ -103,6 +103,13 @@ export class OrderAccountingIntegrationService {
     }
 
     try {
+      if (!order.store) {
+        throw new AccountingDomainError(
+          'Order belum memiliki store/workspace. Tetapkan store pada order sebelum diintegrasikan ke accounting.',
+          'ORDER_STORE_REQUIRED'
+        );
+      }
+
       const sourceStore =
         await this.storeRepository.findById(
           String(order.store)

@@ -156,6 +156,13 @@ export class MarketplaceSettlementService {
       );
     }
 
+    if (!order.store) {
+      throw new AccountingDomainError(
+        'Order belum memiliki store/workspace. Tetapkan store pada order sebelum mencatat settlement.',
+        'SETTLEMENT_STORE_REQUIRED'
+      );
+    }
+
     const sourceStore = await this.storeRepository.findById(
       String(order.store)
     );
