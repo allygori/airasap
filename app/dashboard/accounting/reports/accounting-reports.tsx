@@ -57,6 +57,8 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { formatIDR } from '@/lib/formatter/format-idr';
+import AccountingScopeFilters from '../_components/accounting-scope-filters';
+import type { AccountingScopeOptions } from '../_components/accounting-scope-filters';
 
 type AccountBalance = {
   account_id: string;
@@ -117,6 +119,7 @@ type AccountingReport = {
     net_amount: number;
     reconciliation_difference: number;
   };
+  filters: AccountingScopeOptions;
 };
 
 type ApiPayload<T> = {
@@ -148,17 +151,32 @@ const reportChartConfig = {
 
 export default function AccountingReports() {
   const [period, setPeriod] = useState(getCurrentPeriod);
+  const [storeId, setStoreId] = useState('all');
+  const [platform, setPlatform] = useState('all');
   const [report, setReport] =
     useState<AccountingReport | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadReport = async (selectedPeriod = period) => {
+  const loadReport = async (
+    selectedPeriod = period,
+    selectedStoreId = storeId,
+    selectedPlatform = platform
+  ) => {
     setIsLoading(true);
     setError(null);
     try {
+      const params = new URLSearchParams({
+        period: selectedPeriod,
+      });
+      if (selectedStoreId !== 'all') {
+        params.set('store_id', selectedStoreId);
+      }
+      if (selectedPlatform !== 'all') {
+        params.set('platform', selectedPlatform);
+      }
       const response = await fetch(
-        `/api/v1/dashboard/accounting/reports?period=${encodeURIComponent(selectedPeriod)}`,
+        `/api/v1/dashboard/accounting/reports?${params.toString()}`,
         { cache: 'no-store' }
       );
       const payload =
@@ -248,7 +266,9 @@ export default function AccountingReports() {
           </label>
           <Button
             variant="outline"
-            onClick={() => void loadReport(period)}
+            onClick={() =>
+              void loadReport(period, storeId, platform)
+            }
             disabled={isLoading}
           >
             {isLoading ? (
@@ -263,6 +283,28 @@ export default function AccountingReports() {
           </Button>
         </div>
       </header>
+
+      {report ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Scope laporan</CardTitle>
+            <CardDescription>
+              Baca consolidated organization atau fokus ke
+              satu workspace dan platform.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AccountingScopeFilters
+              options={report.filters}
+              storeId={storeId}
+              platform={platform}
+              onStoreChange={setStoreId}
+              onPlatformChange={setPlatform}
+              disabled={isLoading}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
 
       {error ? (
         <Alert variant="destructive">

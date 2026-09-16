@@ -27,7 +27,11 @@ export const GET = withValidation(
         tenantContext
       ).getExplorer(validatedQuery!);
 
-      return apiSuccess({ accounts: explorer.accounts });
+      return apiSuccess({
+        period: explorer.period,
+        accounts: explorer.accounts,
+        filters: explorer.filters,
+      });
     } catch (error) {
       console.error(
         '[GET /api/v1/dashboard/accounting/accounts]',

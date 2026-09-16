@@ -5,6 +5,12 @@ import { InventoryItemModel } from '@/modules/inventory/items/inventory-item.mod
 import { InventoryMovementModel } from '@/modules/inventory/movements/inventory-movement.model';
 import { SettlementModel } from '@/modules/accounting/settlements/settlement.model';
 import {
+  getAccountingScopeOptions,
+  getJournalDimensionFilter,
+  resolveAccountingScope,
+  type AccountingScopeOptions,
+} from '@/modules/accounting/accounting-scope';
+import {
   AccountingTenantContext,
   toAccountingObjectId,
 } from '@/modules/accounting/accounting.types';
@@ -36,6 +42,11 @@ type JournalActivity = {
   source_type: string | null;
   status: string;
   amount: number;
+};
+
+type ReportJournalLine = {
+  debit: number;
+  dimensions?: Record<string, string>;
 };
 
 type InventorySnapshotRow = {
@@ -91,6 +102,19 @@ const sumByType = (
       .reduce((sum, account) => sum + account.balance, 0)
   );
 
+const lineMatchesScope = (
+  line: ReportJournalLine,
+  scope: { store?: Types.ObjectId; platform?: string }
+) => {
+  const dimensions = line.dimensions;
+  return (
+    (!scope.store ||
+      dimensions?.store === String(scope.store)) &&
+    (!scope.platform ||
+      dimensions?.platform === scope.platform)
+  );
+};
+
 export type AccountingReport = {
   period: {
     key: string;
@@ -127,6 +151,7 @@ export type AccountingReport = {
     net_amount: number;
     reconciliation_difference: number;
   };
+  filters: AccountingScopeOptions;
 };
 
 export class AccountingReportService {
@@ -142,6 +167,12 @@ export class AccountingReportService {
       'organizationId'
     );
     const period = getReportPeriod(query);
+    const scope = await resolveAccountingScope(
+      organization,
+      query
+    );
+    const dimensionFilter =
+      getJournalDimensionFilter(scope);
 
     const [
       accounts,
@@ -149,6 +180,7 @@ export class AccountingReportService {
       inventoryRows,
       journals,
       settlements,
+      filters,
     ] = await Promise.all([
       AccountingAccountModel.find({
         organization,
@@ -169,9 +201,11 @@ export class AccountingReportService {
               $gte: period.from,
               $lte: period.to,
             },
+            ...dimensionFilter,
           },
         },
         { $unwind: '$lines' },
+        { $match: dimensionFilter },
         {
           $group: {
             _id: '$lines.account',
@@ -190,6 +224,10 @@ export class AccountingReportService {
             organization,
             status: 'posted',
             occurred_at: { $lte: period.to },
+            ...(scope.store ? { store: scope.store } : {}),
+            ...(scope.platform
+              ? { platform: scope.platform }
+              : {}),
           },
         },
         {
@@ -242,6 +280,7 @@ export class AccountingReportService {
           $gte: period.from,
           $lte: period.to,
         },
+        ...dimensionFilter,
       })
         .sort({ transaction_date: -1, created_at: -1 })
         .limit(12)
@@ -250,7 +289,12 @@ export class AccountingReportService {
         organization,
         settled_at: { $gte: period.from, $lte: period.to },
         status: { $in: ['posted', 'blocked'] },
+        ...(scope.store ? { store: scope.store } : {}),
+        ...(scope.platform
+          ? { platform: scope.platform }
+          : {}),
       }).lean(),
+      getAccountingScopeOptions(organization),
     ]);
 
     const totalByAccount = new Map(
@@ -434,11 +478,15 @@ export class AccountingReportService {
         source_type: journal.source_type ?? null,
         status: journal.status,
         amount: roundMoney(
-          journal.lines.reduce(
-            (sum: number, line: { debit: number }) =>
-              sum + line.debit,
-            0
-          )
+          journal.lines
+            .filter((line: ReportJournalLine) =>
+              lineMatchesScope(line, scope)
+            )
+            .reduce(
+              (sum: number, line: { debit: number }) =>
+                sum + line.debit,
+              0
+            )
         ),
       })),
       settlements: {
@@ -458,6 +506,7 @@ export class AccountingReportService {
           settlementSummary.reconciliation_difference
         ),
       },
+      filters,
     };
   }
 }

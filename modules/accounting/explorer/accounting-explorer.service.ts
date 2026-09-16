@@ -5,6 +5,12 @@ import {
   type AccountingTenantContext,
   toAccountingObjectId,
 } from '@/modules/accounting/accounting.types';
+import {
+  getAccountingScopeOptions,
+  getJournalDimensionFilter,
+  resolveAccountingScope,
+  type AccountingScopeOptions,
+} from '@/modules/accounting/accounting-scope';
 import type { AccountingExplorerQuery } from './accounting-explorer.schema';
 
 type ExplorerPeriod = {
@@ -60,6 +66,18 @@ type RawJournalLine = {
   dimensions?: Record<string, string>;
 };
 
+const lineMatchesScope = (
+  line: RawJournalLine,
+  scope: { store?: Types.ObjectId; platform?: string }
+) => {
+  return (
+    (!scope.store ||
+      line.dimensions?.store === String(scope.store)) &&
+    (!scope.platform ||
+      line.dimensions?.platform === scope.platform)
+  );
+};
+
 type JournalExplorerRow = {
   id: string;
   entry_number: string;
@@ -101,6 +119,7 @@ export type AccountingExplorer = {
   accounts: AccountExplorerRow[];
   journal_entries: JournalExplorerRow[];
   ledger: LedgerExplorerRow[];
+  filters: AccountingScopeOptions;
 };
 
 export class AccountingExplorerService {
@@ -116,6 +135,12 @@ export class AccountingExplorerService {
       'organizationId'
     );
     const period = getPeriod(query.period);
+    const scope = await resolveAccountingScope(
+      organization,
+      query
+    );
+    const dimensionFilter =
+      getJournalDimensionFilter(scope);
     const baseJournalFilter = {
       organization,
       ...(query.status ? { status: query.status } : {}),
@@ -127,23 +152,27 @@ export class AccountingExplorerService {
             },
           }
         : {}),
+      ...dimensionFilter,
     };
 
-    const [accounts, journals, ledger] = await Promise.all([
-      AccountingAccountModel.find({ organization })
-        .sort({ display_order: 1, code: 1 })
-        .lean(),
-      JournalEntryModel.find(baseJournalFilter)
-        .sort({ transaction_date: -1, entry_number: -1 })
-        .limit(query.limit)
-        .lean(),
-      this.getLedgerRows(
-        organization,
-        baseJournalFilter,
-        query.account_id,
-        query.limit
-      ),
-    ]);
+    const [accounts, journals, ledger, filters] =
+      await Promise.all([
+        AccountingAccountModel.find({ organization })
+          .sort({ display_order: 1, code: 1 })
+          .lean(),
+        JournalEntryModel.find(baseJournalFilter)
+          .sort({ transaction_date: -1, entry_number: -1 })
+          .limit(query.limit)
+          .lean(),
+        this.getLedgerRows(
+          organization,
+          baseJournalFilter,
+          dimensionFilter,
+          query.account_id,
+          query.limit
+        ),
+        getAccountingScopeOptions(organization),
+      ]);
 
     const accountRows: AccountExplorerRow[] = accounts.map(
       (account) => ({
@@ -180,35 +209,47 @@ export class AccountingExplorerService {
         source_event: journal.source_event ?? null,
         status: journal.status,
         total_debit: roundMoney(
-          journal.lines.reduce(
-            (sum: number, line: RawJournalLine) =>
-              sum + line.debit,
-            0
-          )
+          journal.lines
+            .filter((line: RawJournalLine) =>
+              lineMatchesScope(line, scope)
+            )
+            .reduce(
+              (sum: number, line: RawJournalLine) =>
+                sum + line.debit,
+              0
+            )
         ),
         total_credit: roundMoney(
-          journal.lines.reduce(
-            (sum: number, line: RawJournalLine) =>
-              sum + line.credit,
-            0
-          )
+          journal.lines
+            .filter((line: RawJournalLine) =>
+              lineMatchesScope(line, scope)
+            )
+            .reduce(
+              (sum: number, line: RawJournalLine) =>
+                sum + line.credit,
+              0
+            )
         ),
-        lines: journal.lines.map((line: RawJournalLine) => {
-          const account = accountById.get(
-            String(line.account)
-          );
-          return {
-            id: `${String(journal._id)}-${String(line.account)}`,
-            account_id: String(line.account),
-            account_code: account?.code ?? 'UNKNOWN',
-            account_name:
-              account?.name ?? 'Account tidak ditemukan',
-            debit: roundMoney(line.debit),
-            credit: roundMoney(line.credit),
-            description: line.description ?? null,
-            dimensions: line.dimensions ?? null,
-          };
-        }),
+        lines: journal.lines
+          .filter((line: RawJournalLine) =>
+            lineMatchesScope(line, scope)
+          )
+          .map((line: RawJournalLine) => {
+            const account = accountById.get(
+              String(line.account)
+            );
+            return {
+              id: `${String(journal._id)}-${String(line.account)}`,
+              account_id: String(line.account),
+              account_code: account?.code ?? 'UNKNOWN',
+              account_name:
+                account?.name ?? 'Account tidak ditemukan',
+              debit: roundMoney(line.debit),
+              credit: roundMoney(line.credit),
+              description: line.description ?? null,
+              dimensions: line.dimensions ?? null,
+            };
+          }),
       })
     );
 
@@ -221,12 +262,14 @@ export class AccountingExplorerService {
       accounts: accountRows,
       journal_entries: journalRows,
       ledger,
+      filters,
     };
   }
 
   private async getLedgerRows(
     organization: Types.ObjectId,
     baseJournalFilter: Record<string, unknown>,
+    dimensionFilter: Record<string, string>,
     accountId: string | undefined,
     limit: number
   ): Promise<LedgerExplorerRow[]> {
@@ -254,6 +297,7 @@ export class AccountingExplorerService {
         },
       },
       { $unwind: '$lines' },
+      { $match: dimensionFilter },
       ...(account
         ? [{ $match: { 'lines.account': account } }]
         : []),

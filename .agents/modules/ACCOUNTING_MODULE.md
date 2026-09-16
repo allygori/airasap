@@ -677,6 +677,21 @@ Per-store balance-sheet views must only show balances that are attributable to
 that store; shared cash, equity, and other centralized balances must not be
 silently duplicated across stores.
 
+#### Phase 7C implementation status
+
+- Accounting reports and the journal/ledger explorer now accept `store_id` and
+  `platform` filters.
+- Filtered reports operate on journal-line dimensions, so mixed-dimension
+  journals are not counted in full when only one store or platform is selected.
+- Inventory snapshots filter source movements, while settlement summaries
+  filter source settlements using their persisted store/platform attribution.
+- The API returns active store/workspace and known platform options so the UI
+  does not need to hardcode the available scope.
+- The organization remains the enforced tenant boundary. The current Better
+  Auth setup has organization roles but no membership-per-store assignment, so
+  a future store-scoped permission layer is still required before restricting
+  organization members to individual workspaces.
+
 ### Phase 7D — Manual accounting and adjustments
 
 Users may create manual journal entries, but they must always enter through the

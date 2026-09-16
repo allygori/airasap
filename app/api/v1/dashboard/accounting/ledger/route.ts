@@ -31,6 +31,7 @@ export const GET = withValidation(
         period: explorer.period,
         accounts: explorer.accounts,
         ledger: explorer.ledger,
+        filters: explorer.filters,
       });
     } catch (error) {
       console.error(

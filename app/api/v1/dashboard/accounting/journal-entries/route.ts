@@ -30,6 +30,7 @@ export const GET = withValidation(
       return apiSuccess({
         period: explorer.period,
         journal_entries: explorer.journal_entries,
+        filters: explorer.filters,
       });
     } catch (error) {
       console.error(

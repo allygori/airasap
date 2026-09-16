@@ -59,6 +59,8 @@ import {
   TabsTrigger,
 } from '@/components/ui/tabs';
 import { formatIDR } from '@/lib/formatter/format-idr';
+import AccountingScopeFilters from '../_components/accounting-scope-filters';
+import type { AccountingScopeOptions } from '../_components/accounting-scope-filters';
 
 type ExplorerView =
   | 'accounts'
@@ -131,6 +133,7 @@ type ExplorerPayload = {
   accounts?: AccountRow[];
   journal_entries?: JournalRow[];
   ledger?: LedgerRow[];
+  filters?: AccountingScopeOptions;
 };
 
 type ApiPayload<T> = {
@@ -155,6 +158,10 @@ const formatSource = (value: string | null) =>
   value?.replaceAll('_', ' ') || 'manual';
 
 const EMPTY_ACCOUNTS: AccountRow[] = [];
+const EMPTY_SCOPE_OPTIONS: AccountingScopeOptions = {
+  stores: [],
+  platforms: [],
+};
 
 export default function AccountingExplorer({
   defaultView,
@@ -163,6 +170,8 @@ export default function AccountingExplorer({
 }) {
   const router = useRouter();
   const [period, setPeriod] = useState(getCurrentPeriod);
+  const [storeId, setStoreId] = useState('all');
+  const [platform, setPlatform] = useState('all');
   const [selectedAccount, setSelectedAccount] =
     useState('all');
   const [payload, setPayload] =
@@ -186,6 +195,12 @@ export default function AccountingExplorer({
       selectedAccount !== 'all'
     ) {
       params.set('account_id', selectedAccount);
+    }
+    if (storeId !== 'all') {
+      params.set('store_id', storeId);
+    }
+    if (platform !== 'all') {
+      params.set('platform', platform);
     }
 
     const endpoint =
@@ -220,7 +235,13 @@ export default function AccountingExplorer({
     } finally {
       setIsLoading(false);
     }
-  }, [defaultView, period, selectedAccount]);
+  }, [
+    defaultView,
+    period,
+    platform,
+    selectedAccount,
+    storeId,
+  ]);
 
   useEffect(() => {
     // The explorer is deliberately read-only and always reloads from a tenant-scoped API.
@@ -311,6 +332,29 @@ export default function AccountingExplorer({
             </div>
           </div>
         </section>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Scope explorer</CardTitle>
+            <CardDescription>
+              Gunakan filter dimensi untuk menelusuri angka
+              organization, workspace, atau platform
+              tertentu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AccountingScopeFilters
+              options={
+                payload?.filters ?? EMPTY_SCOPE_OPTIONS
+              }
+              storeId={storeId}
+              platform={platform}
+              onStoreChange={setStoreId}
+              onPlatformChange={setPlatform}
+              disabled={isLoading}
+            />
+          </CardContent>
+        </Card>
 
         {error ? (
           <Alert variant="destructive">
