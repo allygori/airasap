@@ -23,7 +23,7 @@ The General Ledger is the accounting source of truth. Operational modules retain
 - Accounting periods can be closed and reject new postings after closing.
 - Every journal has a source type, source ID, and idempotency key.
 - Inventory has both quantity and value subledgers.
-- Store/channel analysis uses dimensions instead of duplicating the Chart of Accounts.
+- Store/workspace and platform analysis uses dimensions instead of duplicating the Chart of Accounts.
 - Business-domain Mongoose models use `organization` as their tenant reference.
 - Better Auth internal models continue to use `organizationId`.
 - The business supports accrual-capable accounting, with cash flow reported separately.
@@ -38,7 +38,10 @@ Phase 0 → Phase 1 → Phase 2 → Phase 3
                                 → Phase 4 — order integration
                                 → Phase 5 — settlement/reconciliation
                                 → Phase 6B — financial reporting UI
-                                → Phase 7 — manual accounting and adjustments
+                                → Phase 7A — store-aware accounting foundation
+                                → Phase 7B — store/platform-aware source postings
+                                → Phase 7C — store-aware reporting and controls
+                                → Phase 7D — manual accounting and adjustments
 ```
 
 Phase 4 can be implemented after Phase 6A because it reuses the posting and
@@ -203,7 +206,42 @@ Support opening balances for cash, bank, marketplace receivable, inventory, liab
 
 #### Accounting dimensions
 
-Do not create separate accounts such as `Shopee Sales`, `TikTok Sales`, and `Website Sales`. Use shared accounts such as `Sales Revenue` with dimensions such as `channel`, `store`, `warehouse`, and `product`.
+Do not create separate accounts such as `Shopee Sales`, `TikTok Sales`, and
+`Website Sales`. Use shared accounts such as `Sales Revenue` with dimensions
+such as `store`/workspace, `platform`, `warehouse`, and `product`.
+
+The business meaning of these terms is:
+
+```text
+organization
+  └── store/workspace/brand
+        ├── Shopee platform
+        ├── Tokopedia platform
+        ├── Website platform
+        └── WhatsApp platform
+```
+
+`organization` remains the tenant and accounting-book boundary. A `store` is
+the operating workspace or brand inside the organization; it may sell through
+multiple platforms. `platform` identifies the sales channel or integration,
+not a separate accounting book.
+
+The current `Store` schema still has a required `platform` field, which
+reflects the older one-store-per-platform assumption. This is a documented
+model mismatch to resolve in the store/platform foundation work; no accounting
+code should treat that field as the final business model.
+
+For accounting, the intended policy is:
+
+- Order and settlement: store/workspace and platform are required.
+- Inventory movements: store/workspace is required when stock is attributable
+  to a workspace; the physical inventory location is tracked separately.
+- Expense: store/workspace is optional only when the expense is explicitly
+  organization-wide; otherwise it must be attributed to a workspace.
+- Manual journal: the user must choose a workspace scope or
+  organization-wide scope.
+- Reports default to organization-wide consolidation and allow filtering by
+  store/workspace and platform.
 
 #### Inventory Item
 
@@ -227,7 +265,19 @@ Item types: `merchandise`, `packaging`, `supplies`, `fixed_asset`.
 
 #### Inventory Location
 
-`Store` is a sales channel/storefront. It is not the same as a physical inventory location. Inventory locations may include the main warehouse, shelves, or a home storage area.
+Inventory locations are not stores/workspaces and are not sales channels.
+They are physical or logical stock locations such as a main warehouse, shelf,
+or home storage area. The current implementation uses the
+`inventory_locations` collection and the `type` values `warehouse`,
+`store_room`, and `other`. There is currently no separate `warehouse` module
+or `warehouses` collection.
+
+A separate warehouse module is not required yet. `InventoryLocation` is the
+right abstraction while the business has a simple stock structure. A future
+warehouse module becomes justified when locations need their own addresses,
+managers, transfer workflows, receiving/shipping operations, or workspace
+ownership rules. In that case, `warehouse` may become a richer entity while
+`inventory_locations` remains the bin/shelf/sub-location layer.
 
 #### Inventory Movement
 
@@ -484,7 +534,58 @@ valuation, marketplace receivable, settlement, and reconciliation screens.
   balance-sheet presentation remain follow-up work after the first reporting
   screen.
 
-## Phase 7 — Manual accounting and adjustments
+## Phase 7 — Store-aware accounting and manual accounting
+
+Phase 7 is split because manual journals should not be built on top of an
+ambiguous store/platform model. The accounting book remains organization-level,
+while store/workspace and platform become validated reporting dimensions.
+
+### Phase 7A — Store-aware accounting foundation
+
+Finalize the business model and vocabulary before adding manual input:
+
+- Keep `organization` as the tenant and accounting-book boundary.
+- Keep the term `store` in the product, but define it as the workspace/brand
+  operating unit.
+- Remove the assumption that one store has exactly one platform.
+- Introduce a separate platform/channel connection concept for Shopee,
+  Tokopedia, Website, WhatsApp, and future channels.
+- Define whether each dimension is required, optional, or explicitly
+  organization-wide for each transaction type.
+- Keep physical stock locations under `inventory_locations`; do not introduce a
+  separate warehouse module until warehouse workflows require it.
+
+### Phase 7B — Store/platform-aware source postings
+
+Propagate validated dimensions through every posting source:
+
+- Order revenue, marketplace receivable, HPP, and inventory movements.
+- Marketplace settlements and marketplace fees.
+- Expenses, packaging consumption, and inventory purchases.
+- Future payroll, owner withdrawals, capital contributions, and transfers.
+
+Source records should carry the workspace and platform attribution so journal
+dimensions can be derived from the source transaction rather than from the
+currently active UI store alone.
+
+### Phase 7C — Store-aware reporting and controls
+
+Extend the reporting and explorer pages with:
+
+- `All stores` organization-wide view.
+- Store/workspace filter.
+- Platform filter.
+- Store/platform profit and loss analysis.
+- Journal and ledger drill-down filtered by dimension.
+- Organization-wide/shared transaction visibility.
+- Permission checks so a store-scoped user cannot inspect another workspace.
+
+The organization-wide balance sheet remains the primary financial statement.
+Per-store balance-sheet views must only show balances that are attributable to
+that store; shared cash, equity, and other centralized balances must not be
+silently duplicated across stores.
+
+### Phase 7D — Manual accounting and adjustments
 
 Users may create manual journal entries, but they must always enter through the
 same journal posting service used by operational workflows:
@@ -499,17 +600,19 @@ Manual Journal Entry
 ```
 
 The General Ledger is not a direct input table. It is derived from posted
-journals. Phase 7 may include manual journals, capital contributions, owner
+journals. Phase 7D may include manual journals, capital contributions, owner
 withdrawals, salary/compensation, account transfers, adjustments, approval
-controls, and journal reversal.
+controls, and journal reversal. Every manual journal must declare either a
+store/workspace scope or an explicit organization-wide scope.
 
 ## Recommended decisions before Phase 1
 
 1. Use accrual-capable accounting with cash flow reported separately.
 2. Use IDR first.
 3. Use `organization` on business-domain models.
-4. Use store/channel as dimensions, not separate accounts.
-5. Make posted journals immutable and correct them through reversal.
+4. Use store/workspace and platform as dimensions, not separate accounts.
+5. Keep physical inventory locations separate from stores/workspaces.
+6. Make posted journals immutable and correct them through reversal.
 
 ## References
 
