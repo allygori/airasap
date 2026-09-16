@@ -19,13 +19,17 @@ import {
   ScrollText,
   SearchCheck,
 } from 'lucide-react';
+import Link from 'next/link';
 import {
   Alert,
   AlertDescription,
   AlertTitle,
 } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -329,6 +333,17 @@ export default function AccountingExplorer({
                 )}
                 Refresh data
               </Button>
+              {defaultView === 'journal-entries' ? (
+                <Link
+                  href="/dashboard/accounting/journal-entries/create"
+                  className={buttonVariants({
+                    variant: 'default',
+                    className: 'w-full justify-center',
+                  })}
+                >
+                  Tambah manual journal
+                </Link>
+              ) : null}
             </div>
           </div>
         </section>

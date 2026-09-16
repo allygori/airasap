@@ -9,6 +9,8 @@ import { AccountingAccountService } from '@/modules/accounting/accounts/account.
 import { AccountingPeriodRepository } from '@/modules/accounting/periods/accounting-period.repository';
 import { InventoryItemRepository } from '@/modules/inventory/items/inventory-item.repository';
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
+import { getAccountingScopeOptions } from '@/modules/accounting/accounting-scope';
+import { toAccountingObjectId } from '@/modules/accounting/accounting.types';
 
 export async function GET() {
   try {
@@ -32,6 +34,7 @@ export async function GET() {
       inventoryItems,
       locations,
       openPeriod,
+      scopeOptions,
     ] = await Promise.all([
       new AccountingAccountService(
         tenantContext
@@ -47,6 +50,12 @@ export async function GET() {
       new AccountingPeriodRepository(
         tenantContext
       ).findOpenContainingDate(periodKey, now),
+      getAccountingScopeOptions(
+        toAccountingObjectId(
+          tenantContext.organizationId,
+          'organizationId'
+        )
+      ),
     ]);
 
     return apiSuccess({
@@ -54,6 +63,7 @@ export async function GET() {
       inventoryItems,
       locations,
       openPeriod,
+      scopeOptions,
       currentPeriodKey: periodKey,
     });
   } catch (error) {

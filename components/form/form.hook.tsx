@@ -59,6 +59,11 @@ const AvatarField = lazy(() =>
     default: m.AvatarField,
   }))
 );
+const JournalLinesField = lazy(() =>
+  import('./fields/journal-lines').then((m) => ({
+    default: m.JournalLinesField,
+  }))
+);
 
 const SubmitButton = lazy(() =>
   import('../form/button/submit-button').then((m) => ({
@@ -79,6 +84,7 @@ export const { useAppForm, withForm, withFieldGroup } =
       DateTimeField,
       DateRangePresetsField,
       AvatarField,
+      JournalLinesField,
     },
     formComponents: {
       SubmitButton,

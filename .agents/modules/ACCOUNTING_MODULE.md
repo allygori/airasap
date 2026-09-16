@@ -712,6 +712,39 @@ withdrawals, salary/compensation, account transfers, adjustments, approval
 controls, and journal reversal. Every manual journal must declare either a
 store/workspace scope or an explicit organization-wide scope.
 
+#### Phase 7D implementation status
+
+The first manual-accounting slice is implemented:
+
+- `ManualJournalService` validates the selected store against the active
+  organization, derives the accounting period from the transaction date, and
+  posts through `JournalEntryService.postNew`.
+- Manual entries use `source_type: manual`, receive a generated entry number,
+  and remain subject to account, open-period, balance, and idempotency checks
+  from the shared journal service.
+- Store scope is persisted on every journal line as the canonical `store`
+  dimension. Leaving the scope blank means the journal is organization-wide.
+- `POST /api/v1/dashboard/accounting/journal-entries/manual` is the write API;
+  the General Ledger remains derived from the posted journal.
+- `/dashboard/accounting/journal-entries/create` is the dedicated manual
+  journal page. Its form is a project `components/form/*` composition and the
+  journal line editor is a registered custom form field.
+- `/dashboard/accounting/widgets` is the dedicated widget directory. It links
+  manual journal, capital contribution, owner withdrawal, expense, inventory
+  purchase, and packaging-consumption workflows.
+
+The remaining 7D work is deliberately separate from this first slice:
+
+- template-specific forms that preselect the correct modal, prive, salary,
+  transfer, or adjustment accounts;
+- explicit transfer and salary workflows with their own source types and
+  validations;
+- approval states/permissions and a reversal action in the explorer;
+- period-close controls and audit-oriented correction tooling.
+
+These should continue using the same journal posting service and should not
+write directly to the ledger.
+
 ## Recommended decisions before Phase 1
 
 1. Use accrual-capable accounting with cash flow reported separately.
