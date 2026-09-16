@@ -28,13 +28,22 @@ export abstract class BaseRepository<T extends Document> {
     this.tenantContext = tenantContext;
   }
 
-  protected getTenantFilter(): QueryFilter<T> {
+  // Some organization-scoped modules, such as accounting, deliberately do
+  // not have a top-level store field. Only add store scoping when the model
+  // actually declares that path; otherwise an upsert becomes a strict-schema
+  // error and the query would imply a scope the model cannot represent.
+  protected getTenantFields() {
     return {
       organization: this.tenantContext.organizationId,
-      ...(this.tenantContext.storeId && {
-        store: this.tenantContext.storeId,
-      }),
-    } as QueryFilter<T>;
+      ...(this.tenantContext.storeId &&
+      this.model.schema.path('store')
+        ? { store: this.tenantContext.storeId }
+        : {}),
+    };
+  }
+
+  protected getTenantFilter(): QueryFilter<T> {
+    return this.getTenantFields() as QueryFilter<T>;
   }
 
   async findById(id: string, populate?: string) {
@@ -68,10 +77,7 @@ export abstract class BaseRepository<T extends Document> {
   async create(data: any) {
     return this.model.create({
       ...data,
-      organization: this.tenantContext.organizationId,
-      ...(this.tenantContext.storeId && {
-        store: this.tenantContext.storeId,
-      }),
+      ...this.getTenantFields(),
     });
   }
 
@@ -111,10 +117,7 @@ export abstract class BaseRepository<T extends Document> {
 
       doc.overwrite({
         ...payload,
-        organization: this.tenantContext.organizationId,
-        ...(this.tenantContext.storeId && {
-          store: this.tenantContext.storeId,
-        }),
+        ...this.getTenantFields(),
       });
 
       return doc.save();

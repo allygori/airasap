@@ -50,6 +50,18 @@ export const mainNav = [
         title: 'Financial Reports',
         url: '/dashboard/accounting/reports',
       },
+      {
+        title: 'Chart of Accounts',
+        url: '/dashboard/accounting/accounts',
+      },
+      {
+        title: 'Journal Entries',
+        url: '/dashboard/accounting/journal-entries',
+      },
+      {
+        title: 'General Ledger',
+        url: '/dashboard/accounting/ledger',
+      },
     ],
   },
   {

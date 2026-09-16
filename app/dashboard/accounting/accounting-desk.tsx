@@ -226,6 +226,17 @@ export default function AccountingDesk() {
     bootstrap.accounts.length > 0 &&
     bootstrap.locations.length > 0
   );
+  const setupGaps = [
+    !bootstrap?.accounts.length
+      ? 'Chart of Accounts'
+      : null,
+    !bootstrap?.openPeriod
+      ? 'periode accounting terbuka'
+      : null,
+    !bootstrap?.locations.length
+      ? 'lokasi inventory default'
+      : null,
+  ].filter((item): item is string => Boolean(item));
 
   const runSetup = async () => {
     setIsSettingUp(true);
@@ -468,8 +479,10 @@ export default function AccountingDesk() {
             </AlertTitle>
             <AlertDescription className="flex flex-wrap items-center justify-between gap-4">
               <span>
-                Sistem akan menyiapkan default Chart of
-                Accounts dan periode accounting bulan ini.
+                Sistem akan menyiapkan{' '}
+                {setupGaps.join(', ')}. Setelah semua siap,
+                Finance Desk dapat menerima transaksi
+                operasional.
               </span>
               <Button
                 size="sm"

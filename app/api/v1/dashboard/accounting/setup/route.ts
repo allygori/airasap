@@ -8,6 +8,7 @@ import { db } from '@/lib/db/connection';
 import { AccountingAccountService } from '@/modules/accounting/accounts/account.service';
 import { AccountingPeriodRepository } from '@/modules/accounting/periods/accounting-period.repository';
 import { AccountingPeriodService } from '@/modules/accounting/periods/accounting-period.service';
+import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 
 export async function POST() {
   try {
@@ -28,13 +29,17 @@ export async function POST() {
     const periodRepository = new AccountingPeriodRepository(
       tenantContext
     );
+    const locationRepository =
+      new InventoryLocationRepository(tenantContext);
 
-    const [coa, existingPeriod] = await Promise.all([
-      new AccountingAccountService(
-        tenantContext
-      ).seedDefaultAccounts(),
-      periodRepository.findByPeriodKey(periodKey),
-    ]);
+    const [coa, existingPeriod, defaultLocation] =
+      await Promise.all([
+        new AccountingAccountService(
+          tenantContext
+        ).seedDefaultAccounts(),
+        periodRepository.findByPeriodKey(periodKey),
+        locationRepository.ensureDefaultLocation(),
+      ]);
 
     const startDate = new Date(
       Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
@@ -65,9 +70,10 @@ export async function POST() {
     return apiSuccess({
       coa,
       period,
+      defaultLocation,
       message: existingPeriod
-        ? 'Chart of Accounts siap digunakan.'
-        : 'Chart of Accounts dan accounting period berhasil disiapkan.',
+        ? 'Accounting workspace siap digunakan.'
+        : 'Accounting workspace dan lokasi inventory default berhasil disiapkan.',
     });
   } catch (error) {
     console.error(

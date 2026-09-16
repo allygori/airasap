@@ -367,7 +367,9 @@ Widgets are interfaces for source transactions. They must not bypass domain serv
 - Added the `/dashboard/accounting` Finance Desk using the existing
   Shadcn/Base UI components.
 - Added tenant-scoped bootstrap and setup endpoints for default CoA, current
-  accounting period, accounts, inventory items, and inventory locations.
+  accounting period, accounts, inventory items, and inventory locations. The
+  setup action is idempotent and also ensures a default `MAIN` / `Gudang Utama`
+  inventory location exists.
 - Added operational API endpoints for expense posting, inventory purchase, and
   packaging consumption.
 - Added UI flows for `Catat expense`, `Beli inventory`, and `Pakai packaging`.
@@ -468,6 +470,11 @@ valuation, marketplace receivable, settlement, and reconciliation screens.
   settlement summary from posted domain records.
 - Added `/dashboard/accounting/reports` with Shadcn/Base UI tabs for overview,
   trial balance, inventory valuation, and journal activity.
+- Added the read-only accounting explorer pages:
+  `/dashboard/accounting/accounts`, `/dashboard/accounting/journal-entries`,
+  and `/dashboard/accounting/ledger`. These expose the CoA, journal headers and
+  lines, source references, and derived running ledger balances so automated
+  postings can be inspected without writing directly to the ledger.
 - Added period selection, KPI cards, P&L chart, settlement exception alert, and
   empty states for tenants that do not yet have posted activity.
 - Reporting is read-only. It does not create journal entries or write ledger

@@ -11,6 +11,35 @@ export class InventoryLocationRepository extends BaseRepository<TInventoryLocati
     super(InventoryLocationModel, context);
   }
 
+  async ensureDefaultLocation() {
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        code: 'MAIN',
+      },
+      {
+        $set: {
+          is_active: true,
+        },
+        $setOnInsert: {
+          organization: this.tenantContext.organizationId,
+          code: 'MAIN',
+          name: 'Gudang Utama',
+          type: 'warehouse',
+          description:
+            'Lokasi inventory default untuk operasional toko.',
+        },
+      },
+      {
+        upsert: true,
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    return query.lean();
+  }
+
   async findLocationById(
     id: string,
     session?: ClientSession
