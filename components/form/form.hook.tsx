@@ -54,6 +54,11 @@ const DateRangePresetsField = lazy(() =>
     default: m.DateRangePresetsField,
   }))
 );
+const MoneyField = lazy(() =>
+  import('./fields/money').then((m) => ({
+    default: m.MoneyField,
+  }))
+);
 const AvatarField = lazy(() =>
   import('./fields/avatar').then((m) => ({
     default: m.AvatarField,
@@ -83,6 +88,7 @@ export const { useAppForm, withForm, withFieldGroup } =
       MultiselectField,
       DateTimeField,
       DateRangePresetsField,
+      MoneyField,
       AvatarField,
       JournalLinesField,
     },
