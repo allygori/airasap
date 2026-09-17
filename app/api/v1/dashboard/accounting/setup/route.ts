@@ -9,6 +9,11 @@ import { AccountingAccountService } from '@/modules/accounting/accounts/account.
 import { AccountingPeriodRepository } from '@/modules/accounting/periods/accounting-period.repository';
 import { AccountingPeriodService } from '@/modules/accounting/periods/accounting-period.service';
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
+import { AccountingLifecycleService } from '@/modules/accounting/accounting-lifecycle.service';
+import {
+  getAccountingPeriodDateRange,
+  getPeriodKeyFromDate,
+} from '@/modules/accounting/accounting.types';
 
 export async function POST() {
   try {
@@ -23,9 +28,13 @@ export async function POST() {
 
     await db.connect();
     const now = new Date();
-    const periodKey = `${now.getUTCFullYear()}-${String(
-      now.getUTCMonth() + 1
-    ).padStart(2, '0')}`;
+    const accountingState =
+      await new AccountingLifecycleService(
+        tenantContext
+      ).getState();
+    const timezone =
+      accountingState.calendar_timezone ?? 'Asia/Jakarta';
+    const periodKey = getPeriodKeyFromDate(now, timezone);
     const periodRepository = new AccountingPeriodRepository(
       tenantContext
     );
@@ -41,31 +50,22 @@ export async function POST() {
         locationRepository.ensureDefaultLocation(),
       ]);
 
-    const startDate = new Date(
-      Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)
-    );
-    const endDate = new Date(
-      Date.UTC(
-        now.getUTCFullYear(),
-        now.getUTCMonth() + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      )
-    );
+    const { start_date: startDate, end_date: endDate } =
+      getAccountingPeriodDateRange(periodKey, timezone);
 
     const period = existingPeriod
       ? existingPeriod
       : await new AccountingPeriodService(
           tenantContext
-        ).create({
-          period_key: periodKey,
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
-          status: 'open',
-        });
+        ).create(
+          {
+            period_key: periodKey,
+            start_date: startDate.toISOString(),
+            end_date: endDate.toISOString(),
+            status: 'open',
+          },
+          timezone
+        );
 
     return apiSuccess({
       coa,

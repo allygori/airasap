@@ -23,6 +23,17 @@ export class InventoryItemRepository extends BaseRepository<TInventoryItem> {
     return query.lean();
   }
 
+  async createItem(
+    data: Record<string, unknown>,
+    session?: ClientSession
+  ) {
+    const document = new this.model({
+      ...data,
+      organization: this.tenantContext.organizationId,
+    });
+    return document.save(session ? { session } : undefined);
+  }
+
   async findActiveBySkus(
     skus: string[],
     session?: ClientSession

@@ -557,6 +557,17 @@ const OrderSchema = new Schema<TOrder>(
     accounting_error: {
       type: String,
     },
+    accounting_block_reason: {
+      type: String,
+    },
+    accounting_last_attempt_at: {
+      type: Date,
+    },
+    accounting_attempt_count: {
+      type: Number,
+      min: 0,
+      default: 0,
+    },
     accounting_journal_entry: {
       type: Types.ObjectId,
       ref: 'JournalEntry',

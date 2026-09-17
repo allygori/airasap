@@ -43,6 +43,12 @@ const AccountSchema = new Schema<TAccountingAccount>(
     is_active: { type: Boolean, default: true },
     display_order: { type: Number, default: 0 },
     description: { type: String },
+    account_metadata: {
+      institution: { type: String },
+      account_last4: { type: String, match: /^\d{4}$/ },
+      account_holder: { type: String },
+      provider: { type: String },
+    },
   },
   {
     timestamps: {

@@ -10,6 +10,7 @@ const INBOUND_MOVEMENT_TYPES = new Set([
   'purchase',
   'return',
   'transfer_in',
+  'opening_balance',
 ]);
 
 export class InventoryMovementRepository extends BaseRepository<TInventoryMovement> {

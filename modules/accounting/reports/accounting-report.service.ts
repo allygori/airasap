@@ -4,6 +4,7 @@ import { JournalEntryModel } from '@/modules/accounting/journal-entries/journal-
 import { InventoryItemModel } from '@/modules/inventory/items/inventory-item.model';
 import { InventoryMovementModel } from '@/modules/inventory/movements/inventory-movement.model';
 import { SettlementModel } from '@/modules/accounting/settlements/settlement.model';
+import { OrganizationModel } from '@/modules/organizations/organization.model';
 import {
   getAccountingScopeOptions,
   getJournalDimensionFilter,
@@ -12,6 +13,8 @@ import {
 } from '@/modules/accounting/accounting-scope';
 import {
   AccountingTenantContext,
+  getAccountingPeriodDateRange,
+  getZonedDateParts,
   toAccountingObjectId,
 } from '@/modules/accounting/accounting.types';
 import type { AccountingReportQuery } from './accounting-report.schema';
@@ -60,19 +63,27 @@ type InventorySnapshotRow = {
 
 const roundMoney = (value: number) => Math.round(value);
 
-const getMonthPeriod = (period: string): ReportPeriod => {
-  const [year, month] = period.split('-').map(Number);
-  const from = new Date(Date.UTC(year, month - 1, 1));
-  const to = new Date(
-    Date.UTC(year, month, 0, 23, 59, 59, 999)
+const getMonthPeriod = (
+  period: string,
+  timezone: string
+): ReportPeriod => {
+  const range = getAccountingPeriodDateRange(
+    period,
+    timezone
   );
-  return { from, to, key: period };
+  return {
+    from: range.start_date,
+    to: range.end_date,
+    key: period,
+  };
 };
 
 const getReportPeriod = (
-  query: AccountingReportQuery
+  query: AccountingReportQuery,
+  timezone: string
 ): ReportPeriod => {
-  if (query.period) return getMonthPeriod(query.period);
+  if (query.period)
+    return getMonthPeriod(query.period, timezone);
 
   if (query.from && query.to) {
     const from = new Date(query.from);
@@ -87,8 +98,10 @@ const getReportPeriod = (
   }
 
   const now = new Date();
+  const { year, month } = getZonedDateParts(now, timezone);
   return getMonthPeriod(
-    `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`
+    `${year}-${String(month).padStart(2, '0')}`,
+    timezone
   );
 };
 
@@ -166,7 +179,14 @@ export class AccountingReportService {
       this.context.organizationId,
       'organizationId'
     );
-    const period = getReportPeriod(query);
+    const organizationConfig =
+      await OrganizationModel.findById(organization)
+        .select('accounting.calendar_timezone')
+        .lean();
+    const timezone =
+      organizationConfig?.accounting?.calendar_timezone ??
+      'UTC';
+    const period = getReportPeriod(query, timezone);
     const scope = await resolveAccountingScope(
       organization,
       query
@@ -348,7 +368,10 @@ export class AccountingReportService {
       ].includes(account.subtype ?? '')
     );
     const receivableBalance = trialBalance
-      .filter((account) => account.code === '1210')
+      .filter(
+        (account) =>
+          account.subtype === 'marketplace_receivable'
+      )
       .reduce((sum, account) => sum + account.balance, 0);
     const inventoryValue = inventoryRows.reduce(
       (sum, row) => sum + (row.value ?? 0),

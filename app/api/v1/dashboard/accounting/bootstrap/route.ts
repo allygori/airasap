@@ -11,6 +11,8 @@ import { InventoryItemRepository } from '@/modules/inventory/items/inventory-ite
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 import { getAccountingScopeOptions } from '@/modules/accounting/accounting-scope';
 import { toAccountingObjectId } from '@/modules/accounting/accounting.types';
+import { AccountingLifecycleService } from '@/modules/accounting/accounting-lifecycle.service';
+import { getPeriodKeyFromDate } from '@/modules/accounting/accounting.types';
 
 export async function GET() {
   try {
@@ -25,9 +27,13 @@ export async function GET() {
 
     await db.connect();
     const now = new Date();
-    const periodKey = `${now.getUTCFullYear()}-${String(
-      now.getUTCMonth() + 1
-    ).padStart(2, '0')}`;
+    const accountingState =
+      await new AccountingLifecycleService(
+        tenantContext
+      ).getState();
+    const timezone =
+      accountingState.calendar_timezone ?? 'Asia/Jakarta';
+    const periodKey = getPeriodKeyFromDate(now, timezone);
 
     const [
       accounts,
@@ -65,6 +71,7 @@ export async function GET() {
       openPeriod,
       scopeOptions,
       currentPeriodKey: periodKey,
+      accounting: accountingState,
     });
   } catch (error) {
     console.error(

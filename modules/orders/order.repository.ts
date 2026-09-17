@@ -17,6 +17,9 @@ import { type QueryOptions } from '@/lib/api/query-builder';
 type OrderAccountingState = {
   accounting_status: 'pending' | 'posted' | 'blocked';
   accounting_error?: string | null;
+  accounting_block_reason?: string | null;
+  accounting_last_attempt_at?: Date;
+  accounting_attempt_count?: number;
   accounting_journal_entry?: string;
   accounting_inventory_movements?: string[];
   accounting_posted_at?: Date;
@@ -73,6 +76,34 @@ export class OrderRepository extends BaseRepository<TOrder> {
         is_active: true,
         deleted_at: null,
       })
+      .lean();
+  }
+
+  async findAccountingCandidates(limit = 50) {
+    return this.model
+      .find({
+        ...this.getTenantFilter(),
+        is_active: true,
+        status: 'selesai',
+        $or: [
+          {
+            accounting_status: {
+              $in: ['pending', 'blocked'],
+            },
+          },
+          { accounting_status: { $exists: false } },
+        ],
+        $and: [
+          {
+            $or: [
+              { deleted_at: null },
+              { deleted_at: { $exists: false } },
+            ],
+          },
+        ],
+      })
+      .sort({ completed_at: 1, placed_at: 1, _id: 1 })
+      .limit(limit)
       .lean();
   }
 
@@ -145,6 +176,24 @@ export class OrderRepository extends BaseRepository<TOrder> {
             ...(state.accounting_error !== undefined
               ? { accounting_error: state.accounting_error }
               : {}),
+            ...(state.accounting_block_reason !== undefined
+              ? {
+                  accounting_block_reason:
+                    state.accounting_block_reason,
+                }
+              : {}),
+            ...(state.accounting_last_attempt_at
+              ? {
+                  accounting_last_attempt_at:
+                    state.accounting_last_attempt_at,
+                }
+              : {}),
+            ...(state.accounting_attempt_count !== undefined
+              ? {
+                  accounting_attempt_count:
+                    state.accounting_attempt_count,
+                }
+              : {}),
             ...(state.accounting_journal_entry
               ? {
                   accounting_journal_entry:
@@ -165,7 +214,12 @@ export class OrderRepository extends BaseRepository<TOrder> {
               : {}),
           },
           ...(state.accounting_status === 'posted'
-            ? { $unset: { accounting_error: 1 } }
+            ? {
+                $unset: {
+                  accounting_error: 1,
+                  accounting_block_reason: 1,
+                },
+              }
             : {}),
         },
         {

@@ -3,7 +3,8 @@ import {
   type ClientSession,
 } from 'mongoose';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
-import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
+import { AccountingAccountResolver } from '@/modules/accounting/accounts/account-resolver.service';
+import { assertAccountingModuleActive } from '@/modules/accounting/accounting-module.guard';
 import { createAccountingDimensions } from '@/modules/accounting/accounting-dimensions';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
 import {
@@ -20,15 +21,13 @@ import { StoreRepository } from '@/modules/stores/store.repository';
 import { matchProductAndVariant } from './product-matching';
 import { OrderRepository } from '../order.repository';
 
-const MARKETPLACE_RECEIVABLE_ACCOUNT = '1210';
-const SALES_REVENUE_ACCOUNT = '4100';
-
 type OrderAccountingContext = AccountingTenantContext & {
   storeId?: string;
 };
 
 export type PostCompletedOrderInput = {
   location_id?: string;
+  mode?: 'operational' | 'reconstruction';
   session?: ClientSession;
 };
 
@@ -39,7 +38,7 @@ export class OrderAccountingIntegrationService {
   private readonly mappingRepository: InventoryItemMappingRepository;
   private productRepository: ProductRepository;
   private readonly locationRepository: InventoryLocationRepository;
-  private readonly accountRepository: AccountingAccountRepository;
+  private readonly accountResolver: AccountingAccountResolver;
   private readonly movementService: InventoryMovementService;
   private readonly journalService: JournalEntryService;
   private readonly storeRepository: StoreRepository;
@@ -68,8 +67,9 @@ export class OrderAccountingIntegrationService {
     );
     this.locationRepository =
       new InventoryLocationRepository(context);
-    this.accountRepository =
-      new AccountingAccountRepository(context);
+    this.accountResolver = new AccountingAccountResolver(
+      context
+    );
     this.movementService = new InventoryMovementService(
       organizationContext
     );
@@ -103,6 +103,11 @@ export class OrderAccountingIntegrationService {
     }
 
     try {
+      const accountingState =
+        await assertAccountingModuleActive(
+          this.context,
+          input.session
+        );
       if (!order.store) {
         throw new AccountingDomainError(
           'Order belum memiliki store/workspace. Tetapkan store pada order sebelum diintegrasikan ke accounting.',
@@ -139,6 +144,16 @@ export class OrderAccountingIntegrationService {
         order.completed_at ?? order.placed_at ?? new Date(),
         'completed_at'
       );
+      if (
+        accountingState.cutover_date &&
+        occurredAt < accountingState.cutover_date &&
+        input.mode !== 'reconstruction'
+      ) {
+        throw new AccountingDomainError(
+          'Order sebelum cutover harus diproses melalui reconstruction.',
+          'ORDER_BEFORE_CUTOVER'
+        );
+      }
       const locationId = await this.resolveLocation(
         input.location_id,
         input.session
@@ -172,7 +187,7 @@ export class OrderAccountingIntegrationService {
               platform: order.platform,
               source_type: 'order',
               source_id: String(order._id),
-              idempotency_key: `order:${String(
+              idempotency_key: `order${input.mode === 'reconstruction' ? '-reconstruction' : ''}:${String(
                 order._id
               )}:inventory:${index}`,
               reference: `${order.platform} ${order.order_id}`,
@@ -194,21 +209,18 @@ export class OrderAccountingIntegrationService {
       const salesAmount = this.getSalesAmount(order);
       const [receivableAccount, revenueAccount] =
         await Promise.all([
-          this.accountRepository.findByCode(
-            MARKETPLACE_RECEIVABLE_ACCOUNT,
-            input.session
-          ),
-          this.accountRepository.findByCode(
-            SALES_REVENUE_ACCOUNT,
-            input.session
-          ),
+          this.accountResolver.resolve({
+            role: 'marketplace_receivable',
+            platform: order.platform,
+            fallbackCode: '1210',
+            session: input.session,
+          }),
+          this.accountResolver.resolve({
+            role: 'sales_revenue',
+            fallbackCode: '4100',
+            session: input.session,
+          }),
         ]);
-      if (!receivableAccount || !revenueAccount) {
-        throw new AccountingDomainError(
-          'Akun Piutang Marketplace atau Penjualan belum tersedia. Jalankan setup accounting terlebih dahulu.',
-          'ORDER_REVENUE_ACCOUNTS_NOT_CONFIGURED'
-        );
-      }
 
       const dimensions = createAccountingDimensions({
         store: storeId,
@@ -221,12 +233,18 @@ export class OrderAccountingIntegrationService {
             entry_number: `ORD-${order.order_id}`,
             transaction_date: occurredAt.toISOString(),
             posting_date: occurredAt.toISOString(),
-            period: getPeriodKeyFromDate(occurredAt),
+            period: getPeriodKeyFromDate(
+              occurredAt,
+              accountingState.calendar_timezone
+            ),
             description: `Penjualan ${order.platform} ${order.order_id}`,
             source_type: 'order',
             source_id: String(order._id),
-            source_event: 'completed_posted',
-            idempotency_key: `order-sales:${String(order._id)}`,
+            source_event:
+              input.mode === 'reconstruction'
+                ? 'reconstruction_completed_posted'
+                : 'completed_posted',
+            idempotency_key: `order-sales${input.mode === 'reconstruction' ? '-reconstruction' : ''}:${String(order._id)}`,
             status: 'draft',
             lines: [
               {
@@ -258,6 +276,9 @@ export class OrderAccountingIntegrationService {
             accounting_inventory_movements:
               inventoryMovementIds,
             accounting_posted_at: new Date(),
+            accounting_last_attempt_at: new Date(),
+            accounting_attempt_count:
+              (order.accounting_attempt_count ?? 0) + 1,
           },
           input.session
         );
@@ -278,6 +299,10 @@ export class OrderAccountingIntegrationService {
         {
           accounting_status: 'blocked',
           accounting_error: message,
+          accounting_block_reason: message,
+          accounting_last_attempt_at: new Date(),
+          accounting_attempt_count:
+            (order.accounting_attempt_count ?? 0) + 1,
         },
         input.session
       );

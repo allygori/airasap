@@ -22,7 +22,7 @@ export class AccountingPeriodService {
     );
   }
 
-  async create(input: unknown) {
+  async create(input: unknown, timezone = 'UTC') {
     const data = CreateAccountingPeriodSchema.parse(input);
     const startDate = parseAccountingDate(
       data.start_date,
@@ -41,7 +41,8 @@ export class AccountingPeriodService {
     }
 
     if (
-      getPeriodKeyFromDate(startDate) !== data.period_key
+      getPeriodKeyFromDate(startDate, timezone) !==
+      data.period_key
     ) {
       throw new AccountingDomainError(
         'period_key harus sesuai dengan bulan start_date.',
@@ -49,7 +50,10 @@ export class AccountingPeriodService {
       );
     }
 
-    if (getPeriodKeyFromDate(endDate) !== data.period_key) {
+    if (
+      getPeriodKeyFromDate(endDate, timezone) !==
+      data.period_key
+    ) {
       throw new AccountingDomainError(
         'Accounting period tidak boleh melintasi bulan lain.',
         'PERIOD_CROSSES_MONTH'

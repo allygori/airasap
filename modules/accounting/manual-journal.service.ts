@@ -9,6 +9,7 @@ import {
 } from './accounting.types';
 import { resolveAccountingScope } from './accounting-scope';
 import { PostManualJournalSchema } from './manual-journal.schema';
+import { assertAccountingModuleActive } from './accounting-module.guard';
 
 export class ManualJournalService {
   private readonly journalEntryService: JournalEntryService;
@@ -22,6 +23,8 @@ export class ManualJournalService {
   }
 
   async post(input: unknown) {
+    const accountingState =
+      await assertAccountingModuleActive(this.context);
     const data = PostManualJournalSchema.parse(input);
     const transactionDate = parseAccountingDate(
       data.transaction_date,
@@ -34,7 +37,10 @@ export class ManualJournalService {
       ),
       data.store_id ? { store_id: data.store_id } : {}
     );
-    const period = getPeriodKeyFromDate(transactionDate);
+    const period = getPeriodKeyFromDate(
+      transactionDate,
+      accountingState.calendar_timezone
+    );
     const manualSourceId = `manual:${randomUUID()}`;
     const scopeDimensions = scope.store
       ? { store: String(scope.store) }

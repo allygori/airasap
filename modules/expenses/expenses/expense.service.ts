@@ -14,6 +14,8 @@ import {
   type AccountingTenantContext,
 } from '@/modules/accounting/accounting.types';
 import { createAuditLog } from '@/modules/accounting/audit/audit-log.model';
+import { assertAccountingModuleActive } from '@/modules/accounting/accounting-module.guard';
+import { AccountingAccountResolver } from '@/modules/accounting/accounts/account-resolver.service';
 
 const DEFAULT_EXPENSE_LIABILITY_ACCOUNT = '2100';
 
@@ -22,6 +24,7 @@ export class ExpenseService {
   private readonly accountRepository: AccountingAccountRepository;
   private readonly journalService: JournalEntryService;
   private readonly storeRepository: StoreRepository;
+  private readonly accountResolver: AccountingAccountResolver;
   private readonly context: AccountingTenantContext;
 
   constructor(context: AccountingTenantContext) {
@@ -34,12 +37,19 @@ export class ExpenseService {
     this.storeRepository = new StoreRepository({
       organizationId: context.organizationId,
     });
+    this.accountResolver = new AccountingAccountResolver(
+      context
+    );
   }
 
   async createDraft(
     input: unknown,
     session?: ClientSession
   ) {
+    await assertAccountingModuleActive(
+      this.context,
+      session
+    );
     const data = CreateExpenseSchema.parse(input);
     if (data.status !== 'draft') {
       throw new AccountingDomainError(
@@ -98,6 +108,11 @@ export class ExpenseService {
     postedBy?: string,
     session?: ClientSession
   ) {
+    const accountingState =
+      await assertAccountingModuleActive(
+        this.context,
+        session
+      );
     const expense = await this.repository.findExpenseById(
       expenseId,
       session
@@ -140,28 +155,34 @@ export class ExpenseService {
           String(expense.payment_account),
           session
         )
-      : await this.accountRepository.findByCode(
-          DEFAULT_EXPENSE_LIABILITY_ACCOUNT,
-          session
-        );
-
-    if (!paymentAccount) {
-      throw new AccountingDomainError(
-        `Akun offset expense ${DEFAULT_EXPENSE_LIABILITY_ACCOUNT} tidak ditemukan.`,
-        'DEFAULT_EXPENSE_LIABILITY_ACCOUNT_NOT_FOUND'
-      );
-    }
+      : await this.accountResolver.resolve({
+          role: 'expense_payable',
+          fallbackCode: DEFAULT_EXPENSE_LIABILITY_ACCOUNT,
+          session,
+        });
 
     const expenseDate = parseAccountingDate(
       expense.expense_date,
       'expense_date'
     );
+    if (
+      accountingState.cutover_date &&
+      expenseDate < accountingState.cutover_date
+    ) {
+      throw new AccountingDomainError(
+        'Expense sebelum cutover harus dicatat melalui reconstruction.',
+        'EXPENSE_BEFORE_CUTOVER'
+      );
+    }
     const journalEntry = await this.journalService.postNew(
       {
         entry_number: `EXP-${String(expense._id)}`,
         transaction_date: expenseDate.toISOString(),
         posting_date: expenseDate.toISOString(),
-        period: getPeriodKeyFromDate(expenseDate),
+        period: getPeriodKeyFromDate(
+          expenseDate,
+          accountingState.calendar_timezone
+        ),
         currency: expense.currency,
         description: expense.description,
         source_type: 'expense',

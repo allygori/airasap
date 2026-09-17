@@ -14,7 +14,7 @@ export class InventoryLocationRepository extends BaseRepository<TInventoryLocati
     super(InventoryLocationModel, context);
   }
 
-  async ensureDefaultLocation() {
+  async ensureDefaultLocation(session?: ClientSession) {
     const query = this.model.findOneAndUpdate(
       {
         ...this.getTenantFilter(),
@@ -37,6 +37,7 @@ export class InventoryLocationRepository extends BaseRepository<TInventoryLocati
         upsert: true,
         new: true,
         runValidators: true,
+        ...(session ? { session } : {}),
       }
     );
 

@@ -9,6 +9,7 @@ import {
   AccountingAccountRepository,
   type SeedAccountRecord,
 } from './account.repository';
+import type { ClientSession } from 'mongoose';
 
 type SeedJsonAccount = SeedAccountRecord & {
   parent_code: string | null;
@@ -34,11 +35,11 @@ export class AccountingAccountService {
     return this.repository.findAllActive();
   }
 
-  async findByCode(code: string) {
-    return this.repository.findByCode(code);
+  async findByCode(code: string, session?: ClientSession) {
+    return this.repository.findByCode(code, session);
   }
 
-  async seedDefaultAccounts() {
+  async seedDefaultAccounts(session?: ClientSession) {
     const seed = accountSeed as SeedJson;
     const accountsByCode = new Map<
       string,
@@ -68,7 +69,8 @@ export class AccountingAccountService {
           : undefined;
 
         const before = await this.repository.findByCode(
-          record.code
+          record.code,
+          session
         );
         const account =
           await this.repository.upsertSeedAccount(
@@ -78,7 +80,8 @@ export class AccountingAccountService {
                   String(parent._id),
                   'parent_account'
                 )
-              : null
+              : null,
+            session
           );
 
         if (!account) {

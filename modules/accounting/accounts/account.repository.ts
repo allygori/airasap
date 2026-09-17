@@ -34,6 +34,17 @@ export class AccountingAccountRepository extends BaseRepository<TAccountingAccou
     return query.lean();
   }
 
+  async createAccount(
+    data: Record<string, unknown>,
+    session?: ClientSession
+  ) {
+    const document = new this.model({
+      ...data,
+      organization: this.tenantContext.organizationId,
+    });
+    return document.save(session ? { session } : undefined);
+  }
+
   async findByCodes(
     codes: string[],
     session?: ClientSession

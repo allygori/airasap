@@ -17,6 +17,7 @@ import {
   type AccountingTenantContext,
 } from '../accounting.types';
 import { createAuditLog } from '../audit/audit-log.model';
+import { OrganizationModel } from '@/modules/organizations/organization.model';
 
 type ReversalInput = {
   reversal_entry_number?: string;
@@ -222,8 +223,11 @@ export class JournalEntryService {
       input.effective_date,
       'effective_date'
     );
+    const timezone =
+      await this.getCalendarTimezone(session);
     const period =
-      input.period ?? getPeriodKeyFromDate(effectiveDate);
+      input.period ??
+      getPeriodKeyFromDate(effectiveDate, timezone);
     const idempotencyKey =
       input.idempotency_key ??
       `reversal:${String(original._id)}:${period}`;
@@ -340,6 +344,8 @@ export class JournalEntryService {
     },
     session?: ClientSession
   ) {
+    const timezone =
+      await this.getCalendarTimezone(session);
     const transactionDate = parseAccountingDate(
       entry.transaction_date,
       'transaction_date'
@@ -350,7 +356,8 @@ export class JournalEntryService {
     );
 
     if (
-      getPeriodKeyFromDate(transactionDate) !== entry.period
+      getPeriodKeyFromDate(transactionDate, timezone) !==
+      entry.period
     ) {
       throw new AccountingDomainError(
         'transaction_date tidak sesuai dengan period journal.',
@@ -359,7 +366,8 @@ export class JournalEntryService {
     }
 
     if (
-      getPeriodKeyFromDate(postingDate) !== entry.period
+      getPeriodKeyFromDate(postingDate, timezone) !==
+      entry.period
     ) {
       throw new AccountingDomainError(
         'posting_date tidak sesuai dengan period journal.',
@@ -444,5 +452,18 @@ export class JournalEntryService {
         );
       }
     }
+  }
+
+  private async getCalendarTimezone(
+    session?: ClientSession
+  ) {
+    const query = OrganizationModel.findById(
+      this.context.organizationId
+    ).select('accounting.calendar_timezone');
+    if (session) query.session(session);
+    const organization = await query.lean();
+    return (
+      organization?.accounting?.calendar_timezone ?? 'UTC'
+    );
   }
 }

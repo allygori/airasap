@@ -1,5 +1,51 @@
 import z from 'zod';
 
+export const ORGANIZATION_ACCOUNTING_STATUS_VALUES = [
+  'not_started',
+  'in_progress',
+  'active',
+] as const;
+
+export const OrganizationAccountingStatusSchema = z.enum(
+  ORGANIZATION_ACCOUNTING_STATUS_VALUES
+);
+
+export const OrganizationAccountingSchema = z.object({
+  status:
+    OrganizationAccountingStatusSchema.default(
+      'not_started'
+    ),
+  onboarding_version: z
+    .number()
+    .int()
+    .positive()
+    .default(1),
+  calendar_timezone: z.string().min(1).optional(),
+  cutover_date: z.date().optional(),
+  account_mappings: z
+    .object({
+      sales_revenue: z.string().optional(),
+      marketplace_balance: z.string().optional(),
+      marketplace_balances: z
+        .record(z.string(), z.string())
+        .optional(),
+      marketplace_receivables: z
+        .record(z.string(), z.string())
+        .optional(),
+      merchandise_inventory: z.string().optional(),
+      merchandise_cogs: z.string().optional(),
+      opening_balance_equity: z.string().optional(),
+      expense_payable: z.string().optional(),
+      marketplace_fee_accounts: z
+        .record(z.string(), z.string())
+        .optional(),
+    })
+    .optional(),
+  started_at: z.date().optional(),
+  completed_at: z.date().optional(),
+  completed_by: z.string().optional(),
+});
+
 export const OrganizationBaseSchema = z.object({
   organizationId: z.string(),
   name: z.string().min(1, 'Nama organisasi wajib diisi'),
@@ -7,6 +53,7 @@ export const OrganizationBaseSchema = z.object({
   logo: z.string().optional(),
   metadata: z.object().optional(),
   plan: z.string().optional().default('free'),
+  accounting: OrganizationAccountingSchema.optional(),
   // user: z
   //   .string()
   //   .optional()

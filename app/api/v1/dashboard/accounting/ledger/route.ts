@@ -8,6 +8,8 @@ import {
 import { db } from '@/lib/db/connection';
 import { AccountingExplorerService } from '@/modules/accounting/explorer/accounting-explorer.service';
 import { AccountingExplorerQuerySchema } from '@/modules/accounting/explorer/accounting-explorer.schema';
+import { assertAccountingModuleActive } from '@/modules/accounting/accounting-module.guard';
+import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 
 export const GET = withValidation(
   { query: AccountingExplorerQuerySchema },
@@ -23,6 +25,7 @@ export const GET = withValidation(
       }
 
       await db.connect();
+      await assertAccountingModuleActive(tenantContext);
       const explorer = await new AccountingExplorerService(
         tenantContext
       ).getExplorer(validatedQuery!);
@@ -34,6 +37,9 @@ export const GET = withValidation(
         filters: explorer.filters,
       });
     } catch (error) {
+      if (error instanceof AccountingDomainError) {
+        return apiError(error.code, error.message, 422);
+      }
       console.error(
         '[GET /api/v1/dashboard/accounting/ledger]',
         error

@@ -10,6 +10,7 @@ export const INVENTORY_MOVEMENT_TYPE_VALUES = [
   'transfer_in',
   'transfer_out',
   'consumption',
+  'opening_balance',
 ] as const;
 
 export const INVENTORY_MOVEMENT_STATUS_VALUES = [

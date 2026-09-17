@@ -1,5 +1,6 @@
 import { Schema, model, models, Document } from 'mongoose';
 import { OrganizationBaseDTO } from './organization.dto';
+import { ORGANIZATION_ACCOUNTING_STATUS_VALUES } from './organization.schema';
 
 // export type TOrganization = Document & {
 //   name?: string;
@@ -46,6 +47,36 @@ const OrganizationSchema = new Schema<TOrganization>(
       type: String,
       enum: ['free', 'pro', 'plus', 'enterprise'],
       default: 'free',
+    },
+    accounting: {
+      status: {
+        type: String,
+        enum: ORGANIZATION_ACCOUNTING_STATUS_VALUES,
+        default: 'not_started',
+      },
+      onboarding_version: {
+        type: Number,
+        default: 1,
+      },
+      calendar_timezone: {
+        type: String,
+      },
+      cutover_date: {
+        type: Date,
+      },
+      account_mappings: {
+        type: Schema.Types.Mixed,
+      },
+      started_at: {
+        type: Date,
+      },
+      completed_at: {
+        type: Date,
+      },
+      completed_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+      },
     },
     // username: {
     //   type: String,

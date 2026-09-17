@@ -8,6 +8,8 @@ import {
 import { db } from '@/lib/db/connection';
 import { AccountingReportService } from '@/modules/accounting/reports/accounting-report.service';
 import { AccountingReportQuerySchema } from '@/modules/accounting/reports/accounting-report.schema';
+import { assertAccountingModuleActive } from '@/modules/accounting/accounting-module.guard';
+import { AccountingDomainError } from '@/modules/accounting/accounting.error';
 
 export const GET = withValidation(
   { query: AccountingReportQuerySchema },
@@ -23,12 +25,16 @@ export const GET = withValidation(
       }
 
       await db.connect();
+      await assertAccountingModuleActive(tenantContext);
       const report = await new AccountingReportService(
         tenantContext
       ).getReport(validatedQuery!);
 
       return apiSuccess(report);
     } catch (error) {
+      if (error instanceof AccountingDomainError) {
+        return apiError(error.code, error.message, 422);
+      }
       console.error(
         '[GET /api/v1/dashboard/accounting/reports]',
         error

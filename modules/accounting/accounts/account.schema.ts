@@ -12,6 +12,19 @@ export const NormalBalanceSchema = z.enum(
   NORMAL_BALANCE_VALUES
 );
 
+export const AccountMetadataSchema = z
+  .object({
+    institution: z.string().trim().optional(),
+    account_last4: z
+      .string()
+      .trim()
+      .regex(/^\d{4}$/)
+      .optional(),
+    account_holder: z.string().trim().optional(),
+    provider: z.string().trim().optional(),
+  })
+  .optional();
+
 export const AccountBaseSchema = z.object({
   code: z.string().trim().min(1),
   name: z.string().trim().min(1),
@@ -24,6 +37,7 @@ export const AccountBaseSchema = z.object({
   is_active: z.boolean().default(true),
   display_order: z.number().int().default(0),
   description: z.string().trim().optional(),
+  account_metadata: AccountMetadataSchema,
 });
 
 export const CreateAccountSchema = AccountBaseSchema;

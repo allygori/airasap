@@ -117,11 +117,15 @@ export class InventoryItemMappingRepository extends BaseRepository<TInventoryIte
     return productQuery.lean();
   }
 
-  createMapping(data: UpdateQuery<TInventoryItemMapping>) {
-    return this.model.create({
+  createMapping(
+    data: UpdateQuery<TInventoryItemMapping>,
+    session?: ClientSession
+  ) {
+    const document = new this.model({
       ...data,
       ...this.getTenantFields(),
     });
+    return document.save(session ? { session } : undefined);
   }
 
   async updateMapping(

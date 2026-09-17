@@ -1,13 +1,6 @@
 import { getTenantContext } from '@/lib/api/tenant-context';
-import {
-  apiError,
-  apiSuccess,
-  ErrorCodes,
-} from '@/lib/api/response';
+import { apiError, ErrorCodes } from '@/lib/api/response';
 import { withValidation } from '@/lib/api/validate';
-import { db } from '@/lib/db/connection';
-import { AccountingDomainError } from '@/modules/accounting/accounting.error';
-import { AccountingCutoverService } from '@/modules/accounting/accounting-cutover.service';
 import { AccountingCutoverSchema } from '@/modules/accounting/accounting-cutover.schema';
 
 export const POST = withValidation(
@@ -23,21 +16,12 @@ export const POST = withValidation(
         );
       }
 
-      await db.connect();
-      const result = await new AccountingCutoverService(
-        tenantContext
-      ).initialize(validatedBody);
-
-      return apiSuccess(result, undefined, 201);
-    } catch (error) {
-      if (error instanceof AccountingDomainError) {
-        return apiError(error.code, error.message, 422);
-      }
-
-      console.error(
-        '[POST /api/v1/dashboard/accounting/cutover]',
-        error
+      return apiError(
+        'ACCOUNTING_ONBOARDING_REQUIRED',
+        'Cutover harus dilakukan melalui accounting onboarding agar lifecycle, inventory opening, dan idempotency diproses bersama.',
+        409
       );
+    } catch (error) {
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
         error instanceof Error

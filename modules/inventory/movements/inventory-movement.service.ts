@@ -5,6 +5,7 @@ import { InventoryItemRepository } from '../items/inventory-item.repository';
 import { InventoryLocationRepository } from '../locations/inventory-location.repository';
 import { StoreRepository } from '@/modules/stores/store.repository';
 import { AccountingAccountRepository } from '@/modules/accounting/accounts/account.repository';
+import { AccountingAccountResolver } from '@/modules/accounting/accounts/account-resolver.service';
 import { createAccountingDimensions } from '@/modules/accounting/accounting-dimensions';
 import { JournalEntryService } from '@/modules/accounting/journal-entries/journal-entry.service';
 import { AccountingDomainError } from '@/modules/accounting/accounting.error';
@@ -17,6 +18,8 @@ import {
   type AccountingTenantContext,
 } from '@/modules/accounting/accounting.types';
 import { createAuditLog } from '@/modules/accounting/audit/audit-log.model';
+import { OrganizationModel } from '@/modules/organizations/organization.model';
+import { assertAccountingModuleActive } from '@/modules/accounting/accounting-module.guard';
 
 const DEFAULT_PURCHASE_OFFSET_ACCOUNT = '2100';
 
@@ -42,6 +45,7 @@ export class InventoryMovementService {
   private readonly locationRepository: InventoryLocationRepository;
   private readonly storeRepository: StoreRepository;
   private readonly accountRepository: AccountingAccountRepository;
+  private readonly accountResolver: AccountingAccountResolver;
   private readonly journalService: JournalEntryService;
   private readonly context: AccountingTenantContext;
 
@@ -61,6 +65,9 @@ export class InventoryMovementService {
     });
     this.accountRepository =
       new AccountingAccountRepository(context);
+    this.accountResolver = new AccountingAccountResolver(
+      context
+    );
     this.journalService = new JournalEntryService(context);
   }
 
@@ -73,6 +80,13 @@ export class InventoryMovementService {
       throw new AccountingDomainError(
         'Inventory movement baru harus dibuat sebagai draft.',
         'INVENTORY_MOVEMENT_MUST_START_AS_DRAFT'
+      );
+    }
+
+    if (data.movement_type !== 'opening_balance') {
+      await assertAccountingModuleActive(
+        this.context,
+        session
       );
     }
 
@@ -135,6 +149,10 @@ export class InventoryMovementService {
     postedBy?: string,
     session?: ClientSession
   ) {
+    await assertAccountingModuleActive(
+      this.context,
+      session
+    );
     const movement = await this.repository.findMovementById(
       movementId,
       session
@@ -167,7 +185,8 @@ export class InventoryMovementService {
     if (
       movement.movement_type !== 'purchase' &&
       movement.movement_type !== 'consumption' &&
-      movement.movement_type !== 'sale'
+      movement.movement_type !== 'sale' &&
+      movement.movement_type !== 'opening_balance'
     ) {
       throw new AccountingDomainError(
         `Movement type ${movement.movement_type} belum didukung pada Phase 4.`,
@@ -186,6 +205,13 @@ export class InventoryMovementService {
       String(movement.location),
       session
     );
+
+    if (movement.movement_type === 'opening_balance') {
+      throw new AccountingDomainError(
+        'Opening balance movement harus diposting bersama journal onboarding.',
+        'OPENING_MOVEMENT_JOURNAL_REQUIRED'
+      );
+    }
 
     const result =
       movement.movement_type === 'purchase'
@@ -248,6 +274,100 @@ export class InventoryMovementService {
       session
     );
 
+    return posted;
+  }
+
+  async postOpeningBalance(
+    movementId: string,
+    journalEntryId: string,
+    postedBy?: string,
+    session?: ClientSession
+  ) {
+    if (!journalEntryId.trim()) {
+      throw new AccountingDomainError(
+        'Opening inventory membutuhkan journal entry reference.',
+        'OPENING_MOVEMENT_JOURNAL_REQUIRED'
+      );
+    }
+    const movement = await this.repository.findMovementById(
+      movementId,
+      session
+    );
+    if (!movement) {
+      throw new AccountingDomainError(
+        'Inventory opening movement tidak ditemukan.',
+        'INVENTORY_MOVEMENT_NOT_FOUND'
+      );
+    }
+    if (movement.movement_type !== 'opening_balance') {
+      throw new AccountingDomainError(
+        'Movement yang diposting bukan opening balance.',
+        'INVALID_OPENING_MOVEMENT_TYPE'
+      );
+    }
+    if (movement.status === 'posted') return movement;
+    if (movement.status === 'voided') {
+      throw new AccountingDomainError(
+        'Opening movement voided tidak dapat diposting.',
+        'INVENTORY_MOVEMENT_ALREADY_VOIDED'
+      );
+    }
+    if (!movement.total_cost || movement.total_cost <= 0) {
+      throw new AccountingDomainError(
+        'Opening inventory harus memiliki total_cost lebih besar dari nol.',
+        'OPENING_INVENTORY_COST_REQUIRED'
+      );
+    }
+    await this.validateItemAndLocation(
+      String(movement.inventory_item),
+      String(movement.location),
+      session
+    );
+    const posted = await this.repository.markPosted(
+      movementId,
+      journalEntryId,
+      {
+        unit_cost: movement.unit_cost,
+        total_cost: movement.total_cost,
+      },
+      session
+    );
+    if (!posted) {
+      const latest = await this.repository.findMovementById(
+        movementId,
+        session
+      );
+      if (latest?.status === 'posted') return latest;
+      throw new AccountingDomainError(
+        'Opening inventory movement gagal ditandai posted.',
+        'INVENTORY_MOVEMENT_FINALIZATION_FAILED'
+      );
+    }
+
+    await createAuditLog(
+      this.context,
+      {
+        action: 'inventory_movement.opening_balance_posted',
+        entity_type: 'inventory_movement',
+        entity_id: toAccountingObjectId(
+          String(posted._id),
+          'inventory_movement'
+        ),
+        ...(postedBy
+          ? {
+              actor_id: toAccountingObjectId(
+                postedBy,
+                'postedBy'
+              ),
+            }
+          : {}),
+        metadata: {
+          journal_entry_id: journalEntryId,
+          total_cost: movement.total_cost,
+        },
+      },
+      session
+    );
     return posted;
   }
 
@@ -339,10 +459,7 @@ export class InventoryMovementService {
           String(movement.offset_account),
           session
         )
-      : await this.getOffsetAccountByCode(
-          DEFAULT_PURCHASE_OFFSET_ACCOUNT,
-          session
-        );
+      : await this.resolvePurchaseOffsetAccount(session);
     const occurredAt = parseAccountingDate(
       movement.occurred_at,
       'occurred_at'
@@ -354,7 +471,10 @@ export class InventoryMovementService {
         entry_number: `INV-${String(movement._id)}`,
         transaction_date: occurredAt.toISOString(),
         posting_date: occurredAt.toISOString(),
-        period: getPeriodKeyFromDate(occurredAt),
+        period: getPeriodKeyFromDate(
+          occurredAt,
+          await this.getCalendarTimezone(session)
+        ),
         description: movement.reference
           ? `Inventory purchase: ${movement.reference}`
           : 'Inventory purchase',
@@ -472,7 +592,10 @@ export class InventoryMovementService {
         entry_number: `INV-${String(movement._id)}`,
         transaction_date: occurredAt.toISOString(),
         posting_date: occurredAt.toISOString(),
-        period: getPeriodKeyFromDate(occurredAt),
+        period: getPeriodKeyFromDate(
+          occurredAt,
+          await this.getCalendarTimezone(session)
+        ),
         description: movement.reference
           ? `Inventory consumption: ${movement.reference}`
           : 'Inventory consumption',
@@ -578,7 +701,10 @@ export class InventoryMovementService {
         entry_number: `INV-${String(movement._id)}`,
         transaction_date: occurredAt.toISOString(),
         posting_date: occurredAt.toISOString(),
-        period: getPeriodKeyFromDate(occurredAt),
+        period: getPeriodKeyFromDate(
+          occurredAt,
+          await this.getCalendarTimezone(session)
+        ),
         description: movement.reference
           ? `Merchandise sale: ${movement.reference}`
           : 'Merchandise sale',
@@ -690,10 +816,16 @@ export class InventoryMovementService {
           String(item.inventory_account),
           session
         )
-      : await this.getOffsetAccountByCode(
-          defaultCode,
-          session
-        );
+      : item.item_type === 'merchandise'
+        ? await this.accountResolver.resolve({
+            role: 'merchandise_inventory',
+            fallbackCode: defaultCode,
+            session,
+          })
+        : await this.getOffsetAccountByCode(
+            defaultCode,
+            session
+          );
 
     if (account.type !== 'asset') {
       throw new AccountingDomainError(
@@ -727,10 +859,16 @@ export class InventoryMovementService {
           String(item.cogs_account),
           session
         )
-      : await this.getOffsetAccountByCode(
-          defaultCode,
-          session
-        );
+      : item.item_type === 'merchandise'
+        ? await this.accountResolver.resolve({
+            role: 'merchandise_cogs',
+            fallbackCode: defaultCode,
+            session,
+          })
+        : await this.getOffsetAccountByCode(
+            defaultCode,
+            session
+          );
 
     if (
       ![
@@ -810,6 +948,27 @@ export class InventoryMovementService {
       throw new AccountingDomainError(
         `Account default ${code} tidak dapat digunakan untuk posting.`,
         'DEFAULT_ACCOUNT_NOT_POSTABLE'
+      );
+    }
+    return account;
+  }
+
+  private async resolvePurchaseOffsetAccount(
+    session?: ClientSession
+  ) {
+    const account = await this.accountResolver.resolve({
+      role: 'expense_payable',
+      fallbackCode: DEFAULT_PURCHASE_OFFSET_ACCOUNT,
+      session,
+    });
+    if (
+      !['asset', 'liability', 'equity'].includes(
+        account.type
+      )
+    ) {
+      throw new AccountingDomainError(
+        `Account ${account.code} tidak valid sebagai offset purchase.`,
+        'INVALID_PURCHASE_OFFSET_ACCOUNT'
       );
     }
     return account;
@@ -948,5 +1107,18 @@ export class InventoryMovementService {
       unit_cost: resolvedUnitCost,
       total_cost: resolvedTotalCost,
     };
+  }
+
+  private async getCalendarTimezone(
+    session?: ClientSession
+  ) {
+    const query = OrganizationModel.findById(
+      this.context.organizationId
+    ).select('accounting.calendar_timezone');
+    if (session) query.session(session);
+    const organization = await query.lean();
+    return (
+      organization?.accounting?.calendar_timezone ?? 'UTC'
+    );
   }
 }

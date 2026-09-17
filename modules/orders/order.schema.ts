@@ -236,6 +236,13 @@ export const OrderBaseSchema = z.object({
 
   accounting_status: OrderAccountingStatusSchema.optional(),
   accounting_error: z.string().optional(),
+  accounting_block_reason: z.string().optional(),
+  accounting_last_attempt_at: z.string().optional(),
+  accounting_attempt_count: z
+    .number()
+    .int()
+    .nonnegative()
+    .optional(),
   accounting_journal_entry: ObjectIdStringSchema.optional(),
   accounting_inventory_movements: z
     .array(ObjectIdStringSchema)

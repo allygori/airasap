@@ -1,4 +1,4 @@
-import type { ClientSession } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import {
   SettlementModel,
@@ -33,6 +33,38 @@ export class SettlementRepository extends BaseRepository<TSettlement> {
     });
     if (session) query.session(session);
     return query.lean();
+  }
+
+  async getPostedPayoutTotal(
+    sourceSettlementId: string,
+    session?: ClientSession
+  ) {
+    const sourceSettlement = new Types.ObjectId(
+      sourceSettlementId
+    );
+    const aggregate = this.model.aggregate<{
+      total: number;
+    }>([
+      {
+        $match: {
+          organization: new Types.ObjectId(
+            this.tenantContext.organizationId
+          ),
+          source_settlement: sourceSettlement,
+          settlement_stage: 'payout_received',
+          status: 'posted',
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: '$net_amount' },
+        },
+      },
+    ]);
+    if (session) aggregate.session(session);
+    const [result] = await aggregate;
+    return result?.total ?? 0;
   }
 
   async createSettlement(

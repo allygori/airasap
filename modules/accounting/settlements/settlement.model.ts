@@ -12,6 +12,7 @@ export type TSettlement = Document &
   Omit<
     SettlementBaseDTO,
     | 'order'
+    | 'source_settlement'
     | 'store'
     | 'destination_account'
     | 'settled_at'
@@ -21,6 +22,7 @@ export type TSettlement = Document &
   > & {
     organization: Types.ObjectId;
     order: Types.ObjectId;
+    source_settlement?: Types.ObjectId;
     store: Types.ObjectId;
     destination_account: Types.ObjectId;
     settled_at: Date;
@@ -61,6 +63,10 @@ const SettlementSchema = new Schema<TSettlement>(
       ref: 'Order',
       required: true,
     },
+    source_settlement: {
+      type: Schema.Types.ObjectId,
+      ref: 'MarketplaceSettlement',
+    },
     store: {
       type: Schema.Types.ObjectId,
       ref: 'Store',
@@ -70,6 +76,11 @@ const SettlementSchema = new Schema<TSettlement>(
     platform: { type: String, required: true },
     settlement_reference: { type: String, required: true },
     settled_at: { type: Date, required: true },
+    settlement_stage: {
+      type: String,
+      enum: ['funds_released', 'payout_received'],
+      default: 'funds_released',
+    },
     destination_account: {
       type: Schema.Types.ObjectId,
       ref: 'AccountingAccount',
@@ -124,6 +135,11 @@ SettlementSchema.index({
   organization: 1,
   store: 1,
   settled_at: 1,
+});
+SettlementSchema.index({
+  organization: 1,
+  source_settlement: 1,
+  status: 1,
 });
 SettlementSchema.index(
   { organization: 1, idempotency_key: 1 },

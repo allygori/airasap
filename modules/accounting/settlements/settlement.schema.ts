@@ -13,11 +13,19 @@ export const SETTLEMENT_RECONCILIATION_STATUS_VALUES = [
   'exception',
 ] as const;
 
+export const SETTLEMENT_STAGE_VALUES = [
+  'funds_released',
+  'payout_received',
+] as const;
+
 export const SettlementStatusSchema = z.enum(
   SETTLEMENT_STATUS_VALUES
 );
 export const SettlementReconciliationStatusSchema = z.enum(
   SETTLEMENT_RECONCILIATION_STATUS_VALUES
+);
+export const SettlementStageSchema = z.enum(
+  SETTLEMENT_STAGE_VALUES
 );
 
 export const SettlementFeeLineSchema = z.object({
@@ -28,11 +36,18 @@ export const SettlementFeeLineSchema = z.object({
 
 export const SettlementBaseSchema = z.object({
   order: z.string().regex(/^[0-9a-fA-F]{24}$/),
+  source_settlement: z
+    .string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .optional(),
   store: z.string().regex(/^[0-9a-fA-F]{24}$/),
   order_id: z.string().trim().min(1),
   platform: z.enum(ORDER_PLATFORM_VALUES),
   settlement_reference: z.string().trim().min(1),
   settled_at: z.string().min(1),
+  settlement_stage: SettlementStageSchema.default(
+    'funds_released'
+  ),
   destination_account: z
     .string()
     .regex(/^[0-9a-fA-F]{24}$/),

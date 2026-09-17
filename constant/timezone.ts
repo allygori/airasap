@@ -3,12 +3,12 @@ export const TIMEZONES = {
     label: 'WIB (UTC/GMT+7)',
     value: 'Asia/Jakarta',
   },
-  WIT: {
-    label: 'WIT (UTC/GMT+8)',
+  WITA: {
+    label: 'WITA (UTC/GMT+8)',
     value: 'Asia/Makassar',
   },
-  WITA: {
-    label: 'WITA (UTC/GMT+9)',
+  WIT: {
+    label: 'WIT (UTC/GMT+9)',
     value: 'Asia/Jayapura',
   },
 } as const;
