@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import {
   apiError,
@@ -10,13 +11,49 @@ import { AccountingPeriodRepository } from '@/modules/accounting/periods/account
 import { AccountingPeriodService } from '@/modules/accounting/periods/accounting-period.service';
 import { InventoryLocationRepository } from '@/modules/inventory/locations/inventory-location.repository';
 import { AccountingLifecycleService } from '@/modules/accounting/accounting-lifecycle.service';
+import { TIMEZONE_VALUES } from '@/constant/timezone';
 import {
   getAccountingPeriodDateRange,
   getPeriodKeyFromDate,
+  parseAccountingCalendarDate,
 } from '@/modules/accounting/accounting.types';
 
-export async function POST() {
+const SetupSchema = z.object({
+  cutover_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  calendar_timezone: z.enum(TIMEZONE_VALUES).optional(),
+});
+
+export async function POST(request: Request) {
   try {
+    const rawBody = await request.text();
+    let body: unknown = {};
+    if (rawBody.trim()) {
+      try {
+        body = JSON.parse(rawBody);
+      } catch {
+        return apiError(
+          ErrorCodes.VALIDATION_ERROR,
+          'Format JSON tidak valid.',
+          400
+        );
+      }
+    }
+    const parsedBody = SetupSchema.safeParse(body);
+    if (!parsedBody.success) {
+      return apiError(
+        ErrorCodes.VALIDATION_ERROR,
+        'Validasi input setup accounting gagal.',
+        400,
+        parsedBody.error.issues.map((issue) => ({
+          field: issue.path.join('.'),
+          message: issue.message,
+        }))
+      );
+    }
+
     const tenantContext = await getTenantContext();
     if (!tenantContext.organizationId) {
       return apiError(
@@ -33,8 +70,31 @@ export async function POST() {
         tenantContext
       ).getState();
     const timezone =
-      accountingState.calendar_timezone ?? 'Asia/Jakarta';
-    const periodKey = getPeriodKeyFromDate(now, timezone);
+      parsedBody.data.calendar_timezone ??
+      accountingState.calendar_timezone ??
+      'Asia/Jakarta';
+    let periodDate = now;
+    if (parsedBody.data.cutover_date) {
+      try {
+        periodDate = parseAccountingCalendarDate(
+          parsedBody.data.cutover_date,
+          timezone,
+          'cutover_date'
+        );
+      } catch (error) {
+        return apiError(
+          ErrorCodes.VALIDATION_ERROR,
+          error instanceof Error
+            ? error.message
+            : 'Cutover date tidak valid.',
+          400
+        );
+      }
+    }
+    const periodKey = getPeriodKeyFromDate(
+      periodDate,
+      timezone
+    );
     const periodRepository = new AccountingPeriodRepository(
       tenantContext
     );

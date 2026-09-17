@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
 ## Accounting Module Onboarding
 
-**Version:** 1.2  
+**Version:** 1.3
 **Date:** 2026-09-17  
-**Status:** Refined draft; siap diturunkan menjadi implementation plan backend  
+**Status:** Implementation-aligned draft; flow utama sudah diimplementasikan, production verification masih berjalan
 **Language:** Indonesian  
 
 ---
@@ -79,8 +79,8 @@ The user must be able to enter the dashboard and use non-accounting modules with
 
 ### Module states
 
-- `not_enabled`: accounting belum disiapkan.
-- `onboarding`: user sedang menyimpan atau melanjutkan draft setup.
+- `not_started`: accounting belum disiapkan.
+- `in_progress`: user sedang menyelesaikan atau melanjutkan setup.
 - `active`: setup sudah selesai dan accounting dapat digunakan.
 
 ### Standard onboarding steps
@@ -88,17 +88,16 @@ The user must be able to enter the dashboard and use non-accounting modules with
 1. Accounting start date and calendar context.
 2. Data readiness dan inventory readiness.
 3. Chart of Accounts review dan account setup.
-4. Inventory opening setup:
+4. Opening balance setup:
    - select product/variant candidates that are actually inventory-managed;
    - optionally enter location, quantity, and unit cost;
    - choose an aggregate-value fallback only when detailed stock is postponed.
-5. Opening balance:
    - cash dan bank;
    - marketplace receivables;
    - inventory;
    - liabilities;
    - calculated owner equity.
-6. Review, confirmation, dan finalisasi.
+5. Review, confirmation, dan finalisasi.
 
 Standard onboarding tidak menawarkan historical reconstruction. Reconstruction dibuka dari flow terpisah untuk user yang berhak.
 
@@ -122,7 +121,7 @@ Setelah selesai, halaman onboarding dan endpoint mutasinya tidak dapat digunakan
 
 ### 5.1 Accounting start date
 
-For standard onboarding, recommend and enforce the first day of a calendar month. This matches the current monthly accounting period design and makes monthly reporting and reconciliation safer.
+For standard onboarding, recommend the first day of a calendar month. This matches the current monthly accounting period design and makes monthly reporting and reconciliation safer. The backend accepts any valid local calendar date so a real business cutover is not silently shifted; the UI defaults to the first day of the current month.
 
 Timezone is required for deterministic period boundaries, but it should not be a repeated free-form input in the onboarding wizard. The current store timezone is the default source. Because one organization has one ledger, the organization must eventually have one accounting calendar timezone; initialize it from the primary store and expose it under Accounting settings only when stores use different timezones.
 
@@ -133,7 +132,7 @@ Rules:
 - date is inclusive and becomes the cutover boundary;
 - standard onboarding does not create journals for transactions before the date;
 - start date is locked after finalization;
-- arbitrary mid-month dates are reserved for the reconstruction/advanced process.
+- a mid-month date is allowed only when it represents the user's actual accounting boundary and the opening balance is reviewed carefully; it does not automatically trigger reconstruction.
 
 The existing timezone constants must also keep the Indonesian labels correct: WITA is UTC+8 (`Asia/Makassar`) and WIT is UTC+9 (`Asia/Jayapura`).
 
@@ -219,6 +218,8 @@ The current seed is a starting point and may be adjusted accordingly. Examples o
 
 Automation must not depend directly on numeric account codes. Organization accounting settings must store validated account mappings for revenue, receivables by platform, marketplace balance, inventory, COGS, settlement destination, and applicable fee accounts. Inventory items may continue to override inventory and COGS accounts through their existing references.
 
+The onboarding UI must expose provider-level mappings for marketplace receivable, released balance, and fee accounts using the platform values already used by orders. Empty provider mappings use the resolver fallback and must not create invalid empty account references.
+
 ### 5.5 Multiple bank accounts and marketplace receivables
 
 The flow must support multiple bank accounts. Each bank account that needs a separate balance should be represented by a separate postable child account under the cash/bank group.
@@ -265,6 +266,8 @@ Released-funds data must not be treated as pending automatically. The exact hand
 Do not limit opening liabilities to suppliers. The flow should support supplier debt, bank loans, finance-company debt, family/private debt, tax payable, and other liabilities through appropriate postable liability accounts.
 
 For the first version, this is an opening-balance workflow, not a payable/loan subledger. User-created child accounts and descriptions can identify the liability. A separate payable/loan subledger should be considered later if creditor, due date, partial payment, and aging are required.
+
+Opening adjustment lines may additionally retain `counterparty`, `due_date`, and `description`. These fields provide traceability for supplier, family, bank, finance-company, tax, or other liabilities without pretending that onboarding has created a full payable subledger. The counterparty summary is also carried into the journal line description.
 
 #### Equity
 
@@ -339,8 +342,12 @@ accounting: {
     sales_revenue?: string,
     marketplace_balance?: string,
     marketplace_receivables?: Record<string, string>,
+    marketplace_balances?: Record<string, string>,
     merchandise_inventory?: string,
     merchandise_cogs?: string,
+    opening_balance_equity?: string,
+    expense_payable?: string,
+    marketplace_fee_accounts?: Record<string, string>,
   },
   started_at?: Date,
   completed_at?: Date,
@@ -350,7 +357,7 @@ accounting: {
 
 Better Auth's organization plugin must expose this field through `schema.organization.additionalFields`, and the Mongoose organization model/schema/DTO must use the same shape. The final field design must still be checked against the current MongoDB adapter and ownership rules. Status, cutover date, completion actor, and account mappings are server-owned.
 
-The organization document should not embed a large product-by-product onboarding draft. Reuse existing `opening_balances`, `inventory_movements`, and `journal_entries` for persisted accounting data. A separate onboarding-session collection is deferred unless resumable drafts and concurrency requirements cannot be represented safely with the existing structures.
+The organization document should not embed a large product-by-product onboarding draft. Reuse existing `opening_balances`, `inventory_movements`, and `journal_entries` for persisted accounting data. While `accounting.status` is `in_progress`, the browser may persist a versioned draft keyed by organization for resume UX; this is not authoritative and is deleted after successful finalization. A separate onboarding-session collection is deferred unless cross-device resume becomes a requirement.
 
 ## 8. Key business rules
 
@@ -369,7 +376,7 @@ The organization document should not embed a large product-by-product onboarding
 13. Posted journals are corrected through adjustment/reversal, not silent editing.
 14. Server-side checks enforce module status, organization scope, permission, and finalization state.
 15. Finalization is idempotent and safe against concurrent requests.
-16. Timezone is inherited from the primary store/accounting calendar and is not duplicated as an uncontrolled onboarding input.
+16. Timezone defaults from the primary store, can be selected only from the supported timezone values during onboarding, and is stored as the organization accounting calendar.
 17. Bank accounts are postable CoA child accounts; a separate bank collection is not required for the first version.
 18. Existing orders are not automatically reconstructed or mass-posted by onboarding finalization.
 19. Eligible future orders may be posted automatically only after accounting is active and all prerequisites are satisfied.
@@ -405,17 +412,15 @@ The organization document should not embed a large product-by-product onboarding
 
 ## 11. Open decisions
 
-1. Final field shape and write path for `organization.accounting` across Better Auth and the application-owned Mongoose model.
-2. Exact account-mapping structure and migration away from hardcoded account codes in accounting services.
-3. Settlement policy for released funds that are not yet visible in the destination bank account.
-4. Exact implementation of `opening_balance` inventory movements, shared opening-journal references, and idempotency.
-5. Whether detailed stock initialization is required by default when existing inventory movements already provide a reliable balance.
-6. Automatic-posting trigger and batch-queue UX for orders imported after accounting activation.
-7. Initial owner-only reconstruction permission and how it can be expanded later through a real permission model.
+1. Better Auth adapter contract for read/update nested `organization.accounting`.
+2. Settlement policy for released funds that are not yet visible in the destination bank account.
+3. Whether detailed stock initialization should be suggested from reliable existing movements.
+4. Automatic-posting trigger and batch-queue UX for orders imported after accounting activation.
+5. Initial owner-only reconstruction permission and how it can be expanded later through a real permission model.
 
 ## 12. Implementation notes
 
-This document is now the refined product direction. The current UI prototype may be iterated independently, but backend implementation starts only after the open decisions above are converted into an implementation plan and this PRD is marked final.
+This document is the current product direction aligned with the implemented onboarding contract. The UI remains an adapter to the backend source of truth. Remaining open decisions are intentionally separated from the production-critical lifecycle, opening balance, inventory, and mapping rules above.
 
 Implementation must reuse existing accounting, inventory, order, validation, audit, and idempotency mechanisms where possible. If an existing mechanism cannot represent a requirement safely, document the gap before adding a collection or changing a schema.
 

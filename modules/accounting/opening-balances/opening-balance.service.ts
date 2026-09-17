@@ -47,7 +47,25 @@ export class OpeningBalanceService {
         description: data.description,
         status: 'draft',
         journal_entry: data.journal_entry,
-        lines: data.lines,
+        lines: data.lines.map((line) => ({
+          account: line.account,
+          debit: line.debit,
+          credit: line.credit,
+          ...(line.description
+            ? { description: line.description }
+            : {}),
+          ...(line.counterparty
+            ? { counterparty: line.counterparty }
+            : {}),
+          ...(line.due_date
+            ? {
+                due_date: parseAccountingDate(
+                  line.due_date,
+                  'due_date'
+                ),
+              }
+            : {}),
+        })),
       },
       session
     );
@@ -118,6 +136,14 @@ export class OpeningBalanceService {
           account: String(line.account),
           debit: line.debit,
           credit: line.credit,
+          ...((line.counterparty || line.description) && {
+            description: [
+              line.counterparty,
+              line.description,
+            ]
+              .filter(Boolean)
+              .join(' · '),
+          }),
         })),
       },
       postedBy,

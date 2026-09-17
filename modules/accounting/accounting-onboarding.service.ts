@@ -95,6 +95,7 @@ export class AccountingOnboardingService {
   }
 
   async getStatus() {
+    await this.lifecycle.assertOwner();
     const state =
       await this.lifecycle.assertOnboardingAvailable();
     const stores = await StoreModel.find({
@@ -110,6 +111,7 @@ export class AccountingOnboardingService {
       .lean();
 
     return {
+      organization_id: String(this.context.organizationId),
       state,
       stores,
       can_start: state.status === 'not_started',
@@ -124,12 +126,14 @@ export class AccountingOnboardingService {
 
   async previewInventory(input?: {
     storeId?: string;
+    offset?: number;
     limit?: number;
   }) {
     await this.lifecycle.assertOwner();
     const state =
       await this.lifecycle.assertOnboardingAvailable();
     const limit = input?.limit ?? 100;
+    const offset = input?.offset ?? 0;
     if (
       !Number.isInteger(limit) ||
       limit < 1 ||
@@ -138,6 +142,16 @@ export class AccountingOnboardingService {
       throw new AccountingDomainError(
         'Limit preview inventory harus antara 1 sampai 200.',
         'INVENTORY_PREVIEW_LIMIT_INVALID'
+      );
+    }
+    if (
+      !Number.isInteger(offset) ||
+      offset < 0 ||
+      offset > 100000
+    ) {
+      throw new AccountingDomainError(
+        'Offset preview inventory tidak valid.',
+        'INVENTORY_PREVIEW_OFFSET_INVALID'
       );
     }
     if (
@@ -150,7 +164,7 @@ export class AccountingOnboardingService {
       );
     }
 
-    const productQuery = ProductModel.find({
+    const productFilter = {
       organization: this.context.organizationId,
       is_active: true,
       $or: [
@@ -158,13 +172,20 @@ export class AccountingOnboardingService {
         { deleted_at: { $exists: false } },
       ],
       ...(input?.storeId ? { store: input.storeId } : {}),
-    })
+    };
+    const productQuery = ProductModel.find(productFilter)
       .select(
         '_id store platform name product_id parent_sku variants'
       )
       .sort({ created_at: 1, _id: 1 })
+      .skip(offset)
       .limit(limit + 1);
-    const products = await productQuery.lean();
+    const [products, totalProductCount] = await Promise.all(
+      [
+        productQuery.lean(),
+        ProductModel.countDocuments(productFilter),
+      ]
+    );
     const hasMore = products.length > limit;
     const visibleProducts = products.slice(0, limit);
     const mappings =
@@ -245,9 +266,14 @@ export class AccountingOnboardingService {
 
     return {
       state,
+      offset,
       limit,
       has_more: hasMore,
+      next_offset: hasMore
+        ? offset + visibleProducts.length
+        : undefined,
       product_count: visibleProducts.length,
+      total_product_count: totalProductCount,
       candidate_count: candidates.length,
       mapped_count: candidates.filter(
         (candidate) => candidate.mapped
@@ -340,6 +366,24 @@ export class AccountingOnboardingService {
         (sum, line) => sum + line.credit,
         0
       ) ?? 0;
+    const adjustmentDebit =
+      data.opening_balance_adjustments?.reduce(
+        (sum, line) => sum + line.debit,
+        0
+      ) ?? 0;
+    const adjustmentCredit =
+      data.opening_balance_adjustments?.reduce(
+        (sum, line) => sum + line.credit,
+        0
+      ) ?? 0;
+    if (
+      data.opening_balance_lines &&
+      data.opening_balance_adjustments?.length
+    ) {
+      blockers.push(
+        'Gunakan opening_balance_lines atau opening_balance_adjustments, bukan keduanya.'
+      );
+    }
     if (
       data.opening_balance_lines &&
       providedDebit !== providedCredit
@@ -347,6 +391,21 @@ export class AccountingOnboardingService {
       blockers.push(
         'Opening balance lines belum balance antara debit dan credit.'
       );
+    }
+    for (const [index, line] of (
+      data.opening_balance_adjustments ?? []
+    ).entries()) {
+      if (
+        !Types.ObjectId.isValid(line.account) ||
+        !(await this.findPreviewAccount(
+          line.account,
+          '__opening_adjustment_not_found__'
+        ))
+      ) {
+        blockers.push(
+          `Opening adjustment ${index + 1} memakai account yang tidak aktif atau tidak dapat diposting.`
+        );
+      }
     }
     if (totalAssets === 0) {
       warnings.push(
@@ -364,23 +423,21 @@ export class AccountingOnboardingService {
       '3110',
       ['equity']
     );
+    const hasAutomaticOpeningInputs =
+      totalAssets > 0 ||
+      adjustmentDebit > 0 ||
+      adjustmentCredit > 0;
     if (inventoryValue + aggregateInventoryValue > 0) {
       if (!inventoryAccount) {
         blockers.push(
           'Akun inventory belum tersedia atau tidak dapat diposting.'
         );
       }
-      if (!equityAccount && !data.opening_balance_lines) {
-        blockers.push(
-          'Akun opening balance equity belum tersedia atau tidak dapat diposting.'
-        );
-      }
     }
     if (
-      totalAssets > 0 &&
+      hasAutomaticOpeningInputs &&
       !equityAccount &&
-      !data.opening_balance_lines &&
-      inventoryValue + aggregateInventoryValue === 0
+      !data.opening_balance_lines
     ) {
       blockers.push(
         'Akun opening balance equity belum tersedia atau tidak dapat diposting.'
@@ -405,10 +462,23 @@ export class AccountingOnboardingService {
       },
       opening_balance: {
         total_assets: totalAssets,
-        suggested_equity_credit: totalAssets,
+        adjustment_debit: adjustmentDebit,
+        adjustment_credit: adjustmentCredit,
+        suggested_equity_credit: Math.max(
+          totalAssets + adjustmentDebit - adjustmentCredit,
+          0
+        ),
+        suggested_equity_debit: Math.max(
+          adjustmentCredit - totalAssets - adjustmentDebit,
+          0
+        ),
         provided_debit: providedDebit,
         provided_credit: providedCredit,
-        will_create_journal: totalAssets > 0,
+        will_create_journal:
+          totalAssets > 0 ||
+          adjustmentDebit > 0 ||
+          adjustmentCredit > 0 ||
+          Boolean(data.opening_balance_lines?.length),
       },
       blockers,
       warnings,
@@ -676,6 +746,12 @@ export class AccountingOnboardingService {
     fallbackCode: string,
     allowedTypes?: string[]
   ) {
+    if (
+      configuredId &&
+      !Types.ObjectId.isValid(configuredId)
+    ) {
+      return null;
+    }
     const account = configuredId
       ? (
           await this.accountRepository.findByIds([
@@ -882,6 +958,10 @@ export class AccountingOnboardingService {
         'INVENTORY_MODE_CONFLICT'
       );
     }
+    for (const line of data.opening_balance_adjustments ??
+      []) {
+      await this.getPostableAccount(line.account, session);
+    }
 
     const inventoryTotals = new Map<string, number>();
     for (const line of inventory) {
@@ -917,6 +997,12 @@ export class AccountingOnboardingService {
     }
 
     if (data.opening_balance_lines) {
+      if (data.opening_balance_adjustments?.length) {
+        throw new AccountingDomainError(
+          'Opening balance lines dan adjustments tidak boleh digunakan bersamaan.',
+          'OPENING_BALANCE_INPUT_CONFLICT'
+        );
+      }
       for (const [accountId, amount] of inventoryTotals) {
         const debit = data.opening_balance_lines
           .filter((line) => line.account === accountId)
@@ -931,29 +1017,122 @@ export class AccountingOnboardingService {
       return data.opening_balance_lines;
     }
 
-    if (inventoryTotals.size === 0) return [];
+    const openingTotals = new Map<
+      string,
+      {
+        debit: number;
+        credit: number;
+        description?: string;
+        counterparty?: string;
+        due_date?: string;
+      }
+    >();
+    const addOpeningTotal = (
+      account: string,
+      debit: number,
+      credit: number,
+      metadata?: {
+        description?: string;
+        counterparty?: string;
+        due_date?: string;
+      }
+    ) => {
+      const current = openingTotals.get(account) ?? {
+        debit: 0,
+        credit: 0,
+      };
+      current.debit += debit;
+      current.credit += credit;
+      if (metadata?.description && !current.description) {
+        current.description = metadata.description;
+      }
+      if (metadata?.counterparty && !current.counterparty) {
+        current.counterparty = metadata.counterparty;
+      }
+      if (metadata?.due_date && !current.due_date) {
+        current.due_date = metadata.due_date;
+      }
+      openingTotals.set(account, current);
+    };
+
+    for (const [account, debit] of inventoryTotals) {
+      addOpeningTotal(account, debit, 0);
+    }
+    for (const line of data.opening_balance_adjustments ??
+      []) {
+      addOpeningTotal(
+        line.account,
+        line.debit,
+        line.credit,
+        {
+          description: line.description,
+          counterparty: line.counterparty,
+          due_date: line.due_date,
+        }
+      );
+    }
+
+    if (openingTotals.size === 0) return [];
 
     const equity = await this.resolveOpeningEquity(
       data.account_mappings?.opening_balance_equity,
       session
     );
-    const lines = Array.from(inventoryTotals.entries()).map(
-      ([account, debit]) => ({
+    const lines = Array.from(openingTotals.entries()).map(
+      ([account, totals]) => ({
         account,
-        debit,
-        credit: 0,
+        debit: totals.debit,
+        credit: totals.credit,
+        ...(totals.description
+          ? { description: totals.description }
+          : {}),
+        ...(totals.counterparty
+          ? { counterparty: totals.counterparty }
+          : {}),
+        ...(totals.due_date
+          ? { due_date: totals.due_date }
+          : {}),
       })
     );
     const totalDebit = lines.reduce(
       (sum, line) => sum + line.debit,
       0
     );
-    lines.push({
-      account: String(equity._id),
-      debit: 0,
-      credit: totalDebit,
-    });
-    return lines;
+    const totalCredit = lines.reduce(
+      (sum, line) => sum + line.credit,
+      0
+    );
+    if (totalDebit > totalCredit) {
+      addOpeningTotal(
+        String(equity._id),
+        0,
+        totalDebit - totalCredit
+      );
+    } else if (totalCredit > totalDebit) {
+      addOpeningTotal(
+        String(equity._id),
+        totalCredit - totalDebit,
+        0
+      );
+    }
+
+    const balancedLines = Array.from(
+      openingTotals.entries()
+    ).map(([account, totals]) => ({
+      account,
+      debit: totals.debit,
+      credit: totals.credit,
+      ...(totals.description
+        ? { description: totals.description }
+        : {}),
+      ...(totals.counterparty
+        ? { counterparty: totals.counterparty }
+        : {}),
+      ...(totals.due_date
+        ? { due_date: totals.due_date }
+        : {}),
+    }));
+    return balancedLines;
   }
 
   private async ensureBankAccounts(
@@ -1074,6 +1253,9 @@ export class AccountingOnboardingService {
         account: string;
         debit: number;
         credit: number;
+        description?: string;
+        counterparty?: string;
+        due_date?: string;
       }>;
     },
     session: ClientSession
@@ -1142,6 +1324,12 @@ export class AccountingOnboardingService {
     session: ClientSession,
     allowedTypes?: string[]
   ) {
+    if (!Types.ObjectId.isValid(accountId)) {
+      throw new AccountingDomainError(
+        'Account onboarding tidak valid.',
+        'ACCOUNT_MAPPING_INVALID'
+      );
+    }
     const accounts = await this.accountRepository.findByIds(
       [accountId],
       session

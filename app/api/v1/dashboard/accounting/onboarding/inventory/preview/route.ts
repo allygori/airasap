@@ -12,6 +12,12 @@ import { AccountingOnboardingService } from '@/modules/accounting/accounting-onb
 
 const QuerySchema = z.object({
   store_id: z.string().trim().min(1).optional(),
+  offset: z.coerce
+    .number()
+    .int()
+    .min(0)
+    .max(100000)
+    .default(0),
   limit: z.coerce
     .number()
     .int()
@@ -40,6 +46,7 @@ export const GET = withValidation(
         tenantContext
       ).previewInventory({
         storeId: query.store_id,
+        offset: query.offset,
         limit: query.limit,
       });
       return apiSuccess(result);

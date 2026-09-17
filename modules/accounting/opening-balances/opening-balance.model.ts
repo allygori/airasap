@@ -12,6 +12,9 @@ type TOpeningBalanceLine = {
   account: Types.ObjectId;
   debit: number;
   credit: number;
+  description?: string;
+  counterparty?: string;
+  due_date?: Date;
 };
 
 export type TOpeningBalance = Document &
@@ -37,6 +40,17 @@ const OpeningBalanceLineMongooseSchema =
       },
       debit: { type: Number, required: true, min: 0 },
       credit: { type: Number, required: true, min: 0 },
+      description: {
+        type: String,
+        trim: true,
+        maxlength: 240,
+      },
+      counterparty: {
+        type: String,
+        trim: true,
+        maxlength: 160,
+      },
+      due_date: { type: Date },
     },
     { _id: false }
   );

@@ -13,6 +13,9 @@ export const OpeningBalanceLineSchema = z
     account: z.string().min(1),
     debit: z.number().int().nonnegative().default(0),
     credit: z.number().int().nonnegative().default(0),
+    description: z.string().trim().max(240).optional(),
+    counterparty: z.string().trim().max(160).optional(),
+    due_date: z.string().date().optional(),
   })
   .refine(
     (line) =>

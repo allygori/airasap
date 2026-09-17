@@ -1,8 +1,8 @@
 # Implementation Plan — Accounting Backend
 
-**Status:** In progress — core lifecycle/onboarding/posting sudah diimplementasikan; hardening lanjutan masih tersisa
-**Versi:** 1.0  
-**Basis:** [PRD — Accounting Onboarding.md](<D:\Startup\airasap\.agents\PRD\PRD — Accounting Onboarding.md>) v1.2  
+**Status:** In progress — flow utama dan hardening prioritas tinggi sudah diimplementasikan; verifikasi integration/browser dan hardening lanjutan masih tersisa
+**Versi:** 1.3
+**Basis:** [PRD — Accounting Onboarding.md](<D:\Startup\airasap\.agents\PRD\PRD — Accounting Onboarding.md>) v1.3
 **Scope:** backend dan perubahan domain pada module `accounting`, `inventory`, `expense`, `orders`, `organizations`, serta integrasi `products` dan `stores`.
 
 Dokumen ini menjadi baseline implementasi. Pekerjaan dilakukan bertahap per phase agar kontrak data dan acceptance criteria dapat diverifikasi sebelum domain diperluas.
@@ -14,10 +14,21 @@ Sudah diimplementasikan pada batch ini:
 - lifecycle organization `not_started -> in_progress -> active`, owner gate, module guard, dan endpoint onboarding satu kali;
 - CoA resolver berbasis logical role, mapping per platform, child account bank dengan metadata rekening, serta dukungan beberapa rekening bank;
 - accounting calendar timezone, cutover lokal, period boundary, dan report period berbasis timezone accounting;
-- opening balance aggregate, inventory opening movement, product/variant mapping, stok awal `0`, stok positif, dan balancing equity;
+- opening balance aggregate, inventory opening movement, product/variant mapping, stok awal `0`, stok positif, balancing equity, dan opening balance adjustment untuk receivable/liability/counterparty;
 - guard cutover untuk order/expense/settlement, status blocked/retry metadata, marketplace funds release ke receivable/balance marketplace, payout ke rekening bank, fee mapping, serta batch retry order;
 - reconstruction order terpisah dengan default permission owner, preview, dan konfirmasi eksplisit;
 - preview read-only inventory/opening balance sebelum finalisasi, reconciliation filter per platform/file, summary per sumber import, dan index query settlement.
+
+Wizard onboarding sekarang sudah terhubung ke backend: lifecycle, bootstrap CoA/location, inventory candidate preview, opening balance preview, blocker/warning, account `_id` mapping, finalization, loading/error state, dan redirect ketika onboarding sudah active.
+
+Hardening prioritas tinggi yang baru diselesaikan:
+
+- `GET /onboarding` sekarang owner-gated, sehingga non-owner tidak dapat membuka atau membaca data onboarding sejak awal.
+- Halaman onboarding tidak lagi memanggil `POST /setup` saat baru dibuka. Setup teknis baru dijalankan setelah lifecycle benar-benar `in_progress`; setup menerima cutover date dan timezone yang dipilih agar period tidak dibuat berdasarkan tanggal server secara diam-diam.
+- Draft form disimpan di `localStorage` dengan key per organization, dipulihkan saat melanjutkan status `in_progress`, dan dihapus setelah finalisasi berhasil. Field konfirmasi tidak dipulihkan.
+- Inventory candidate preview mendukung `offset`, `limit`, `has_more`, `next_offset`, dan total product aktif; UI menyediakan load-more sehingga catalog besar tidak dipaksa dikirim sekaligus.
+- Mapping marketplace per provider untuk receivable, released balance, dan fee account sekarang tersedia di UI dan memakai record mapping yang sudah didukung resolver backend.
+- Opening adjustment menyimpan `counterparty`, `due_date`, dan `description`; metadata tersebut disimpan pada opening balance dan ringkasannya ikut menjadi journal line description.
 
 
 Masih menjadi follow-up phase berikutnya:
@@ -25,6 +36,21 @@ Masih menjadi follow-up phase berikutnya:
 - auto-match settlement multi-order dan reconciliation repair workflow;
 - clean-start verification, integration test Mongo transaction, serta verifikasi adapter Better Auth;
 - audit/reconciliation report dan hardening concurrency pada seluruh import pipeline.
+
+## Remaining yang belum diimplementasikan
+
+Item berikut sengaja didokumentasikan agar tidak dianggap sudah selesai:
+
+- **Contract/component test UI onboarding:** belum tersedia. Runtime typecheck/lint sudah dijalankan, tetapi test lifecycle, preview blocker, retry, dan finalization success masih menjadi follow-up Phase 9/10.
+- **Inventory initialize endpoint terpisah:** belum dibuat dan belum diperlukan untuk flow saat ini. Finalization sudah mengorkestrasi pembuatan/reuse item, mapping, movement, dan journal dalam satu transaction. Endpoint terpisah hanya dipertimbangkan jika UX membutuhkan penyimpanan draft inventory lintas device.
+- **Auto-match settlement multi-order:** belum tersedia. Reconciliation saat ini sudah dapat difilter per platform/file dan memiliki summary, tetapi belum mencocokkan satu payout/provider file dengan banyak order secara otomatis.
+- **Reconciliation repair workflow:** belum tersedia untuk memperbaiki partial/exception secara terarah.
+- **Clean-start verification:** belum dijalankan sebagai runbook end-to-end pada database development.
+- **Mongo transaction integration test:** belum tersedia karena test environment MongoDB replica set belum dikonfigurasi.
+- **Better Auth adapter contract test:** belum diverifikasi untuk read/update nested `organization.accounting` melalui adapter yang digunakan.
+- **Production hardening lanjutan:** audit/reconciliation report menyeluruh, performance test batch besar, structured logging, dan concurrency test masih tersisa.
+- **Historical data migration:** tidak dikerjakan dan tidak dibutuhkan untuk development clean-start; data dapat dihapus dan dibuat ulang melalui import products, orders, lalu enrichment.
+- **Client-side inline validation:** belum menjadi sumber keputusan readiness. Backend tetap authoritative; validasi field yang lebih ramah masih perlu ditambahkan agar error dapat ditampilkan sedekat mungkin dengan field terkait.
 
 ## 1. Keputusan arsitektur yang dipakai
 
@@ -42,6 +68,8 @@ Masih menjadi follow-up phase berikutnya:
 9. Stok awal `0` boleh disimpan sebagai item/mapping, tetapi tidak menghasilkan inventory movement atau journal. Stok positif memerlukan quantity, unit cost, dan location.
 10. Opening inventory memakai semantics `opening_balance`, bukan `purchase`, supaya tidak menciptakan hutang supplier fiktif.
 11. `released_funds` marketplace tidak otomatis berarti uang sudah masuk bank. Dana tersebut masuk ke akun saldo marketplace; pencatatan bank dilakukan ketika ada payout/receipt yang benar-benar diterima.
+12. Kontrak backend, schema, dan domain rule adalah source of truth. Nama field, grouping, dan urutan step pada UI prototype boleh diubah; UI harus membuat adapter ke kontrak backend, bukan memaksa backend mengikuti nama field prototype.
+13. Field/backend capability baru hanya ditambahkan jika dibutuhkan oleh domain atau UX yang nyata, misalnya blocker actionable, preview, retry, idempotency, atau resume flow. Tidak menambah field hanya untuk mempertahankan label UI prototype.
 
 ## 2. Kondisi kode saat ini yang harus diperbaiki
 
@@ -52,9 +80,11 @@ Temuan ini menjadi baseline implementation plan:
 - `constant/timezone.ts` memiliki label `WIT`/`WITA` yang tertukar dengan nilai timezone-nya.
 - `getPeriodKeyFromDate` dan validasi journal saat ini berbasis UTC, sedangkan store sudah memiliki timezone.
 - Route setup/bootstrap saat ini melakukan seed CoA, default location, dan period. Itu harus tetap idempotent, tetapi tidak boleh dianggap sebagai finalisasi onboarding atau aktivasi module.
+- Route setup/bootstrap harus menerima context cutover/timezone dari onboarding dan tidak boleh dipanggil otomatis hanya karena halaman wizard dibuka.
 - `OrderAccountingIntegrationService` memakai kode akun hardcoded (`1210`, `4100`), belum memeriksa accounting status/cutover, dan hanya memproses order `selesai`.
 - `InventoryMovementService` hanya mem-post `purchase`, `sale`, dan `consumption`, walaupun schema mendeklarasikan tipe movement yang lebih banyak. `opening_balance` perlu menjadi jalur resmi.
 - `InventoryItem` tidak memiliki referensi product, sehingga relasi tetap harus menggunakan collection mapping yang sudah ada.
+- Preview inventory harus menggunakan pagination/offset agar organization dengan catalog besar tidak mengandalkan satu response besar.
 - `ExpenseService` sudah mendukung account reference, tetapi fallback payment account masih hardcoded ke `2100`; posting belum memakai resolver/mapping yang sama dengan order dan inventory.
 - `SettlementService` masih hardcoded ke `1130`, `1210`, dan account fee tertentu serta mencampur release marketplace dengan penerimaan bank.
 - Model yang sudah memiliki idempotency dan audit belum seluruhnya memakai satu transaction boundary untuk perubahan dokumen sumber, journal, movement, dan status final.
@@ -92,6 +122,7 @@ Catatan implementasi:
 
 - `status` default `not_started` untuk organization lama.
 - Reference account disimpan sebagai string/ObjectId reference yang divalidasi oleh service, bukan sebagai kode akun yang digunakan langsung saat posting.
+- `GET /onboarding` melakukan owner check sebelum mengembalikan state atau daftar store; endpoint mutasi tetap melakukan owner check dan finalization tetap transaction-bound.
 - Jangan menyimpan draft onboarding besar di organization. Draft sementara tetap berada di client atau collection khusus hanya jika retry/resume lintas device benar-benar diperlukan.
 - Semua perubahan state harus melewati `AccountingLifecycleService`, bukan update langsung dari route.
 - Karena collection dipakai Better Auth, lakukan compatibility test terhadap adapter dan `additionalFields`. Jika Better Auth tidak aman untuk nested object, Mongoose application model tetap menjadi source of truth dan konfigurasi Better Auth hanya digunakan untuk field yang perlu diekspos.
@@ -256,7 +287,7 @@ Pekerjaan:
 
 **API contract minimum:**
 
-- `GET /api/v1/dashboard/accounting/onboarding` — status, readiness, bootstrap summary, dan blockers;
+- `GET /api/v1/dashboard/accounting/onboarding` — owner-gated status, readiness, bootstrap summary, dan blockers; response includes `organization_id` for draft scoping;
 - `POST /api/v1/dashboard/accounting/onboarding/start` — idempotent, hanya dari `not_started`;
 - `POST /api/v1/dashboard/accounting/onboarding/finalize` — atomically activates module setelah semua prerequisite valid;
 - endpoint bootstrap existing tetap idempotent dan tidak mengaktifkan module.
@@ -311,9 +342,9 @@ Pekerjaan:
 
 **API contract minimum:**
 
-- `POST /api/v1/dashboard/accounting/onboarding/inventory/preview` — read-only candidate preview;
-- `POST /api/v1/dashboard/accounting/onboarding/inventory/initialize` — creates items/mappings/movements under one idempotent operation;
-- `POST /api/v1/dashboard/accounting/onboarding/opening-balance/preview` — calculates debit/credit and blockers.
+- `GET /api/v1/dashboard/accounting/onboarding/inventory/preview` — read-only candidate preview dengan `offset`, `limit`, `has_more`, `next_offset`, dan total product aktif;
+- inventory initialization — dilakukan oleh `finalize` dalam satu transaction; endpoint terpisah belum diperlukan untuk flow saat ini;
+- `POST /api/v1/dashboard/accounting/onboarding/opening-balance/preview` — calculates debit/credit and blockers; opening adjustment dapat menyimpan counterparty, due date, dan description.
 
 **Acceptance criteria:** stok awal 0 tidak membuat journal; stok awal positif menghasilkan inventory asset yang benar; retry menghasilkan dokumen yang sama; kegagalan tidak meninggalkan organization active atau partial opening tanpa status yang dapat direkonsiliasi.
 
@@ -392,6 +423,37 @@ Pekerjaan:
 - performance test batch order dan candidate inventory pada organization besar;
 - audit log dan structured error logging untuk semua state transition/posting.
 
+**Status:** sebagian belum selesai. Clean-start verification, integration test Mongo transaction, contract test Better Auth, performance test, reconciliation report, dan audit/structured logging menyeluruh masih diperlukan sebelum production.
+
+### Phase 10 — Integrasi UI onboarding dengan backend
+
+**Status:** implemented untuk flow utama dan hardening prioritas tinggi; contract/component test dan verifikasi browser masih tersisa.
+
+**Target area:** `app/dashboard/accounting/onboarding`, `app/dashboard/accounting/_components/accounting-onboarding-wizard.tsx`, serta API onboarding.
+
+Pekerjaan:
+
+- saat halaman dibuka, panggil `GET /api/v1/dashboard/accounting/onboarding`; tampilkan `not_started` atau `in_progress`, sedangkan `409 ONBOARDING_ALREADY_COMPLETED` diperlakukan sebagai state `active` dan diarahkan ke accounting desk;
+- panggil `POST /api/v1/dashboard/accounting/onboarding/start` hanya ketika user benar-benar memulai setup; request ulang harus aman;
+- ganti candidate product/inventory hardcoded dengan `GET /api/v1/dashboard/accounting/onboarding/inventory/preview`;
+- ganti accounting snapshot hardcoded dengan hasil `POST /api/v1/dashboard/accounting/onboarding/opening-balance/preview`;
+- buat adapter payload dari form UI ke kontrak backend: `cutover_date`, `calendar_timezone`, bank accounts, inventory lines, account mappings, `opening_balance_adjustments`, dan inventory mode;
+- gunakan account catalog/backend bootstrap yang sudah ada untuk memilih account `_id`, bukan data account hardcoded di UI; jika catalog belum tersedia pada state onboarding, tambahkan endpoint read-only/backend readiness yang sesuai, bukan menjadikan kode account UI sebagai contract;
+- pastikan `setup/bootstrap` hanya dipakai untuk menyiapkan dependency teknis dan tidak dianggap sebagai finalization atau aktivasi module;
+- tampilkan blocker dan warning backend pada step terkait, termasuk unit cost, location, account mapping, cutover, dan debit/credit imbalance;
+- panggil `POST /api/v1/dashboard/accounting/onboarding/finalize` hanya setelah user melakukan konfirmasi eksplisit;
+- handle loading, retry, network error, `403`, `409 ONBOARDING_ALREADY_COMPLETED`, dan state `active`;
+- persist draft lokal per organization untuk resume status `in_progress`; draft tidak disimpan di organization dan dihapus setelah finalisasi berhasil;
+- jangan memanggil `POST /setup` saat halaman baru dibuka; panggil setelah `start` atau saat memulihkan sesi `in_progress`, dengan cutover/timezone yang sedang dipakai;
+- gunakan pagination inventory preview dan load-more untuk candidate product/variant;
+- tampilkan mapping marketplace per provider untuk receivable, released balance, dan fee, bukan hanya satu mapping scalar;
+- sediakan metadata counterparty, due date, dan description pada opening adjustment agar kewajiban non-supplier tetap dapat dilacak sejak opening;
+- setelah accounting active, cegah akses ulang ke wizard dan arahkan user ke accounting desk;
+- tambahkan contract/component test untuk state lifecycle, preview, blocker, retry, dan finalization success;
+- verifikasi browser untuk timezone selector, candidate selection, zero-stock item/mapping, positive-stock opening journal, multi-bank account, adjustment line, dan redirect setelah active.
+
+**Acceptance criteria:** wizard menampilkan data organization yang sebenarnya, tidak ada candidate/saldo hardcoded, preview dan blocker berasal dari backend, finalisasi mengaktifkan accounting satu kali secara atomik, refresh tidak mengulang onboarding, dan organization `active` tidak dapat membuka wizard lagi.
+
 ## 6. Kontrak API dan service boundary
 
 Route harus tipis. Business rule berada di service berikut:
@@ -445,13 +507,14 @@ Urutan dependency:
 8. Phase 7 — expense.
 9. Phase 8 — reconstruction permission boundary.
 10. Phase 9 — clean-start test, reconciliation, dan hardening.
+11. Phase 10 — integrasi UI onboarding dan contract/component test.
 
 Phase 6 tidak boleh dikerjakan sebelum Phase 2–5 selesai karena order membutuhkan account mapping, period, active state, inventory baseline, dan cutover semantics.
 
 ## 9. Hal yang tidak termasuk implementasi backend phase ini
 
 - Menggabungkan accounting onboarding dengan organization/store creation.
-- Full UI reconstruction.
+- Visual redesign UI onboarding di luar kebutuhan integrasi contract backend.
 - Full payable/loan subledger dengan aging dan installment schedule.
 - Bank statement import dan automatic reconciliation penuh.
 - FIFO/average-cost engine lengkap jika valuation saat ini belum mendukungnya.
@@ -472,4 +535,5 @@ Backend dianggap siap ketika:
 - posted accounting data immutable dan koreksi dilakukan lewat reversal;
 - reconstruction terpisah, owner-only secara default, dan memiliki audit trail;
 - timezone, period, cutover, dan report menggunakan calendar yang konsisten;
+- wizard UI onboarding terhubung ke lifecycle, preview, dan finalization backend; contract/component test masih menjadi follow-up;
 - clean-start verification dan reconciliation report tersedia sebelum deployment production.

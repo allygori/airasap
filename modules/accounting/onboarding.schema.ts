@@ -80,6 +80,9 @@ export const AccountingOnboardingFinalizeSchema = z.object({
     .array(OpeningBalanceLineSchema)
     .min(2)
     .optional(),
+  opening_balance_adjustments: z
+    .array(OpeningBalanceLineSchema)
+    .optional(),
   account_mappings:
     AccountingOnboardingAccountMappingsSchema,
 });
