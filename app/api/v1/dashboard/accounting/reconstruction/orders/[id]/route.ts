@@ -16,7 +16,58 @@ const ParamsSchema = z.object({
 
 const BodySchema = z.object({
   location_id: z.string().optional(),
+  confirm: z.literal(true),
 });
+
+const handleError = (error: unknown) => {
+  if (error instanceof AccountingDomainError) {
+    const status =
+      error.code === 'ACCOUNTING_OWNER_REQUIRED'
+        ? 403
+        : error.code === 'ORDER_NOT_FOUND'
+          ? 404
+          : error.code ===
+              'RECONSTRUCTION_CONFIRMATION_REQUIRED'
+            ? 400
+            : 422;
+    return apiError(error.code, error.message, status);
+  }
+  console.error('[reconstruction order accounting]', error);
+  return apiError(
+    ErrorCodes.INTERNAL_ERROR,
+    error instanceof Error
+      ? error.message
+      : 'Gagal melakukan reconstruction order.',
+    500
+  );
+};
+
+export const GET = withValidation(
+  { params: ParamsSchema },
+  async (_request, context) => {
+    try {
+      const tenantContext = await getTenantContext();
+      if (!tenantContext.organizationId) {
+        return apiError(
+          ErrorCodes.FORBIDDEN,
+          'Organization ID tidak ditemukan.',
+          403
+        );
+      }
+      await db.connect();
+      const params = context.validatedParams as z.infer<
+        typeof ParamsSchema
+      >;
+      const result =
+        await new AccountingReconstructionService(
+          tenantContext
+        ).previewOrder(params.id);
+      return apiSuccess(result);
+    } catch (error) {
+      return handleError(error);
+    }
+  }
+);
 
 export const POST = withValidation(
   {
@@ -46,26 +97,7 @@ export const POST = withValidation(
         ).reconstructOrder(params.id, body);
       return apiSuccess(result, undefined, 201);
     } catch (error) {
-      if (error instanceof AccountingDomainError) {
-        const status =
-          error.code === 'ACCOUNTING_OWNER_REQUIRED'
-            ? 403
-            : error.code === 'ORDER_NOT_FOUND'
-              ? 404
-              : 422;
-        return apiError(error.code, error.message, status);
-      }
-      console.error(
-        '[POST /api/v1/dashboard/accounting/reconstruction/orders/[id]]',
-        error
-      );
-      return apiError(
-        ErrorCodes.INTERNAL_ERROR,
-        error instanceof Error
-          ? error.message
-          : 'Gagal melakukan reconstruction order.',
-        500
-      );
+      return handleError(error);
     }
   }
 );

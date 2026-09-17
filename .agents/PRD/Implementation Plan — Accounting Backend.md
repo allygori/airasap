@@ -16,14 +16,14 @@ Sudah diimplementasikan pada batch ini:
 - accounting calendar timezone, cutover lokal, period boundary, dan report period berbasis timezone accounting;
 - opening balance aggregate, inventory opening movement, product/variant mapping, stok awal `0`, stok positif, dan balancing equity;
 - guard cutover untuk order/expense/settlement, status blocked/retry metadata, marketplace funds release ke receivable/balance marketplace, payout ke rekening bank, fee mapping, serta batch retry order;
-- reconstruction order terpisah dengan default permission owner.
+- reconstruction order terpisah dengan default permission owner, preview, dan konfirmasi eksplisit;
+- preview read-only inventory/opening balance sebelum finalisasi, reconciliation filter per platform/file, summary per sumber import, dan index query settlement.
 
 
 Masih menjadi follow-up phase berikutnya:
 
-- inventory/opening preview API dan readiness report yang lebih detail;
-- fee reconciliation dan settlement reconciliation yang lebih lengkap;
-- migration/readiness command untuk data lama, integration test Mongo transaction, serta verifikasi adapter Better Auth;
+- auto-match settlement multi-order dan reconciliation repair workflow;
+- clean-start verification, integration test Mongo transaction, serta verifikasi adapter Better Auth;
 - audit/reconciliation report dan hardening concurrency pada seluruh import pipeline.
 
 ## 1. Keputusan arsitektur yang dipakai
@@ -223,7 +223,7 @@ Jika data movement lama reliable, sistem boleh mengusulkan saldo dari data terse
 
 ## 5. Phase implementasi
 
-### Phase 0 — Contract, migration safety, dan observability
+### Phase 0 — Contract, transaction safety, dan observability
 
 **Tujuan:** menyiapkan fondasi sehingga perubahan domain tidak menghasilkan data partial.
 
@@ -234,10 +234,10 @@ Pekerjaan:
 - pastikan semua aggregate memiliki idempotency key dan audit event;
 - standardisasi helper transaction/session berbasis Mongoose;
 - pastikan environment Mongo mendukung transaction, atau dokumentasikan fallback reconciliation jika tidak;
-- buat migration/readiness report untuk organization lama, account, period, movement, order, settlement, dan expense;
+- siapkan clean-start/reset verification untuk database development tanpa mempertahankan data lama;
 - perbaiki timezone constant sebelum digunakan dalam period calculation.
 
-**Acceptance criteria:** migration dapat dijalankan read-only, tidak mengubah data, dan memberi daftar conflict yang dapat ditindaklanjuti.
+**Acceptance criteria:** database kosong dapat menjalankan seed/bootstrap dan onboarding tanpa data partial yang tersembunyi.
 
 ### Phase 1 — Organization accounting lifecycle dan module guard
 
@@ -263,7 +263,7 @@ Pekerjaan:
 
 **Acceptance criteria:** organization active hanya setelah finalization berhasil penuh; refresh/retry tidak membuat onboarding kedua; semua operational accounting route menolak organization non-active dengan error stabil.
 
-### Phase 2 — CoA, account resolver, dan seed migration
+### Phase 2 — CoA, account resolver, dan seed/mapping
 
 **Target area:** `modules/accounting/accounts`, account seed, organization mappings, expense/inventory/order/settlement services.
 
@@ -273,7 +273,7 @@ Pekerjaan:
 - tambahkan metadata rekening opsional dan validasinya;
 - buat `AccountingAccountResolver` untuk logical roles dan platform/provider;
 - ubah order, inventory, settlement, expense, opening balance, dan manual journal agar memakai account `_id` hasil resolver;
-- migrasikan referensi lama berbasis code ke account `_id` tanpa mengubah journal historis;
+- gunakan referensi account `_id` untuk seluruh posting baru; tidak ada migrasi data historis yang diperlukan pada clean-start development;
 - validasi parent account tidak postable dan child account postable;
 - pastikan account mapping onboarding tidak dapat memilih inactive/non-postable/wrong-type account.
 
@@ -374,19 +374,18 @@ Pekerjaan:
 
 - buat service terpisah dari onboarding untuk order historis, opening correction, atau journal reconstruction;
 - default hanya owner; gunakan capability name yang dapat dipetakan ke role/permission di masa depan;
-- require explicit date range, source selection, preview, dan confirmation;
+- require explicit preview dan confirmation sebelum posting; date range/source selection untuk batch reconstruction tetap menjadi follow-up.
 - tandai semua reconstructed journal dengan source type/event khusus dan audit actor;
 - cegah reconstruction mengubah cutover atau mengedit posted journal;
 - sediakan idempotency dan reversal path.
 
 **Acceptance criteria:** user biasa tidak dapat menjalankan reconstruction; reconstruction tidak membuka onboarding lagi; hasilnya dapat dibedakan dan diaudit dari posting operasional normal.
 
-### Phase 9 — Test, migration, dan hardening
+### Phase 9 — Test dan hardening
 
 Pekerjaan:
 
-- migration untuk organization lama: default `not_started`, tanpa mengubah data accounting existing;
-- migration account/reference lama ke resolver dan `_id`;
+- clean-start test: reset database development, seed CoA, import products, onboarding, import orders, enrich, lalu retry posting;
 - reconciliation report untuk journal, movement, order, settlement, expense, dan source references;
 - integration test Mongo dengan transaction dan duplicate request;
 - contract test untuk Better Auth organization read/update;
@@ -436,7 +435,7 @@ Gunakan Mongo `ClientSession` untuk aggregate yang harus atomik. Jika transaksi 
 
 Urutan dependency:
 
-1. Phase 0 — contract dan migration safety.
+1. Phase 0 — contract dan transaction safety.
 2. Phase 1 — organization lifecycle dan module guard.
 3. Phase 2 — account resolver dan seed/mapping.
 4. Phase 3 — calendar/period timezone.
@@ -445,7 +444,7 @@ Urutan dependency:
 7. Phase 6 — order serta settlement.
 8. Phase 7 — expense.
 9. Phase 8 — reconstruction permission boundary.
-10. Phase 9 — migration, reconciliation, dan hardening.
+10. Phase 9 — clean-start test, reconciliation, dan hardening.
 
 Phase 6 tidak boleh dikerjakan sebelum Phase 2–5 selesai karena order membutuhkan account mapping, period, active state, inventory baseline, dan cutover semantics.
 
@@ -473,4 +472,4 @@ Backend dianggap siap ketika:
 - posted accounting data immutable dan koreksi dilakukan lewat reversal;
 - reconstruction terpisah, owner-only secara default, dan memiliki audit trail;
 - timezone, period, cutover, dan report menggunakan calendar yang konsisten;
-- migration dan reconciliation report tersedia sebelum data lama diperlakukan sebagai authoritative.
+- clean-start verification dan reconciliation report tersedia sebelum deployment production.

@@ -13,7 +13,10 @@ import {
 import { createAuditLog } from '../audit/audit-log.model';
 import { assertAccountingModuleActive } from '../accounting-module.guard';
 import { AccountingAccountResolver } from '../accounts/account-resolver.service';
-import { SettlementRepository } from './settlement.repository';
+import {
+  SettlementRepository,
+  type SettlementReconciliationFilter,
+} from './settlement.repository';
 import { OrderRepository } from '@/modules/orders/order.repository';
 import { StoreRepository } from '@/modules/stores/store.repository';
 
@@ -40,6 +43,12 @@ export type RecordPayoutInput = {
   source_file?: string;
   session?: ClientSession;
 };
+
+export type SettlementReconciliationQuery =
+  SettlementReconciliationFilter & {
+    page?: number;
+    limit?: number;
+  };
 
 type FeeDefinition = {
   field: string;
@@ -713,6 +722,43 @@ export class MarketplaceSettlementService {
       status: 'posted' as const,
       journal_entry_id: String(journalEntry._id),
     };
+  }
+
+  async getReconciliation(
+    input: SettlementReconciliationQuery = {}
+  ) {
+    await assertAccountingModuleActive(this.context);
+    const page = input.page ?? 1;
+    const limit = input.limit ?? 25;
+    if (
+      !Number.isInteger(page) ||
+      page < 1 ||
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 100
+    ) {
+      throw new AccountingDomainError(
+        'Pagination reconciliation settlement tidak valid.',
+        'SETTLEMENT_RECONCILIATION_PAGINATION_INVALID'
+      );
+    }
+
+    return this.repository.findReconciliationPage(
+      {
+        ...(input.status ? { status: input.status } : {}),
+        ...(input.settlement_stage
+          ? { settlement_stage: input.settlement_stage }
+          : {}),
+        ...(input.platform
+          ? { platform: input.platform }
+          : {}),
+        ...(input.source_file
+          ? { source_file: input.source_file }
+          : {}),
+      },
+      page,
+      limit
+    );
   }
 
   private async resolveDestinationAccount(

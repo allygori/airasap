@@ -122,6 +122,300 @@ export class AccountingOnboardingService {
     return this.lifecycle.start();
   }
 
+  async previewInventory(input?: {
+    storeId?: string;
+    limit?: number;
+  }) {
+    await this.lifecycle.assertOwner();
+    const state =
+      await this.lifecycle.assertOnboardingAvailable();
+    const limit = input?.limit ?? 100;
+    if (
+      !Number.isInteger(limit) ||
+      limit < 1 ||
+      limit > 200
+    ) {
+      throw new AccountingDomainError(
+        'Limit preview inventory harus antara 1 sampai 200.',
+        'INVENTORY_PREVIEW_LIMIT_INVALID'
+      );
+    }
+    if (
+      input?.storeId &&
+      !Types.ObjectId.isValid(input.storeId)
+    ) {
+      throw new AccountingDomainError(
+        'Store inventory preview tidak valid.',
+        'INVENTORY_PREVIEW_STORE_INVALID'
+      );
+    }
+
+    const productQuery = ProductModel.find({
+      organization: this.context.organizationId,
+      is_active: true,
+      $or: [
+        { deleted_at: null },
+        { deleted_at: { $exists: false } },
+      ],
+      ...(input?.storeId ? { store: input.storeId } : {}),
+    })
+      .select(
+        '_id store platform name product_id parent_sku variants'
+      )
+      .sort({ created_at: 1, _id: 1 })
+      .limit(limit + 1);
+    const products = await productQuery.lean();
+    const hasMore = products.length > limit;
+    const visibleProducts = products.slice(0, limit);
+    const mappings =
+      visibleProducts.length > 0
+        ? await this.mappingRepository.findActiveByProductIds(
+            visibleProducts.map((product) =>
+              String(product._id)
+            )
+          )
+        : [];
+    const mappingByKey = new Map(
+      mappings.map((mapping) => [
+        `${String(mapping.product)}:${mapping.variant_key}`,
+        mapping,
+      ])
+    );
+
+    const candidates = visibleProducts.flatMap(
+      (product) => {
+        const variants: Array<
+          | {
+              variant_id?: string;
+              child_sku?: string;
+              sku?: string;
+              name?: string;
+              default_cost?: number;
+              costs?: Array<{
+                effective_from?: Date | string | null;
+                cogs_unit?: number;
+              }>;
+            }
+          | undefined
+        > = product.variants?.length
+          ? product.variants
+          : [undefined];
+        return variants.map((variant) => {
+          const variantId = variant?.variant_id;
+          const productKey = String(product._id);
+          const mapping =
+            (variantId
+              ? mappingByKey.get(
+                  `${productKey}:${variantId}`
+                )
+              : undefined) ??
+            mappingByKey.get(`${productKey}:__product__`);
+          const sku =
+            variant?.child_sku ||
+            variant?.sku ||
+            product.parent_sku ||
+            product.product_id;
+          const name = variant
+            ? `${product.name} — ${variant.name}`
+            : product.name;
+          const suggestedUnitCost =
+            this.getSuggestedUnitCost(variant);
+
+          return {
+            product_id: productKey,
+            store_id: String(product.store),
+            platform: product.platform,
+            product_external_id: product.product_id,
+            variant_id: variantId,
+            sku,
+            name,
+            suggested_unit_cost: suggestedUnitCost,
+            default_quantity: 0,
+            mapping_id: mapping
+              ? String(mapping._id)
+              : undefined,
+            inventory_item_id: mapping
+              ? String(mapping.inventory_item)
+              : undefined,
+            mapped: Boolean(mapping),
+          };
+        });
+      }
+    );
+
+    return {
+      state,
+      limit,
+      has_more: hasMore,
+      product_count: visibleProducts.length,
+      candidate_count: candidates.length,
+      mapped_count: candidates.filter(
+        (candidate) => candidate.mapped
+      ).length,
+      unmapped_count: candidates.filter(
+        (candidate) => !candidate.mapped
+      ).length,
+      candidates,
+    };
+  }
+
+  async previewOpeningBalance(input: unknown) {
+    await this.lifecycle.assertOwner();
+    const state =
+      await this.lifecycle.assertOnboardingAvailable();
+    const data =
+      AccountingOnboardingFinalizeSchema.parse(input);
+    const timezone =
+      data.calendar_timezone ??
+      state.calendar_timezone ??
+      'Asia/Jakarta';
+    try {
+      getZonedDateParts(new Date(), timezone);
+    } catch {
+      throw new AccountingDomainError(
+        'Timezone accounting tidak valid.',
+        'ACCOUNTING_TIMEZONE_INVALID'
+      );
+    }
+    const cutoverDate = parseAccountingCalendarDate(
+      data.cutover_date,
+      timezone,
+      'cutover_date'
+    );
+    const period = getPeriodKeyFromDate(
+      cutoverDate,
+      timezone
+    );
+    const blockers: string[] = [];
+    const warnings: string[] = [];
+
+    if (
+      data.inventory_mode === 'aggregate' &&
+      data.inventory_lines.length > 0
+    ) {
+      blockers.push(
+        'Mode aggregate tidak dapat memakai detail inventory.'
+      );
+    }
+    if (
+      data.inventory_mode === 'detailed' &&
+      data.inventory_lines.length > 0 &&
+      data.aggregate_inventory_value !== undefined
+    ) {
+      blockers.push(
+        'Detail inventory tidak dapat digabung dengan nilai aggregate.'
+      );
+    }
+
+    let inventoryValue = 0;
+    for (const [
+      index,
+      line,
+    ] of data.inventory_lines.entries()) {
+      if (line.quantity === 0) continue;
+      if (!line.unit_cost || line.unit_cost <= 0) {
+        blockers.push(
+          `Inventory line ${index + 1} membutuhkan unit cost.`
+        );
+        continue;
+      }
+      inventoryValue += line.quantity * line.unit_cost;
+    }
+
+    const aggregateInventoryValue =
+      data.aggregate_inventory_value ?? 0;
+    const bankValue = data.bank_accounts.reduce(
+      (sum, account) => sum + account.balance,
+      0
+    );
+    const totalAssets =
+      inventoryValue + aggregateInventoryValue + bankValue;
+    const providedDebit =
+      data.opening_balance_lines?.reduce(
+        (sum, line) => sum + line.debit,
+        0
+      ) ?? 0;
+    const providedCredit =
+      data.opening_balance_lines?.reduce(
+        (sum, line) => sum + line.credit,
+        0
+      ) ?? 0;
+    if (
+      data.opening_balance_lines &&
+      providedDebit !== providedCredit
+    ) {
+      blockers.push(
+        'Opening balance lines belum balance antara debit dan credit.'
+      );
+    }
+    if (totalAssets === 0) {
+      warnings.push(
+        'Tidak ada saldo bank atau inventory awal. Accounting tetap dapat diaktifkan tanpa opening journal.'
+      );
+    }
+
+    const inventoryAccount = await this.findPreviewAccount(
+      data.account_mappings?.merchandise_inventory,
+      '1310',
+      ['asset']
+    );
+    const equityAccount = await this.findPreviewAccount(
+      data.account_mappings?.opening_balance_equity,
+      '3110',
+      ['equity']
+    );
+    if (inventoryValue + aggregateInventoryValue > 0) {
+      if (!inventoryAccount) {
+        blockers.push(
+          'Akun inventory belum tersedia atau tidak dapat diposting.'
+        );
+      }
+      if (!equityAccount && !data.opening_balance_lines) {
+        blockers.push(
+          'Akun opening balance equity belum tersedia atau tidak dapat diposting.'
+        );
+      }
+    }
+    if (
+      totalAssets > 0 &&
+      !equityAccount &&
+      !data.opening_balance_lines &&
+      inventoryValue + aggregateInventoryValue === 0
+    ) {
+      blockers.push(
+        'Akun opening balance equity belum tersedia atau tidak dapat diposting.'
+      );
+    }
+
+    return {
+      state,
+      cutover_date: cutoverDate.toISOString(),
+      period,
+      calendar_timezone: timezone,
+      inventory: {
+        detail_value: inventoryValue,
+        aggregate_value: aggregateInventoryValue,
+        total_value:
+          inventoryValue + aggregateInventoryValue,
+        line_count: data.inventory_lines.length,
+      },
+      bank_accounts: {
+        count: data.bank_accounts.length,
+        total_balance: bankValue,
+      },
+      opening_balance: {
+        total_assets: totalAssets,
+        suggested_equity_credit: totalAssets,
+        provided_debit: providedDebit,
+        provided_credit: providedCredit,
+        will_create_journal: totalAssets > 0,
+      },
+      blockers,
+      warnings,
+      can_finalize: blockers.length === 0,
+    };
+  }
+
   async finalize(input: unknown) {
     const data =
       AccountingOnboardingFinalizeSchema.parse(input);
@@ -343,6 +637,63 @@ export class AccountingOnboardingService {
       }
       throw error;
     }
+  }
+
+  private getSuggestedUnitCost(
+    variant:
+      | {
+          default_cost?: number;
+          costs?: Array<{
+            effective_from?: Date | string | null;
+            cogs_unit?: number;
+          }>;
+        }
+      | undefined
+  ) {
+    if (variant?.default_cost !== undefined) {
+      return variant.default_cost;
+    }
+    const costs = [...(variant?.costs ?? [])]
+      .filter(
+        (cost) =>
+          typeof cost.cogs_unit === 'number' &&
+          cost.cogs_unit > 0
+      )
+      .sort((left, right) => {
+        const leftTime = left.effective_from
+          ? new Date(left.effective_from).getTime()
+          : 0;
+        const rightTime = right.effective_from
+          ? new Date(right.effective_from).getTime()
+          : 0;
+        return rightTime - leftTime;
+      });
+    return costs[0]?.cogs_unit;
+  }
+
+  private async findPreviewAccount(
+    configuredId: string | undefined,
+    fallbackCode: string,
+    allowedTypes?: string[]
+  ) {
+    const account = configuredId
+      ? (
+          await this.accountRepository.findByIds([
+            configuredId,
+          ])
+        )[0]
+      : await this.accountRepository.findByCode(
+          fallbackCode
+        );
+    if (
+      !account ||
+      !account.is_active ||
+      !account.is_postable ||
+      (allowedTypes && !allowedTypes.includes(account.type))
+    ) {
+      return null;
+    }
+    return account;
   }
 
   private async prepareInventoryLines(

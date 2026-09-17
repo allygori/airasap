@@ -141,6 +141,14 @@ SettlementSchema.index({
   source_settlement: 1,
   status: 1,
 });
+SettlementSchema.index({
+  organization: 1,
+  source_file: 1,
+  platform: 1,
+  settlement_stage: 1,
+  status: 1,
+  settled_at: -1,
+});
 SettlementSchema.index(
   { organization: 1, idempotency_key: 1 },
   { unique: true }

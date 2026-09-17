@@ -78,6 +78,7 @@ export const AccountingOnboardingFinalizeSchema = z.object({
     .default([]),
   opening_balance_lines: z
     .array(OpeningBalanceLineSchema)
+    .min(2)
     .optional(),
   account_mappings:
     AccountingOnboardingAccountMappingsSchema,

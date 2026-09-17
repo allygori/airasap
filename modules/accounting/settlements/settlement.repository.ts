@@ -5,6 +5,14 @@ import {
   type TSettlement,
 } from './settlement.model';
 import type { AccountingTenantContext } from '../accounting.types';
+import type { OrderPlatform } from '@/constant/order-platform';
+
+export type SettlementReconciliationFilter = {
+  status?: 'draft' | 'posted' | 'blocked' | 'voided';
+  settlement_stage?: 'funds_released' | 'payout_received';
+  platform?: OrderPlatform;
+  source_file?: string;
+};
 
 export class SettlementRepository extends BaseRepository<TSettlement> {
   constructor(context: AccountingTenantContext) {
@@ -65,6 +73,112 @@ export class SettlementRepository extends BaseRepository<TSettlement> {
     if (session) aggregate.session(session);
     const [result] = await aggregate;
     return result?.total ?? 0;
+  }
+
+  async findReconciliationPage(
+    filter: SettlementReconciliationFilter,
+    page: number,
+    limit: number
+  ) {
+    const scopedFilter = {
+      ...this.getTenantFilter(),
+      ...(filter.status ? { status: filter.status } : {}),
+      ...(filter.settlement_stage
+        ? { settlement_stage: filter.settlement_stage }
+        : {}),
+      ...(filter.platform
+        ? { platform: filter.platform }
+        : {}),
+      ...(filter.source_file
+        ? {
+            source_file: new Types.ObjectId(
+              filter.source_file
+            ),
+          }
+        : {}),
+    };
+    const [rows, total] = await Promise.all([
+      this.model
+        .find(scopedFilter)
+        .sort({ settled_at: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+      this.model.countDocuments(scopedFilter),
+    ]);
+
+    const aggregate = this.model.aggregate<{
+      _id: {
+        settlement_stage: string;
+        status: string;
+        reconciliation_status: string;
+        platform: string;
+        source_file?: Types.ObjectId;
+      };
+      count: number;
+      gross_amount: number;
+      fee_amount: number;
+      net_amount: number;
+      reconciliation_difference: number;
+    }>([
+      {
+        $match: {
+          organization: new Types.ObjectId(
+            this.tenantContext.organizationId
+          ),
+          ...(filter.status
+            ? { status: filter.status }
+            : {}),
+          ...(filter.settlement_stage
+            ? { settlement_stage: filter.settlement_stage }
+            : {}),
+          ...(filter.platform
+            ? { platform: filter.platform }
+            : {}),
+          ...(filter.source_file
+            ? {
+                source_file: new Types.ObjectId(
+                  filter.source_file
+                ),
+              }
+            : {}),
+        },
+      },
+      {
+        $group: {
+          _id: {
+            settlement_stage: '$settlement_stage',
+            status: '$status',
+            reconciliation_status: '$reconciliation_status',
+            platform: '$platform',
+            source_file: '$source_file',
+          },
+          count: { $sum: 1 },
+          gross_amount: { $sum: '$gross_amount' },
+          fee_amount: { $sum: '$fee_amount' },
+          net_amount: { $sum: '$net_amount' },
+          reconciliation_difference: {
+            $sum: '$reconciliation_difference',
+          },
+        },
+      },
+      {
+        $sort: {
+          '_id.source_file': 1,
+          '_id.platform': 1,
+          '_id.settlement_stage': 1,
+        },
+      },
+    ]);
+    const summary = await aggregate;
+
+    return {
+      rows,
+      total,
+      page,
+      limit,
+      summary,
+    };
   }
 
   async createSettlement(

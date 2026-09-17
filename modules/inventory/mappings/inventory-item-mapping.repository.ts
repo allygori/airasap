@@ -117,6 +117,19 @@ export class InventoryItemMappingRepository extends BaseRepository<TInventoryIte
     return productQuery.lean();
   }
 
+  async findActiveByProductIds(
+    productIds: string[],
+    session?: ClientSession
+  ) {
+    const query = this.model.find({
+      ...this.getTenantFilter(),
+      product: { $in: productIds },
+      is_active: true,
+    });
+    if (session) query.session(session);
+    return query.lean();
+  }
+
   createMapping(
     data: UpdateQuery<TInventoryItemMapping>,
     session?: ClientSession
