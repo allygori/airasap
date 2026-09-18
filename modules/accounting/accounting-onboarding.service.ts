@@ -128,12 +128,14 @@ export class AccountingOnboardingService {
     storeId?: string;
     offset?: number;
     limit?: number;
+    search?: string;
   }) {
     await this.lifecycle.assertOwner();
     const state =
       await this.lifecycle.assertOnboardingAvailable();
-    const limit = input?.limit ?? 100;
+    const limit = input?.limit ?? 10;
     const offset = input?.offset ?? 0;
+    const search = input?.search?.trim() ?? '';
     if (
       !Number.isInteger(limit) ||
       limit < 1 ||
@@ -173,6 +175,31 @@ export class AccountingOnboardingService {
       ],
       ...(input?.storeId ? { store: input.storeId } : {}),
     };
+    if (search) {
+      const escapedSearch = search.replace(
+        /[.*+?^${}()|[\]\\]/g,
+        '\\$&'
+      );
+      const searchRegex = {
+        $regex: escapedSearch,
+        $options: 'i',
+      };
+      Object.assign(productFilter, {
+        $and: [
+          {
+            $or: [
+              { name: searchRegex },
+              { product_id: searchRegex },
+              { parent_sku: searchRegex },
+              { 'variants.name': searchRegex },
+              { 'variants.variant_id': searchRegex },
+              { 'variants.child_sku': searchRegex },
+              { 'variants.sku': searchRegex },
+            ],
+          },
+        ],
+      });
+    }
     const productQuery = ProductModel.find(productFilter)
       .select(
         '_id store platform name product_id parent_sku variants'
@@ -203,8 +230,22 @@ export class AccountingOnboardingService {
       ])
     );
 
+    const normalizedSearch = search.toLowerCase();
     const candidates = visibleProducts.flatMap(
       (product) => {
+        const productMatches = normalizedSearch
+          ? [
+              product.name,
+              product.product_id,
+              product.parent_sku,
+            ]
+              .filter(Boolean)
+              .some((value) =>
+                String(value)
+                  .toLowerCase()
+                  .includes(normalizedSearch)
+              )
+          : true;
         const variants: Array<
           | {
               variant_id?: string;
@@ -221,46 +262,63 @@ export class AccountingOnboardingService {
         > = product.variants?.length
           ? product.variants
           : [undefined];
-        return variants.map((variant) => {
-          const variantId = variant?.variant_id;
-          const productKey = String(product._id);
-          const mapping =
-            (variantId
-              ? mappingByKey.get(
-                  `${productKey}:${variantId}`
-                )
-              : undefined) ??
-            mappingByKey.get(`${productKey}:__product__`);
-          const sku =
-            variant?.child_sku ||
-            variant?.sku ||
-            product.parent_sku ||
-            product.product_id;
-          const name = variant
-            ? `${product.name} — ${variant.name}`
-            : product.name;
-          const suggestedUnitCost =
-            this.getSuggestedUnitCost(variant);
+        return variants
+          .filter((variant) => {
+            if (!normalizedSearch || productMatches)
+              return true;
+            return [
+              variant?.name,
+              variant?.variant_id,
+              variant?.child_sku,
+              variant?.sku,
+            ]
+              .filter(Boolean)
+              .some((value) =>
+                String(value)
+                  .toLowerCase()
+                  .includes(normalizedSearch)
+              );
+          })
+          .map((variant) => {
+            const variantId = variant?.variant_id;
+            const productKey = String(product._id);
+            const mapping =
+              (variantId
+                ? mappingByKey.get(
+                    `${productKey}:${variantId}`
+                  )
+                : undefined) ??
+              mappingByKey.get(`${productKey}:__product__`);
+            const sku =
+              variant?.child_sku ||
+              variant?.sku ||
+              product.parent_sku ||
+              product.product_id;
+            const name = variant
+              ? `${product.name} — ${variant.name}`
+              : product.name;
+            const suggestedUnitCost =
+              this.getSuggestedUnitCost(variant);
 
-          return {
-            product_id: productKey,
-            store_id: String(product.store),
-            platform: product.platform,
-            product_external_id: product.product_id,
-            variant_id: variantId,
-            sku,
-            name,
-            suggested_unit_cost: suggestedUnitCost,
-            default_quantity: 0,
-            mapping_id: mapping
-              ? String(mapping._id)
-              : undefined,
-            inventory_item_id: mapping
-              ? String(mapping.inventory_item)
-              : undefined,
-            mapped: Boolean(mapping),
-          };
-        });
+            return {
+              product_id: productKey,
+              store_id: String(product.store),
+              platform: product.platform,
+              product_external_id: product.product_id,
+              variant_id: variantId,
+              sku,
+              name,
+              suggested_unit_cost: suggestedUnitCost,
+              default_quantity: 0,
+              mapping_id: mapping
+                ? String(mapping._id)
+                : undefined,
+              inventory_item_id: mapping
+                ? String(mapping.inventory_item)
+                : undefined,
+              mapped: Boolean(mapping),
+            };
+          });
       }
     );
 
@@ -268,6 +326,7 @@ export class AccountingOnboardingService {
       state,
       offset,
       limit,
+      search,
       has_more: hasMore,
       next_offset: hasMore
         ? offset + visibleProducts.length

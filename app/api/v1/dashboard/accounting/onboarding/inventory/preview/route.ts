@@ -23,7 +23,8 @@ const QuerySchema = z.object({
     .int()
     .min(1)
     .max(200)
-    .default(100),
+    .default(10),
+  search: z.string().trim().max(120).default(''),
 });
 
 export const GET = withValidation(
@@ -48,6 +49,7 @@ export const GET = withValidation(
         storeId: query.store_id,
         offset: query.offset,
         limit: query.limit,
+        search: query.search,
       });
       return apiSuccess(result);
     } catch (error) {

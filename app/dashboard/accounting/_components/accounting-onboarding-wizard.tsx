@@ -39,6 +39,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardAction,
@@ -255,6 +256,7 @@ type InventoryPreview = {
   mapped_count: number;
   unmapped_count: number;
   candidates: InventoryCandidate[];
+  search?: string;
 };
 
 type OpeningPreview = {
@@ -590,6 +592,10 @@ export default function AccountingOnboardingWizard() {
   const [isAccountDialogOpen, setIsAccountDialogOpen] =
     useState(false);
   const [isInventoryDialogOpen, setIsInventoryDialogOpen] =
+    useState(false);
+  const [candidateSearch, setCandidateSearch] =
+    useState('');
+  const [hasSearchedCandidates, setHasSearchedCandidates] =
     useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<
@@ -939,44 +945,26 @@ export default function AccountingOnboardingWizard() {
 
   async function loadInventoryPreview(options?: {
     append?: boolean;
+    offset?: number;
+    search?: string;
   }) {
     const append = options?.append ?? false;
     const offset = append
       ? (inventoryPreview?.next_offset ?? 0)
-      : 0;
+      : (options?.offset ?? 0);
+    const search = options?.search ?? candidateSearch;
     setIsLoadingInventoryPreview(true);
     try {
       const query = new URLSearchParams({
         offset: String(offset),
-        limit: '100',
+        limit: '10',
+        search,
       });
       const preview = await requestJson<InventoryPreview>(
         '/api/v1/dashboard/accounting/onboarding/inventory/preview?' +
           query.toString()
       );
-      setInventoryPreview((current) =>
-        append && current
-          ? {
-              ...preview,
-              candidates: [
-                ...current.candidates,
-                ...preview.candidates,
-              ],
-              offset: current.offset,
-              product_count:
-                current.product_count +
-                preview.product_count,
-              candidate_count:
-                current.candidate_count +
-                preview.candidate_count,
-              mapped_count:
-                current.mapped_count + preview.mapped_count,
-              unmapped_count:
-                current.unmapped_count +
-                preview.unmapped_count,
-            }
-          : preview
-      );
+      setInventoryPreview(preview);
       return preview;
     } finally {
       setIsLoadingInventoryPreview(false);
@@ -1120,6 +1108,31 @@ export default function AccountingOnboardingWizard() {
     // The initial request intentionally runs once for the current organization.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (
+      !isInventoryDialogOpen ||
+      !hasSearchedCandidates ||
+      onboarding?.state.status !== 'in_progress'
+    ) {
+      return;
+    }
+    const timeout = window.setTimeout(() => {
+      void loadInventoryPreview({
+        offset: 0,
+        search: candidateSearch,
+      }).catch(handleApiError);
+    }, 300);
+    return () => window.clearTimeout(timeout);
+    // The request helpers are intentionally kept local to the wizard; this effect
+    // should only restart when the dialog/search state changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    candidateSearch,
+    hasSearchedCandidates,
+    isInventoryDialogOpen,
+    onboarding?.state.status,
+  ]);
 
   useEffect(() => {
     if (
@@ -1589,6 +1602,22 @@ export default function AccountingOnboardingWizard() {
                     <FieldLegend variant="label">
                       Product dan variant
                     </FieldLegend>
+                    <Input
+                      value={candidateSearch}
+                      onChange={(event) => {
+                        setCandidateSearch(
+                          event.target.value
+                        );
+                        setHasSearchedCandidates(true);
+                      }}
+                      placeholder="Cari nama, product ID, SKU, variant name, atau variant ID"
+                      aria-label="Cari candidate product"
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Menampilkan 10 candidate per halaman.
+                      Pencarian mencakup product dan
+                      variant.
+                    </p>
                     <div className="flex max-h-[55vh] flex-col gap-3 overflow-y-auto pr-1">
                       {candidates.length === 0 ? (
                         <Alert>
@@ -1657,27 +1686,59 @@ export default function AccountingOnboardingWizard() {
                     </div>
                   </FieldSet>
                   <DialogFooter className="flex-wrap justify-between gap-2">
-                    {inventoryPreview?.has_more ? (
+                    <div className="flex items-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
+                        size="sm"
+                        disabled={
+                          isLoadingInventoryPreview ||
+                          (inventoryPreview?.offset ??
+                            0) === 0
+                        }
                         onClick={() =>
                           void loadInventoryPreview({
-                            append: true,
+                            offset: Math.max(
+                              0,
+                              (inventoryPreview?.offset ??
+                                0) - 10
+                            ),
+                            search: candidateSearch,
                           }).catch(handleApiError)
                         }
-                        disabled={isLoadingInventoryPreview}
                       >
-                        {isLoadingInventoryPreview ? (
-                          <Spinner data-icon="inline-start" />
-                        ) : null}
-                        Muat candidate berikutnya
+                        Sebelumnya
                       </Button>
-                    ) : (
                       <span className="text-muted-foreground text-xs">
-                        Semua product aktif sudah dimuat.
+                        Halaman{' '}
+                        {Math.floor(
+                          (inventoryPreview?.offset ?? 0) /
+                            10
+                        ) + 1}
                       </span>
-                    )}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={
+                          isLoadingInventoryPreview ||
+                          !inventoryPreview?.has_more
+                        }
+                        onClick={() =>
+                          void loadInventoryPreview({
+                            offset:
+                              inventoryPreview?.next_offset ??
+                              0,
+                            search: candidateSearch,
+                          }).catch(handleApiError)
+                        }
+                      >
+                        Berikutnya
+                        {isLoadingInventoryPreview ? (
+                          <Spinner data-icon="inline-end" />
+                        ) : null}
+                      </Button>
+                    </div>
                     <DialogClose
                       render={
                         <Button
