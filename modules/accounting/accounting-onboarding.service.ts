@@ -588,7 +588,7 @@ export class AccountingOnboardingService {
     const session = await mongoose.startSession();
 
     try {
-      return await session.withTransaction(async () => {
+      const finalizeWork = async () => {
         const transactionState =
           await this.lifecycle.getState(session);
         if (transactionState.status === 'active') {
@@ -712,7 +712,22 @@ export class AccountingOnboardingService {
           ),
           reused: false,
         };
-      });
+      };
+
+      // MongoDB standalone deployments do not support multi-document
+      // transactions. Keep the same session-aware workflow for local/dev
+      // environments, while retaining atomic transactions on replica sets
+      // and sharded deployments.
+      const hello = await mongoose.connection.db
+        ?.admin()
+        .command({ hello: 1 });
+      const supportsTransactions = Boolean(
+        hello?.setName || hello?.msg === 'isdbgrid'
+      );
+
+      return supportsTransactions
+        ? await session.withTransaction(finalizeWork)
+        : await finalizeWork();
     } finally {
       await session.endSession();
     }
