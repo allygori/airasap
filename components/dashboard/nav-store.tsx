@@ -23,7 +23,7 @@ import {
 import Link from 'next/link';
 import { cn } from '@/lib/utils/ui';
 
-export function NavMain2({
+export function NavStore({
   items,
 }: {
   items: {
@@ -39,7 +39,7 @@ export function NavMain2({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Store</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item, idx) => {
           return (item.items || []).length === 0 ? (

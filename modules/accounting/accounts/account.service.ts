@@ -39,6 +39,39 @@ export class AccountingAccountService {
     return this.repository.findByCode(code, session);
   }
 
+  async updateDetails(
+    id: string,
+    data: { name: string; description: string | null }
+  ) {
+    const account = await this.repository.findById(id);
+
+    if (!account) {
+      throw new AccountingDomainError(
+        'Account tidak ditemukan.',
+        'ACCOUNT_NOT_FOUND'
+      );
+    }
+
+    if (account.is_system) {
+      throw new AccountingDomainError(
+        'System account tidak dapat diubah.',
+        'SYSTEM_ACCOUNT_READ_ONLY'
+      );
+    }
+
+    const updated =
+      await this.repository.updateAccountDetails(id, data);
+
+    if (!updated) {
+      throw new AccountingDomainError(
+        'Account tidak dapat diubah.',
+        'ACCOUNT_UPDATE_FAILED'
+      );
+    }
+
+    return updated;
+  }
+
   async seedDefaultAccounts(session?: ClientSession) {
     const seed = accountSeed as SeedJson;
     const accountsByCode = new Map<

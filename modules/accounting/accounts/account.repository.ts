@@ -66,6 +66,26 @@ export class AccountingAccountRepository extends BaseRepository<TAccountingAccou
     return query.lean();
   }
 
+  async updateAccountDetails(
+    id: string,
+    data: { name: string; description: string | null }
+  ) {
+    return this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          _id: id,
+          is_system: false,
+        },
+        { $set: data },
+        {
+          returnDocument: 'after',
+          runValidators: true,
+        }
+      )
+      .lean();
+  }
+
   async upsertSeedAccount(
     record: SeedAccountRecord,
     parentAccount: TAccountingAccount['_id'] | null,

@@ -28,17 +28,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { NavDocuments } from '@/components/dashboard/nav-documents';
-import { NavMain } from '@/components/dashboard/nav-main';
-import { NavSecondary } from '@/components/dashboard/nav-secondary';
+import { NavOrganization } from '@/components/dashboard/nav-organization';
+// import { NavMain } from '@/components/dashboard/nav-main';
+// import { NavSecondary } from '@/components/dashboard/nav-secondary';
 import { NavUser } from '@/components/dashboard/nav-user';
 import {
   mainNav,
   documentsNav,
+  organizationNav,
   secondaryNav,
 } from '@/constant/menu';
 import { useSession } from '@/lib/auth/auth-client';
-import { NavMain2 } from './nav-main-2';
+import { NavStore } from './nav-store';
 
 export function AppSidebar({
   ...props
@@ -64,9 +65,9 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         {/* <NavMain items={mainNav} /> */}
-        <NavMain2 items={mainNav} />
-        {(documentsNav || []).length > 0 && (
-          <NavDocuments items={documentsNav} />
+        <NavStore items={mainNav} />
+        {(organizationNav || []).length > 0 && (
+          <NavOrganization items={organizationNav} />
         )}
         {/* <NavSecondary items={secondaryNav} className="mt-auto" /> */}
       </SidebarContent>

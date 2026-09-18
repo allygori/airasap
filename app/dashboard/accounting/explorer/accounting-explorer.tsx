@@ -271,7 +271,7 @@ export default function AccountingExplorer({
       view === 'journal-entries' ||
       view === 'ledger'
     ) {
-      router.push(`/dashboard/accounting/${view}`);
+      router.push(`/dashboard/accounting/explorer/${view}`);
     }
   };
 

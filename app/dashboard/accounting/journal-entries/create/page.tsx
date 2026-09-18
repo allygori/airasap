@@ -143,7 +143,7 @@ export default function CreateManualJournalPage() {
         }
         toast.success('Manual journal berhasil diposting.');
         router.push(
-          '/dashboard/accounting/journal-entries'
+          '/dashboard/accounting/explorer/journal-entries'
         );
         router.refresh();
       } catch (error) {

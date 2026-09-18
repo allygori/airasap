@@ -44,6 +44,13 @@ export const CreateAccountSchema = AccountBaseSchema;
 export const UpdateAccountSchema =
   AccountBaseSchema.partial();
 
+export const UpdateAccountDetailsSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    description: z.string().trim().max(500).nullable(),
+  })
+  .strict();
+
 export const AccountResponseSchema =
   AccountBaseSchema.extend({
     _id: z.string(),

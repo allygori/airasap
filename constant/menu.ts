@@ -38,64 +38,64 @@ export const mainNav = [
     url: '/dashboard/orders',
     icon: ShoppingBagIcon,
   },
-  {
-    title: 'Accounting',
-    url: '/dashboard/accounting',
-    icon: Landmark,
-    items: [
-      {
-        title: 'Finance Desk',
-        url: '/dashboard/accounting',
-      },
-      {
-        title: 'Accounting Onboarding',
-        url: '/dashboard/accounting/onboarding',
-      },
-      {
-        title: 'Accounting Widgets',
-        url: '/dashboard/accounting/widgets',
-      },
-      {
-        title: 'Financial Reports',
-        url: '/dashboard/accounting/reports',
-      },
-      {
-        title: 'Chart of Accounts',
-        url: '/dashboard/accounting/accounts',
-      },
-      {
-        title: 'Journal Entries',
-        url: '/dashboard/accounting/journal-entries',
-      },
-      {
-        title: 'General Ledger',
-        url: '/dashboard/accounting/ledger',
-      },
-    ],
-  },
-  {
-    title: 'Inventory',
-    url: '/dashboard/inventory',
-    icon: Boxes,
-    items: [
-      {
-        title: 'Inventory Items',
-        url: '/dashboard/inventory/items',
-      },
-      {
-        title: 'Locations',
-        url: '/dashboard/inventory/locations',
-      },
-      {
-        title: 'Product Mappings',
-        url: '/dashboard/inventory/mappings',
-      },
-      {
-        title: 'Movements',
-        url: '/dashboard/inventory/movements',
-      },
-    ],
-  },
+  // {
+  //   title: 'Accounting',
+  //   url: '/dashboard/accounting',
+  //   icon: Landmark,
+  //   items: [
+  //     {
+  //       title: 'Finance Desk',
+  //       url: '/dashboard/accounting',
+  //     },
+  //     {
+  //       title: 'Accounting Onboarding',
+  //       url: '/dashboard/accounting/onboarding',
+  //     },
+  //     {
+  //       title: 'Accounting Widgets',
+  //       url: '/dashboard/accounting/widgets',
+  //     },
+  //     {
+  //       title: 'Financial Reports',
+  //       url: '/dashboard/accounting/reports',
+  //     },
+  //     {
+  //       title: 'Chart of Accounts',
+  //       url: '/dashboard/accounting/explorer/accounts',
+  //     },
+  //     {
+  //       title: 'Journal Entries',
+  //       url: '/dashboard/accounting/explorer/journal-entries',
+  //     },
+  //     {
+  //       title: 'General Ledger',
+  //       url: '/dashboard/accounting/explorer/ledger',
+  //     },
+  //   ],
+  // },
+  // {
+  //   title: 'Inventory',
+  //   url: '/dashboard/inventory',
+  //   icon: Boxes,
+  //   items: [
+  //     {
+  //       title: 'Inventory Items',
+  //       url: '/dashboard/inventory/items',
+  //     },
+  //     {
+  //       title: 'Locations',
+  //       url: '/dashboard/inventory/locations',
+  //     },
+  //     {
+  //       title: 'Product Mappings',
+  //       url: '/dashboard/inventory/mappings',
+  //     },
+  //     {
+  //       title: 'Movements',
+  //       url: '/dashboard/inventory/movements',
+  //     },
+  //   ],
+  // },
   {
     title: 'Reports',
     url: '/dashboard/reports',
@@ -260,4 +260,92 @@ export const documentsNav = [
   //   url: "#",
   //   icon: FileText,
   // },
+];
+
+export const organizationNav = [
+  {
+    title: 'Accounting',
+    // url: '/dashboard/accounting',
+    icon: Landmark,
+    defaultOpen: true,
+    items: [
+      {
+        title: 'Finance Desk',
+        url: '/dashboard/accounting',
+      },
+      {
+        title: 'Accounting Onboarding',
+        url: '/dashboard/accounting/onboarding',
+      },
+      {
+        title: 'Accounting Widgets',
+        url: '/dashboard/accounting/widgets',
+      },
+      {
+        title: 'Chart of Accounts',
+        url: '/dashboard/accounting/accounts',
+      },
+      {
+        title: 'Journal Entries',
+        url: '/dashboard/accounting/journal-entries',
+      },
+      {
+        title: 'General Ledger',
+        url: '/dashboard/accounting/ledger',
+      },
+      {
+        title: 'Financial Reports',
+        url: '/dashboard/accounting/reports',
+      },
+      {
+        title: 'Accounting Explorer',
+        // url: '/dashboard/accounting/explorer/accounts',
+        defaultOpen: true,
+        items: [
+          {
+            title: 'Chart of Accounts',
+            url: '/dashboard/accounting/explorer/accounts',
+          },
+          {
+            title: 'Journal Entries',
+            url: '/dashboard/accounting/explorer/journal-entries',
+          },
+          {
+            title: 'General Ledger',
+            url: '/dashboard/accounting/explorer/ledger',
+          },
+        ],
+      },
+    ],
+  },
+  {
+    title: 'Inventory',
+    // url: '/dashboard/inventory',
+    icon: Boxes,
+    defaultOpen: false,
+    items: [
+      {
+        title: 'Inventory Items',
+        url: '/dashboard/inventory/items',
+      },
+      {
+        title: 'Locations',
+        url: '/dashboard/inventory/locations',
+      },
+      {
+        title: 'Product Mappings',
+        url: '/dashboard/inventory/mappings',
+      },
+      {
+        title: 'Movements',
+        url: '/dashboard/inventory/movements',
+      },
+    ],
+  },
+  {
+    title: 'Storage',
+    url: '/dashboard/media',
+    icon: Database,
+    items: [],
+  },
 ];
