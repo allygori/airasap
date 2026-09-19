@@ -171,9 +171,9 @@ export const ManualJournalForm = withForm({
                 <form.AppField
                   name="transaction_date"
                   children={(field) => (
-                    <field.TextField
+                    <field.DateField
                       label="Tanggal transaksi"
-                      type="date"
+                      granularity="date"
                     />
                   )}
                 />
@@ -235,7 +235,10 @@ export const ManualJournalForm = withForm({
               </Button>
             ) : null}
             <form.AppForm>
-              <form.SubmitButton text="Post manual journal" />
+              <form.SubmitButton
+                text="Post manual journal"
+                className="w-full sm:w-auto"
+              />
             </form.AppForm>
           </CardFooter>
         </Card>

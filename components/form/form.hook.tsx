@@ -49,6 +49,11 @@ const DateTimeField = lazy(() =>
     default: m.DateTimeField,
   }))
 );
+const DateField = lazy(() =>
+  import('./fields/date').then((m) => ({
+    default: m.DateField,
+  }))
+);
 const DateRangePresetsField = lazy(() =>
   import('./fields/date-range-presets').then((m) => ({
     default: m.DateRangePresetsField,
@@ -86,6 +91,7 @@ export const { useAppForm, withForm, withFieldGroup } =
       SwitchField,
       SelectField,
       MultiselectField,
+      DateField,
       DateTimeField,
       DateRangePresetsField,
       MoneyField,
