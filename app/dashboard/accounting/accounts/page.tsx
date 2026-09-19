@@ -326,7 +326,7 @@ function AccountTreeNode({
               size="icon-xs"
               type="button"
               aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${node.name}`}
-              className="text-muted-foreground shrink-0"
+              className="text-muted-foreground shrink-0 cursor-pointer"
             />
           }
         >
@@ -414,7 +414,10 @@ function AccountTreeNode({
             ? 'System account tidak dapat diubah'
             : 'Edit account'
         }
-        className="text-muted-foreground shrink-0"
+        className={cn(
+          'text-muted-foreground shrink-0',
+          node.is_system ? '' : 'cursor-pointer'
+        )}
       >
         <HugeiconsIcon
           icon={node.is_system ? EditOffIcon : Edit02Icon}

@@ -7,6 +7,7 @@ import {
   useState,
 } from 'react';
 import Link from 'next/link';
+import { useStore } from '@tanstack/react-form';
 import {
   Calendar01Icon,
   CheckmarkCircle01Icon,
@@ -15,6 +16,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { useAppForm } from '@/components/form/form.hook';
 import {
   Alert,
   AlertDescription,
@@ -29,7 +31,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import AccountingScopeFilters from '../_components/accounting-scope-filters';
 import {
@@ -50,7 +51,15 @@ import {
 const EMPTY_JOURNALS: JournalRow[] = [];
 
 export default function AccountingJournalEntriesPage() {
-  const [period, setPeriod] = useState(getCurrentPeriod);
+  const periodForm = useAppForm({
+    defaultValues: {
+      period: getCurrentPeriod(),
+    },
+  });
+  const period = useStore(
+    periodForm.store,
+    (state) => state.values.period
+  );
   const [storeId, setStoreId] = useState('all');
   const [platform, setPlatform] = useState('all');
   const [payload, setPayload] =
@@ -167,15 +176,20 @@ export default function AccountingJournalEntriesPage() {
                   size={18}
                 />
               </div>
-              <Input
-                type="month"
-                value={period}
-                onChange={(event) =>
-                  setPeriod(event.target.value)
-                }
-                className="border-background/20 bg-background/10 text-background"
-                aria-label="Filter periode journal entries"
-              />
+              <periodForm.AppField name="period">
+                {(field) => (
+                  <field.DateField
+                    granularity="month"
+                    className="w-full"
+                    buttonVariant="ghost"
+                    buttonClassName="w-full border-background/20 bg-background/10 text-background hover:bg-background/20 hover:text-background"
+                    buttonProps={{
+                      'aria-label':
+                        'Filter periode journal entries',
+                    }}
+                  />
+                )}
+              </periodForm.AppField>
               <div className="flex flex-col gap-2 sm:flex-row xl:flex-col">
                 <Button
                   variant="secondary"

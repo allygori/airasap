@@ -20,6 +20,10 @@ import {
   ArrowDown01Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import {
+  dateMatchModifiers,
+  type Matcher,
+} from 'react-day-picker';
 
 import { useFieldContext } from '../form.hook';
 import { FieldInfo } from '../partials/field-info';
@@ -98,6 +102,11 @@ const defaultDisplayFormats: Record<
   month: 'LLLL yyyy',
   year: 'yyyy',
 };
+
+const monthIndexes = Array.from(
+  { length: 12 },
+  (_, index) => index
+);
 
 function parseFieldValue(
   value: DateFieldValue,
@@ -211,10 +220,39 @@ export function DateField({
     setCalendarMonth(startOfMonth(nextMonth));
     calendarProps?.onMonthChange?.(nextMonth);
 
-    if (granularity !== 'date') {
+    if (granularity === 'year') {
       commitValue(nextMonth);
       setOpen(false);
     }
+  };
+
+  const handleMonthSelect = (monthIndex: number) => {
+    const nextMonth = new Date(
+      calendarMonth.getFullYear(),
+      monthIndex,
+      1
+    );
+
+    commitValue(nextMonth);
+    setOpen(false);
+  };
+
+  const isMonthDisabled = (monthDate: Date) => {
+    const disabled = calendarProps?.disabled as
+      | Matcher
+      | Matcher[]
+      | undefined;
+    const startMonth = calendarProps?.startMonth;
+    const endMonth = calendarProps?.endMonth;
+
+    return (
+      (disabled !== undefined &&
+        dateMatchModifiers(monthDate, disabled)) ||
+      (startMonth !== undefined &&
+        monthDate < startOfMonth(startMonth)) ||
+      (endMonth !== undefined &&
+        monthDate > startOfMonth(endMonth))
+    );
   };
 
   const clearValue = () => {
@@ -255,7 +293,7 @@ export function DateField({
 
   const calendarCaptionLayout =
     captionLayout ??
-    (granularity === 'year'
+    (granularity === 'month' || granularity === 'year'
       ? 'dropdown-years'
       : 'dropdown');
   const isCompactCalendar = granularity !== 'date';
@@ -341,7 +379,9 @@ export function DateField({
               }
               className={cn(
                 calendarClassName,
-                isCompactCalendar && 'pb-3'
+                isCompactCalendar &&
+                  granularity !== 'month' &&
+                  'pb-3'
               )}
               classNames={{
                 ...calendarClassNames,
@@ -359,6 +399,44 @@ export function DateField({
                   : {}),
               }}
             />
+            {granularity === 'month' && (
+              <div className="grid min-w-64 grid-cols-3 gap-2 px-3 pb-3">
+                {monthIndexes.map((monthIndex) => {
+                  const monthDate = new Date(
+                    calendarMonth.getFullYear(),
+                    monthIndex,
+                    1
+                  );
+                  const isSelected =
+                    selectedDate?.getFullYear() ===
+                      monthDate.getFullYear() &&
+                    selectedDate.getMonth() ===
+                      monthDate.getMonth();
+                  const monthDisabled =
+                    isMonthDisabled(monthDate);
+
+                  return (
+                    <Button
+                      key={monthIndex}
+                      type="button"
+                      variant={
+                        isSelected ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      disabled={disabled || monthDisabled}
+                      aria-pressed={isSelected}
+                      onClick={() =>
+                        handleMonthSelect(monthIndex)
+                      }
+                    >
+                      {format(monthDate, 'LLL', {
+                        locale: dateFnsLocale,
+                      })}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
           </PopoverContent>
         </Popover>
 
