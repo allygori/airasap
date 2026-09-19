@@ -1,4 +1,8 @@
-# Roadmap
+# Roadmap (reference only)
+
+> `[TARGET]` This document describes future direction. Do not implement an
+> item unless the user explicitly requests it and current code has been
+> inspected.
 
 ## Phase 1 (MVP)
 - Product listing

@@ -1,4 +1,8 @@
-# Product Requirements Document (PRD)
+# Product Requirements Document (reference only)
+
+> `[REFERENCE]` This is a product/roadmap document. It is not evidence that
+> the described marketplace, layout, A/B testing, or AI capabilities exist.
+> For implementation work, use current source code and `AGENTS.md` first.
 
 ## 1. Overview
 This project is a hybrid **Marketplace + Landing Page Platform** designed for the Indonesian market.

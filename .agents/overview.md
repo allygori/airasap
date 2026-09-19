@@ -1,4 +1,8 @@
-# Project: Pasaria.id (Marketplace)
+# Product Overview (reference only)
+
+> `[REFERENCE]` This describes product vision, not the current implementation.
+> Verify every route, model, and capability against source code before using it
+> for an implementation task.
 
 ## Project Overview
 
