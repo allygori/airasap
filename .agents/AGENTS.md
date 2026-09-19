@@ -1,4 +1,9 @@
-# AI Agents Guide
+# Historical AI Agents Guide (non-canonical)
+
+> Use the repository-root `AGENTS.md` as the current source of truth. This
+> file is retained for historical/product-planning context and contains stale
+> examples such as `/api/products`, `/engines`, and `/jobs` that are not the
+> current implementation.
 
 This document defines how AI coding agents should operate within this repository.
 
