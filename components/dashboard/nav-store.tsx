@@ -77,7 +77,7 @@ export function NavStore({
                     - overflow-hidden: clips inner contents during expansion.
                     - data-[state]: tracks Base UI execution blocks natively.
                   */
-                  'data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up overflow-hidden transition-all'
+                  'data-open:animate-collapsible-down data-closed:animate-collapsible-up overflow-hidden'
                 )}
               >
                 <SidebarMenuSub>

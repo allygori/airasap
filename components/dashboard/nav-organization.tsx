@@ -21,8 +21,8 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
-import { cn } from '@/lib/utils/ui';
 
 const MAX_DEPTH = 3;
 
@@ -38,9 +38,11 @@ export type OrganizationNavItem = {
 function NavItem({
   item,
   depth,
+  onNavigate,
 }: {
   item: OrganizationNavItem;
   depth: number;
+  onNavigate: () => void;
 }): ReactNode {
   const hasChildren =
     depth < MAX_DEPTH - 1 && Boolean(item.items?.length);
@@ -57,7 +59,12 @@ function NavItem({
     return isNested ? (
       <SidebarMenuSubItem key={item.title}>
         <SidebarMenuSubButton
-          render={<Link href={item.url ?? '#'} />}
+          render={
+            <Link
+              href={item.url ?? '#'}
+              onClick={onNavigate}
+            />
+          }
           isActive={item.isActive}
         >
           {content}
@@ -72,6 +79,7 @@ function NavItem({
           <Link
             href={item.url ?? '#'}
             className="flex w-full flex-row gap-2"
+            onClick={onNavigate}
           >
             {content}
           </Link>
@@ -114,17 +122,14 @@ function NavItem({
       >
         {triggerContent}
       </CollapsibleTrigger>
-      <CollapsibleContent
-        className={cn(
-          'data-open:animate-collapsible-down data-closed:animate-collapsible-up overflow-hidden transition-all'
-        )}
-      >
+      <CollapsibleContent className="h-(--collapsible-panel-height) overflow-hidden transition-[height] duration-200 ease-out data-ending-style:h-0 data-starting-style:h-0">
         <SidebarMenuSub>
           {item.items?.map((child) => (
             <NavItem
               key={child.title}
               item={child}
               depth={depth + 1}
+              onNavigate={onNavigate}
             />
           ))}
         </SidebarMenuSub>
@@ -138,12 +143,19 @@ export function NavOrganization({
 }: {
   items: OrganizationNavItem[];
 }) {
+  const { setOpenMobile } = useSidebar();
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Organization</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
-          <NavItem key={item.title} item={item} depth={0} />
+          <NavItem
+            key={item.title}
+            item={item}
+            depth={0}
+            onNavigate={() => setOpenMobile(false)}
+          />
         ))}
       </SidebarMenu>
     </SidebarGroup>
