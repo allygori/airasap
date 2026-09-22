@@ -107,6 +107,30 @@ Acceptance criteria:
 - balances agree with the journal;
 - overdue behavior is explicit.
 
+Implementation status: [CURRENT]
+
+- The Finance subledger reads posted `order` journals as Marketplace
+  Receivable and posted `purchase`/`expense` journals that credit Accounts
+  Payable as Hutang Usaha. Only outstanding source journals are shown.
+- A settlement is stored in the Finance-owned `finance_settlements` collection
+  and posted in one database transaction. Receivable settlement debits the
+  selected Kas/Bank account and credits Piutang; payable settlement debits
+  Utang Usaha and credits the selected Kas/Bank account.
+- Partial settlement is allowed up to the outstanding amount. A fully settled
+  source disappears from the open-balance list, while a partially settled
+  source remains with its reduced balance. Repeating the same idempotency key
+  replays the existing settlement.
+- The menu routes are `/dashboard/finance/accounts-receivable` and
+  `/dashboard/finance/accounts-payable`. The API uses `GET
+  /api/v1/dashboard/finance/receivables-and-payables` and `POST
+  /api/v1/dashboard/finance/receivables-and-payables/settlements`.
+- Source purchase, expense, and order records are not edited by settlement;
+  the original posted journal remains immutable and the settlement journal is
+  traceable through the source journal id.
+- Existing source transactions do not contain a due-date field. Therefore
+  this phase reports overdue status as `not_configured` and does not infer
+  overdue from transaction date. Due-date policy remains a future decision.
+
 ### Phase 7.4 — Basic controls and tax inputs
 
 Add only the tax and control fields required by the first release.
