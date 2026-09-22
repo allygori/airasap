@@ -20,6 +20,7 @@ import {
   // FileTextIcon,
   ChartPieIcon,
   Landmark,
+  WalletIcon,
 } from 'lucide-react';
 
 export const mainNav = [
@@ -347,5 +348,129 @@ export const organizationNav = [
     url: '/dashboard/media',
     icon: Database,
     items: [],
+  },
+];
+
+export const financeNav = [
+  {
+    title: 'Transaksi',
+    // url: '/dashboard/accounting',
+    icon: ShoppingBagIcon,
+    defaultOpen: true,
+    items: [
+      {
+        title: 'Penjualan',
+        url: '/dashboard/finance/sales',
+      },
+      {
+        title: 'Pembelian',
+        url: '/dashboard/finance/purchase',
+      },
+      {
+        title: 'Biaya & Pengeluaran',
+        url: '/dashboard/finance/expenses-and-outflows',
+      },
+      {
+        title: 'Transfer Kas & Bank',
+        url: '/dashboard/finance/cash-and-bank-transfers',
+      },
+    ],
+  },
+  {
+    title: 'Persediaan',
+    // url: '/dashboard/inventory',
+    icon: BoxIcon,
+    defaultOpen: false,
+    items: [
+      {
+        title: 'Daftar Produk & Stok',
+        url: '/dashboard/finance/inventory/product-and-stock-list',
+      },
+      {
+        title: 'Penyesuaian Stok',
+        url: '/dashboard/finance/inventory/stock-adjustments',
+      },
+      {
+        title: 'Mutasi Gudang',
+        url: '/dashboard/finance/inventory/warehouse-transfers',
+      },
+    ],
+  },
+  {
+    title: 'Keuangan',
+    // url: '/dashboard/media',
+    icon: WalletIcon,
+    items: [
+      {
+        title: 'Cash & Bank',
+        url: '/dashboard/finance/cash-and-bank',
+      },
+      {
+        title: 'Piutang',
+        url: '/dashboard/finance/accounts-receivable',
+      },
+      {
+        title: 'Hutang',
+        url: '/dashboard/finance/accounts-payable',
+      },
+      {
+        title: 'Rekonsiliasi Bank',
+        url: '/dashboard/finance/bank-reconciliation',
+      },
+    ],
+  },
+  {
+    title: 'Laporan',
+    // url: '/dashboard/media',
+    icon: ChartPieIcon,
+    items: [
+      {
+        title: 'Laba Rugi',
+        url: '/dashboard/finance/reports/profit-and-loss',
+      },
+      {
+        title: 'Neraca',
+        url: '/dashboard/finance/reports/balance-sheet',
+      },
+      {
+        title: 'Arus Kas',
+        url: '/dashboard/finance/reports/cash-flow',
+      },
+      {
+        title: 'Laporan Penjualan',
+        url: '/dashboard/finance/reports/sales-reports',
+      },
+      {
+        title: 'Laporan Stok & Margin',
+        url: '/dashboard/finance/reports/stock-and-margin-reports',
+      },
+      {
+        title: 'Laporan Pajak',
+        url: '/dashboard/finance/reports/tax-reports',
+      },
+    ],
+  },
+  {
+    title: 'Akuntansi',
+    // url: '/dashboard/media',
+    icon: Landmark,
+    items: [
+      {
+        title: 'Chart of Accounts',
+        url: '/dashboard/finance/accounting/chart-of-accounts',
+      },
+      {
+        title: 'Jurnal Umum',
+        url: '/dashboard/finance/accounting/general-journal',
+      },
+      {
+        title: 'Tutup Buku',
+        url: '/dashboard/finance/accounting/closing-books',
+      },
+      {
+        title: 'Opening Balance',
+        url: '/dashboard/finance/accounting/opening-balances',
+      },
+    ],
   },
 ];

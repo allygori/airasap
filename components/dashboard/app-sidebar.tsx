@@ -36,6 +36,7 @@ import {
   mainNav,
   documentsNav,
   organizationNav,
+  financeNav,
   secondaryNav,
 } from '@/constant/menu';
 import { useSession } from '@/lib/auth/auth-client';
@@ -66,6 +67,9 @@ export function AppSidebar({
       <SidebarContent>
         {/* <NavMain items={mainNav} /> */}
         <NavStore items={mainNav} />
+        {(financeNav || []).length > 0 && (
+          <NavOrganization items={financeNav} />
+        )}
         {(organizationNav || []).length > 0 && (
           <NavOrganization items={organizationNav} />
         )}

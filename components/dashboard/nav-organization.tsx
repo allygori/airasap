@@ -147,7 +147,7 @@ export function NavOrganization({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Organization</SidebarGroupLabel>
+      <SidebarGroupLabel>Finance</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => (
           <NavItem
