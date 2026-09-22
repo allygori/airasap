@@ -1,4 +1,4 @@
-import type { ClientSession } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 import { MemberModel } from '@/modules/members/member.model';
 import { OrganizationRepository } from '@/modules/organizations/organization.repository';
 import { FinanceDomainError } from './finance.error';
@@ -23,6 +23,15 @@ type FinanceLifecycleRepository = {
     data: {
       onboarding_version: number;
       started_at: Date;
+    },
+    session?: ClientSession
+  ) => Promise<FinanceLifecycleOrganization | null>;
+  activateFinance?: (
+    data: {
+      onboarding_version: number;
+      cut_off_date: Date;
+      completed_at: Date;
+      completed_by?: string;
     },
     session?: ClientSession
   ) => Promise<FinanceLifecycleOrganization | null>;
@@ -213,6 +222,59 @@ export class FinanceLifecycleService {
 
     throw new FinanceDomainError(
       'Finance onboarding gagal dimulai karena lifecycle berubah.',
+      'FINANCE_LIFECYCLE_CONFLICT'
+    );
+  }
+
+  async activate(
+    input: {
+      onboarding_version: number;
+      cut_off_date: Date;
+      completed_at?: Date;
+    },
+    session?: ClientSession
+  ): Promise<FinanceState> {
+    await this.assertOwner();
+    if (
+      !this.context.userId ||
+      !Types.ObjectId.isValid(this.context.userId)
+    ) {
+      throw new FinanceDomainError(
+        'User aktif tidak valid untuk mengaktifkan Finance.',
+        'FINANCE_OWNER_REQUIRED'
+      );
+    }
+
+    const activateFinance =
+      this.organizationRepository.activateFinance;
+    if (!activateFinance) {
+      throw new FinanceDomainError(
+        'Aktivasi Finance belum tersedia.',
+        'FINANCE_LIFECYCLE_CONFLICT'
+      );
+    }
+    const updated = await activateFinance.call(
+      this.organizationRepository,
+      {
+        ...input,
+        completed_at: input.completed_at ?? new Date(),
+        completed_by: this.context.userId,
+      },
+      session
+    );
+    if (updated)
+      return normalizeFinanceState(updated.finance);
+
+    const latest = await this.getState(session);
+    if (
+      latest.status === 'active' &&
+      latest.onboarding_version === input.onboarding_version
+    ) {
+      return latest;
+    }
+
+    throw new FinanceDomainError(
+      'Finance gagal diaktifkan karena lifecycle berubah.',
       'FINANCE_LIFECYCLE_CONFLICT'
     );
   }

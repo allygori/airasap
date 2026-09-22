@@ -8,6 +8,9 @@ import {
   FinanceOpeningBalanceSetupResponseSchema,
   FinanceOpeningBalanceStatusSchema,
   FinanceOpeningBalanceSummarySchema,
+  FinanceOpeningBalancePreviewSchema,
+  FinanceOpeningBalanceFinalizeInputSchema,
+  FinanceOpeningBalanceFinalizeResponseSchema,
 } from './finance-opening-balance.schema';
 
 export type FinanceOpeningBalanceModeDTO = ReturnType<
@@ -48,4 +51,18 @@ export type FinanceOpeningBalanceSummaryDTO = ReturnType<
 export type FinanceOpeningBalanceSetupResponseDTO =
   ReturnType<
     typeof FinanceOpeningBalanceSetupResponseSchema.parse
+  >;
+
+export type FinanceOpeningBalancePreviewDTO = ReturnType<
+  typeof FinanceOpeningBalancePreviewSchema.parse
+>;
+
+export type FinanceOpeningBalanceFinalizeInputDTO =
+  ReturnType<
+    typeof FinanceOpeningBalanceFinalizeInputSchema.parse
+  >;
+
+export type FinanceOpeningBalanceFinalizeResponseDTO =
+  ReturnType<
+    typeof FinanceOpeningBalanceFinalizeResponseSchema.parse
   >;

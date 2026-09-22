@@ -39,6 +39,9 @@ export {
   FinanceOpeningBalanceDraftInputSchema,
   FinanceOpeningBalanceDraftSchema,
   FinanceOpeningBalanceSetupResponseSchema,
+  FinanceOpeningBalancePreviewSchema,
+  FinanceOpeningBalanceFinalizeInputSchema,
+  FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalanceModeSchema,
   FinanceOpeningBalanceStatusSchema,
 } from './onboarding/finance-opening-balance.schema';
@@ -80,6 +83,9 @@ export type {
   FinanceOpeningBalanceLocationOptionDTO,
   FinanceOpeningBalanceModeDTO,
   FinanceOpeningBalanceStatusDTO,
+  FinanceOpeningBalancePreviewDTO,
+  FinanceOpeningBalanceFinalizeInputDTO,
+  FinanceOpeningBalanceFinalizeResponseDTO,
 } from './onboarding/finance-opening-balance.dto';
 export type {
   FinanceSalesOrderSourceDTO,

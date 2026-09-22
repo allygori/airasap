@@ -45,6 +45,10 @@ export type TFinanceOpeningBalanceDraft = Document & {
   receivable_lines: TOpeningSubledgerLine[];
   owner_capital_account_id?: Types.ObjectId;
   owner_capital_amount?: number;
+  journal_entry?: Types.ObjectId | null;
+  inventory_movement_ids: Types.ObjectId[];
+  finalized_at?: Date | null;
+  finalized_by?: Types.ObjectId | null;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -147,6 +151,21 @@ const FinanceOpeningBalanceDraftSchema =
         type: Schema.Types.ObjectId,
       },
       owner_capital_amount: { type: Number, min: 0 },
+      journal_entry: {
+        type: Schema.Types.ObjectId,
+        ref: 'FinanceJournalEntry',
+        default: null,
+      },
+      inventory_movement_ids: {
+        type: [Schema.Types.ObjectId],
+        default: [],
+      },
+      finalized_at: { type: Date, default: null },
+      finalized_by: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        default: null,
+      },
     },
     {
       timestamps: {

@@ -97,6 +97,9 @@ const OrganizationSchema = new Schema<TOrganization>(
       blocked_reason: {
         type: String,
       },
+      cut_off_date: {
+        type: Date,
+      },
       completed_at: {
         type: Date,
       },

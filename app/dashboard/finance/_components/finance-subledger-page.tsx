@@ -44,10 +44,8 @@ export function FinanceSubledgerPage({
   paymentAccounts,
 }: FinanceSubledgerPageProps) {
   const router = useRouter();
-  const [selectedJournalId, setSelectedJournalId] =
-    useState(
-      balances.balances[0]?.source_journal_entry_id ?? ''
-    );
+  const [selectedSourceKey, setSelectedSourceKey] =
+    useState(balances.balances[0]?.source_key ?? '');
   const [amount, setAmount] = useState('');
   const [settlementDate, setSettlementDate] = useState(
     new Date().toISOString().slice(0, 10)
@@ -65,8 +63,7 @@ export function FinanceSubledgerPage({
   >(null);
 
   const selectedBalance = balances.balances.find(
-    (balance) =>
-      balance.source_journal_entry_id === selectedJournalId
+    (balance) => balance.source_key === selectedSourceKey
   );
   const isReceivable = balanceType === 'receivable';
   const title = isReceivable ? 'Piutang' : 'Hutang';
@@ -78,6 +75,12 @@ export function FinanceSubledgerPage({
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
+    if (!selectedBalance) {
+      setErrorMessage(
+        'Pilih saldo yang ingin diselesaikan.'
+      );
+      return;
+    }
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -90,7 +93,14 @@ export function FinanceSubledgerPage({
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             balance_type: balanceType,
-            source_journal_entry_id: selectedJournalId,
+            source_journal_entry_id:
+              selectedBalance?.source_journal_entry_id,
+            ...(selectedBalance?.source_item_id
+              ? {
+                  source_item_id:
+                    selectedBalance.source_item_id,
+                }
+              : {}),
             amount: Number(amount),
             settlement_date: `${settlementDate}T00:00:00.000Z`,
             payment_account_id: paymentAccountId,
@@ -173,8 +183,8 @@ export function FinanceSubledgerPage({
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm leading-6">
             Journal dari order selesai menjadi piutang
-            marketplace. Purchase atau expense dengan status
-            Utang menjadi hutang.
+            marketplace. Hutang dari pembelian, expense, dan
+            opening balance juga tampil sesuai sumbernya.
           </CardContent>
         </Card>
       ) : (
@@ -191,15 +201,15 @@ export function FinanceSubledgerPage({
               <div className="divide-y">
                 {balances.balances.map((balance) => (
                   <BalanceRow
-                    key={balance.source_journal_entry_id}
+                    key={balance.source_key}
                     balance={balance}
                     selected={
-                      selectedJournalId ===
-                      balance.source_journal_entry_id
+                      selectedSourceKey ===
+                      balance.source_key
                     }
                     onSelect={() =>
-                      setSelectedJournalId(
-                        balance.source_journal_entry_id
+                      setSelectedSourceKey(
+                        balance.source_key
                       )
                     }
                   />
@@ -224,9 +234,9 @@ export function FinanceSubledgerPage({
                 <label className="grid gap-2 text-sm font-medium">
                   Sumber saldo
                   <select
-                    value={selectedJournalId}
+                    value={selectedSourceKey}
                     onChange={(event) =>
-                      setSelectedJournalId(
+                      setSelectedSourceKey(
                         event.target.value
                       )
                     }
@@ -235,12 +245,8 @@ export function FinanceSubledgerPage({
                   >
                     {balances.balances.map((balance) => (
                       <option
-                        key={
-                          balance.source_journal_entry_id
-                        }
-                        value={
-                          balance.source_journal_entry_id
-                        }
+                        key={balance.source_key}
+                        value={balance.source_key}
                       >
                         {balance.source_label} —{' '}
                         {formatMoney(
@@ -359,7 +365,7 @@ export function FinanceSubledgerPage({
                   disabled={
                     isSubmitting ||
                     paymentAccounts.length === 0 ||
-                    !selectedJournalId
+                    !selectedBalance
                   }
                 >
                   {isSubmitting

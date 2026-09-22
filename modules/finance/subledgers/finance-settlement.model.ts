@@ -17,6 +17,7 @@ export type TFinanceSettlement = Document & {
   organization: Types.ObjectId;
   balance_type: FinanceSubledgerType;
   source_journal_entry: Types.ObjectId;
+  source_item_id?: Types.ObjectId | null;
   source_type: string;
   source_id: string;
   source_description: string;
@@ -52,6 +53,10 @@ const FinanceSettlementSchema =
         type: Schema.Types.ObjectId,
         ref: 'FinanceJournalEntry',
         required: true,
+      },
+      source_item_id: {
+        type: Schema.Types.ObjectId,
+        default: null,
       },
       source_type: { type: String, required: true },
       source_id: { type: String, required: true },
@@ -99,6 +104,7 @@ FinanceSettlementSchema.index(
 FinanceSettlementSchema.index({
   organization: 1,
   source_journal_entry: 1,
+  source_item_id: 1,
   status: 1,
 });
 FinanceSettlementSchema.index({

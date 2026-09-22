@@ -67,6 +67,7 @@ export const OrganizationFinanceSchema = z.object({
     .default(1),
   started_at: z.date().optional(),
   blocked_reason: z.string().min(1).optional(),
+  cut_off_date: z.date().optional(),
   completed_at: z.date().optional(),
   completed_by: z.string().optional(),
 });

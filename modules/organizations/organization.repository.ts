@@ -9,7 +9,7 @@ import {
   OrganizationModel,
   TOrganization,
 } from './organization.model';
-import type { ClientSession } from 'mongoose';
+import { Types, type ClientSession } from 'mongoose';
 
 export class OrganizationRepository extends BaseRepository<TOrganization> {
   constructor(tenantContext: {
@@ -72,6 +72,46 @@ export class OrganizationRepository extends BaseRepository<TOrganization> {
             data.onboarding_version,
           'finance.started_at': data.started_at,
         },
+      },
+      {
+        new: true,
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query.lean();
+  }
+
+  async activateFinance(
+    data: {
+      onboarding_version: number;
+      cut_off_date: Date;
+      completed_at: Date;
+      completed_by?: string;
+    },
+    session?: ClientSession
+  ) {
+    const completedBy = data.completed_by
+      ? new Types.ObjectId(data.completed_by)
+      : undefined;
+    const query = this.model.findOneAndUpdate(
+      {
+        _id: this.tenantContext.organizationId,
+        'finance.status': 'in_progress',
+        'finance.onboarding_version':
+          data.onboarding_version,
+      },
+      {
+        $set: {
+          'finance.status': 'active',
+          'finance.cut_off_date': data.cut_off_date,
+          'finance.completed_at': data.completed_at,
+          ...(completedBy
+            ? { 'finance.completed_by': completedBy }
+            : {}),
+        },
+        $unset: { 'finance.blocked_reason': '' },
       },
       {
         new: true,

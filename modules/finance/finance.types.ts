@@ -49,10 +49,13 @@ export const normalizeFinanceState = (
   ...(finance?.blocked_reason
     ? { blocked_reason: finance.blocked_reason }
     : {}),
+  ...(finance?.cut_off_date
+    ? { cut_off_date: finance.cut_off_date }
+    : {}),
   ...(finance?.completed_at
     ? { completed_at: finance.completed_at }
     : {}),
   ...(finance?.completed_by
-    ? { completed_by: finance.completed_by }
+    ? { completed_by: String(finance.completed_by) }
     : {}),
 });

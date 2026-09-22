@@ -42,14 +42,32 @@ export type FinanceOpeningBalanceDraftPersistenceRecord = {
   }>;
   owner_capital_account_id?: Types.ObjectId;
   owner_capital_amount?: number;
+  journal_entry?: Types.ObjectId | null;
+  inventory_movement_ids?: Types.ObjectId[];
+  finalized_at?: Date | null;
+  finalized_by?: Types.ObjectId | null;
   created_at?: Date;
   updated_at?: Date;
 };
 
 export type CreateFinanceOpeningBalanceDraftRecord = Omit<
   FinanceOpeningBalanceDraftPersistenceRecord,
-  '_id' | 'organization'
->;
+  | '_id'
+  | 'organization'
+  | 'journal_entry'
+  | 'inventory_movement_ids'
+  | 'finalized_at'
+  | 'finalized_by'
+> &
+  Partial<
+    Pick<
+      FinanceOpeningBalanceDraftPersistenceRecord,
+      | 'journal_entry'
+      | 'inventory_movement_ids'
+      | 'finalized_at'
+      | 'finalized_by'
+    >
+  >;
 
 export class FinanceOpeningBalanceDraftRepository extends BaseRepository<TFinanceOpeningBalanceDraft> {
   constructor(context: FinanceTenantContext) {
@@ -99,6 +117,49 @@ export class FinanceOpeningBalanceDraftRepository extends BaseRepository<TFinanc
         status: 'draft',
       },
       { $set: data },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceOpeningBalanceDraftPersistenceRecord | null>()
+      .exec();
+  }
+
+  async markFinalized(
+    id: string,
+    status: Extract<
+      FinanceOpeningBalanceStatus,
+      'posted' | 'skipped'
+    >,
+    data: {
+      journal_entry?: Types.ObjectId | null;
+      inventory_movement_ids: Types.ObjectId[];
+      finalized_at: Date;
+      finalized_by?: Types.ObjectId;
+    },
+    session?: ClientSession
+  ): Promise<FinanceOpeningBalanceDraftPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        status: 'draft',
+      },
+      {
+        $set: {
+          status,
+          journal_entry: data.journal_entry ?? null,
+          inventory_movement_ids:
+            data.inventory_movement_ids,
+          finalized_at: data.finalized_at,
+          finalized_by: data.finalized_by ?? null,
+        },
+      },
       {
         returnDocument: 'after',
         runValidators: true,

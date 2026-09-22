@@ -49,6 +49,7 @@ export const FinanceSettlementInputSchema = z
   .object({
     balance_type: FinanceSubledgerTypeSchema,
     source_journal_entry_id: ObjectIdStringSchema,
+    source_item_id: ObjectIdStringSchema.optional(),
     amount: z.coerce
       .number()
       .int()
@@ -74,7 +75,9 @@ export const FinanceSubledgerAccountSchema = z.object({
 });
 
 export const FinanceSubledgerBalanceSchema = z.object({
+  source_key: z.string().min(1),
   source_journal_entry_id: ObjectIdStringSchema,
+  source_item_id: ObjectIdStringSchema.nullable(),
   balance_type: FinanceSubledgerTypeSchema,
   source_type: z.string().min(1),
   source_id: z.string().min(1),
@@ -107,6 +110,7 @@ export const FinanceSettlementResponseSchema = z.object({
   settlement_id: ObjectIdStringSchema,
   balance_type: FinanceSubledgerTypeSchema,
   source_journal_entry_id: ObjectIdStringSchema,
+  source_item_id: ObjectIdStringSchema.nullable(),
   amount: z.number().int().positive(),
   settlement_date: z.string().datetime(),
   payment_account: FinanceSubledgerAccountSchema,

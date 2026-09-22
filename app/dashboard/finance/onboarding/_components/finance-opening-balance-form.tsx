@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,9 +15,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type {
   FinanceOpeningBalanceDraftInputDTO,
+  FinanceOpeningBalanceFinalizeResponseDTO,
+  FinanceOpeningBalancePreviewDTO,
   FinanceOpeningBalanceSetupResponseDTO,
 } from '@/modules/finance';
-import { FinanceOpeningBalanceSetupResponseSchema } from '@/modules/finance';
+import {
+  FinanceOpeningBalanceFinalizeResponseSchema,
+  FinanceOpeningBalancePreviewSchema,
+  FinanceOpeningBalanceSetupResponseSchema,
+} from '@/modules/finance';
 
 type FinanceOpeningBalanceFormProps = {
   enabled: boolean;
@@ -57,7 +64,9 @@ const emptyInventoryLine = (
   setup: FinanceOpeningBalanceSetupResponseDTO
 ): InventoryLineState => ({
   inventory_item_id:
-    setup.options.inventory_items[0]?.id ?? '',
+    setup.options.inventory_items.find(
+      (item) => item.track_quantity && item.track_value
+    )?.id ?? '',
   location_id: setup.options.locations[0]?.id ?? '',
   quantity: '',
   unit_cost: '',
@@ -132,9 +141,20 @@ const numberValue = (value: string) => {
 const formatMoney = (value: number) =>
   `Rp ${moneyFormatter.format(value)}`;
 
+const getEligibleInventoryItems = (
+  setup: FinanceOpeningBalanceSetupResponseDTO
+) =>
+  setup.options.inventory_items.filter(
+    (item) =>
+      item.item_type !== 'fixed_asset' &&
+      item.track_quantity &&
+      item.track_value
+  );
+
 export default function FinanceOpeningBalanceForm({
   enabled,
 }: FinanceOpeningBalanceFormProps) {
+  const router = useRouter();
   const [setup, setSetup] =
     useState<FinanceOpeningBalanceSetupResponseDTO | null>(
       null
@@ -142,6 +162,12 @@ export default function FinanceOpeningBalanceForm({
   const [form, setForm] = useState<FormState | null>(null);
   const [isLoading, setIsLoading] = useState(enabled);
   const [isSaving, setIsSaving] = useState(false);
+  const [isPreviewing, setIsPreviewing] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [preview, setPreview] =
+    useState<FinanceOpeningBalancePreviewDTO | null>(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [finalized, setFinalized] = useState(false);
   const [errorMessage, setErrorMessage] = useState<
     string | null
   >(null);
@@ -252,15 +278,64 @@ export default function FinanceOpeningBalanceForm({
     );
   }
 
-  const updateForm = (next: Partial<FormState>) =>
+  const updateForm = (next: Partial<FormState>) => {
+    setPreview(null);
+    setConfirmed(false);
     setForm((current) =>
       current ? { ...current, ...next } : current
     );
+  };
 
-  const saveDraft = async () => {
-    setIsSaving(true);
+  const saveDraft = async (): Promise<boolean> => {
     setErrorMessage(null);
     setSuccessMessage(null);
+    setPreview(null);
+    setConfirmed(false);
+
+    if (form.mode === 'entered') {
+      if (!form.owner_capital_account_id) {
+        setErrorMessage(
+          'Pilih akun Modal Pemilik terlebih dahulu.'
+        );
+        return false;
+      }
+      if (form.owner_capital_amount.trim() === '') {
+        setErrorMessage(
+          'Isi Modal Pemilik; masukkan 0 jika memang tidak ada modal yang dicatat.'
+        );
+        return false;
+      }
+      if (
+        form.inventory_lines.some(
+          (line) =>
+            numberValue(line.quantity) > 0 &&
+            line.unit_cost.trim() === ''
+        )
+      ) {
+        setErrorMessage(
+          'Isi unit cost untuk setiap inventory yang memiliki quantity.'
+        );
+        return false;
+      }
+      if (
+        [
+          ...form.payable_lines,
+          ...form.receivable_lines,
+        ].some(
+          (line) =>
+            numberValue(line.amount) > 0 &&
+            !line.counterparty.trim() &&
+            !line.reference.trim()
+        )
+      ) {
+        setErrorMessage(
+          'Isi nama supplier/counterparty atau reference untuk setiap hutang/piutang.'
+        );
+        return false;
+      }
+    }
+
+    setIsSaving(true);
 
     try {
       const payload: FinanceOpeningBalanceDraftInputDTO = {
@@ -288,12 +363,8 @@ export default function FinanceOpeningBalanceForm({
                   inventory_item_id: line.inventory_item_id,
                   location_id: line.location_id,
                   quantity: numberValue(line.quantity),
-                  ...(numberValue(line.unit_cost) > 0
-                    ? {
-                        unit_cost: numberValue(
-                          line.unit_cost
-                        ),
-                      }
+                  ...(line.unit_cost.trim() !== ''
+                    ? { unit_cost: Number(line.unit_cost) }
                     : {}),
                 }))
             : [],
@@ -365,18 +436,90 @@ export default function FinanceOpeningBalanceForm({
           getErrorMessage(responsePayload) ??
             'Draft opening balance gagal disimpan.'
         );
-        return;
+        return false;
       }
 
       setSetup(nextSetup);
       setForm(toFormState(nextSetup));
       setSuccessMessage('Draft opening balance tersimpan.');
+      return true;
     } catch {
       setErrorMessage(
         'Draft opening balance gagal disimpan. Coba lagi.'
       );
+      return false;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const showPreview = async () => {
+    setIsPreviewing(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      if (!(await saveDraft())) return;
+
+      const response = await fetch(
+        '/api/v1/dashboard/finance/onboarding/opening-balance/preview',
+        { cache: 'no-store' }
+      );
+      const payload: unknown = await response.json();
+      const parsed = parsePreviewResponse(payload);
+      if (!response.ok || !parsed) {
+        setErrorMessage(
+          getErrorMessage(payload) ??
+            'Preview opening balance gagal dibuat.'
+        );
+        return;
+      }
+      setPreview(parsed);
+      setConfirmed(false);
+      setSuccessMessage(
+        'Draft tervalidasi. Periksa preview sebelum finalisasi.'
+      );
+    } catch {
+      setErrorMessage(
+        'Preview opening balance gagal dibuat. Coba lagi.'
+      );
+    } finally {
+      setIsPreviewing(false);
+    }
+  };
+
+  const finalizeOpeningBalance = async () => {
+    setIsFinalizing(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    try {
+      const response = await fetch(
+        '/api/v1/dashboard/finance/onboarding/opening-balance/finalize',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ confirmed: true }),
+        }
+      );
+      const payload: unknown = await response.json();
+      const result = parseFinalizeResponse(payload);
+      if (!response.ok || !result) {
+        setErrorMessage(
+          getErrorMessage(payload) ??
+            'Finalisasi opening balance gagal.'
+        );
+        return;
+      }
+      setFinalized(true);
+      setSuccessMessage(
+        result.status === 'skipped'
+          ? 'Finance aktif dengan pilihan mulai dari nol.'
+          : 'Finance aktif dan saldo awal sudah dicatat.'
+      );
+      router.refresh();
+    } catch {
+      setErrorMessage('Finalisasi gagal. Coba lagi.');
+    } finally {
+      setIsFinalizing(false);
     }
   };
 
@@ -397,272 +540,318 @@ export default function FinanceOpeningBalanceForm({
           </div>
         </CardHeader>
         <CardContent className="space-y-8 pt-6">
-          <div className="grid gap-4 md:grid-cols-[12rem_1fr]">
-            <div className="space-y-2">
-              <Label htmlFor="opening-cut-off-date">
-                Tanggal cut-off
-              </Label>
-              <Input
-                id="opening-cut-off-date"
-                type="date"
-                value={form.cut_off_date}
-                onChange={(event) =>
-                  updateForm({
-                    cut_off_date: event.target.value,
-                  })
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="opening-description">
-                Catatan
-              </Label>
-              <Input
-                id="opening-description"
-                value={form.description}
-                maxLength={240}
-                onChange={(event) =>
-                  updateForm({
-                    description: event.target.value,
-                  })
-                }
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-3 md:grid-cols-2">
-            <ModeOption
-              active={form.mode === 'entered'}
-              title="Masukkan saldo awal"
-              description="Catat kas, inventory, hutang, dan modal yang benar-benar ada."
-              onClick={() =>
-                updateForm({ mode: 'entered' })
-              }
-            />
-            <ModeOption
-              active={form.mode === 'zero'}
-              title="Mulai dari nol"
-              description="Tidak ada saldo awal yang perlu dicatat sekarang."
-              onClick={() => updateForm({ mode: 'zero' })}
-            />
-          </div>
-
-          {form.mode === 'entered' && (
-            <div className="space-y-8">
-              <section className="space-y-4">
-                <SectionHeading
-                  title="Kas, Bank, dan Saldo Marketplace"
-                  description="Isi hanya akun yang memiliki saldo pada tanggal cut-off."
-                />
-                <div className="grid gap-3">
-                  {setup.options.cash_bank_accounts
-                    .length === 0 ? (
-                    <EmptyHint>
-                      Belum ada akun Kas, Bank, E-wallet,
-                      atau Saldo Marketplace yang dapat
-                      diposting.
-                    </EmptyHint>
-                  ) : (
-                    setup.options.cash_bank_accounts.map(
-                      (account) => (
-                        <div
-                          key={account.id}
-                          className="bg-muted/20 grid gap-3 rounded-xl border p-3 md:grid-cols-[1fr_12rem] md:items-center"
-                        >
-                          <div>
-                            <p className="font-medium">
-                              {account.name}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {account.code} ·{' '}
-                              {account.subtype ?? 'asset'}
-                            </p>
-                          </div>
-                          <Input
-                            aria-label={`Saldo ${account.name}`}
-                            inputMode="numeric"
-                            placeholder="0"
-                            value={
-                              form.cash_bank_amounts[
-                                account.id
-                              ] ?? ''
-                            }
-                            onChange={(event) =>
-                              updateForm({
-                                cash_bank_amounts: {
-                                  ...form.cash_bank_amounts,
-                                  [account.id]:
-                                    event.target.value,
-                                },
-                              })
-                            }
-                          />
-                        </div>
-                      )
-                    )
-                  )}
-                </div>
-              </section>
-
-              <section className="space-y-4">
-                <SectionHeading
-                  title="Persediaan barang"
-                  description="Satu baris untuk satu item pada satu lokasi. Unit cost dipakai untuk nilai inventory."
-                />
-                {form.inventory_lines.map((line, index) => (
-                  <InventoryLine
-                    key={`${index}-${line.inventory_item_id}-${line.location_id}`}
-                    line={line}
-                    setup={setup}
-                    onChange={(next) => {
-                      const lines = [
-                        ...form.inventory_lines,
-                      ];
-                      lines[index] = next;
-                      updateForm({
-                        inventory_lines: lines,
-                      });
-                    }}
-                    onRemove={() =>
-                      updateForm({
-                        inventory_lines:
-                          form.inventory_lines.filter(
-                            (_, lineIndex) =>
-                              lineIndex !== index
-                          ),
-                      })
-                    }
-                  />
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
+          <fieldset
+            className="contents"
+            disabled={
+              isSaving ||
+              isPreviewing ||
+              isFinalizing ||
+              finalized
+            }
+          >
+            <div className="grid gap-4 md:grid-cols-[12rem_1fr]">
+              <div className="space-y-2">
+                <Label htmlFor="opening-cut-off-date">
+                  Tanggal cut-off
+                </Label>
+                <Input
+                  id="opening-cut-off-date"
+                  type="date"
+                  value={form.cut_off_date}
+                  onChange={(event) =>
                     updateForm({
-                      inventory_lines: [
-                        ...form.inventory_lines,
-                        emptyInventoryLine(setup),
-                      ],
+                      cut_off_date: event.target.value,
                     })
                   }
-                  disabled={
-                    setup.options.inventory_items.length ===
-                    0
-                  }
-                >
-                  Tambah item inventory
-                </Button>
-                {setup.options.inventory_items.length ===
-                  0 && (
-                  <EmptyHint>
-                    Belum ada Finance inventory item aktif.
-                    Inventory dapat disiapkan pada tahap
-                    inventory Finance.
-                  </EmptyHint>
-                )}
-              </section>
-
-              <SubledgerSection
-                title="Hutang supplier"
-                description="Gunakan satu baris per supplier. Jika hanya punya angka total, gunakan reference seperti ‘Saldo hutang lama’."
-                lines={form.payable_lines}
-                accounts={setup.options.liability_accounts}
-                emptyLabel="Belum ada akun liability postable."
-                addLabel="Tambah hutang"
-                onChange={(lines) =>
-                  updateForm({ payable_lines: lines })
-                }
-              />
-
-              <SubledgerSection
-                title="Piutang (opsional)"
-                description="Masukkan hanya piutang yang memang ingin ditampilkan dan disettle dari Finance."
-                lines={form.receivable_lines}
-                accounts={setup.options.receivable_accounts}
-                emptyLabel="Belum ada akun piutang postable."
-                addLabel="Tambah piutang"
-                onChange={(lines) =>
-                  updateForm({ receivable_lines: lines })
-                }
-              />
-
-              <section className="space-y-4">
-                <SectionHeading
-                  title="Modal pemilik"
-                  description="Saldo laba/retained earnings akan dihitung otomatis saat finalisasi."
                 />
-                <div className="grid gap-3 md:grid-cols-[1fr_12rem]">
-                  <select
-                    className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-                    aria-label="Akun modal pemilik"
-                    value={form.owner_capital_account_id}
-                    onChange={(event) =>
-                      updateForm({
-                        owner_capital_account_id:
-                          event.target.value,
-                      })
-                    }
-                  >
-                    <option value="">
-                      Pilih akun modal pemilik
-                    </option>
-                    {setup.options.equity_accounts.map(
-                      (account) => (
-                        <option
-                          key={account.id}
-                          value={account.id}
-                        >
-                          {account.code} — {account.name}
-                        </option>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="opening-description">
+                  Catatan
+                </Label>
+                <Input
+                  id="opening-description"
+                  value={form.description}
+                  maxLength={240}
+                  onChange={(event) =>
+                    updateForm({
+                      description: event.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2">
+              <ModeOption
+                active={form.mode === 'entered'}
+                title="Masukkan saldo awal"
+                description="Catat kas, inventory, hutang, dan modal yang benar-benar ada."
+                onClick={() =>
+                  updateForm({ mode: 'entered' })
+                }
+              />
+              <ModeOption
+                active={form.mode === 'zero'}
+                title="Mulai dari nol"
+                description="Tidak ada saldo awal yang perlu dicatat sekarang."
+                onClick={() => updateForm({ mode: 'zero' })}
+              />
+            </div>
+
+            {form.mode === 'entered' && (
+              <div className="space-y-8">
+                <section className="space-y-4">
+                  <SectionHeading
+                    title="Kas, Bank, dan Saldo Marketplace"
+                    description="Masukkan saldo tiap akun pada tanggal cut-off. Akun yang dibiarkan kosong dianggap tidak memiliki saldo awal."
+                  />
+                  <div className="grid gap-3">
+                    {setup.options.cash_bank_accounts
+                      .length === 0 ? (
+                      <EmptyHint>
+                        Belum ada akun Kas, Bank, E-wallet,
+                        atau Saldo Marketplace yang dapat
+                        diposting.
+                      </EmptyHint>
+                    ) : (
+                      setup.options.cash_bank_accounts.map(
+                        (account) => (
+                          <div
+                            key={account.id}
+                            className="bg-muted/20 grid gap-3 rounded-xl border p-3 md:grid-cols-[1fr_12rem] md:items-center"
+                          >
+                            <div>
+                              <p className="font-medium">
+                                {account.name}
+                              </p>
+                              <p className="text-muted-foreground text-xs">
+                                {account.code} ·{' '}
+                                {account.subtype ?? 'asset'}
+                              </p>
+                            </div>
+                            <Input
+                              aria-label={`Saldo ${account.name}`}
+                              inputMode="numeric"
+                              placeholder="0"
+                              value={
+                                form.cash_bank_amounts[
+                                  account.id
+                                ] ?? ''
+                              }
+                              onChange={(event) =>
+                                updateForm({
+                                  cash_bank_amounts: {
+                                    ...form.cash_bank_amounts,
+                                    [account.id]:
+                                      event.target.value,
+                                  },
+                                })
+                              }
+                            />
+                          </div>
+                        )
                       )
                     )}
-                  </select>
-                  <Input
-                    aria-label="Jumlah modal pemilik"
-                    inputMode="numeric"
-                    placeholder="0"
-                    value={form.owner_capital_amount}
-                    onChange={(event) =>
+                  </div>
+                </section>
+
+                <section className="space-y-4">
+                  <SectionHeading
+                    title="Persediaan barang"
+                    description="Satu baris untuk satu item pada satu lokasi. Unit cost dipakai untuk nilai inventory."
+                  />
+                  {form.inventory_lines.map(
+                    (line, index) => (
+                      <InventoryLine
+                        key={`${index}-${line.inventory_item_id}-${line.location_id}`}
+                        line={line}
+                        setup={setup}
+                        onChange={(next) => {
+                          const lines = [
+                            ...form.inventory_lines,
+                          ];
+                          lines[index] = next;
+                          updateForm({
+                            inventory_lines: lines,
+                          });
+                        }}
+                        onRemove={() =>
+                          updateForm({
+                            inventory_lines:
+                              form.inventory_lines.filter(
+                                (_, lineIndex) =>
+                                  lineIndex !== index
+                              ),
+                          })
+                        }
+                      />
+                    )
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
                       updateForm({
-                        owner_capital_amount:
-                          event.target.value,
+                        inventory_lines: [
+                          ...form.inventory_lines,
+                          emptyInventoryLine(setup),
+                        ],
                       })
                     }
+                    disabled={
+                      getEligibleInventoryItems(setup)
+                        .length === 0 ||
+                      setup.options.locations.length === 0
+                    }
+                  >
+                    Tambah item inventory
+                  </Button>
+                  {getEligibleInventoryItems(setup)
+                    .length === 0 && (
+                    <EmptyHint>
+                      Belum ada item yang melacak quantity
+                      dan nilai. Item seperti ini tidak
+                      dapat dinilai pada saldo awal.
+                    </EmptyHint>
+                  )}
+                  {setup.options.locations.length === 0 && (
+                    <EmptyHint>
+                      Belum ada lokasi inventory aktif; buat
+                      lokasi sebelum memasukkan saldo
+                      persediaan.
+                    </EmptyHint>
+                  )}
+                </section>
+
+                <SubledgerSection
+                  title="Hutang supplier"
+                  description="Gunakan satu baris per supplier. Jika hanya punya angka total, gunakan reference seperti ‘Saldo hutang lama’."
+                  lines={form.payable_lines}
+                  accounts={
+                    setup.options.liability_accounts
+                  }
+                  emptyLabel="Belum ada akun liability postable."
+                  addLabel="Tambah hutang"
+                  onChange={(lines) =>
+                    updateForm({ payable_lines: lines })
+                  }
+                />
+
+                <SubledgerSection
+                  title="Piutang (opsional)"
+                  description="Masukkan hanya piutang yang memang ingin ditampilkan dan disettle dari Finance."
+                  lines={form.receivable_lines}
+                  accounts={
+                    setup.options.receivable_accounts
+                  }
+                  emptyLabel="Belum ada akun piutang postable."
+                  addLabel="Tambah piutang"
+                  onChange={(lines) =>
+                    updateForm({ receivable_lines: lines })
+                  }
+                />
+
+                <section className="space-y-4">
+                  <SectionHeading
+                    title="Modal pemilik"
+                    description="Saldo laba/retained earnings akan dihitung otomatis saat finalisasi."
                   />
-                </div>
-              </section>
+                  <div className="grid gap-3 md:grid-cols-[1fr_12rem]">
+                    <select
+                      className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
+                      aria-label="Akun modal pemilik"
+                      value={form.owner_capital_account_id}
+                      onChange={(event) =>
+                        updateForm({
+                          owner_capital_account_id:
+                            event.target.value,
+                        })
+                      }
+                    >
+                      <option value="">
+                        Pilih akun modal pemilik
+                      </option>
+                      {setup.options.equity_accounts.map(
+                        (account) => (
+                          <option
+                            key={account.id}
+                            value={account.id}
+                          >
+                            {account.code} — {account.name}
+                          </option>
+                        )
+                      )}
+                    </select>
+                    <Input
+                      aria-label="Jumlah modal pemilik"
+                      inputMode="numeric"
+                      placeholder="0"
+                      value={form.owner_capital_amount}
+                      onChange={(event) =>
+                        updateForm({
+                          owner_capital_amount:
+                            event.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  {setup.options.equity_accounts.length ===
+                    0 && (
+                    <EmptyHint>
+                      Akun Modal Pemilik belum tersedia atau
+                      belum dapat diposting.
+                    </EmptyHint>
+                  )}
+                </section>
+              </div>
+            )}
+
+            <div className="flex flex-wrap items-center gap-3 border-t pt-5">
+              <Button
+                type="button"
+                onClick={saveDraft}
+                disabled={
+                  isSaving || isPreviewing || finalized
+                }
+              >
+                {isSaving ? 'Menyimpan…' : 'Simpan draft'}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={showPreview}
+                disabled={
+                  isSaving || isPreviewing || finalized
+                }
+              >
+                {isPreviewing
+                  ? 'Memvalidasi…'
+                  : 'Preview & validasi'}
+              </Button>
+              <p className="text-muted-foreground text-xs">
+                Finance belum aktif sampai finalisasi
+                dikonfirmasi.
+              </p>
             </div>
-          )}
 
-          <div className="flex flex-wrap items-center gap-3 border-t pt-5">
-            <Button
-              type="button"
-              onClick={saveDraft}
-              disabled={isSaving}
-            >
-              {isSaving ? 'Menyimpan…' : 'Simpan draft'}
-            </Button>
-            <p className="text-muted-foreground text-xs">
-              Draft dapat diubah sebelum finalisasi.
-            </p>
-          </div>
-
-          {errorMessage && (
-            <p
-              className="text-destructive text-sm"
-              role="alert"
-            >
-              {errorMessage}
-            </p>
-          )}
-          {successMessage && (
-            <p
-              className="text-success text-sm"
-              role="status"
-            >
-              {successMessage}
-            </p>
-          )}
+            {errorMessage && (
+              <p
+                className="text-destructive text-sm"
+                role="alert"
+              >
+                {errorMessage}
+              </p>
+            )}
+            {successMessage && (
+              <p
+                className="text-success text-sm"
+                role="status"
+              >
+                {successMessage}
+              </p>
+            )}
+          </fieldset>
         </CardContent>
       </Card>
 
@@ -712,12 +901,242 @@ export default function FinanceOpeningBalanceForm({
             }
           />
           <p className="text-muted-foreground pt-3 text-xs leading-5">
-            Nilai ini belum menjadi journal. Phase
-            berikutnya akan memvalidasi dan mem-posting satu
-            opening batch yang immutable.
+            Ini estimasi selama mengisi. Preview server akan
+            menunjukkan akun dan nilai journal final.
           </p>
         </CardContent>
       </Card>
+
+      {preview && (
+        <Card className="border-primary/30 xl:col-span-2">
+          <CardHeader className="border-b">
+            <CardTitle>
+              Periksa saldo awal sebelum mulai
+            </CardTitle>
+            <CardDescription>
+              Per tanggal {preview.cut_off_date}. Setelah
+              dikonfirmasi, journal dan pergerakan inventory
+              tidak dapat diedit; koreksi dilakukan lewat
+              transaksi koreksi atau reversal.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5 pt-5">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <PreviewMetric
+                label="Total debit"
+                value={preview.total_debit}
+              />
+              <PreviewMetric
+                label="Total credit"
+                value={preview.total_credit}
+              />
+              <PreviewMetric
+                label="Pergerakan inventory"
+                value={preview.inventory_movement_count}
+                numeric
+              />
+              <PreviewMetric
+                label="Item hutang / piutang"
+                value={
+                  preview.payable_item_count +
+                  preview.receivable_item_count
+                }
+                numeric
+              />
+            </div>
+
+            {preview.will_create_journal ? (
+              <div className="overflow-x-auto rounded-xl border">
+                <table className="w-full min-w-[42rem] text-sm">
+                  <thead className="bg-muted/40 text-muted-foreground text-left text-xs uppercase">
+                    <tr>
+                      <th className="px-4 py-3">Akun</th>
+                      <th className="px-4 py-3">
+                        Keterangan
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        Debit
+                      </th>
+                      <th className="px-4 py-3 text-right">
+                        Credit
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {preview.journal_lines.map((line) => (
+                      <tr key={line.account_id}>
+                        <td className="px-4 py-3">
+                          <span className="font-mono text-xs">
+                            {line.account_code}
+                          </span>{' '}
+                          {line.account_name}
+                        </td>
+                        <td className="text-muted-foreground px-4 py-3">
+                          {line.description}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">
+                          {line.debit
+                            ? formatMoney(line.debit)
+                            : '—'}
+                        </td>
+                        <td className="px-4 py-3 text-right font-mono">
+                          {line.credit
+                            ? formatMoney(line.credit)
+                            : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="border-info/30 bg-info/5 text-info-foreground rounded-xl border p-4 text-sm leading-6">
+                Pilihan mulai dari nol tidak membuat journal
+                atau pergerakan inventory.
+              </div>
+            )}
+
+            {preview.inventory_movements.length > 0 && (
+              <section className="space-y-3">
+                <div>
+                  <h3 className="font-semibold">
+                    Persediaan yang akan dicatat
+                  </h3>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Quantity dan nilai yang akan masuk ke
+                    lokasi masing-masing.
+                  </p>
+                </div>
+                <div className="overflow-x-auto rounded-xl border">
+                  <table className="w-full min-w-[42rem] text-sm">
+                    <thead className="bg-muted/40 text-muted-foreground text-left text-xs uppercase">
+                      <tr>
+                        <th className="px-4 py-3">Item</th>
+                        <th className="px-4 py-3">
+                          Lokasi
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          Quantity
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          Unit cost
+                        </th>
+                        <th className="px-4 py-3 text-right">
+                          Nilai
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {preview.inventory_movements.map(
+                        (movement) => (
+                          <tr
+                            key={`${movement.inventory_item_id}:${movement.location_id}`}
+                          >
+                            <td className="px-4 py-3">
+                              <span className="font-mono text-xs">
+                                {movement.sku}
+                              </span>{' '}
+                              {movement.item_name}
+                            </td>
+                            <td className="px-4 py-3">
+                              {movement.location_name}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono">
+                              {movement.quantity}{' '}
+                              {movement.unit}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono">
+                              {formatMoney(
+                                movement.unit_cost
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono">
+                              {formatMoney(
+                                movement.total_cost
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
+
+            {preview.subledger_items.length > 0 && (
+              <section className="space-y-3">
+                <div>
+                  <h3 className="font-semibold">
+                    Hutang dan piutang per sumber
+                  </h3>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Tiap sumber dapat disettle sendiri dari
+                    halaman Hutang atau Piutang.
+                  </p>
+                </div>
+                <div className="divide-y rounded-xl border">
+                  {preview.subledger_items.map(
+                    (item, index) => (
+                      <div
+                        key={`${item.balance_type}:${index}`}
+                        className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
+                      >
+                        <span>
+                          <Badge
+                            variant={
+                              item.balance_type ===
+                              'payable'
+                                ? 'warning'
+                                : 'info'
+                            }
+                          >
+                            {item.balance_type === 'payable'
+                              ? 'Hutang'
+                              : 'Piutang'}
+                          </Badge>{' '}
+                          {item.source_label}
+                        </span>
+                        <span className="font-mono font-medium">
+                          {formatMoney(item.amount)}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+            )}
+
+            <label className="border-border flex items-start gap-3 rounded-xl border p-4 text-sm leading-6">
+              <input
+                type="checkbox"
+                className="accent-primary mt-1 size-4"
+                checked={confirmed}
+                disabled={finalized}
+                onChange={(event) =>
+                  setConfirmed(event.target.checked)
+                }
+              />
+              <span>
+                Saya sudah memeriksa tanggal dan saldo di
+                atas. Aktifkan Finance dengan opening
+                balance ini.
+              </span>
+            </label>
+            <Button
+              type="button"
+              onClick={finalizeOpeningBalance}
+              disabled={
+                !confirmed || isFinalizing || finalized
+              }
+            >
+              {isFinalizing
+                ? 'Mengaktifkan Finance…'
+                : 'Konfirmasi dan aktifkan Finance'}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -788,7 +1207,8 @@ function InventoryLine({
   onChange: (line: InventoryLineState) => void;
   onRemove: () => void;
 }) {
-  const item = setup.options.inventory_items.find(
+  const eligibleItems = getEligibleInventoryItems(setup);
+  const item = eligibleItems.find(
     (option) => option.id === line.inventory_item_id
   );
 
@@ -797,12 +1217,10 @@ function InventoryLine({
       <SelectField
         label="Item"
         value={line.inventory_item_id}
-        options={setup.options.inventory_items.map(
-          (option) => ({
-            value: option.id,
-            label: `${option.sku} — ${option.name}`,
-          })
-        )}
+        options={eligibleItems.map((option) => ({
+          value: option.id,
+          label: `${option.sku} — ${option.name}`,
+        }))}
         onChange={(value) =>
           onChange({ ...line, inventory_item_id: value })
         }
@@ -1052,6 +1470,27 @@ function SummaryRow({
   );
 }
 
+function PreviewMetric({
+  label,
+  value,
+  numeric = false,
+}: {
+  label: string;
+  value: number;
+  numeric?: boolean;
+}) {
+  return (
+    <div className="bg-muted/30 rounded-xl border p-4">
+      <p className="text-muted-foreground text-xs">
+        {label}
+      </p>
+      <p className="mt-2 font-mono text-lg font-semibold">
+        {numeric ? value : formatMoney(value)}
+      </p>
+    </div>
+  );
+}
+
 function parseSetupResponse(
   payload: unknown
 ): FinanceOpeningBalanceSetupResponseDTO | null {
@@ -1078,6 +1517,44 @@ function parseSetupData(
   return FinanceOpeningBalanceSetupResponseSchema.parse(
     value
   );
+}
+
+function parsePreviewResponse(
+  payload: unknown
+): FinanceOpeningBalancePreviewDTO | null {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    !('success' in payload) ||
+    payload.success !== true ||
+    !('data' in payload)
+  ) {
+    return null;
+  }
+  const parsed =
+    FinanceOpeningBalancePreviewSchema.safeParse(
+      payload.data
+    );
+  return parsed.success ? parsed.data : null;
+}
+
+function parseFinalizeResponse(
+  payload: unknown
+): FinanceOpeningBalanceFinalizeResponseDTO | null {
+  if (
+    !payload ||
+    typeof payload !== 'object' ||
+    !('success' in payload) ||
+    payload.success !== true ||
+    !('data' in payload)
+  ) {
+    return null;
+  }
+  const parsed =
+    FinanceOpeningBalanceFinalizeResponseSchema.safeParse(
+      payload.data
+    );
+  return parsed.success ? parsed.data : null;
 }
 
 function getErrorMessage(payload: unknown) {

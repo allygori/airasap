@@ -1,6 +1,6 @@
 # ADR 0020 — Finance Opening Balance Onboarding Scope
 
-Status: [TARGET]
+Status: [CURRENT]
 
 ## Context
 
@@ -45,9 +45,10 @@ Products, and Reports modules remain outside this decision.
    zero or not used; an omitted value must not silently change the opening
    position.
 6. Finalization creates one Finance-owned, idempotent opening batch for the
-   organization, cut-off date, and onboarding version. The batch creates a
-   balanced journal with `source_type: opening_balance`, plus linked inventory
-   movements and opening subledger items where applicable.
+   organization, cut-off date, and onboarding version. Entered balances create
+   one balanced journal with `source_type: opening_balance`, plus linked
+   inventory movements and opening subledger items where applicable. The
+   explicit zero-start choice records a skipped batch without a journal.
 7. Posted opening journals and related movements are immutable. Corrections
    use a reversal or a separate adjustment transaction. Settlement of an
    opening payable or receivable creates a new journal rather than editing the
@@ -76,12 +77,9 @@ Products, and Reports modules remain outside this decision.
 
 ## Follow-up work
 
-- Implement the opening draft and finalization as part of Finance Plan 03.
-- Extend the Finance subledger in Plan 07.3 to recognize opening payable and
-  receivable source items.
-- Define the preview level for the opening journal and inventory effects
-  before implementing the onboarding UI.
-- Decide the default cut-off date before finalizing the onboarding form.
+- Decide whether Finance should seed a default Chart of Accounts for
+  organizations without existing usable COA data, rather than relying on the
+  Finance adapter to the existing account collection.
 
 ## Scope boundary
 

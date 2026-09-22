@@ -49,7 +49,13 @@ type FinanceSubledgerRepositoryPort = Pick<
   | 'findByIdempotencyKey'
   | 'createPending'
   | 'markPosted'
->;
+> &
+  Partial<
+    Pick<
+      FinanceSubledgerRepository,
+      'findOpeningBalanceSubledgerItem'
+    >
+  >;
 
 const eligiblePaymentSubtypes = new Set<string>(
   FINANCE_CASH_BANK_SUBTYPE_VALUES
@@ -87,6 +93,9 @@ const toSettlementResponse = (
     source_journal_entry_id: String(
       record.source_journal_entry
     ),
+    source_item_id: record.source_item_id
+      ? String(record.source_item_id)
+      : null,
     amount: record.amount,
     settlement_date: record.settlement_date.toISOString(),
     payment_account: {
@@ -113,6 +122,8 @@ const getSourceLabel = (
     return `Purchase ${sourceId}`;
   if (sourceType === 'expense')
     return `Expense ${sourceId}`;
+  if (sourceType === 'opening_balance')
+    return `Saldo awal ${sourceId}`;
   return `${sourceType} ${sourceId}`;
 };
 
@@ -140,6 +151,8 @@ const assertSameSettlementRequest = (
     existing.balance_type === input.balance_type &&
     String(existing.source_journal_entry) ===
       input.source_journal_entry_id &&
+    String(existing.source_item_id ?? '') ===
+      (input.source_item_id ?? '') &&
     existing.amount === input.amount &&
     existing.settlement_date.getTime() ===
       input.settlement_date.getTime() &&
@@ -206,29 +219,38 @@ export class FinanceSubledgerService {
         query.balance_type,
         session
       );
-    const totalsByJournal = new Map(
-      totals.map((total) => [String(total._id), total])
+    const totalsBySource = new Map(
+      totals.map((total) => [
+        total.source_item_id
+          ? `item:${String(total.source_item_id)}`
+          : `journal:${String(total.source_journal_entry ?? total._id)}`,
+        total,
+      ])
     );
     const balances = sourceRows
       .map((row): FinanceSubledgerBalanceDTO | null => {
-        const settled = totalsByJournal.get(
-          String(row.source_journal_entry)
-        );
+        const sourceKey = row.source_item_id
+          ? `item:${String(row.source_item_id)}`
+          : `journal:${String(row.source_journal_entry)}`;
+        const settled = totalsBySource.get(sourceKey);
         const settledAmount = settled?.settled_amount ?? 0;
         const outstandingAmount =
           row.original_amount - settledAmount;
         if (outstandingAmount <= 0) return null;
         return {
+          source_key: sourceKey,
           source_journal_entry_id: String(
             row.source_journal_entry
           ),
+          source_item_id: row.source_item_id
+            ? String(row.source_item_id)
+            : null,
           balance_type: query.balance_type,
           source_type: row.source_type,
           source_id: row.source_id,
-          source_label: getSourceLabel(
-            row.source_type,
-            row.source_id
-          ),
+          source_label:
+            row.source_label ??
+            getSourceLabel(row.source_type, row.source_id),
           description: row.description,
           transaction_date:
             row.transaction_date.toISOString(),
@@ -297,29 +319,47 @@ export class FinanceSubledgerService {
       data.balance_type,
       session
     );
-    const source = await this.repository.findSourceJournal(
-      data.source_journal_entry_id,
-      data.balance_type,
-      [String(balanceAccount._id)],
-      session
-    );
-    if (!source) {
+    const openingItem = data.source_item_id
+      ? await this.repository.findOpeningBalanceSubledgerItem?.(
+          data.source_item_id,
+          data.balance_type,
+          [String(balanceAccount._id)],
+          session
+        )
+      : null;
+    const source = data.source_item_id
+      ? null
+      : await this.repository.findSourceJournal(
+          data.source_journal_entry_id,
+          data.balance_type,
+          [String(balanceAccount._id)],
+          session
+        );
+    if (
+      (!openingItem && !source) ||
+      (openingItem &&
+        String(openingItem.journal_entry) !==
+          data.source_journal_entry_id)
+    ) {
       throw new FinanceDomainError(
         'Saldo Finance tidak ditemukan atau belum berstatus posted.',
         'FINANCE_SUBLEDGER_SOURCE_NOT_FOUND'
       );
     }
 
-    const originalAmount = getSourceAmount(
-      source,
-      String(balanceAccount._id),
-      data.balance_type
-    );
+    const originalAmount = openingItem
+      ? openingItem.amount
+      : getSourceAmount(
+          source!,
+          String(balanceAccount._id),
+          data.balance_type
+        );
     const settledAmount =
       await this.repository.sumSettledAmount(
         data.source_journal_entry_id,
         data.balance_type,
-        session
+        session,
+        data.source_item_id
       );
     const outstandingAmount =
       originalAmount - settledAmount;
@@ -342,9 +382,22 @@ export class FinanceSubledgerService {
           source_journal_entry: new Types.ObjectId(
             data.source_journal_entry_id
           ),
-          source_type: source.source_type,
-          source_id: source.source_id,
-          source_description: source.description,
+          ...(data.source_item_id
+            ? {
+                source_item_id: new Types.ObjectId(
+                  data.source_item_id
+                ),
+              }
+            : {}),
+          source_type: openingItem
+            ? 'opening_balance'
+            : source!.source_type,
+          source_id: openingItem
+            ? openingItem.source_id
+            : source!.source_id,
+          source_description: openingItem
+            ? openingItem.source_label
+            : source!.description,
           amount: data.amount,
           settlement_date: data.settlement_date,
           payment_account: paymentAccount._id,
@@ -353,7 +406,7 @@ export class FinanceSubledgerService {
           reference: data.reference ?? null,
           description:
             data.description ??
-            `${data.balance_type === 'receivable' ? 'Penerimaan piutang' : 'Pembayaran hutang'} ${getSourceLabel(source.source_type, source.source_id)}`,
+            `${data.balance_type === 'receivable' ? 'Penerimaan piutang' : 'Pembayaran hutang'} ${openingItem ? openingItem.source_label : getSourceLabel(source!.source_type, source!.source_id)}`,
           status: 'pending',
           journal_entry: null,
           idempotency_key: idempotencyKey,
@@ -396,7 +449,8 @@ export class FinanceSubledgerService {
         {
           transaction_date: data.settlement_date,
           posting_date: data.settlement_date,
-          currency: source.currency,
+          currency:
+            openingItem?.currency ?? source!.currency,
           description: settlement.description,
           source_type: 'finance_settlement',
           source_id: String(settlement._id),

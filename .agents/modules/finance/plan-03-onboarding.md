@@ -1,6 +1,6 @@
 # Finance Plan 03 — Onboarding
 
-Status: [CURRENT / IN PROGRESS]
+Status: [CURRENT / IMPLEMENTED]
 
 ## Goal
 
@@ -54,7 +54,7 @@ Acceptance criteria:
 - activation is idempotent;
 - blockers come from the server, not hardcoded UI assumptions.
 
-### Phase 3.2 — Required setup and opening balance draft [CURRENT / IN PROGRESS]
+### Phase 3.2 — Required setup and opening balance draft [CURRENT / IMPLEMENTED]
 
 Define the smallest setup that produces a meaningful opening position. Currency
 and accounting timezone are not required in the first Finance release. The
@@ -100,16 +100,19 @@ Implementation status:
   cash and bank balances, detailed inventory lines, payable/receivable draft
   lines, and owner capital input.
 - Saving a draft does not create a journal, inventory movement, subledger
-  source, or active Finance state. Those effects remain Phase 3.3 work.
+  source, or active Finance state.
 
-### Phase 3.3 — Opening balance validation and finalization [TARGET]
+### Phase 3.3 — Opening balance validation and finalization [CURRENT / IMPLEMENTED]
 
 Validate the draft opening position, create its Finance effects atomically, and
 then make future Finance routes available.
 
 Acceptance criteria:
 
-- the cut-off date and required COA setup are present before activation;
+- the cut-off date is present; every account referenced by an entered opening
+  balance is active, postable, and of the expected account role;
+- choosing “start at zero” creates no journal or movements and does not require
+  journal account mappings;
 - the opening draft is balanced using permanent accounts only: assets,
   liabilities, and equity;
 - inventory opening lines create traceable Finance inventory movements linked
@@ -131,6 +134,24 @@ Acceptance criteria:
 - incomplete setup cannot activate Finance, and refresh or retry cannot
   duplicate the opening batch.
 
+Implementation status:
+
+- The server preview validates account roles, opening totals, inventory
+  valuation, and source labels before the user confirms finalization.
+- One Finance journal is posted for an entered opening balance. Inventory
+  movements and per-source opening payable/receivable items are created in the
+  same MongoDB transaction and linked to that journal.
+- Opening subledger items retain a distinct source-item ID, so settlement
+  totals remain separate even though those items share one opening journal.
+- Finalization records the batch state and cut-off date on the organization,
+  activates `organization.finance`, and is safe to retry. The explicit
+  zero-start choice records a skipped opening batch and activates Finance
+  without ledger entries.
+- Posted journal and movement records are not editable through onboarding.
+  This phase does not seed or migrate Chart of Accounts data; Finance uses the
+  available Finance COA adapter and validates any accounts used by the opening
+  input.
+
 Period locking before the cut-off date, tax setup, and financial reporting are
 deliberately outside this phase. The cut-off date is still required as the
 reference point for the opening batch; it must not be described as a complete
@@ -138,14 +159,9 @@ historical period-locking feature until that control is implemented.
 
 ## Open questions
 
-- Should a user be able to reopen an unposted opening draft after leaving the
-  onboarding page, or is the current resumable onboarding state sufficient?
-- Should the first release show a separate preview of the journal and
-  inventory effects before finalization, or is the category summary enough?
-- Should the default cut-off date be today, the first day of the current
-  month, or be entered without a default?
-- Should opening receivables be included in the first onboarding UI, or remain
-  a later optional flow after the core opening balance is stable?
+- Should Finance provide its own account-template seeding for organizations
+  that do not already have usable COA records, or is the existing COA adapter
+  and data lifecycle sufficient after legacy Accounting is removed?
 
 ## Not in scope
 

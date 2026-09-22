@@ -44,6 +44,34 @@ const OpeningSubledgerLineSchema = z
   })
   .strict();
 
+const OpeningBalancePreviewLineSchema = z.object({
+  account_id: ObjectIdStringSchema,
+  account_code: z.string().min(1),
+  account_name: z.string().min(1),
+  debit: z.number().int().nonnegative(),
+  credit: z.number().int().nonnegative(),
+  description: z.string().min(1),
+});
+
+const OpeningBalancePreviewInventoryMovementSchema =
+  z.object({
+    inventory_item_id: ObjectIdStringSchema,
+    sku: z.string().min(1),
+    item_name: z.string().min(1),
+    location_id: ObjectIdStringSchema,
+    location_name: z.string().min(1),
+    quantity: z.number().int().positive(),
+    unit: z.string().min(1),
+    unit_cost: z.number().int().nonnegative(),
+    total_cost: z.number().int().nonnegative(),
+  });
+
+const OpeningBalancePreviewSubledgerItemSchema = z.object({
+  balance_type: z.enum(['receivable', 'payable']),
+  source_label: z.string().min(1),
+  amount: z.number().int().positive(),
+});
+
 export const FinanceOpeningBalanceModeSchema = z.enum(
   FINANCE_OPENING_BALANCE_MODE_VALUES
 );
@@ -143,6 +171,34 @@ export const FinanceOpeningBalanceDraftInputSchema = z
         });
       }
     }
+
+    for (const [
+      index,
+      line,
+    ] of value.payable_lines.entries()) {
+      if (!line.counterparty && !line.reference) {
+        context.addIssue({
+          code: 'custom',
+          path: ['payable_lines', index, 'counterparty'],
+          message:
+            'Isi nama supplier atau reference agar saldo hutang dapat dikenali.',
+        });
+      }
+    }
+
+    for (const [
+      index,
+      line,
+    ] of value.receivable_lines.entries()) {
+      if (!line.counterparty && !line.reference) {
+        context.addIssue({
+          code: 'custom',
+          path: ['receivable_lines', index, 'counterparty'],
+          message:
+            'Isi counterparty atau reference agar saldo piutang dapat dikenali.',
+        });
+      }
+    }
   });
 
 export const FinanceOpeningBalanceDraftSchema =
@@ -152,6 +208,9 @@ export const FinanceOpeningBalanceDraftSchema =
     onboarding_version: z.number().int().positive(),
     created_at: z.string().datetime().nullable(),
     updated_at: z.string().datetime().nullable(),
+    journal_entry_id: ObjectIdStringSchema.nullable(),
+    inventory_movement_ids: z.array(ObjectIdStringSchema),
+    finalized_at: z.string().datetime().nullable(),
   });
 
 export const FinanceOpeningBalanceAccountOptionSchema =
@@ -214,6 +273,9 @@ export const FinanceOpeningBalanceSetupResponseSchema =
       equity_accounts: z.array(
         FinanceOpeningBalanceAccountOptionSchema
       ),
+      retained_earnings_accounts: z.array(
+        FinanceOpeningBalanceAccountOptionSchema
+      ),
       inventory_items: z.array(
         FinanceOpeningBalanceInventoryItemOptionSchema
       ),
@@ -222,4 +284,42 @@ export const FinanceOpeningBalanceSetupResponseSchema =
       ),
     }),
     summary: FinanceOpeningBalanceSummarySchema,
+  });
+
+export const FinanceOpeningBalancePreviewSchema = z.object({
+  cut_off_date: z.string().date(),
+  mode: FinanceOpeningBalanceModeSchema,
+  summary: FinanceOpeningBalanceSummarySchema,
+  journal_lines: z.array(OpeningBalancePreviewLineSchema),
+  inventory_movements: z.array(
+    OpeningBalancePreviewInventoryMovementSchema
+  ),
+  subledger_items: z.array(
+    OpeningBalancePreviewSubledgerItemSchema
+  ),
+  total_debit: z.number().int().nonnegative(),
+  total_credit: z.number().int().nonnegative(),
+  will_create_journal: z.boolean(),
+  inventory_movement_count: z.number().int().nonnegative(),
+  payable_item_count: z.number().int().nonnegative(),
+  receivable_item_count: z.number().int().nonnegative(),
+});
+
+export const FinanceOpeningBalanceFinalizeInputSchema = z
+  .object({ confirmed: z.literal(true) })
+  .strict();
+
+export const FinanceOpeningBalanceFinalizeResponseSchema =
+  z.object({
+    finance_status: z.literal('active'),
+    status: z.enum(['posted', 'skipped']),
+    cut_off_date: z.string().date(),
+    journal_entry_id: ObjectIdStringSchema.nullable(),
+    inventory_movement_count: z
+      .number()
+      .int()
+      .nonnegative(),
+    payable_item_count: z.number().int().nonnegative(),
+    receivable_item_count: z.number().int().nonnegative(),
+    replayed: z.boolean(),
   });
