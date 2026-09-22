@@ -42,11 +42,10 @@ export default async function FinanceJournalDetailPage({
   const { journalId } = await params;
   const data = await loadPageData(tenantContext, journalId);
 
-  if (data.status === 'unavailable') {
-    return <UnavailableState />;
-  }
-
-  if (data.status === 'not_ready') {
+  if (data.status !== 'ready') {
+    if (data.status === 'unavailable') {
+      return <UnavailableState />;
+    }
     return <NotReadyState />;
   }
 

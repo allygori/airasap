@@ -14,6 +14,20 @@ preview logic may be reused after review. The Finance onboarding service,
 contracts, and activation behavior must be explicit and must not inherit
 unneeded legacy complexity automatically.
 
+## Implementation progress
+
+### Phase 3.1 — [CURRENT] Readiness and setup state
+
+Finance now exposes a server-computed readiness contract alongside the
+organization-owned lifecycle state. It reports the effective state for the
+current actor, owner access, whether start or resume is allowed, and stable
+blocker codes. Starting an already in-progress onboarding remains idempotent,
+and the onboarding page can reload the saved state without losing progress.
+
+The persisted Finance state supports `blocked` and an optional
+`blocked_reason`; final activation and the configuration steps remain in the
+later onboarding phases.
+
 ## Phases
 
 ### Phase 3.1 — Readiness and setup state
@@ -72,4 +86,3 @@ Acceptance criteria:
 - bank statement import;
 - advanced tax setup;
 - replacing existing organization/store setup.
-

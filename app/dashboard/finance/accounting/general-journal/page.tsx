@@ -57,11 +57,10 @@ export default async function GeneralJournalPage({
     queryResult
   );
 
-  if (data.status === 'unavailable') {
-    return <UnavailableState />;
-  }
-
-  if (data.status === 'not_ready') {
+  if (data.status !== 'ready') {
+    if (data.status === 'unavailable') {
+      return <UnavailableState />;
+    }
     return <NotReadyState />;
   }
 

@@ -24,11 +24,11 @@ export async function GET() {
 
     await db.connect();
 
-    const finance = await new FinanceLifecycleService(
+    const readiness = await new FinanceLifecycleService(
       tenantContext
-    ).getState();
+    ).getReadiness();
 
-    return apiSuccess({ finance });
+    return apiSuccess(readiness);
   } catch (error) {
     if (error instanceof FinanceDomainError) {
       const status =

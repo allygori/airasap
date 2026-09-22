@@ -49,6 +49,7 @@ export const OrganizationAccountingSchema = z.object({
 export const ORGANIZATION_FINANCE_STATUS_VALUES = [
   'not_started',
   'in_progress',
+  'blocked',
   'active',
 ] as const;
 
@@ -65,6 +66,7 @@ export const OrganizationFinanceSchema = z.object({
     .positive()
     .default(1),
   started_at: z.date().optional(),
+  blocked_reason: z.string().min(1).optional(),
   completed_at: z.date().optional(),
   completed_by: z.string().optional(),
 });

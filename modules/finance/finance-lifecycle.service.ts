@@ -8,18 +8,50 @@ import {
   type FinanceState,
   type FinanceTenantContext,
 } from './finance.types';
+import type { FinanceReadinessResponseDTO } from './onboarding/finance-onboarding.dto';
+import { FinanceReadinessResponseSchema } from './onboarding/finance-onboarding.schema';
+
+type FinanceLifecycleOrganization = {
+  finance?: Partial<FinanceState> | null;
+};
+
+type FinanceLifecycleRepository = {
+  findFinanceState: (
+    session?: ClientSession
+  ) => Promise<FinanceLifecycleOrganization | null>;
+  startFinance: (
+    data: {
+      onboarding_version: number;
+      started_at: Date;
+    },
+    session?: ClientSession
+  ) => Promise<FinanceLifecycleOrganization | null>;
+};
+
+type FinanceLifecycleDependencies = {
+  organizationRepository?: FinanceLifecycleRepository;
+  ownerAccessChecker?: () => Promise<boolean>;
+};
 
 export class FinanceLifecycleService {
-  private readonly organizationRepository: OrganizationRepository;
+  private readonly organizationRepository: FinanceLifecycleRepository;
   private readonly context: FinanceTenantContext;
+  private readonly ownerAccessChecker: () => Promise<boolean>;
 
-  constructor(context: FinanceTenantContext) {
+  constructor(
+    context: FinanceTenantContext,
+    dependencies?: FinanceLifecycleDependencies
+  ) {
     assertFinanceTenant(context);
     this.context = context;
     this.organizationRepository =
+      dependencies?.organizationRepository ??
       new OrganizationRepository({
         organizationId: context.organizationId,
       });
+    this.ownerAccessChecker =
+      dependencies?.ownerAccessChecker ??
+      (() => this.hasOwnerAccess());
   }
 
   async getState(
@@ -63,6 +95,66 @@ export class FinanceLifecycleService {
       );
     }
 
+    if (!(await this.ownerAccessChecker())) {
+      throw new FinanceDomainError(
+        'Hanya owner organization yang dapat memulai Finance onboarding.',
+        'FINANCE_OWNER_REQUIRED'
+      );
+    }
+
+    return true;
+  }
+
+  async getReadiness(): Promise<FinanceReadinessResponseDTO> {
+    const finance = await this.getState();
+    const ownerAccess = await this.ownerAccessChecker();
+    const blockers = [] as Array<{
+      code: 'OWNER_REQUIRED' | 'FINANCE_BLOCKED';
+      message: string;
+    }>;
+
+    if (finance.status === 'blocked') {
+      blockers.push({
+        code: 'FINANCE_BLOCKED',
+        message:
+          finance.blocked_reason ??
+          'Setup Finance sedang diblokir dan perlu ditinjau.',
+      });
+    }
+
+    if (finance.status !== 'active' && !ownerAccess) {
+      blockers.push({
+        code: 'OWNER_REQUIRED',
+        message:
+          'Hanya owner organization yang dapat memulai atau melanjutkan setup Finance.',
+      });
+    }
+
+    const readinessStatus =
+      finance.status === 'active'
+        ? 'active'
+        : finance.status === 'blocked' ||
+            blockers.length > 0
+          ? 'blocked'
+          : finance.status;
+
+    return FinanceReadinessResponseSchema.parse({
+      finance,
+      readiness: {
+        status: readinessStatus,
+        owner_access: ownerAccess,
+        can_start:
+          finance.status === 'not_started' && ownerAccess,
+        can_resume:
+          finance.status === 'in_progress' && ownerAccess,
+        blockers,
+      },
+    });
+  }
+
+  private async hasOwnerAccess() {
+    if (!this.context.userId) return false;
+
     const member = await MemberModel.findOne({
       organizationId: this.context.organizationId,
       userId: this.context.userId,
@@ -75,14 +167,7 @@ export class FinanceLifecycleService {
       .select('_id role')
       .lean();
 
-    if (!member) {
-      throw new FinanceDomainError(
-        'Hanya owner organization yang dapat memulai Finance onboarding.',
-        'FINANCE_OWNER_REQUIRED'
-      );
-    }
-
-    return member;
+    return Boolean(member);
   }
 
   async start(session?: ClientSession) {

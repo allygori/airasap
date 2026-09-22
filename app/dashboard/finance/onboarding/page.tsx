@@ -9,7 +9,7 @@ import {
 import {
   FinanceDomainError,
   FinanceLifecycleService,
-  type FinanceState,
+  type FinanceReadinessResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
 import FinanceOnboarding from './_components/finance-onboarding';
@@ -27,26 +27,18 @@ export default async function FinanceOnboardingPage() {
     return <FinanceUnavailableState />;
   }
 
-  return <FinanceOnboarding finance={finance} />;
+  return <FinanceOnboarding data={finance} />;
 }
 
 async function loadFinanceState(
   tenantContext: FinanceTenantContext
-): Promise<Pick<
-  FinanceState,
-  'status' | 'onboarding_version'
-> | null> {
+): Promise<FinanceReadinessResponseDTO | null> {
   try {
     await db.connect();
 
-    const finance = await new FinanceLifecycleService(
+    return await new FinanceLifecycleService(
       tenantContext
-    ).getState();
-
-    return {
-      status: finance.status,
-      onboarding_version: finance.onboarding_version,
-    };
+    ).getReadiness();
   } catch (error) {
     if (
       error instanceof FinanceDomainError &&
@@ -74,8 +66,3 @@ function FinanceUnavailableState() {
     </div>
   );
 }
-
-export type FinanceOnboardingState = Pick<
-  FinanceState,
-  'status' | 'onboarding_version'
->;

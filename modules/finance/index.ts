@@ -5,6 +5,10 @@ export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
 export { FinancePeriodService } from './periods/finance-period.service';
 export {
+  FinanceReadinessResponseSchema,
+  FinanceReadinessSchema,
+} from './onboarding/finance-onboarding.schema';
+export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
 } from './accounts/finance-account.constants';
@@ -27,6 +31,11 @@ export type {
   FinanceStatus,
   FinanceTenantContext,
 } from './finance.types';
+export type {
+  FinanceReadinessBlockerDTO,
+  FinanceReadinessDTO,
+  FinanceReadinessResponseDTO,
+} from './onboarding/finance-onboarding.dto';
 export type {
   FinanceAccountDTO,
   FinanceAccountFilterDTO,

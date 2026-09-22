@@ -46,6 +46,9 @@ export const normalizeFinanceState = (
   ...(finance?.started_at
     ? { started_at: finance.started_at }
     : {}),
+  ...(finance?.blocked_reason
+    ? { blocked_reason: finance.blocked_reason }
+    : {}),
   ...(finance?.completed_at
     ? { completed_at: finance.completed_at }
     : {}),
