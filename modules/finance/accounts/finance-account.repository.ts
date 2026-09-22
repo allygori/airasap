@@ -127,4 +127,28 @@ export class FinanceAccountRepository {
       .lean<FinanceAccountPersistenceRecord[]>()
       .exec();
   }
+
+  async findByIds(
+    accountIds: string[],
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord[]> {
+    const objectIds = accountIds
+      .filter((accountId) =>
+        Types.ObjectId.isValid(accountId)
+      )
+      .map((accountId) => new Types.ObjectId(accountId));
+
+    if (objectIds.length === 0) return [];
+
+    const query = FinanceAccountModel.find({
+      organization: this.organizationId,
+      _id: { $in: objectIds },
+    });
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord[]>()
+      .exec();
+  }
 }

@@ -1,10 +1,37 @@
-import type { ClientSession, QueryFilter } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type QueryFilter,
+} from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import {
   FinanceJournalEntryModel,
   type TFinanceJournalEntry,
 } from './finance-journal.model';
 import type { FinanceTenantContext } from '../finance.types';
+
+type FinanceJournalListFilter = {
+  page: number;
+  limit: number;
+  period?: string;
+  status?: 'posted' | 'reversed';
+  source_type?: string;
+  search?: string;
+};
+
+export type FinanceLedgerPersistenceRow = {
+  _id: TFinanceJournalEntry['_id'];
+  entry_number: string;
+  transaction_date: Date;
+  posting_date: Date;
+  description: string;
+  source_type: string;
+  line_index: number;
+  lines: TFinanceJournalEntry['lines'][number];
+};
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export type FinanceJournalPersistenceRecord = {
   _id: TFinanceJournalEntry['_id'];
@@ -52,6 +79,59 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
       .exec();
   }
 
+  async list(
+    filter: FinanceJournalListFilter,
+    session?: ClientSession
+  ): Promise<{
+    records: FinanceJournalPersistenceRecord[];
+    total: number;
+  }> {
+    const queryFilter: QueryFilter<TFinanceJournalEntry> = {
+      ...this.getTenantFilter(),
+      ...(filter.period ? { period: filter.period } : {}),
+      ...(filter.status ? { status: filter.status } : {}),
+      ...(filter.source_type
+        ? { source_type: filter.source_type }
+        : {}),
+    };
+
+    if (filter.search) {
+      const search = new RegExp(
+        escapeRegex(filter.search),
+        'i'
+      );
+      queryFilter.$or = [
+        { entry_number: search },
+        { description: search },
+        { source_id: search },
+      ];
+    }
+
+    const query = this.model
+      .find(queryFilter)
+      .sort({
+        transaction_date: -1,
+        posting_date: -1,
+        entry_number: -1,
+      })
+      .skip((filter.page - 1) * filter.limit)
+      .limit(filter.limit);
+    if (session) query.session(session);
+
+    const countQuery =
+      this.model.countDocuments(queryFilter);
+    if (session) countQuery.session(session);
+
+    const [records, total] = await Promise.all([
+      query
+        .lean<FinanceJournalPersistenceRecord[]>()
+        .exec(),
+      countQuery.exec(),
+    ]);
+
+    return { records, total };
+  }
+
   async createPosted(
     data: CreateFinanceJournalRecord,
     session?: ClientSession
@@ -78,6 +158,78 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
     return query
       .lean<FinanceJournalPersistenceRecord | null>()
       .exec();
+  }
+
+  async findLedgerLines(
+    accountId: string,
+    period: string | undefined,
+    maxRows: number,
+    session?: ClientSession
+  ): Promise<{
+    rows: FinanceLedgerPersistenceRow[];
+    total: number;
+  }> {
+    const accountObjectId = new Types.ObjectId(accountId);
+    const baseMatch = {
+      ...this.getTenantFilter(),
+      status: 'posted',
+      ...(period ? { period } : {}),
+    };
+    const unwind = {
+      $unwind: {
+        path: '$lines',
+        includeArrayIndex: 'line_index',
+      },
+    } as const;
+    const accountMatch = {
+      $match: { 'lines.account_id': accountObjectId },
+    } as const;
+
+    const dataAggregate =
+      this.model.aggregate<FinanceLedgerPersistenceRow>([
+        { $match: baseMatch },
+        unwind,
+        accountMatch,
+        {
+          $project: {
+            entry_number: 1,
+            transaction_date: 1,
+            posting_date: 1,
+            description: 1,
+            source_type: 1,
+            line_index: 1,
+            lines: 1,
+          },
+        },
+        {
+          $sort: {
+            transaction_date: 1,
+            posting_date: 1,
+            entry_number: 1,
+            _id: 1,
+          },
+        },
+        { $limit: maxRows },
+      ]);
+    const countAggregate = this.model.aggregate<{
+      total: number;
+    }>([
+      { $match: baseMatch },
+      unwind,
+      accountMatch,
+      { $count: 'total' },
+    ]);
+    if (session) {
+      dataAggregate.session(session);
+      countAggregate.session(session);
+    }
+
+    const [rows, countRows] = await Promise.all([
+      dataAggregate.exec(),
+      countAggregate.exec(),
+    ]);
+
+    return { rows, total: countRows[0]?.total ?? 0 };
   }
 
   async findByReversalOf(

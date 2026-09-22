@@ -2,6 +2,7 @@ export { FinanceDomainError } from './finance.error';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
+export { FinanceJournalReadService } from './journal/finance-journal-read.service';
 export { FinancePeriodService } from './periods/finance-period.service';
 export {
   FINANCE_ACCOUNT_TYPE_VALUES,
@@ -11,6 +12,8 @@ export { FinanceAccountFilterSchema } from './accounts/finance-account.schema';
 export {
   FinanceOperationalPostingSchema,
   FinanceJournalReversalSchema,
+  FinanceJournalListQuerySchema,
+  FinanceJournalLedgerQuerySchema,
   FinanceJournalEntryResponseSchema,
 } from './journal/finance-journal.schema';
 export { FinanceClosePeriodSchema } from './periods/finance-period.schema';
@@ -35,6 +38,14 @@ export type {
 } from './accounts/finance-account.constants';
 export type {
   FinanceJournalEntryDTO,
+  FinanceJournalEntryDetailDTO,
+  FinanceJournalEntrySummaryDTO,
+  FinanceJournalDetailResponseDTO,
+  FinanceJournalLineDetailDTO,
+  FinanceJournalListQueryDTO,
+  FinanceJournalListResponseDTO,
+  FinanceJournalLedgerQueryDTO,
+  FinanceLedgerResponseDTO,
   FinanceJournalPostResultDTO,
   FinanceJournalReversalDTO,
   FinanceOperationalPostingDTO,

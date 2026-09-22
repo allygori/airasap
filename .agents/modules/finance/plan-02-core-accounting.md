@@ -48,6 +48,16 @@ balanced journal with swapped debit/credit lines, then transitions the original
 entry to `reversed` without editing its lines. Draft, blocked, and voided
 states are reserved for later onboarding/import and manual-journal workflows.
 
+### Phase 2.4 — [CURRENT] Core read APIs and accounting surface
+
+Finance now exposes tenant-scoped journal list, journal detail, and account
+ledger reads. The journal list supports bounded pagination and filters for
+period, status, source type, and text search. Journal detail joins account
+metadata through the Finance account boundary so the UI can trace each line
+without depending on the legacy accounting explorer. Ledger reads calculate a
+normal-balance running balance and expose a bounded result indicator for very
+large histories.
+
 ## Phases
 
 ### Phase 2.1 — Chart of Accounts contract

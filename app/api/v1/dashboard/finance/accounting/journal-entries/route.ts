@@ -9,6 +9,8 @@ import { db } from '@/lib/db/connection';
 import {
   assertFinanceModuleActive,
   FinanceDomainError,
+  FinanceJournalListQuerySchema,
+  FinanceJournalReadService,
   FinanceJournalService,
   FinanceOperationalPostingSchema,
 } from '@/modules/finance';
@@ -64,6 +66,54 @@ export const POST = withValidation(
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
         'Gagal membuat journal Finance.',
+        500
+      );
+    }
+  }
+);
+
+export const GET = withValidation(
+  { query: FinanceJournalListQuerySchema },
+  async (_request, { validatedQuery }) => {
+    try {
+      const tenantContext = await getTenantContext();
+
+      if (!tenantContext.organizationId) {
+        return apiError(
+          ErrorCodes.FORBIDDEN,
+          'Organization ID tidak ditemukan.',
+          403
+        );
+      }
+
+      await db.connect();
+      await assertFinanceModuleActive(tenantContext);
+
+      const result = await new FinanceJournalReadService(
+        tenantContext
+      ).list(validatedQuery!);
+
+      return apiSuccess(result);
+    } catch (error) {
+      if (error instanceof FinanceDomainError) {
+        const status =
+          error.code === 'FINANCE_ORGANIZATION_NOT_FOUND'
+            ? 404
+            : error.code === 'FINANCE_NOT_ACTIVE'
+              ? 403
+              : 422;
+
+        return apiError(error.code, error.message, status);
+      }
+
+      console.error(
+        '[GET /api/v1/dashboard/finance/accounting/journal-entries]',
+        error
+      );
+
+      return apiError(
+        ErrorCodes.INTERNAL_ERROR,
+        'Gagal memuat journal Finance.',
         500
       );
     }
