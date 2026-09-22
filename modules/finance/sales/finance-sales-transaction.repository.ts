@@ -10,6 +10,7 @@ import {
   type TFinanceSalesTransaction,
 } from './finance-sales-transaction.model';
 import type {
+  FinanceSalesTransactionListQueryDTO,
   FinanceSalesPostingModeDTO,
   FinanceSalesTransactionStatusDTO,
 } from './finance-sales.dto';
@@ -45,6 +46,9 @@ export type CreateFinanceSalesTransactionRecord = Omit<
   '_id' | 'organization' | 'created_at' | 'updated_at'
 >;
 
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSalesTransaction> {
   constructor(context: FinanceTenantContext) {
     super(FinanceSalesTransactionModel, context);
@@ -63,6 +67,73 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
     return query
       .lean<FinanceSalesTransactionPersistenceRecord | null>()
       .exec();
+  }
+
+  async findTransactionById(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      _id: new Types.ObjectId(id),
+    });
+    if (session) query.session(session);
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async list(
+    filter: FinanceSalesTransactionListQueryDTO,
+    session?: ClientSession
+  ): Promise<{
+    records: FinanceSalesTransactionPersistenceRecord[];
+    total: number;
+  }> {
+    const queryFilter: QueryFilter<TFinanceSalesTransaction> =
+      {
+        ...this.getTenantFilter(),
+        ...(filter.status ? { status: filter.status } : {}),
+        ...(filter.posting_mode
+          ? { posting_mode: filter.posting_mode }
+          : {}),
+      };
+
+    if (filter.search) {
+      const search = new RegExp(
+        escapeRegex(filter.search),
+        'i'
+      );
+      queryFilter.$or = [
+        { source_order_id: search },
+        { source_order_number: search },
+        { blocked_reason: search },
+      ];
+    }
+
+    const query = this.model
+      .find(queryFilter)
+      .sort({ created_at: -1, _id: -1 })
+      .skip((filter.page - 1) * filter.limit)
+      .limit(filter.limit);
+    const countQuery =
+      this.model.countDocuments(queryFilter);
+
+    if (session) {
+      query.session(session);
+      countQuery.session(session);
+    }
+
+    const [records, total] = await Promise.all([
+      query
+        .lean<FinanceSalesTransactionPersistenceRecord[]>()
+        .exec(),
+      countQuery.exec(),
+    ]);
+
+    return { records, total };
   }
 
   async createTransaction(
@@ -130,6 +201,33 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
           blocked_reason: null,
         },
       },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async markReversedByJournalEntry(
+    journalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(journalEntryId))
+      return null;
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        journal_entry_id: new Types.ObjectId(
+          journalEntryId
+        ),
+        status: 'posted',
+      },
+      { $set: { status: 'reversed' } },
       {
         returnDocument: 'after',
         runValidators: true,

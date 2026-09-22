@@ -7,6 +7,8 @@ export { FinancePeriodService } from './periods/finance-period.service';
 export { FinanceSalesProjectionService } from './sales/finance-sales.service';
 export { FinanceSalesPostingRulesService } from './sales/finance-sales-rules.service';
 export { FinanceSalesWorkflowService } from './sales/finance-sales-workflow.service';
+export { FinanceSalesTransactionReadService } from './sales/finance-sales-transaction-read.service';
+export { FinanceSalesTransactionRepository } from './sales/finance-sales-transaction.repository';
 export { FinanceAccountRoleResolverService } from './accounts/finance-account-role-resolver.service';
 export {
   FINANCE_SALES_POSTING_MODE_VALUES,
@@ -55,6 +57,10 @@ export type {
   FinanceSalesPostingModeDTO,
   FinanceSalesTransactionStatusDTO,
   FinanceSalesWorkflowResultDTO,
+  FinanceSalesTransactionListQueryDTO,
+  FinanceSalesTransactionSummaryDTO,
+  FinanceSalesTransactionListResponseDTO,
+  FinanceSalesTransactionDetailResponseDTO,
 } from './sales/finance-sales.dto';
 export type { FinanceSalesWorkflowInput } from './sales/finance-sales-workflow.service';
 export type {
@@ -69,6 +75,11 @@ export {
   FinanceSalesPostingModeSchema,
   FinanceSalesTransactionStatusSchema,
   FinanceSalesWorkflowResultSchema,
+  FinanceSalesTransactionListQuerySchema,
+  FinanceSalesTransactionSummarySchema,
+  FinanceSalesTransactionListResponseSchema,
+  FinanceSalesTransactionDetailSchema,
+  FinanceSalesTransactionDetailResponseSchema,
 } from './sales/finance-sales.schema';
 export type {
   FinanceAccountDTO,

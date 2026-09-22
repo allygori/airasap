@@ -40,6 +40,7 @@ export const FINANCE_SALES_TRANSACTION_STATUS_VALUES = [
   'pending',
   'blocked',
   'posted',
+  'reversed',
 ] as const;
 
 export type FinanceSalesProjectionStatus =

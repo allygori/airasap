@@ -51,6 +51,20 @@ Until Finance configuration is introduced, an omitted mode uses the safe
 `manual` fallback. This does not add onboarding fields or change the existing
 Orders importer.
 
+### Phase 4.4 — [CURRENT] Status, retry, and reconciliation behavior
+
+Finance now persists and exposes the complete sales work-item lifecycle:
+`pending`, `blocked`, `posted`, and `reversed`. Repeated processing uses the
+Finance transaction idempotency key, while journal posting continues to use the
+same immutable journal idempotency contract. A manual `post`/`retry` action
+reuses the stored Finance intent and source snapshot; it does not reread or
+mutate the canonical order. Reversing a linked Finance journal marks the
+corresponding sales transaction `reversed`.
+
+The Finance sales page and versioned API expose list/detail traceability,
+blocked reasons, explicit post/retry actions, and links to the resulting
+journal. Inventory/HPP remains a deferred effect until Plan 05.
+
 ## Phases
 
 ### Phase 4.1 — Finance sales projection and adapter

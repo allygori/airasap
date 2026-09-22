@@ -8,6 +8,10 @@ import {
   FinanceSalesPostingJournalLineIntentSchema,
   FinanceSalesPostingModeSchema,
   FinanceSalesTransactionStatusSchema,
+  FinanceSalesTransactionDetailResponseSchema,
+  FinanceSalesTransactionListQuerySchema,
+  FinanceSalesTransactionListResponseSchema,
+  FinanceSalesTransactionSummarySchema,
   FinanceSalesWorkflowResultSchema,
 } from './finance-sales.schema';
 
@@ -51,3 +55,22 @@ export type FinanceSalesTransactionStatusDTO = ReturnType<
 export type FinanceSalesWorkflowResultDTO = ReturnType<
   typeof FinanceSalesWorkflowResultSchema.parse
 >;
+
+export type FinanceSalesTransactionListQueryDTO =
+  ReturnType<
+    typeof FinanceSalesTransactionListQuerySchema.parse
+  >;
+
+export type FinanceSalesTransactionSummaryDTO = ReturnType<
+  typeof FinanceSalesTransactionSummarySchema.parse
+>;
+
+export type FinanceSalesTransactionListResponseDTO =
+  ReturnType<
+    typeof FinanceSalesTransactionListResponseSchema.parse
+  >;
+
+export type FinanceSalesTransactionDetailResponseDTO =
+  ReturnType<
+    typeof FinanceSalesTransactionDetailResponseSchema.parse
+  >;

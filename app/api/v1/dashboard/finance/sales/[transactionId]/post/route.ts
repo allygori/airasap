@@ -10,21 +10,23 @@ import { db } from '@/lib/db/connection';
 import {
   assertFinanceModuleActive,
   FinanceDomainError,
-  FinanceJournalReversalSchema,
-  FinanceJournalService,
-  FinanceSalesTransactionRepository,
+  FinanceSalesWorkflowService,
 } from '@/modules/finance';
 
-const FinanceJournalRouteParamsSchema = z
-  .object({ journalId: z.string().trim().min(1) })
+const FinanceSalesTransactionRouteParamsSchema = z
+  .object({
+    transactionId: z
+      .string()
+      .regex(
+        /^[0-9a-fA-F]{24}$/,
+        'Transaction ID tidak valid'
+      ),
+  })
   .strict();
 
 export const POST = withValidation(
-  {
-    body: FinanceJournalReversalSchema,
-    params: FinanceJournalRouteParamsSchema,
-  },
-  async (_request, { validatedBody, validatedParams }) => {
+  { params: FinanceSalesTransactionRouteParamsSchema },
+  async (_request, { validatedParams }) => {
     try {
       const tenantContext = await getTenantContext();
 
@@ -39,33 +41,22 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const result = await new FinanceJournalService(
+      const result = await new FinanceSalesWorkflowService(
         tenantContext
-      ).reverse(validatedParams!.journalId, validatedBody!);
+      ).postTransaction(validatedParams!.transactionId);
 
-      await new FinanceSalesTransactionRepository(
-        tenantContext
-      ).markReversedByJournalEntry(
-        validatedParams!.journalId
-      );
-
-      return apiSuccess(
-        result,
-        undefined,
-        result.replayed ? 200 : 201
-      );
-    } catch (error) {
+      return apiSuccess(result);
+    } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {
         const status =
           error.code === 'FINANCE_ORGANIZATION_NOT_FOUND' ||
-          error.code === 'FINANCE_JOURNAL_NOT_FOUND'
+          error.code ===
+            'FINANCE_SALES_TRANSACTION_NOT_FOUND'
             ? 404
             : error.code === 'FINANCE_NOT_ACTIVE'
               ? 403
               : error.code ===
-                    'FINANCE_JOURNAL_REVERSAL_CONFLICT' ||
-                  error.code ===
-                    'FINANCE_JOURNAL_REVERSAL_FINALIZATION_FAILED'
+                  'FINANCE_SALES_TRANSACTION_NOT_POSTABLE'
                 ? 409
                 : 422;
 
@@ -73,13 +64,13 @@ export const POST = withValidation(
       }
 
       console.error(
-        '[POST /api/v1/dashboard/finance/accounting/journal-entries/:journalId/reverse]',
+        '[POST /api/v1/dashboard/finance/sales/:transactionId/post]',
         error
       );
 
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
-        'Gagal melakukan reversal journal Finance.',
+        'Gagal mem-posting transaksi sales Finance.',
         500
       );
     }

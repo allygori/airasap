@@ -231,6 +231,7 @@ export const FinanceSalesWorkflowResultSchema = z.object({
     'pending',
     'blocked',
     'posted',
+    'reversed',
   ]),
   mode: FinanceSalesPostingModeSchema,
   source_order_id: z.string(),
@@ -238,3 +239,61 @@ export const FinanceSalesWorkflowResultSchema = z.object({
   journal_entry_id: z.string().nullable(),
   reason: z.string().nullable(),
 });
+
+export const FinanceSalesTransactionListQuerySchema =
+  z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(100)
+      .default(25),
+    status: FinanceSalesTransactionStatusSchema.optional(),
+    posting_mode: FinanceSalesPostingModeSchema.optional(),
+    search: z.string().trim().max(100).optional(),
+  });
+
+export const FinanceSalesTransactionSummarySchema =
+  z.object({
+    id: z.string(),
+    source_order_id: z.string(),
+    source_order_number: z.string(),
+    store_id: z.string().nullable(),
+    platform: z.string(),
+    source_status: z.string().nullable(),
+    transaction_date: z.string().datetime().nullable(),
+    currency: z.string(),
+    sales_amount: z.number().int().nonnegative().nullable(),
+    posting_mode: FinanceSalesPostingModeSchema,
+    status: FinanceSalesTransactionStatusSchema,
+    idempotency_key: z.string(),
+    blocked_reason: z.string().nullable(),
+    journal_entry_id: z.string().nullable(),
+    created_at: z.string().datetime(),
+    updated_at: z.string().datetime(),
+  });
+
+export const FinanceSalesTransactionListResponseSchema =
+  z.object({
+    transactions: z.array(
+      FinanceSalesTransactionSummarySchema
+    ),
+    pagination: z.object({
+      page: z.number().int().positive(),
+      limit: z.number().int().positive(),
+      total: z.number().int().nonnegative(),
+      total_pages: z.number().int().nonnegative(),
+    }),
+  });
+
+export const FinanceSalesTransactionDetailSchema =
+  FinanceSalesTransactionSummarySchema.extend({
+    source_lines: z.array(FinanceSalesProjectionLineSchema),
+    intent: FinanceSalesPostingIntentSchema.nullable(),
+  });
+
+export const FinanceSalesTransactionDetailResponseSchema =
+  z.object({
+    transaction: FinanceSalesTransactionDetailSchema,
+  });

@@ -20,7 +20,16 @@ import {
   type CreateFinanceSalesTransactionRecord,
   type FinanceSalesTransactionPersistenceRecord,
 } from './finance-sales-transaction.repository';
-import { FinanceSalesWorkflowResultSchema } from './finance-sales.schema';
+import {
+  FinanceSalesPostingIntentSchema,
+  FinanceSalesWorkflowResultSchema,
+} from './finance-sales.schema';
+
+type FinanceSalesPostingContext = {
+  source_order_id: string;
+  platform: string;
+  store_id: string | null;
+};
 
 type FinanceSalesLifecyclePort = Pick<
   FinanceLifecycleService,
@@ -30,6 +39,7 @@ type FinanceSalesLifecyclePort = Pick<
 type FinanceSalesTransactionRepositoryPort = Pick<
   FinanceSalesTransactionRepository,
   | 'findByIdempotencyKey'
+  | 'findTransactionById'
   | 'createTransaction'
   | 'markBlocked'
   | 'markPosted'
@@ -126,7 +136,10 @@ export class FinanceSalesWorkflowService {
         session
       );
 
-    if (existing?.status === 'posted') {
+    if (
+      existing?.status === 'posted' ||
+      existing?.status === 'reversed'
+    ) {
       return this.resultFromTransaction(existing);
     }
 
@@ -208,8 +221,12 @@ export class FinanceSalesWorkflowService {
       });
     }
 
-    return this.postAutomatically(
-      projection,
+    return this.postIntent(
+      {
+        source_order_id: projection.source_order_id,
+        platform: projection.platform,
+        store_id: projection.store_id,
+      },
       intent,
       transaction,
       mode,
@@ -217,8 +234,86 @@ export class FinanceSalesWorkflowService {
     );
   }
 
-  private async postAutomatically(
-    projection: FinanceSalesProjectionDTO,
+  async postTransaction(
+    transactionId: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesWorkflowResultDTO> {
+    const transaction =
+      await this.transactionRepository.findTransactionById(
+        transactionId,
+        session
+      );
+
+    if (!transaction) {
+      throw new FinanceDomainError(
+        'Transaksi sales Finance tidak ditemukan.',
+        'FINANCE_SALES_TRANSACTION_NOT_FOUND'
+      );
+    }
+
+    const finance =
+      await this.lifecycleService.getState(session);
+    if (finance.status !== 'active') {
+      return this.result({
+        status: 'disabled',
+        mode: transaction.posting_mode,
+        source_order_id: transaction.source_order_id,
+        transaction_id: String(transaction._id),
+        journal_entry_id: transaction.journal_entry_id
+          ? String(transaction.journal_entry_id)
+          : null,
+        reason: 'Finance module belum aktif.',
+      });
+    }
+
+    if (
+      transaction.status === 'posted' ||
+      transaction.status === 'reversed'
+    ) {
+      return this.resultFromTransaction(transaction);
+    }
+
+    const intent = this.getPersistedIntent(transaction);
+    if (!intent) {
+      const reason =
+        transaction.blocked_reason ??
+        'Transaksi sales Finance belum memiliki intent posting yang lengkap.';
+      const blocked =
+        transaction.status === 'pending'
+          ? await this.transactionRepository.markBlocked(
+              String(transaction._id),
+              reason,
+              session
+            )
+          : transaction;
+
+      return this.result({
+        status: 'blocked',
+        mode: transaction.posting_mode,
+        source_order_id: transaction.source_order_id,
+        transaction_id: String(
+          blocked?._id ?? transaction._id
+        ),
+        journal_entry_id: null,
+        reason,
+      });
+    }
+
+    return this.postIntent(
+      {
+        source_order_id: transaction.source_order_id,
+        platform: transaction.platform,
+        store_id: transaction.store_id,
+      },
+      intent,
+      transaction,
+      transaction.posting_mode,
+      session
+    );
+  }
+
+  private async postIntent(
+    context: FinanceSalesPostingContext,
     intent: FinanceSalesPostingIntentDTO,
     transaction: FinanceSalesTransactionPersistenceRecord,
     mode: FinanceSalesPostingModeDTO,
@@ -251,7 +346,7 @@ export class FinanceSalesWorkflowService {
             currency: intent.currency,
             description: intent.description,
             source_type: 'order',
-            source_id: projection.source_order_id,
+            source_id: context.source_order_id,
             source_event: intent.source_event,
             idempotency_key: intent.idempotency_key,
             lines: intent.lines.map((line) => ({
@@ -260,9 +355,9 @@ export class FinanceSalesWorkflowService {
               debit: line.debit,
               credit: line.credit,
               dimensions: {
-                platform: projection.platform,
-                ...(projection.store_id
-                  ? { store_id: projection.store_id }
+                platform: context.platform,
+                ...(context.store_id
+                  ? { store_id: context.store_id }
                   : {}),
               },
             })),
@@ -296,7 +391,7 @@ export class FinanceSalesWorkflowService {
       return this.result({
         status: 'posted',
         mode,
-        source_order_id: projection.source_order_id,
+        source_order_id: context.source_order_id,
         transaction_id: String(posted._id),
         journal_entry_id: journalResult.journal_entry.id,
         reason: null,
@@ -313,7 +408,7 @@ export class FinanceSalesWorkflowService {
       return this.result({
         status: 'blocked',
         mode,
-        source_order_id: projection.source_order_id,
+        source_order_id: context.source_order_id,
         transaction_id: String(
           blocked?._id ?? transaction._id
         ),
@@ -348,6 +443,41 @@ export class FinanceSalesWorkflowService {
         'FINANCE_JOURNAL_CREATE_CONFLICT'
       );
     }
+  }
+
+  private getPersistedIntent(
+    transaction: FinanceSalesTransactionPersistenceRecord
+  ): FinanceSalesPostingIntentDTO | null {
+    if (
+      !transaction.intent_source_event ||
+      !transaction.intent_transaction_date ||
+      !transaction.intent_description ||
+      transaction.intent_lines.length === 0 ||
+      !transaction.inventory_cogs_deferred_reason
+    ) {
+      return null;
+    }
+
+    const parsed =
+      FinanceSalesPostingIntentSchema.safeParse({
+        source_order_id: transaction.source_order_id,
+        source_order_number:
+          transaction.source_order_number,
+        source_event: transaction.intent_source_event,
+        transaction_date:
+          transaction.intent_transaction_date.toISOString(),
+        currency: transaction.currency,
+        description: transaction.intent_description,
+        idempotency_key: transaction.idempotency_key,
+        lines: transaction.intent_lines,
+        inventory_cogs: {
+          status: 'deferred',
+          reason:
+            transaction.inventory_cogs_deferred_reason,
+        },
+      });
+
+    return parsed.success ? parsed.data : null;
   }
 
   private async blockExisting(

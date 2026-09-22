@@ -101,6 +101,7 @@ const journalResult = {
 type RepositoryPort = Pick<
   FinanceSalesTransactionRepository,
   | 'findByIdempotencyKey'
+  | 'findTransactionById'
   | 'createTransaction'
   | 'markBlocked'
   | 'markPosted'
@@ -111,6 +112,7 @@ const makeRepository = () => {
     null;
   const repository: RepositoryPort = {
     findByIdempotencyKey: async () => current,
+    findTransactionById: async () => current,
     createTransaction: async (data) => {
       current = makeRecord(data);
       return current;
@@ -214,6 +216,23 @@ describe('FinanceSalesWorkflowService', () => {
     expect(result.status).toBe('pending');
     expect(state.getCurrent()?.status).toBe('pending');
     expect(journalCalled).toBe(false);
+  });
+
+  it('posts a pending transaction through the explicit manual action', async () => {
+    const state = makeRepository();
+    const workflow = new FinanceSalesWorkflowService(
+      { organizationId },
+      makeDependencies(state.repository)
+    );
+
+    const pending = await workflow.process(getProjection());
+    const result = await workflow.postTransaction(
+      pending.transaction_id!
+    );
+
+    expect(pending.status).toBe('pending');
+    expect(result.status).toBe('posted');
+    expect(state.getCurrent()?.status).toBe('posted');
   });
 
   it('posts an eligible order automatically and marks the work item posted', async () => {
