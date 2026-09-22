@@ -30,6 +30,15 @@ depth and an explicit `is_selectable` flag, which is true only for active,
 postable accounts. Role-based account mapping is intentionally not persisted
 in this phase and remains part of onboarding design.
 
+### Phase 2.2 — [CURRENT] Operational journal posting contract
+
+Finance now owns a new `finance_journal_entries` collection and posting
+service. Operational posting requires balanced lines, active/postable account
+references, explicit source fields, and an idempotency key. A retry with the
+same key and payload replays the existing entry; the same key with a different
+payload returns a conflict. Manual journal entry, reversal, and closed-period
+behavior remain separate lifecycle work.
+
 ## Phases
 
 ### Phase 2.1 — Chart of Accounts contract
@@ -80,7 +89,6 @@ Acceptance criteria:
 
 ## Open questions
 
-- Reuse the old journal collection or create a new Finance journal collection?
 - Are accounting periods shared with the old module or Finance-owned?
 - Is manual journal available in the first release or only after operational
   posting is stable?
