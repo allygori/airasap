@@ -40,6 +40,16 @@ export class OrganizationRepository extends BaseRepository<TOrganization> {
     return query.lean();
   }
 
+  async findFinanceState(session?: ClientSession) {
+    const query = this.model
+      .findOne({
+        _id: this.tenantContext.organizationId,
+      })
+      .select('finance');
+    if (session) query.session(session);
+    return query.lean();
+  }
+
   async startAccounting(
     data: {
       calendar_timezone: string;

@@ -46,6 +46,29 @@ export const OrganizationAccountingSchema = z.object({
   completed_by: z.string().optional(),
 });
 
+export const ORGANIZATION_FINANCE_STATUS_VALUES = [
+  'not_started',
+  'in_progress',
+  'active',
+] as const;
+
+export const OrganizationFinanceStatusSchema = z.enum(
+  ORGANIZATION_FINANCE_STATUS_VALUES
+);
+
+export const OrganizationFinanceSchema = z.object({
+  status:
+    OrganizationFinanceStatusSchema.default('not_started'),
+  onboarding_version: z
+    .number()
+    .int()
+    .positive()
+    .default(1),
+  started_at: z.date().optional(),
+  completed_at: z.date().optional(),
+  completed_by: z.string().optional(),
+});
+
 export const OrganizationBaseSchema = z.object({
   organizationId: z.string(),
   name: z.string().min(1, 'Nama organisasi wajib diisi'),
@@ -54,6 +77,7 @@ export const OrganizationBaseSchema = z.object({
   metadata: z.object().optional(),
   plan: z.string().optional().default('free'),
   accounting: OrganizationAccountingSchema.optional(),
+  finance: OrganizationFinanceSchema.optional(),
   // user: z
   //   .string()
   //   .optional()
