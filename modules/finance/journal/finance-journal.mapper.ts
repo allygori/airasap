@@ -22,6 +22,9 @@ export const mapFinanceJournalEntry = (
     posted_by: record.posted_by
       ? String(record.posted_by)
       : null,
+    reversal_of: record.reversal_of
+      ? String(record.reversal_of)
+      : null,
     lines: record.lines.map((line) => ({
       account_id: String(line.account_id),
       debit: line.debit,

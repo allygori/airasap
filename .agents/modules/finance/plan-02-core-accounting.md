@@ -39,6 +39,15 @@ same key and payload replays the existing entry; the same key with a different
 payload returns a conflict. Manual journal entry, reversal, and closed-period
 behavior remain separate lifecycle work.
 
+### Phase 2.3 — [CURRENT] Lifecycle and correction behavior
+
+Finance now owns accounting periods in `finance_accounting_periods`. A period
+without a materialized record is implicitly open; an explicit close creates or
+closes the period, and later posting is rejected. Reversal creates a new
+balanced journal with swapped debit/credit lines, then transitions the original
+entry to `reversed` without editing its lines. Draft, blocked, and voided
+states are reserved for later onboarding/import and manual-journal workflows.
+
 ## Phases
 
 ### Phase 2.1 — Chart of Accounts contract
@@ -89,7 +98,6 @@ Acceptance criteria:
 
 ## Open questions
 
-- Are accounting periods shared with the old module or Finance-owned?
 - Is manual journal available in the first release or only after operational
   posting is stable?
 

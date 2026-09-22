@@ -23,6 +23,7 @@ export type FinanceJournalPersistenceRecord = {
   status: TFinanceJournalEntry['status'];
   posted_at: Date;
   posted_by?: TFinanceJournalEntry['posted_by'];
+  reversal_of?: TFinanceJournalEntry['reversal_of'];
   lines: TFinanceJournalEntry['lines'];
 };
 
@@ -63,5 +64,55 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
       session ? { session } : undefined
     );
     return saved.toObject() as unknown as FinanceJournalPersistenceRecord;
+  }
+
+  async findEntryById(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceJournalPersistenceRecord | null> {
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      _id: id,
+    });
+    if (session) query.session(session);
+    return query
+      .lean<FinanceJournalPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findByReversalOf(
+    journalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceJournalPersistenceRecord | null> {
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      reversal_of: journalEntryId,
+    });
+    if (session) query.session(session);
+    return query
+      .lean<FinanceJournalPersistenceRecord | null>()
+      .exec();
+  }
+
+  async markReversed(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceJournalPersistenceRecord | null> {
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: id,
+        status: 'posted',
+      },
+      { $set: { status: 'reversed' } },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceJournalPersistenceRecord | null>()
+      .exec();
   }
 }

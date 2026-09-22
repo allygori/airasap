@@ -1,5 +1,6 @@
 import {
   FinanceJournalEntryResponseSchema,
+  FinanceJournalReversalSchema,
   FinanceJournalLineSchema,
   FinanceJournalStatusSchema,
   FinanceOperationalPostingSchema,
@@ -11,6 +12,10 @@ export type FinanceJournalLineDTO = ReturnType<
 
 export type FinanceOperationalPostingDTO = ReturnType<
   typeof FinanceOperationalPostingSchema.parse
+>;
+
+export type FinanceJournalReversalDTO = ReturnType<
+  typeof FinanceJournalReversalSchema.parse
 >;
 
 export type FinanceJournalStatusDTO = ReturnType<

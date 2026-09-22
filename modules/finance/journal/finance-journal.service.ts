@@ -11,6 +11,7 @@ import {
   type FinanceAccountPersistenceRecord,
 } from '../accounts/finance-account.repository';
 import type {
+  FinanceJournalReversalDTO,
   FinanceJournalPostResultDTO,
   FinanceOperationalPostingDTO,
 } from './finance-journal.dto';
@@ -20,16 +21,29 @@ import {
   type CreateFinanceJournalRecord,
   type FinanceJournalPersistenceRecord,
 } from './finance-journal.repository';
-import { FinanceOperationalPostingSchema } from './finance-journal.schema';
+import { FinancePeriodService } from '../periods/finance-period.service';
+import {
+  FinanceJournalReversalSchema,
+  FinanceOperationalPostingSchema,
+} from './finance-journal.schema';
 
 type FinanceJournalRepositoryPort = Pick<
   FinanceJournalRepository,
-  'findByIdempotencyKey' | 'createPosted'
+  | 'findByIdempotencyKey'
+  | 'createPosted'
+  | 'findEntryById'
+  | 'findByReversalOf'
+  | 'markReversed'
 >;
 
 type FinanceAccountRepositoryPort = Pick<
   FinanceAccountRepository,
   'findSelectableByIds'
+>;
+
+type FinancePeriodServicePort = Pick<
+  FinancePeriodService,
+  'ensureOpen'
 >;
 
 const getPeriodKey = (date: Date) =>
@@ -66,6 +80,7 @@ const toAccountIds = (
 export class FinanceJournalService {
   private readonly journalRepository: FinanceJournalRepositoryPort;
   private readonly accountRepository: FinanceAccountRepositoryPort;
+  private readonly periodService: FinancePeriodServicePort;
   private readonly context: FinanceTenantContext;
 
   constructor(
@@ -73,6 +88,7 @@ export class FinanceJournalService {
     dependencies?: {
       journalRepository?: FinanceJournalRepositoryPort;
       accountRepository?: FinanceAccountRepositoryPort;
+      periodService?: FinancePeriodServicePort;
     }
   ) {
     assertFinanceTenant(context);
@@ -83,11 +99,146 @@ export class FinanceJournalService {
     this.accountRepository =
       dependencies?.accountRepository ??
       new FinanceAccountRepository(context);
+    this.periodService =
+      dependencies?.periodService ??
+      new FinancePeriodService(context);
   }
 
   async postOperational(
     input: FinanceOperationalPostingDTO | unknown,
     session?: ClientSession
+  ): Promise<FinanceJournalPostResultDTO> {
+    return this.postOperationalInternal(input, session);
+  }
+
+  async reverse(
+    journalEntryId: string,
+    input: FinanceJournalReversalDTO | unknown,
+    session?: ClientSession
+  ): Promise<FinanceJournalPostResultDTO> {
+    const data = FinanceJournalReversalSchema.parse(input);
+
+    if (!Types.ObjectId.isValid(journalEntryId)) {
+      throw new FinanceDomainError(
+        'Journal Finance tidak ditemukan.',
+        'FINANCE_JOURNAL_NOT_FOUND'
+      );
+    }
+
+    const original =
+      await this.journalRepository.findEntryById(
+        journalEntryId,
+        session
+      );
+    if (!original) {
+      throw new FinanceDomainError(
+        'Journal Finance tidak ditemukan.',
+        'FINANCE_JOURNAL_NOT_FOUND'
+      );
+    }
+
+    const existingReversal =
+      await this.journalRepository.findByReversalOf(
+        journalEntryId,
+        session
+      );
+    if (existingReversal) {
+      if (original.status === 'posted') {
+        await this.journalRepository.markReversed(
+          journalEntryId,
+          session
+        );
+      }
+      return {
+        journal_entry: mapFinanceJournalEntry(
+          existingReversal
+        ),
+        replayed: true,
+      };
+    }
+
+    if (original.status === 'reversed') {
+      throw new FinanceDomainError(
+        'Journal Finance sudah reversed tetapi reversal entry tidak ditemukan.',
+        'FINANCE_JOURNAL_REVERSAL_CONFLICT'
+      );
+    }
+
+    if (original.status !== 'posted') {
+      throw new FinanceDomainError(
+        'Hanya journal Finance posted yang dapat direverse.',
+        'FINANCE_JOURNAL_NOT_REVERSIBLE'
+      );
+    }
+
+    const effectiveDate = data.effective_date ?? new Date();
+    const period = getPeriodKey(effectiveDate);
+    const idempotencyKey =
+      data.idempotency_key ??
+      `journal-reversal:${String(original._id)}:${period}`;
+    const result = await this.postOperationalInternal(
+      {
+        transaction_date: effectiveDate,
+        posting_date: effectiveDate,
+        currency: original.currency,
+        description:
+          data.description ??
+          `Reversal ${original.entry_number}: ${original.description}`,
+        source_type: 'journal_reversal',
+        source_id: String(original._id),
+        source_event: 'reversal',
+        idempotency_key: idempotencyKey,
+        lines: original.lines.map((line) => ({
+          account_id: String(line.account_id),
+          debit: line.credit,
+          credit: line.debit,
+          ...(line.description
+            ? { description: line.description }
+            : {}),
+          ...(line.dimensions
+            ? { dimensions: line.dimensions }
+            : {}),
+        })),
+      },
+      session,
+      journalEntryId
+    );
+
+    if (
+      result.journal_entry.reversal_of !== journalEntryId
+    ) {
+      throw new FinanceDomainError(
+        'Idempotency key reversal sudah digunakan oleh journal lain.',
+        'FINANCE_JOURNAL_REVERSAL_CONFLICT'
+      );
+    }
+
+    const marked =
+      await this.journalRepository.markReversed(
+        journalEntryId,
+        session
+      );
+    if (!marked) {
+      const latest =
+        await this.journalRepository.findEntryById(
+          journalEntryId,
+          session
+        );
+      if (latest?.status !== 'reversed') {
+        throw new FinanceDomainError(
+          'Reversal berhasil dibuat tetapi journal original gagal ditandai reversed.',
+          'FINANCE_JOURNAL_REVERSAL_FINALIZATION_FAILED'
+        );
+      }
+    }
+
+    return result;
+  }
+
+  private async postOperationalInternal(
+    input: FinanceOperationalPostingDTO | unknown,
+    session?: ClientSession,
+    reversalOf?: string
   ): Promise<FinanceJournalPostResultDTO> {
     const data =
       FinanceOperationalPostingSchema.parse(input);
@@ -104,6 +255,12 @@ export class FinanceJournalService {
         idempotencyHash
       );
     }
+
+    await this.periodService.ensureOpen(
+      getPeriodKey(data.transaction_date),
+      data.transaction_date,
+      session
+    );
 
     const accountIds = data.lines.map(
       (line) => line.account_id
@@ -165,6 +322,9 @@ export class FinanceJournalService {
               this.context.userId
             ),
           }
+        : {}),
+      ...(reversalOf
+        ? { reversal_of: new Types.ObjectId(reversalOf) }
         : {}),
       lines: data.lines.map((line) => ({
         account_id: new Types.ObjectId(line.account_id),

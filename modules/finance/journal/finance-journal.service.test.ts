@@ -78,11 +78,17 @@ describe('FinanceJournalService', () => {
         journalRepository: {
           findByIdempotencyKey,
           createPosted,
+          findEntryById: jest.fn(async () => null),
+          findByReversalOf: jest.fn(async () => null),
+          markReversed: jest.fn(async () => null),
         },
         accountRepository: {
           findSelectableByIds: jest.fn(
             async () => accounts
           ),
+        },
+        periodService: {
+          ensureOpen: jest.fn(async () => null),
         },
       }
     );
@@ -125,12 +131,18 @@ describe('FinanceJournalService', () => {
             async () => created
           ),
           createPosted: recordFactory,
+          findEntryById: jest.fn(async () => null),
+          findByReversalOf: jest.fn(async () => null),
+          markReversed: jest.fn(async () => null),
         },
         accountRepository: {
           findSelectableByIds: jest.fn(async () => [
             makeAccount(accountOneId, '1100'),
             makeAccount(accountTwoId, '4000'),
           ]),
+        },
+        periodService: {
+          ensureOpen: jest.fn(async () => null),
         },
       }
     );
@@ -154,9 +166,15 @@ describe('FinanceJournalService', () => {
         journalRepository: {
           findByIdempotencyKey: jest.fn(async () => null),
           createPosted: jest.fn(),
+          findEntryById: jest.fn(async () => null),
+          findByReversalOf: jest.fn(async () => null),
+          markReversed: jest.fn(async () => null),
         },
         accountRepository: {
           findSelectableByIds: jest.fn(async () => []),
+        },
+        periodService: {
+          ensureOpen: jest.fn(async () => null),
         },
       }
     );

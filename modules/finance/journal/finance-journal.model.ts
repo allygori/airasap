@@ -40,6 +40,7 @@ export type TFinanceJournalEntry = Document & {
   status: FinanceJournalStatus;
   posted_at: Date;
   posted_by?: Types.ObjectId;
+  reversal_of?: Types.ObjectId;
   lines: TFinanceJournalLine[];
   created_at?: Date;
   updated_at?: Date;
@@ -100,6 +101,10 @@ const FinanceJournalEntrySchema =
       posted_by: {
         type: Schema.Types.ObjectId,
         ref: 'User',
+      },
+      reversal_of: {
+        type: Schema.Types.ObjectId,
+        ref: 'FinanceJournalEntry',
       },
       lines: {
         type: [FinanceJournalLineMongooseSchema],
@@ -172,6 +177,15 @@ FinanceJournalEntrySchema.index(
     unique: true,
     partialFilterExpression: {
       idempotency_key: { $exists: true },
+    },
+  }
+);
+FinanceJournalEntrySchema.index(
+  { organization: 1, reversal_of: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      reversal_of: { $exists: true },
     },
   }
 );

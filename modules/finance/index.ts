@@ -2,6 +2,7 @@ export { FinanceDomainError } from './finance.error';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
+export { FinancePeriodService } from './periods/finance-period.service';
 export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
@@ -9,8 +10,10 @@ export {
 export { FinanceAccountFilterSchema } from './accounts/finance-account.schema';
 export {
   FinanceOperationalPostingSchema,
+  FinanceJournalReversalSchema,
   FinanceJournalEntryResponseSchema,
 } from './journal/finance-journal.schema';
+export { FinanceClosePeriodSchema } from './periods/finance-period.schema';
 export { assertFinanceModuleActive } from './finance-module.guard';
 export {
   assertFinanceTenant,
@@ -33,5 +36,11 @@ export type {
 export type {
   FinanceJournalEntryDTO,
   FinanceJournalPostResultDTO,
+  FinanceJournalReversalDTO,
   FinanceOperationalPostingDTO,
 } from './journal/finance-journal.dto';
+export type {
+  FinanceClosePeriodDTO,
+  FinancePeriodKeyDTO,
+  FinancePeriodResponseDTO,
+} from './periods/finance-period.dto';

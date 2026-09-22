@@ -75,6 +75,24 @@ export const FinanceOperationalPostingSchema = z
     }
   });
 
+export const FinanceJournalReversalSchema = z
+  .object({
+    effective_date: z.coerce.date().optional(),
+    description: z
+      .string()
+      .trim()
+      .min(1)
+      .max(500)
+      .optional(),
+    idempotency_key: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .optional(),
+  })
+  .strict();
+
 export const FinanceJournalLineResponseSchema = z.object({
   account_id: z.string(),
   debit: z.number().int().nonnegative(),
@@ -98,5 +116,6 @@ export const FinanceJournalEntryResponseSchema = z.object({
   status: FinanceJournalStatusSchema,
   posted_at: z.string().datetime(),
   posted_by: z.string().nullable(),
+  reversal_of: z.string().nullable(),
   lines: z.array(FinanceJournalLineResponseSchema),
 });
