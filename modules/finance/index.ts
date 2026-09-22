@@ -9,6 +9,7 @@ export { FinanceSalesPostingRulesService } from './sales/finance-sales-rules.ser
 export { FinanceSalesWorkflowService } from './sales/finance-sales-workflow.service';
 export { FinanceSalesTransactionReadService } from './sales/finance-sales-transaction-read.service';
 export { FinanceSalesTransactionRepository } from './sales/finance-sales-transaction.repository';
+export { FinanceInventoryStockReadService } from './inventory/finance-inventory-stock-read.service';
 export { FinanceAccountRoleResolverService } from './accounts/finance-account-role-resolver.service';
 export {
   FINANCE_SALES_POSTING_MODE_VALUES,
@@ -67,6 +68,21 @@ export type {
   FinanceSalesPostingMode,
   FinanceSalesTransactionStatus,
 } from './sales/finance-sales.constants';
+export type {
+  FinanceInventoryBalanceDTO,
+  FinanceInventoryItemSourceDTO,
+  FinanceInventoryItemTypeDTO,
+  FinanceInventoryMovementStatusDTO,
+  FinanceInventoryMovementTypeDTO,
+  FinanceInventoryStockQueryDTO,
+  FinanceInventoryStockResponseDTO,
+  FinanceInventoryStockStatusDTO,
+} from './inventory/finance-inventory.dto';
+export {
+  FinanceInventoryItemTypeSchema,
+  FinanceInventoryStockQuerySchema,
+  FinanceInventoryStockResponseSchema,
+} from './inventory/finance-inventory.schema';
 export {
   FinanceSalesOrderSourceSchema,
   FinanceSalesPostingDecisionSchema,

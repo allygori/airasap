@@ -1,0 +1,66 @@
+import { getTenantContext } from '@/lib/api/tenant-context';
+import { withValidation } from '@/lib/api/validate';
+import {
+  apiError,
+  apiSuccess,
+  ErrorCodes,
+} from '@/lib/api/response';
+import { db } from '@/lib/db/connection';
+import {
+  assertFinanceModuleActive,
+  FinanceDomainError,
+  FinanceInventoryStockQuerySchema,
+  FinanceInventoryStockReadService,
+} from '@/modules/finance';
+
+export const GET = withValidation(
+  { query: FinanceInventoryStockQuerySchema },
+  async (_request, { validatedQuery }) => {
+    try {
+      const tenantContext = await getTenantContext();
+
+      if (!tenantContext.organizationId) {
+        return apiError(
+          ErrorCodes.FORBIDDEN,
+          'Organization ID tidak ditemukan.',
+          403
+        );
+      }
+
+      await db.connect();
+      await assertFinanceModuleActive(tenantContext);
+
+      const result =
+        await new FinanceInventoryStockReadService(
+          tenantContext
+        ).list(validatedQuery!);
+
+      return apiSuccess(result);
+    } catch (error: unknown) {
+      if (error instanceof FinanceDomainError) {
+        const status =
+          error.code === 'FINANCE_ORGANIZATION_NOT_FOUND'
+            ? 404
+            : error.code === 'FINANCE_NOT_ACTIVE'
+              ? 403
+              : error.code ===
+                  'FINANCE_INVENTORY_LOCATION_NOT_FOUND'
+                ? 404
+                : 422;
+
+        return apiError(error.code, error.message, status);
+      }
+
+      console.error(
+        '[GET /api/v1/dashboard/finance/inventory/stock]',
+        error
+      );
+
+      return apiError(
+        ErrorCodes.INTERNAL_ERROR,
+        'Gagal memuat stock Finance.',
+        500
+      );
+    }
+  }
+);
