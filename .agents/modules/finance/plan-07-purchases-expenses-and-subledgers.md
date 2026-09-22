@@ -1,6 +1,6 @@
 # Finance Plan 07 — Purchases, Expenses, Receivables, and Payables
 
-Status: [TARGET]
+Status: [CURRENT / IN PROGRESS]
 
 ## Goal
 
@@ -30,6 +30,33 @@ Acceptance criteria:
 - purchase posting is linked to inventory or expense classification;
 - payment timing is explicit;
 - duplicate import or submission is safe.
+
+Implementation status: [CURRENT]
+
+- The new Finance purchase source transaction is stored in the
+  `finance_purchases` collection. It is separate from the legacy Expense
+  module and does not change Orders, Products, Reports, or their importers.
+- A purchase starts as `draft`. Draft creation only validates and snapshots
+  inventory item/location data; it does not create a journal or change stock.
+- Posting creates a balanced journal and one posted `purchase` inventory
+  movement per line in the same database transaction. Inventory lines are
+  limited to active items that track both quantity and value.
+- Payment timing is explicit: `paid` credits a selected active Cash, Bank,
+  E-wallet, or Marketplace Balance account; `payable` credits the configured
+  Accounts Payable account (subtype `accounts_payable`, with `2100` as the
+  compatibility fallback). A payable purchase is not treated as paid.
+- Supplier data is transactional (`supplier_name` and
+  `supplier_reference`); no supplier master is introduced in this phase.
+- Request idempotency is stored on the purchase and journal/movement keys are
+  derived from the purchase id. Repeating the same request replays the
+  existing source transaction instead of creating duplicate effects.
+- The API surface is `GET/POST /api/v1/dashboard/finance/purchases`,
+  `GET /api/v1/dashboard/finance/purchases/:purchaseId`, and
+  `POST /api/v1/dashboard/finance/purchases/:purchaseId/post`. The UI is
+  `/dashboard/finance/purchase` with a detail view under the same path.
+- Tax fields, partial settlement, supplier master data, purchase invoice vs
+  goods-receipt separation, and direct operating expenses remain outside this
+  phase.
 
 ### Phase 7.2 — Expense and outflow transaction
 
@@ -77,4 +104,3 @@ Acceptance criteria:
 - payroll;
 - advanced procurement approval;
 - recurring bills.
-
