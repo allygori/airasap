@@ -5,8 +5,11 @@ import {
   assertFinanceModuleActive,
   FinanceCashBankQuerySchema,
   FinanceCashBankReadService,
+  FinanceCashBankTransferListQuerySchema,
+  FinanceCashBankTransferReadService,
   FinanceDomainError,
   type FinanceCashBankAccountDTO,
+  type FinanceCashBankTransferListResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
 import { buttonVariants } from '@/components/ui/button';
@@ -23,6 +26,7 @@ type PageData =
   | {
       status: 'ready';
       accounts: FinanceCashBankAccountDTO[];
+      transfers: FinanceCashBankTransferListResponseDTO;
     }
   | { status: 'unavailable' | 'not_ready' };
 
@@ -44,7 +48,10 @@ export default async function CashAndBankTransfersPage() {
   }
 
   return (
-    <FinanceCashBankTransferForm accounts={data.accounts} />
+    <FinanceCashBankTransferForm
+      accounts={data.accounts}
+      transfers={data.transfers}
+    />
   );
 }
 
@@ -55,11 +62,20 @@ async function loadPageData(
     await db.connect();
     await assertFinanceModuleActive(context);
 
-    const data = await new FinanceCashBankReadService(
-      context
-    ).list(FinanceCashBankQuerySchema.parse({}));
+    const [cashBankData, transferData] = await Promise.all([
+      new FinanceCashBankReadService(context).list(
+        FinanceCashBankQuerySchema.parse({})
+      ),
+      new FinanceCashBankTransferReadService(context).list(
+        FinanceCashBankTransferListQuerySchema.parse({})
+      ),
+    ]);
 
-    return { status: 'ready', accounts: data.accounts };
+    return {
+      status: 'ready',
+      accounts: cashBankData.accounts,
+      transfers: transferData,
+    };
   } catch (error) {
     if (
       error instanceof FinanceDomainError &&

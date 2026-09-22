@@ -1,4 +1,8 @@
-import { Types, type ClientSession } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type QueryFilter,
+} from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -23,6 +27,7 @@ export type FinanceCashBankTransferPersistenceRecord = {
   idempotency_key: string;
   status: FinanceCashBankTransferStatusDTO;
   journal_entry?: Types.ObjectId | null;
+  reversal_journal_entry?: Types.ObjectId | null;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -50,6 +55,107 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
     return query
       .lean<FinanceCashBankTransferPersistenceRecord | null>()
       .exec();
+  }
+
+  async findByTransferId(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceCashBankTransferPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      _id: new Types.ObjectId(id),
+    });
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceCashBankTransferPersistenceRecord | null>()
+      .exec();
+  }
+
+  async list(
+    filter: {
+      page: number;
+      limit: number;
+      status?: FinanceCashBankTransferStatusDTO;
+      search?: string;
+    },
+    session?: ClientSession
+  ): Promise<{
+    records: FinanceCashBankTransferPersistenceRecord[];
+    total: number;
+  }> {
+    const queryFilter: QueryFilter<TFinanceCashBankTransfer> =
+      {
+        ...this.getTenantFilter(),
+        ...(filter.status ? { status: filter.status } : {}),
+        ...(filter.search
+          ? {
+              $or: [
+                {
+                  source_account_code: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+                {
+                  source_account_name: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+                {
+                  destination_account_code: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+                {
+                  destination_account_name: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+                {
+                  reference: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+                {
+                  description: new RegExp(
+                    escapeRegex(filter.search),
+                    'i'
+                  ),
+                },
+              ],
+            }
+          : {}),
+      };
+    const query = this.model
+      .find(queryFilter)
+      .sort({
+        transaction_date: -1,
+        created_at: -1,
+        _id: -1,
+      })
+      .skip((filter.page - 1) * filter.limit)
+      .limit(filter.limit);
+    const countQuery =
+      this.model.countDocuments(queryFilter);
+    if (session) {
+      query.session(session);
+      countQuery.session(session);
+    }
+
+    const [records, total] = await Promise.all([
+      query
+        .lean<FinanceCashBankTransferPersistenceRecord[]>()
+        .exec(),
+      countQuery.exec(),
+    ]);
+    return { records, total };
   }
 
   async createPending(
@@ -89,6 +195,44 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
         $set: {
           status: 'posted',
           journal_entry: new Types.ObjectId(journalEntryId),
+          reversal_journal_entry: null,
+        },
+      },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceCashBankTransferPersistenceRecord | null>()
+      .exec();
+  }
+
+  async markReversedByJournalEntry(
+    journalEntryId: string,
+    reversalJournalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceCashBankTransferPersistenceRecord | null> {
+    if (
+      !Types.ObjectId.isValid(journalEntryId) ||
+      !Types.ObjectId.isValid(reversalJournalEntryId)
+    ) {
+      return null;
+    }
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        journal_entry: new Types.ObjectId(journalEntryId),
+        status: 'posted',
+      },
+      {
+        $set: {
+          status: 'reversed',
+          reversal_journal_entry: new Types.ObjectId(
+            reversalJournalEntryId
+          ),
         },
       },
       {
@@ -102,3 +246,6 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
       .exec();
   }
 }
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

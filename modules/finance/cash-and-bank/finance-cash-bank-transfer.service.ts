@@ -2,6 +2,8 @@ import { Types, type ClientSession } from 'mongoose';
 import { FinanceAccountRepository } from '../accounts/finance-account.repository';
 import { FinanceDomainError } from '../finance.error';
 import { FinanceJournalService } from '../journal/finance-journal.service';
+import type { FinanceJournalReversalDTO } from '../journal/finance-journal.dto';
+import { FinanceJournalReversalSchema } from '../journal/finance-journal.schema';
 import {
   assertFinanceTenant,
   type FinanceTenantContext,
@@ -28,12 +30,16 @@ type FinanceCashBankTransferAccountPort = Pick<
 
 type FinanceCashBankTransferJournalPort = Pick<
   FinanceJournalService,
-  'postOperational'
+  'postOperational' | 'reverse'
 >;
 
 type FinanceCashBankTransferRepositoryPort = Pick<
   FinanceCashBankTransferRepository,
-  'findByIdempotencyKey' | 'createPending' | 'markPosted'
+  | 'findByIdempotencyKey'
+  | 'findByTransferId'
+  | 'createPending'
+  | 'markPosted'
+  | 'markReversedByJournalEntry'
 >;
 
 const eligibleSubtypes = new Set<string>(
@@ -110,6 +116,9 @@ const toResponse = (
     status: record.status,
     journal_entry_id: record.journal_entry
       ? String(record.journal_entry)
+      : null,
+    reversal_journal_entry_id: record.reversal_journal_entry
+      ? String(record.reversal_journal_entry)
       : null,
     idempotency_key: record.idempotency_key,
     replayed,
@@ -273,6 +282,68 @@ export class FinanceCashBankTransferService {
     }
 
     return toResponse(posted, journalResult.replayed);
+  }
+
+  async reverse(
+    transferId: string,
+    input: FinanceJournalReversalDTO | unknown,
+    session?: ClientSession
+  ): Promise<FinanceCashBankTransferResponseDTO> {
+    const data = FinanceJournalReversalSchema.parse(input);
+    const transfer =
+      await this.transferRepository.findByTransferId(
+        transferId,
+        session
+      );
+
+    if (!transfer) {
+      throw new FinanceDomainError(
+        'Transfer Kas & Bank tidak ditemukan.',
+        'FINANCE_CASH_BANK_TRANSFER_NOT_FOUND'
+      );
+    }
+    if (transfer.status === 'reversed') {
+      return toResponse(transfer, true);
+    }
+    if (
+      transfer.status !== 'posted' ||
+      !transfer.journal_entry
+    ) {
+      throw new FinanceDomainError(
+        'Hanya transfer Kas & Bank posted yang dapat direverse.',
+        'FINANCE_CASH_BANK_TRANSFER_NOT_REVERSIBLE'
+      );
+    }
+
+    const reversalResult =
+      await this.journalService.reverse(
+        String(transfer.journal_entry),
+        data,
+        session
+      );
+    const reversed =
+      await this.transferRepository.markReversedByJournalEntry(
+        String(transfer.journal_entry),
+        reversalResult.journal_entry.id,
+        session
+      );
+    if (!reversed) {
+      const latest =
+        await this.transferRepository.findByTransferId(
+          transferId,
+          session
+        );
+      if (latest?.status === 'reversed') {
+        return toResponse(latest, true);
+      }
+
+      throw new FinanceDomainError(
+        'Reversal journal berhasil dibuat tetapi transfer gagal ditandai reversed.',
+        'FINANCE_CASH_BANK_TRANSFER_REVERSAL_FINALIZATION_FAILED'
+      );
+    }
+
+    return toResponse(reversed, reversalResult.replayed);
   }
 
   private async createPending(

@@ -88,6 +88,24 @@ Bank reconciliation and bank mutation import remain deferred. The existing
 Rekonsiliasi Bank menu should not imply a full feature until its scope is
 decided.
 
+Implementation status: [CURRENT]
+
+- Transfer history is available from the transfer page with tenant-scoped
+  list, search, status filter support, and a transfer detail endpoint.
+- Transfer source transactions expose `pending`, `posted`, and `reversed`
+  states. A pending record remains retryable when journal finalization is
+  interrupted; the API reports finalization conflicts instead of silently
+  marking the transfer complete.
+- A posted transfer is corrected by creating a new reversal journal. The
+  original journal is never edited, and the transfer stores the reversal
+  journal link with status `reversed`.
+- Reversal is available through a dedicated transfer endpoint. Reversing the
+  source journal through the general journal endpoint also synchronizes a
+  matching Finance transfer record when one exists.
+- The UI exposes links to the transfer detail and source journal, and shows a
+  reversal action only for posted transfers. No bank statement import or
+  reconciliation workflow is introduced.
+
 ## Open questions
 
 - [DECIDED] Marketplace balances are included because they are liquid-asset

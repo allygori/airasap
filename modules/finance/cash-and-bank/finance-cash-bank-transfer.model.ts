@@ -20,8 +20,9 @@ export type TFinanceCashBankTransfer = Document & {
   reference: string | null;
   description: string;
   idempotency_key: string;
-  status: 'pending' | 'posted';
+  status: 'pending' | 'posted' | 'reversed';
   journal_entry?: Types.ObjectId | null;
+  reversal_journal_entry?: Types.ObjectId | null;
   created_at?: Date;
   updated_at?: Date;
 };
@@ -60,10 +61,14 @@ const FinanceCashBankTransferSchema =
       idempotency_key: { type: String, required: true },
       status: {
         type: String,
-        enum: ['pending', 'posted'],
+        enum: ['pending', 'posted', 'reversed'],
         default: 'pending',
       },
       journal_entry: {
+        type: Schema.Types.ObjectId,
+        default: null,
+      },
+      reversal_journal_entry: {
         type: Schema.Types.ObjectId,
         default: null,
       },

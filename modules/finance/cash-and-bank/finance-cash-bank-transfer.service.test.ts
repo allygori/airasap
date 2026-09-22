@@ -16,6 +16,7 @@ const sourceId = new Types.ObjectId();
 const destinationId = new Types.ObjectId();
 const transferId = new Types.ObjectId();
 const journalId = new Types.ObjectId();
+const reversalJournalId = new Types.ObjectId();
 
 const makeAccount = (
   id: Types.ObjectId,
@@ -55,7 +56,7 @@ const makeDependencies = () => {
     null;
   const journalService: Pick<
     FinanceJournalService,
-    'postOperational'
+    'postOperational' | 'reverse'
   > = {
     postOperational: jest.fn(async () => ({
       journal_entry: {
@@ -80,17 +81,57 @@ const makeDependencies = () => {
       },
       replayed: false,
     })),
+    reverse: jest.fn(async () => ({
+      journal_entry: {
+        id: String(reversalJournalId),
+        entry_number: 'FIN-TRANSFER-REVERSAL-1',
+        transaction_date: '2026-09-22T00:00:00.000Z',
+        posting_date: '2026-09-22T00:00:00.000Z',
+        period: '2026-09',
+        currency: 'IDR',
+        description: 'Reversal transfer',
+        source_type: 'journal_reversal',
+        source_id: String(journalId),
+        source_event: 'journal_reversed',
+        idempotency_key: 'finance-journal-reversal:key-1',
+        status: 'posted' as const,
+        posted_at: '2026-09-22T00:00:00.000Z',
+        posted_by: null,
+        reversal_of: String(journalId),
+        lines: [],
+      },
+      replayed: false,
+    })),
   };
   const transferRepository: Pick<
     FinanceCashBankTransferRepository,
-    'findByIdempotencyKey' | 'createPending' | 'markPosted'
+    | 'findByIdempotencyKey'
+    | 'findByTransferId'
+    | 'createPending'
+    | 'markPosted'
+    | 'markReversedByJournalEntry'
   > = {
     findByIdempotencyKey: async () => current,
+    findByTransferId: async () => current,
     createPending: async (data) => {
       current = {
         ...data,
         _id: transferId,
         organization: new Types.ObjectId(organizationId),
+      };
+      return current;
+    },
+    markReversedByJournalEntry: async (
+      _originalJournalEntryId,
+      reversalEntryId
+    ) => {
+      if (!current) return null;
+      current = {
+        ...current,
+        status: 'reversed',
+        reversal_journal_entry: new Types.ObjectId(
+          reversalEntryId
+        ),
       };
       return current;
     },
@@ -225,6 +266,39 @@ describe('FinanceCashBankTransferService', () => {
       {
         code: 'FINANCE_CASH_BANK_TRANSFER_ACCOUNT_INVALID',
       }
+    );
+  });
+
+  it('reverses a posted transfer with a new journal and preserves the source journal', async () => {
+    const dependencies = makeDependencies();
+    const service = new FinanceCashBankTransferService(
+      { organizationId },
+      dependencies
+    );
+
+    await service.post(input);
+    const result = await service.reverse(
+      String(transferId),
+      {
+        description: 'Koreksi transfer',
+        idempotency_key: 'reverse-key-1',
+      }
+    );
+
+    expect(result).toMatchObject({
+      status: 'reversed',
+      journal_entry_id: String(journalId),
+      reversal_journal_entry_id: String(reversalJournalId),
+      replayed: false,
+    });
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenCalledWith(
+      String(journalId),
+      expect.objectContaining({
+        description: 'Koreksi transfer',
+      }),
+      undefined
     );
   });
 });

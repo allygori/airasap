@@ -8,6 +8,7 @@ const ObjectIdStringSchema = z
 export const FinanceCashBankTransferStatusSchema = z.enum([
   'pending',
   'posted',
+  'reversed',
 ]);
 
 export const FinanceCashBankTransferInputSchema = z
@@ -55,6 +56,50 @@ export const FinanceCashBankTransferResponseSchema =
     description: z.string(),
     status: FinanceCashBankTransferStatusSchema,
     journal_entry_id: ObjectIdStringSchema.nullable(),
+    reversal_journal_entry_id:
+      ObjectIdStringSchema.nullable(),
     idempotency_key: z.string(),
     replayed: z.boolean(),
+  });
+
+export const FinanceCashBankTransferSummarySchema =
+  FinanceCashBankTransferResponseSchema.omit({
+    replayed: true,
+  });
+
+export const FinanceCashBankTransferListQuerySchema = z
+  .object({
+    page: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1000)
+      .default(1),
+    limit: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(100)
+      .default(25),
+    status: FinanceCashBankTransferStatusSchema.optional(),
+    search: z.string().trim().max(100).optional(),
+  })
+  .strict();
+
+export const FinanceCashBankTransferListResponseSchema =
+  z.object({
+    transfers: z.array(
+      FinanceCashBankTransferSummarySchema
+    ),
+    pagination: z.object({
+      page: z.number().int().positive(),
+      limit: z.number().int().positive(),
+      total: z.number().int().nonnegative(),
+      total_pages: z.number().int().nonnegative(),
+    }),
+  });
+
+export const FinanceCashBankTransferDetailResponseSchema =
+  z.object({
+    transfer: FinanceCashBankTransferSummarySchema,
   });

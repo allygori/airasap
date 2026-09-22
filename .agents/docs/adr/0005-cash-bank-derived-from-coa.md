@@ -27,10 +27,18 @@ source and destination account identity for traceability. The operation is
 atomic at the API boundary and uses a request idempotency key plus a separate
 journal idempotency key.
 
+A posted transfer is corrected by creating a separate reversal journal and
+marking the source transaction as `reversed`. The posted source journal and
+its lines remain immutable. The general journal reversal operation also
+updates a matching transfer source transaction when the reversed journal was
+created by a cash-and-bank transfer.
+
 ## Consequences
 
 - No second cash ledger is required for the first release.
 - COA account subtype and metadata must be sufficient for the initial view.
 - Transfer transactions need idempotency and reversal behavior.
+- Transfer history needs explicit pending, posted, and reversed states so an
+  interrupted finalization is visible and retryable.
 - The Rekonsiliasi Bank menu must not imply bank-feed functionality before that
   scope is implemented.

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,8 @@ import {
   FinanceCashBankTransferResponseSchema,
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   type FinanceCashBankAccountDTO,
+  type FinanceCashBankTransferListResponseDTO,
+  type FinanceCashBankTransferSummaryDTO,
 } from '@/modules/finance';
 
 const ActionResponseSchema = z.object({
@@ -30,9 +33,12 @@ const ErrorResponseSchema = z.object({
 
 export function FinanceCashBankTransferForm({
   accounts,
+  transfers,
 }: {
   accounts: FinanceCashBankAccountDTO[];
+  transfers: FinanceCashBankTransferListResponseDTO;
 }) {
+  const router = useRouter();
   const [sourceAccountId, setSourceAccountId] = useState(
     accounts[0]?.id ?? ''
   );
@@ -52,6 +58,9 @@ export function FinanceCashBankTransferForm({
     string | null
   >(null);
   const [successMessage, setSuccessMessage] = useState<
+    string | null
+  >(null);
+  const [reversingId, setReversingId] = useState<
     string | null
   >(null);
 
@@ -121,6 +130,62 @@ export function FinanceCashBankTransferForm({
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const reverseTransfer = async (
+    transfer: FinanceCashBankTransferSummaryDTO
+  ) => {
+    if (
+      !window.confirm(
+        `Reverse transfer ${transfer.source_account.name} ke ${transfer.destination_account.name}?`
+      )
+    ) {
+      return;
+    }
+
+    setReversingId(transfer.transfer_id);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch(
+        `/api/v1/dashboard/finance/cash-and-bank-transfers/${transfer.transfer_id}/reverse`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            description: `Reversal transfer ${transfer.reference ?? transfer.transfer_id}`,
+            idempotency_key: `finance-cash-bank-transfer-reversal:${transfer.transfer_id}`,
+          }),
+        }
+      );
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        setErrorMessage(getErrorMessage(payload));
+        return;
+      }
+
+      const parsed =
+        ActionResponseSchema.safeParse(payload);
+      if (!parsed.success) {
+        setErrorMessage(
+          'Respons server Finance tidak valid.'
+        );
+        return;
+      }
+
+      setSuccessMessage(
+        'Transfer berhasil direverse dengan journal baru.'
+      );
+      router.refresh();
+    } catch {
+      setErrorMessage(
+        'Tidak dapat menghubungi server Finance.'
+      );
+    } finally {
+      setReversingId(null);
     }
   };
 
@@ -337,7 +402,142 @@ export function FinanceCashBankTransferForm({
           </Card>
         </div>
       )}
+
+      <TransferHistory
+        transfers={transfers.transfers}
+        reversingId={reversingId}
+        onReverse={reverseTransfer}
+      />
     </div>
+  );
+}
+
+function TransferHistory({
+  transfers,
+  reversingId,
+  onReverse,
+}: {
+  transfers: FinanceCashBankTransferSummaryDTO[];
+  reversingId: string | null;
+  onReverse: (
+    transfer: FinanceCashBankTransferSummaryDTO
+  ) => void;
+}) {
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <CardTitle>Riwayat transfer</CardTitle>
+        <CardDescription>
+          Transfer posted dapat dikoreksi melalui reversal.
+          Journal asal tetap tersimpan dan tidak diedit.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-0">
+        {transfers.length === 0 ? (
+          <div className="text-muted-foreground px-6 py-10 text-center text-sm">
+            Belum ada transfer Kas & Bank.
+          </div>
+        ) : (
+          <div className="divide-y">
+            {transfers.map((transfer) => (
+              <TransferHistoryRow
+                key={transfer.transfer_id}
+                transfer={transfer}
+                reversingId={reversingId}
+                onReverse={onReverse}
+              />
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function TransferHistoryRow({
+  transfer,
+  reversingId,
+  onReverse,
+}: {
+  transfer: FinanceCashBankTransferSummaryDTO;
+  reversingId: string | null;
+  onReverse: (
+    transfer: FinanceCashBankTransferSummaryDTO
+  ) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-4 px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href={`/dashboard/finance/cash-and-bank-transfers/${transfer.transfer_id}`}
+            className="font-medium underline-offset-4 hover:underline"
+          >
+            {transfer.source_account.name} →{' '}
+            {transfer.destination_account.name}
+          </Link>
+          <TransferStatusBadge status={transfer.status} />
+        </div>
+        <p className="text-muted-foreground mt-1 text-xs">
+          {formatDate(transfer.transaction_date)}
+          {transfer.reference
+            ? ` · ${transfer.reference}`
+            : ''}
+        </p>
+        <p className="text-muted-foreground mt-1 text-xs">
+          {transfer.description}
+        </p>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 lg:justify-end">
+        <span className="font-mono text-sm font-semibold">
+          {formatMoney(transfer.amount)}
+        </span>
+        {transfer.journal_entry_id ? (
+          <Link
+            href={`/dashboard/finance/accounting/general-journal/${transfer.journal_entry_id}`}
+            className="text-primary text-xs font-medium underline-offset-4 hover:underline"
+          >
+            Journal
+          </Link>
+        ) : null}
+        {transfer.status === 'posted' ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={reversingId === transfer.transfer_id}
+            onClick={() => onReverse(transfer)}
+          >
+            {reversingId === transfer.transfer_id
+              ? 'Mereverse…'
+              : 'Reverse'}
+          </Button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function TransferStatusBadge({
+  status,
+}: {
+  status: 'pending' | 'posted' | 'reversed';
+}) {
+  return (
+    <Badge
+      variant={
+        status === 'posted'
+          ? 'success'
+          : status === 'reversed'
+            ? 'warning'
+            : 'info'
+      }
+    >
+      {status === 'posted'
+        ? 'Posted'
+        : status === 'reversed'
+          ? 'Reversed'
+          : 'Pending'}
+    </Badge>
   );
 }
 
@@ -402,6 +602,11 @@ const formatMoney = (value: number) =>
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(value);
+
+const formatDate = (value: string) =>
+  new Intl.DateTimeFormat('id-ID', {
+    dateStyle: 'medium',
+  }).format(new Date(value));
 
 function getErrorMessage(payload: unknown) {
   const parsed = ErrorResponseSchema.safeParse(payload);

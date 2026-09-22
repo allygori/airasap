@@ -14,6 +14,7 @@ import {
   FinanceJournalReversalSchema,
   FinanceJournalService,
   FinanceInventoryCogsService,
+  FinanceCashBankTransferRepository,
   FinanceSalesTransactionRepository,
   type FinanceJournalPostResultDTO,
 } from '@/modules/finance';
@@ -69,6 +70,14 @@ export const POST = withValidation(
               tenantContext
             ).markReversedByJournalEntry(
               validatedParams!.journalId,
+              session
+            );
+
+            await new FinanceCashBankTransferRepository(
+              tenantContext
+            ).markReversedByJournalEntry(
+              validatedParams!.journalId,
+              reversalResult.journal_entry.id,
               session
             );
 
