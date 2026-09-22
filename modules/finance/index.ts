@@ -4,6 +4,7 @@ export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
 export { FinancePeriodService } from './periods/finance-period.service';
+export { FinanceSalesProjectionService } from './sales/finance-sales.service';
 export {
   FinanceReadinessResponseSchema,
   FinanceReadinessSchema,
@@ -36,6 +37,16 @@ export type {
   FinanceReadinessDTO,
   FinanceReadinessResponseDTO,
 } from './onboarding/finance-onboarding.dto';
+export type {
+  FinanceSalesOrderSourceDTO,
+  FinanceSalesProjectionDTO,
+  FinanceSalesProjectionIssueDTO,
+  FinanceSalesProjectionLineDTO,
+} from './sales/finance-sales.dto';
+export {
+  FinanceSalesOrderSourceSchema,
+  FinanceSalesProjectionSchema,
+} from './sales/finance-sales.schema';
 export type {
   FinanceAccountDTO,
   FinanceAccountFilterDTO,

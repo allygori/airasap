@@ -14,6 +14,18 @@ transaction/reference data only as needed for financial posting and traceability
 
 The old importer must continue to import orders when Finance is disabled.
 
+## Implementation progress
+
+### Phase 4.1 — [CURRENT] Finance sales projection and adapter
+
+Finance now owns a narrow sales-source contract and a pure projection adapter.
+It copies only the order fields needed for future financial posting and
+traceability: source order identity, organization/store, platform, source
+status, dates, monetary totals, and line-level product references/cost data.
+The adapter reports `ready` or `incomplete` with actionable data-shape issues,
+but it does not choose eligible order statuses, post journals, or mutate the
+Orders collection. Those decisions remain in later phases.
+
 ## Phases
 
 ### Phase 4.1 — Finance sales projection and adapter
@@ -78,4 +90,3 @@ Acceptance criteria:
 - changing order status semantics;
 - redesigning Products;
 - marketplace-specific settlement features beyond the agreed first slice.
-
