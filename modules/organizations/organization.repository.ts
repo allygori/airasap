@@ -50,6 +50,39 @@ export class OrganizationRepository extends BaseRepository<TOrganization> {
     return query.lean();
   }
 
+  async startFinance(
+    data: {
+      onboarding_version: number;
+      started_at: Date;
+    },
+    session?: ClientSession
+  ) {
+    const query = this.model.findOneAndUpdate(
+      {
+        _id: this.tenantContext.organizationId,
+        $or: [
+          { 'finance.status': { $exists: false } },
+          { 'finance.status': 'not_started' },
+        ],
+      },
+      {
+        $set: {
+          'finance.status': 'in_progress',
+          'finance.onboarding_version':
+            data.onboarding_version,
+          'finance.started_at': data.started_at,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query.lean();
+  }
+
   async startAccounting(
     data: {
       calendar_timezone: string;

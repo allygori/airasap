@@ -1,5 +1,6 @@
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -7,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { buttonVariants } from '@/components/ui/button';
 import {
   FinanceDomainError,
   FinanceLifecycleService,
@@ -86,6 +88,17 @@ function FinanceStateView({
           {finance.status === 'active'
             ? 'Finance siap digunakan. Fitur transaksi dan laporan akan tersedia melalui tahap berikutnya.'
             : 'Selesaikan onboarding Finance sebelum membuat transaksi atau jurnal.'}
+          {finance.status !== 'active' && (
+            <Link
+              href="/dashboard/finance/onboarding"
+              className={buttonVariants({
+                variant: 'outline',
+                className: 'mt-4',
+              })}
+            >
+              Buka onboarding
+            </Link>
+          )}
         </CardContent>
       </Card>
     </div>

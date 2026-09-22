@@ -1,7 +1,10 @@
 export type FinanceErrorCode =
   | 'FINANCE_TENANT_REQUIRED'
   | 'FINANCE_ORGANIZATION_NOT_FOUND'
-  | 'FINANCE_NOT_ACTIVE';
+  | 'FINANCE_NOT_ACTIVE'
+  | 'FINANCE_OWNER_REQUIRED'
+  | 'FINANCE_ONBOARDING_ALREADY_COMPLETED'
+  | 'FINANCE_LIFECYCLE_CONFLICT';
 
 export class FinanceDomainError extends Error {
   readonly code: FinanceErrorCode;
