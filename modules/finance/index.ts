@@ -10,6 +10,7 @@ export { FinanceSalesWorkflowService } from './sales/finance-sales-workflow.serv
 export { FinanceSalesTransactionReadService } from './sales/finance-sales-transaction-read.service';
 export { FinanceSalesTransactionRepository } from './sales/finance-sales-transaction.repository';
 export { FinanceInventoryStockReadService } from './inventory/finance-inventory-stock-read.service';
+export { FinanceInventoryAdjustmentService } from './inventory/finance-inventory-adjustment.service';
 export { FinanceAccountRoleResolverService } from './accounts/finance-account-role-resolver.service';
 export {
   FINANCE_SALES_POSTING_MODE_VALUES,
@@ -77,11 +78,19 @@ export type {
   FinanceInventoryStockQueryDTO,
   FinanceInventoryStockResponseDTO,
   FinanceInventoryStockStatusDTO,
+  FinanceInventoryAdjustmentDTO,
+  FinanceInventoryAdjustmentDirectionDTO,
+  FinanceInventoryAdjustmentReasonDTO,
+  FinanceInventoryAdjustmentItemOptionDTO,
+  FinanceInventoryAdjustmentLocationOptionDTO,
+  FinanceInventoryAdjustmentResponseDTO,
 } from './inventory/finance-inventory.dto';
 export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryStockQuerySchema,
   FinanceInventoryStockResponseSchema,
+  FinanceInventoryAdjustmentSchema,
+  FinanceInventoryAdjustmentResponseSchema,
 } from './inventory/finance-inventory.schema';
 export {
   FinanceSalesOrderSourceSchema,

@@ -47,9 +47,7 @@ const FinanceInventoryItemSchema =
       unit: { type: String, required: true, trim: true },
       track_quantity: { type: Boolean, default: true },
       track_value: { type: Boolean, default: true },
-      inventory_account: {
-        type: Schema.Types.ObjectId,
-      },
+      inventory_account: { type: Schema.Types.ObjectId },
       cogs_account: { type: Schema.Types.ObjectId },
       reorder_point: { type: Number, min: 0 },
       is_active: { type: Boolean, default: true },

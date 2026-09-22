@@ -38,4 +38,21 @@ export class FinanceInventoryLocationRepository extends BaseRepository<TFinanceI
       .lean<FinanceInventoryLocationPersistenceRecord | null>()
       .exec();
   }
+
+  async listActive(
+    session?: ClientSession
+  ): Promise<FinanceInventoryLocationPersistenceRecord[]> {
+    const query = this.model
+      .find({
+        ...this.getTenantFilter(),
+        is_active: true,
+      })
+      .select('_id organization code name is_active')
+      .sort({ code: 1, _id: 1 });
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceInventoryLocationPersistenceRecord[]>()
+      .exec();
+  }
 }

@@ -10,6 +10,10 @@ import {
   FINANCE_INVENTORY_INBOUND_MOVEMENT_TYPES,
   FINANCE_INVENTORY_OUTBOUND_MOVEMENT_TYPES,
 } from './finance-inventory.constants';
+import type {
+  FinanceInventoryAdjustmentDirectionDTO,
+  FinanceInventoryAdjustmentReasonDTO,
+} from './finance-inventory.dto';
 import {
   FinanceInventoryMovementModel,
   type TFinanceInventoryMovement,
@@ -26,9 +30,129 @@ export type FinanceInventoryBalancePersistenceRecord = {
   missing_cost_movement_count: number;
 };
 
+export type FinanceInventoryMovementPersistenceRecord = {
+  _id: Types.ObjectId;
+  organization: Types.ObjectId;
+  inventory_item: Types.ObjectId;
+  location: Types.ObjectId;
+  movement_type: TFinanceInventoryMovement['movement_type'];
+  adjustment_direction?: FinanceInventoryAdjustmentDirectionDTO;
+  adjustment_reason?: FinanceInventoryAdjustmentReasonDTO;
+  quantity: number;
+  unit_cost?: number | null;
+  total_cost?: number | null;
+  occurred_at: Date;
+  source_type?: string;
+  source_id?: string;
+  offset_account?: Types.ObjectId;
+  idempotency_key?: string;
+  reference?: string;
+  notes?: string;
+  status: TFinanceInventoryMovement['status'];
+  journal_entry?: Types.ObjectId;
+};
+
+export type CreateFinanceInventoryMovementRecord = Omit<
+  FinanceInventoryMovementPersistenceRecord,
+  '_id' | 'organization'
+>;
+
 export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceInventoryMovement> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryMovementModel, context);
+  }
+
+  async findByIdempotencyKey(
+    idempotencyKey: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord | null> {
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      idempotency_key: idempotencyKey,
+    });
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceInventoryMovementPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findMovementById(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      _id: new Types.ObjectId(id),
+    });
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceInventoryMovementPersistenceRecord | null>()
+      .exec();
+  }
+
+  async createDraft(
+    data: CreateFinanceInventoryMovementRecord,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord> {
+    const document = new this.model({
+      ...data,
+      organization: this.tenantContext.organizationId,
+      status: 'draft',
+    });
+    const saved = await document.save(
+      session ? { session } : undefined
+    );
+    return saved.toObject() as unknown as FinanceInventoryMovementPersistenceRecord;
+  }
+
+  async markPosted(
+    id: string,
+    journalEntryId?: string,
+    costs?: {
+      unit_cost?: number | null;
+      total_cost?: number | null;
+    },
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const set: Record<string, unknown> = {
+      status: 'posted',
+      ...(costs?.unit_cost !== undefined
+        ? { unit_cost: costs.unit_cost }
+        : {}),
+      ...(costs?.total_cost !== undefined
+        ? { total_cost: costs.total_cost }
+        : {}),
+    };
+    if (journalEntryId) {
+      if (!Types.ObjectId.isValid(journalEntryId))
+        return null;
+      set.journal_entry = new Types.ObjectId(
+        journalEntryId
+      );
+    }
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        status: 'draft',
+      },
+      { $set: set },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceInventoryMovementPersistenceRecord | null>()
+      .exec();
   }
 
   async aggregatePostedBalances(
@@ -57,7 +181,31 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
     const outboundTypes = [
       ...FINANCE_INVENTORY_OUTBOUND_MOVEMENT_TYPES,
     ];
-    const knownTypes = [...inboundTypes, ...outboundTypes];
+    const inboundCondition = {
+      $or: [
+        { $in: ['$movement_type', inboundTypes] },
+        {
+          $and: [
+            { $eq: ['$movement_type', 'adjustment'] },
+            { $eq: ['$adjustment_direction', 'increase'] },
+          ],
+        },
+      ],
+    };
+    const outboundCondition = {
+      $or: [
+        { $in: ['$movement_type', outboundTypes] },
+        {
+          $and: [
+            { $eq: ['$movement_type', 'adjustment'] },
+            { $eq: ['$adjustment_direction', 'decrease'] },
+          ],
+        },
+      ],
+    };
+    const classifiedCondition = {
+      $or: [inboundCondition, outboundCondition],
+    };
 
     const pipeline: PipelineStage[] = [
       { $match: baseFilter },
@@ -66,26 +214,18 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
           _id: '$inventory_item',
           inbound_quantity: {
             $sum: {
-              $cond: [
-                { $in: ['$movement_type', inboundTypes] },
-                '$quantity',
-                0,
-              ],
+              $cond: [inboundCondition, '$quantity', 0],
             },
           },
           outbound_quantity: {
             $sum: {
-              $cond: [
-                { $in: ['$movement_type', outboundTypes] },
-                '$quantity',
-                0,
-              ],
+              $cond: [outboundCondition, '$quantity', 0],
             },
           },
           inbound_value: {
             $sum: {
               $cond: [
-                { $in: ['$movement_type', inboundTypes] },
+                inboundCondition,
                 { $ifNull: ['$total_cost', 0] },
                 0,
               ],
@@ -94,7 +234,7 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
           outbound_value: {
             $sum: {
               $cond: [
-                { $in: ['$movement_type', outboundTypes] },
+                outboundCondition,
                 { $ifNull: ['$total_cost', 0] },
                 0,
               ],
@@ -105,9 +245,7 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
             $sum: {
               $cond: [
                 {
-                  $not: [
-                    { $in: ['$movement_type', knownTypes] },
-                  ],
+                  $not: [classifiedCondition],
                 },
                 1,
                 0,
@@ -119,7 +257,7 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
               $cond: [
                 {
                   $and: [
-                    { $in: ['$movement_type', knownTypes] },
+                    classifiedCondition,
                     {
                       $eq: [
                         { $ifNull: ['$total_cost', null] },
@@ -155,5 +293,18 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
       );
     if (session) aggregate.session(session);
     return aggregate.exec();
+  }
+
+  async getPostedBalance(
+    itemId: string,
+    locationId: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryBalancePersistenceRecord | null> {
+    const [balance] = await this.aggregatePostedBalances(
+      [itemId],
+      locationId,
+      session
+    );
+    return balance ?? null;
   }
 }

@@ -21,6 +21,8 @@ export type FinanceInventoryItemPersistenceRecord = {
   track_quantity: boolean;
   track_value: boolean;
   is_active: boolean;
+  inventory_account?: Types.ObjectId;
+  cogs_account?: Types.ObjectId;
 };
 
 type FinanceInventoryItemListFilter = {
@@ -65,7 +67,7 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
     const query = this.model
       .find(queryFilter)
       .select(
-        '_id organization sku name item_type unit track_quantity track_value is_active'
+        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
       )
       .sort({ sku: 1, _id: 1 })
       .skip((filter.page - 1) * filter.limit)
@@ -86,5 +88,27 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
     ]);
 
     return { records, total };
+  }
+
+  async findActiveById(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryItemPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model
+      .findOne({
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        is_active: true,
+      })
+      .select(
+        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+      );
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceInventoryItemPersistenceRecord | null>()
+      .exec();
   }
 }

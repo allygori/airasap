@@ -31,6 +31,16 @@ export const FINANCE_INVENTORY_STOCK_STATUS_VALUES = [
   'value_not_tracked',
 ] as const;
 
+export const FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES =
+  ['increase', 'decrease'] as const;
+
+export const FINANCE_INVENTORY_ADJUSTMENT_REASON_VALUES = [
+  'stock_count',
+  'damage',
+  'loss',
+  'other',
+] as const;
+
 export const FINANCE_INVENTORY_INBOUND_MOVEMENT_TYPES = [
   'purchase',
   'return',
@@ -46,6 +56,32 @@ export const FINANCE_INVENTORY_OUTBOUND_MOVEMENT_TYPES = [
   'consumption',
 ] as const;
 
+export const FINANCE_INVENTORY_DEFAULT_ACCOUNT_BY_ITEM_TYPE =
+  {
+    merchandise: {
+      subtype: 'merchandise_inventory',
+      code: '1310',
+    },
+    packaging: {
+      subtype: 'packaging_inventory',
+      code: '1320',
+    },
+    supplies: {
+      subtype: 'packaging_inventory',
+      code: '1320',
+    },
+    fixed_asset: {
+      subtype: 'packing_equipment',
+      code: '1510',
+    },
+  } as const;
+
+export const FINANCE_INVENTORY_DEFAULT_ADJUSTMENT_ACCOUNT =
+  {
+    subtype: 'inventory_shrinkage',
+    code: '6900',
+  } as const;
+
 export type FinanceInventoryItemType =
   (typeof FINANCE_INVENTORY_ITEM_TYPE_VALUES)[number];
 
@@ -57,3 +93,9 @@ export type FinanceInventoryMovementStatus =
 
 export type FinanceInventoryStockStatus =
   (typeof FINANCE_INVENTORY_STOCK_STATUS_VALUES)[number];
+
+export type FinanceInventoryAdjustmentDirection =
+  (typeof FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES)[number];
+
+export type FinanceInventoryAdjustmentReason =
+  (typeof FINANCE_INVENTORY_ADJUSTMENT_REASON_VALUES)[number];

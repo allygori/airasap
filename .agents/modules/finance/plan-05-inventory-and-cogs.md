@@ -64,6 +64,32 @@ Acceptance criteria:
 - adjustment correction uses a new transaction;
 - negative stock behavior is explicitly defined.
 
+Implementation status: [CURRENT]
+
+- A user-facing Finance adjustment form and versioned API now support stock
+  count, damage, loss, and other adjustments.
+- Negative stock is rejected per location. Finance does not silently allow a
+  seller to create an invalid on-hand balance.
+- A value-tracked item requires a positive unit cost. Its posted adjustment
+  creates a balanced journal: increase debits inventory and credits the
+  inventory shrinkage account; decrease debits that account and credits
+  inventory.
+- Inventory account resolution uses the item's explicit account first, then
+  the Finance default for its item type. The offset account defaults to the
+  selectable `inventory_shrinkage` account (code `6900`) and can be overridden
+  by an API caller when a different approved account is required.
+- A quantity-only item can post the movement without a journal because no
+  value claim is being made.
+- The posted movement and journal are created in one database transaction.
+  Posted movements are immutable; any correction is another adjustment.
+- Idempotency keys replay the original posted adjustment and reject a reused
+  key with different adjustment data.
+
+Phase 5.2 decisions: quantity-only Finance use is supported; packaging and
+supplies use the existing packaging inventory default unless an item-specific
+inventory account is configured. The costing method for sales HPP remains a
+Phase 5.4 decision.
+
 ### Phase 5.3 — Warehouse transfers
 
 Support transfer between locations without incorrectly changing total
@@ -90,12 +116,10 @@ Acceptance criteria:
 ## Open questions
 
 - Moving average, FIFO, or another costing method?
-- Can a seller use Finance without value-tracked inventory?
 - Which existing inventory collections remain canonical?
-- Is packaging inventory part of the first release?
 
-The costing method and adjustment semantics remain open for Phase 5.2 and
-Phase 5.4; Phase 5.1 does not silently choose either one.
+The costing method remains open for Phase 5.4; Phase 5.1 and Phase 5.2 do not
+silently choose FIFO or moving average.
 
 ## Not in scope
 

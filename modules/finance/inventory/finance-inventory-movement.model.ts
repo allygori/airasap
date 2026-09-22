@@ -12,6 +12,10 @@ import {
   type FinanceInventoryMovementStatus,
   type FinanceInventoryMovementType,
 } from './finance-inventory.constants';
+import type {
+  FinanceInventoryAdjustmentDirection,
+  FinanceInventoryAdjustmentReason,
+} from './finance-inventory.constants';
 
 export type TFinanceInventoryMovement = Document & {
   organization: Types.ObjectId;
@@ -20,6 +24,8 @@ export type TFinanceInventoryMovement = Document & {
   store?: Types.ObjectId;
   platform?: string;
   movement_type: FinanceInventoryMovementType;
+  adjustment_direction?: FinanceInventoryAdjustmentDirection;
+  adjustment_reason?: FinanceInventoryAdjustmentReason;
   quantity: number;
   unit_cost?: number | null;
   total_cost?: number | null;
@@ -59,6 +65,14 @@ const FinanceInventoryMovementSchema =
         type: String,
         enum: FINANCE_INVENTORY_MOVEMENT_TYPE_VALUES,
         required: true,
+      },
+      adjustment_direction: {
+        type: String,
+        enum: ['increase', 'decrease'],
+      },
+      adjustment_reason: {
+        type: String,
+        enum: ['stock_count', 'damage', 'loss', 'other'],
       },
       quantity: { type: Number, required: true, min: 0 },
       unit_cost: { type: Number, min: 0, default: null },

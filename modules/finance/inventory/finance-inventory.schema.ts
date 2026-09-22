@@ -4,6 +4,8 @@ import {
   FINANCE_INVENTORY_MOVEMENT_STATUS_VALUES,
   FINANCE_INVENTORY_MOVEMENT_TYPE_VALUES,
   FINANCE_INVENTORY_STOCK_STATUS_VALUES,
+  FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES,
+  FINANCE_INVENTORY_ADJUSTMENT_REASON_VALUES,
 } from './finance-inventory.constants';
 
 const ObjectIdStringSchema = z
@@ -25,6 +27,12 @@ export const FinanceInventoryMovementStatusSchema = z.enum(
 export const FinanceInventoryStockStatusSchema = z.enum(
   FINANCE_INVENTORY_STOCK_STATUS_VALUES
 );
+
+export const FinanceInventoryAdjustmentDirectionSchema =
+  z.enum(FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES);
+
+export const FinanceInventoryAdjustmentReasonSchema =
+  z.enum(FINANCE_INVENTORY_ADJUSTMENT_REASON_VALUES);
 
 export const FinanceInventoryStockQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -99,6 +107,81 @@ export const FinanceInventoryStockMovementSourceSchema =
     unit_cost: z.number().int().nonnegative().nullable(),
     total_cost: z.number().int().nonnegative().nullable(),
     occurred_at: z.string().datetime(),
+  });
+
+export const FinanceInventoryAdjustmentSchema = z
+  .object({
+    item_id: ObjectIdStringSchema,
+    location_id: ObjectIdStringSchema,
+    direction: FinanceInventoryAdjustmentDirectionSchema,
+    reason: FinanceInventoryAdjustmentReasonSchema,
+    quantity: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(1_000_000),
+    unit_cost: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(1_000_000_000_000)
+      .optional(),
+    transaction_date: z.coerce
+      .date()
+      .default(() => new Date()),
+    offset_account_id: ObjectIdStringSchema.optional(),
+    notes: z.string().trim().max(500).optional(),
+    idempotency_key: z
+      .string()
+      .trim()
+      .min(1)
+      .max(200)
+      .optional(),
+  })
+  .strict()
+  .superRefine((value, context) => {
+    if (
+      value.direction === 'increase' &&
+      (value.reason === 'damage' || value.reason === 'loss')
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['direction'],
+        message:
+          'Damage atau loss hanya dapat mengurangi stok.',
+      });
+    }
+  });
+
+export const FinanceInventoryAdjustmentItemOptionSchema =
+  z.object({
+    id: ObjectIdStringSchema,
+    sku: z.string().min(1),
+    name: z.string().min(1),
+    unit: z.string().min(1),
+    track_value: z.boolean(),
+  });
+
+export const FinanceInventoryAdjustmentLocationOptionSchema =
+  z.object({
+    id: ObjectIdStringSchema,
+    code: z.string().min(1),
+    name: z.string().min(1),
+  });
+
+export const FinanceInventoryAdjustmentResponseSchema =
+  z.object({
+    movement_id: ObjectIdStringSchema,
+    item_id: ObjectIdStringSchema,
+    location_id: ObjectIdStringSchema,
+    direction: FinanceInventoryAdjustmentDirectionSchema,
+    reason: FinanceInventoryAdjustmentReasonSchema,
+    status: z.literal('posted'),
+    quantity: z.number().int().positive(),
+    unit_cost: z.number().int().positive().nullable(),
+    total_cost: z.number().int().positive().nullable(),
+    journal_entry_id: ObjectIdStringSchema.nullable(),
+    idempotency_key: z.string().min(1),
   });
 
 export type FinanceInventoryStockQueryInput = z.input<
