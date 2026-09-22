@@ -18,6 +18,8 @@ export { FinanceCashBankTransferReadService } from './cash-and-bank/finance-cash
 export { FinanceCashBankTransferRepository } from './cash-and-bank/finance-cash-bank-transfer.repository';
 export { FinancePurchaseService } from './purchases/finance-purchase.service';
 export { FinancePurchaseReadService } from './purchases/finance-purchase-read.service';
+export { FinanceExpenseService } from './expenses/finance-expense.service';
+export { FinanceExpenseReadService } from './expenses/finance-expense-read.service';
 export {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   FINANCE_CASH_BANK_SUBTYPE_VALUES,
@@ -125,6 +127,16 @@ export type {
   FinancePurchaseListResponseDTO,
   FinancePurchaseDetailResponseDTO,
 } from './purchases/finance-purchase.dto';
+export type {
+  FinanceExpenseInputDTO,
+  FinanceExpenseStatusDTO,
+  FinanceExpensePaymentTimingDTO,
+  FinanceExpenseResponseDTO,
+  FinanceExpenseSummaryDTO,
+  FinanceExpenseListQueryDTO,
+  FinanceExpenseListResponseDTO,
+  FinanceExpenseDetailResponseDTO,
+} from './expenses/finance-expense.dto';
 export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryStockQuerySchema,
@@ -159,6 +171,16 @@ export {
   FinancePurchaseListResponseSchema,
   FinancePurchaseDetailResponseSchema,
 } from './purchases/finance-purchase.schema';
+export {
+  FinanceExpenseInputSchema,
+  FinanceExpenseStatusSchema,
+  FinanceExpensePaymentTimingSchema,
+  FinanceExpenseResponseSchema,
+  FinanceExpenseSummarySchema,
+  FinanceExpenseListQuerySchema,
+  FinanceExpenseListResponseSchema,
+  FinanceExpenseDetailResponseSchema,
+} from './expenses/finance-expense.schema';
 export {
   FinanceSalesOrderSourceSchema,
   FinanceSalesPostingDecisionSchema,

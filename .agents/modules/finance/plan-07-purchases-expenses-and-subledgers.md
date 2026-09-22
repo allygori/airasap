@@ -70,6 +70,32 @@ Acceptance criteria:
 - attachments or notes are optional and bounded;
 - posted expense is traceable to a journal.
 
+Implementation status: [CURRENT]
+
+- The Finance-owned source transaction is stored in the `finance_expenses`
+  collection. The legacy Expense module is untouched and is not imported by
+  this workflow.
+- An expense starts as `draft`; draft creation does not create a journal or
+  change a balance. Posting creates one balanced journal with debit to the
+  selected `expense` or `other_expense` account.
+- `paid` credits an active postable Cash, Bank, E-wallet, or Marketplace
+  Balance account. `payable` credits the active Accounts Payable account (with
+  code `2100` as a compatibility fallback) and does not require a payment
+  account.
+- Vendor, invoice/reference, notes, and `attachment_reference` are bounded
+  transaction fields. The attachment field is only a reference string in this
+  phase; file upload, taxes, recurring bills, partial settlement, and expense
+  approval are deferred.
+- Request idempotency is stored on the source transaction and the derived
+  journal uses a key derived from the expense id. Posted journals remain
+  immutable.
+- The API surface is `GET/POST
+  /api/v1/dashboard/finance/expenses-and-outflows`, `GET
+  /api/v1/dashboard/finance/expenses-and-outflows/:expenseId`, and `POST
+  /api/v1/dashboard/finance/expenses-and-outflows/:expenseId/post`. The UI is
+  `/dashboard/finance/expenses-and-outflows` with a detail view under the same
+  path.
+
 ### Phase 7.3 — Receivable and payable balances
 
 Provide minimal outstanding balance views and settlement actions.
