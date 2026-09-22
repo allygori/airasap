@@ -30,7 +30,9 @@ in the relevant implementation plan before implementation.
 
 - There is no requirement to duplicate a good COA model merely because Finance
   has a new route namespace.
-- Old accounting code remains a reference or compatibility dependency until
-  proven unused.
+- Finance may own an adapted model and point it at an existing collection when
+  that preserves user data; this is data compatibility, not a runtime
+  dependency on the old service or UI.
+- Old accounting code remains a reference until proven unused and may be
+  removed after its remaining consumers are migrated.
 - Finance plans must include explicit reuse and migration checks.
-

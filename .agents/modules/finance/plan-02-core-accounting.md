@@ -17,6 +17,19 @@ Finance adapter.
 New Finance-owned concepts must not be forced into an incompatible legacy
 contract.
 
+## Implementation progress
+
+### Phase 2.1 — [CURRENT] Chart of Accounts adapter
+
+Finance now exposes its own account filter, response DTO, service, repository,
+model, and route under the Finance namespace. The Finance model reads the
+existing `accounting_accounts` collection so existing COA data remains
+available during the transition, but it does not import the legacy accounting
+service, resolver, model, page, or UI. The Finance contract exposes hierarchy
+depth and an explicit `is_selectable` flag, which is true only for active,
+postable accounts. Role-based account mapping is intentionally not persisted
+in this phase and remains part of onboarding design.
+
 ## Phases
 
 ### Phase 2.1 — Chart of Accounts contract
@@ -78,4 +91,3 @@ Acceptance criteria:
 - bank statement matching;
 - full historical reconstruction;
 - automatic closing entries.
-

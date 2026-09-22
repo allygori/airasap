@@ -4,7 +4,8 @@ export type FinanceErrorCode =
   | 'FINANCE_NOT_ACTIVE'
   | 'FINANCE_OWNER_REQUIRED'
   | 'FINANCE_ONBOARDING_ALREADY_COMPLETED'
-  | 'FINANCE_LIFECYCLE_CONFLICT';
+  | 'FINANCE_LIFECYCLE_CONFLICT'
+  | 'FINANCE_ACCOUNT_NOT_SELECTABLE';
 
 export class FinanceDomainError extends Error {
   readonly code: FinanceErrorCode;

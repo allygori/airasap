@@ -1,5 +1,11 @@
 export { FinanceDomainError } from './finance.error';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
+export { FinanceAccountService } from './accounts/finance-account.service';
+export {
+  FINANCE_ACCOUNT_TYPE_VALUES,
+  FINANCE_NORMAL_BALANCE_VALUES,
+} from './accounts/finance-account.constants';
+export { FinanceAccountFilterSchema } from './accounts/finance-account.schema';
 export { assertFinanceModuleActive } from './finance-module.guard';
 export {
   assertFinanceTenant,
@@ -10,3 +16,12 @@ export type {
   FinanceStatus,
   FinanceTenantContext,
 } from './finance.types';
+export type {
+  FinanceAccountDTO,
+  FinanceAccountFilterDTO,
+  FinanceAccountListResponseDTO,
+} from './accounts/finance-account.dto';
+export type {
+  FinanceAccountType,
+  FinanceNormalBalance,
+} from './accounts/finance-account.constants';
