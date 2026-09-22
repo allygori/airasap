@@ -13,6 +13,7 @@ export { FinanceInventoryStockReadService } from './inventory/finance-inventory-
 export { FinanceInventoryAdjustmentService } from './inventory/finance-inventory-adjustment.service';
 export { FinanceInventoryCogsService } from './inventory/finance-inventory-cogs.service';
 export { FinanceCashBankReadService } from './cash-and-bank/finance-cash-bank-read.service';
+export { FinanceCashBankTransferService } from './cash-and-bank/finance-cash-bank-transfer.service';
 export {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   FINANCE_CASH_BANK_SUBTYPE_VALUES,
@@ -99,6 +100,11 @@ export type {
   FinanceCashBankResponseDTO,
   FinanceCashBankSubtypeDTO,
 } from './cash-and-bank/finance-cash-bank.dto';
+export type {
+  FinanceCashBankTransferInputDTO,
+  FinanceCashBankTransferResponseDTO,
+  FinanceCashBankTransferStatusDTO,
+} from './cash-and-bank/finance-cash-bank-transfer.dto';
 export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryStockQuerySchema,
@@ -112,6 +118,11 @@ export {
   FinanceCashBankAccountSchema,
   FinanceCashBankSubtypeSchema,
 } from './cash-and-bank/finance-cash-bank.schema';
+export {
+  FinanceCashBankTransferInputSchema,
+  FinanceCashBankTransferResponseSchema,
+  FinanceCashBankTransferStatusSchema,
+} from './cash-and-bank/finance-cash-bank-transfer.schema';
 export {
   FinanceSalesOrderSourceSchema,
   FinanceSalesPostingDecisionSchema,

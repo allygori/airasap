@@ -21,6 +21,12 @@ A transfer is a new source transaction that produces a balanced journal:
 Posted journals are never edited directly. Bank mutation import and full bank
 reconciliation are deferred.
 
+Transfers post immediately in the initial release. A Finance-owned transfer
+source transaction is created before the journal and stores snapshots of the
+source and destination account identity for traceability. The operation is
+atomic at the API boundary and uses a request idempotency key plus a separate
+journal idempotency key.
+
 ## Consequences
 
 - No second cash ledger is required for the first release.

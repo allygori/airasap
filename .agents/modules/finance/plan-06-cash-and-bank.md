@@ -59,6 +59,26 @@ Acceptance criteria:
 - duplicate submissions are idempotent;
 - transfer remains traceable to its journal.
 
+Implementation status: [CURRENT]
+
+- A Finance-owned transfer source transaction is stored in the new
+  `finance_cash_bank_transfers` collection before journal posting. It keeps
+  both COA account snapshots, amount, date, reference, description, status,
+  and journal link for traceability.
+- Only active, postable COA asset accounts with subtype `cash`, `bank`,
+  `e_wallet`, or `marketplace_balance` may be selected. Source and destination
+  must be different accounts.
+- The transfer journal is balanced as Dr destination / Cr source and uses its
+  own source type and idempotency key. The source transaction and journal are
+  created or finalized in one database transaction at the API boundary.
+- The API is `POST /api/v1/dashboard/finance/cash-and-bank-transfers` and the
+  form is `/dashboard/finance/cash-and-bank-transfers`.
+- Repeating a request with the same idempotency key and payload returns the
+  existing transfer without creating another journal. Reusing the key with a
+  different payload is rejected.
+- Transfers post immediately. Approval queues, bank statement import, and
+  reconciliation remain outside this phase.
+
 ### Phase 6.3 — Correction and usability
 
 Support transfer detail, reversal/correction, pending/error states, and
@@ -73,7 +93,8 @@ decided.
 - [DECIDED] Marketplace balances are included because they are liquid-asset
   accounts already represented in the COA, but they remain visibly labeled as
   marketplace balances rather than bank cash.
-- Should transfers support pending approval or post immediately?
+- [DECIDED] Transfers post immediately in the initial release. Approval flow
+  can be added later if the operating workflow requires it.
 - [DECIDED] Phase 6.1 only displays existing optional metadata: institution,
   last four digits, account holder, and provider. Full bank identity and
   statement import remain outside this phase.
