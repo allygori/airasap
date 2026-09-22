@@ -47,6 +47,12 @@ const mapSummary = (
     journal_entry_id: record.journal_entry_id
       ? String(record.journal_entry_id)
       : null,
+    inventory_cogs_status:
+      record.inventory_cogs_status ?? 'deferred',
+    inventory_cogs_deferred_reason:
+      record.inventory_cogs_deferred_reason ?? null,
+    inventory_cogs_total_cost:
+      record.inventory_cogs_total_cost ?? null,
     created_at: toIsoString(record.created_at),
     updated_at: toIsoString(record.updated_at),
   });
@@ -58,8 +64,7 @@ const mapIntent = (
     !record.intent_source_event ||
     !record.intent_transaction_date ||
     !record.intent_description ||
-    record.intent_lines.length === 0 ||
-    !record.inventory_cogs_deferred_reason
+    record.intent_lines.length === 0
   ) {
     return null;
   }
@@ -75,8 +80,12 @@ const mapIntent = (
     idempotency_key: record.idempotency_key,
     lines: record.intent_lines,
     inventory_cogs: {
-      status: 'deferred',
-      reason: record.inventory_cogs_deferred_reason,
+      status: record.inventory_cogs_status ?? 'deferred',
+      reason:
+        record.inventory_cogs_status === 'posted'
+          ? null
+          : (record.inventory_cogs_deferred_reason ??
+            'HPP belum diposting.'),
     },
   });
 };

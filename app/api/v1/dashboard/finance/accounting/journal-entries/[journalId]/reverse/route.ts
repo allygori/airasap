@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -12,7 +13,9 @@ import {
   FinanceDomainError,
   FinanceJournalReversalSchema,
   FinanceJournalService,
+  FinanceInventoryCogsService,
   FinanceSalesTransactionRepository,
+  type FinanceJournalPostResultDTO,
 } from '@/modules/finance';
 
 const FinanceJournalRouteParamsSchema = z
@@ -39,20 +42,47 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const result = await new FinanceJournalService(
-        tenantContext
-      ).reverse(validatedParams!.journalId, validatedBody!);
+      const session = await mongoose.startSession();
+      let result: FinanceJournalPostResultDTO;
+      try {
+        result = await session.withTransaction(
+          async (): Promise<FinanceJournalPostResultDTO> => {
+            const reversalResult =
+              await new FinanceJournalService(
+                tenantContext
+              ).reverse(
+                validatedParams!.journalId,
+                validatedBody!,
+                session
+              );
 
-      await new FinanceSalesTransactionRepository(
-        tenantContext
-      ).markReversedByJournalEntry(
-        validatedParams!.journalId
-      );
+            await new FinanceInventoryCogsService(
+              tenantContext
+            ).reversePostedSalesMovements(
+              validatedParams!.journalId,
+              reversalResult.journal_entry.id,
+              validatedBody!.effective_date ?? new Date(),
+              session
+            );
+
+            await new FinanceSalesTransactionRepository(
+              tenantContext
+            ).markReversedByJournalEntry(
+              validatedParams!.journalId,
+              session
+            );
+
+            return reversalResult;
+          }
+        );
+      } finally {
+        await session.endSession();
+      }
 
       return apiSuccess(
-        result,
+        result!,
         undefined,
-        result.replayed ? 200 : 201
+        result!.replayed ? 200 : 201
       );
     } catch (error) {
       if (error instanceof FinanceDomainError) {
@@ -65,7 +95,9 @@ export const POST = withValidation(
               : error.code ===
                     'FINANCE_JOURNAL_REVERSAL_CONFLICT' ||
                   error.code ===
-                    'FINANCE_JOURNAL_REVERSAL_FINALIZATION_FAILED'
+                    'FINANCE_JOURNAL_REVERSAL_FINALIZATION_FAILED' ||
+                  error.code ===
+                    'FINANCE_INVENTORY_COGS_REVERSAL_FAILED'
                 ? 409
                 : 422;
 

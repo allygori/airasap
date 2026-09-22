@@ -9,6 +9,7 @@ import {
   FinanceSalesPostingModeSchema,
   FinanceSalesTransactionStatusSchema,
   FinanceSalesTransactionDetailResponseSchema,
+  FinanceSalesInventoryCogsStatusSchema,
   FinanceSalesTransactionListQuerySchema,
   FinanceSalesTransactionListResponseSchema,
   FinanceSalesTransactionSummarySchema,
@@ -50,6 +51,10 @@ export type FinanceSalesPostingModeDTO = ReturnType<
 
 export type FinanceSalesTransactionStatusDTO = ReturnType<
   typeof FinanceSalesTransactionStatusSchema.parse
+>;
+
+export type FinanceSalesInventoryCogsStatusDTO = ReturnType<
+  typeof FinanceSalesInventoryCogsStatusSchema.parse
 >;
 
 export type FinanceSalesWorkflowResultDTO = ReturnType<

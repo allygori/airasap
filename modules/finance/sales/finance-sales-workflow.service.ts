@@ -15,6 +15,7 @@ import type {
   FinanceSalesWorkflowResultDTO,
 } from './finance-sales.dto';
 import { FinanceSalesPostingRulesService } from './finance-sales-rules.service';
+import { FinanceInventoryCogsService } from '../inventory/finance-inventory-cogs.service';
 import {
   FinanceSalesTransactionRepository,
   type CreateFinanceSalesTransactionRecord,
@@ -55,6 +56,11 @@ type FinanceSalesJournalPort = Pick<
   'postOperational'
 >;
 
+type FinanceSalesCogsPort = Pick<
+  FinanceInventoryCogsService,
+  'prepare' | 'finalize'
+>;
+
 export type FinanceSalesWorkflowInput = {
   mode?: FinanceSalesPostingModeDTO;
   session?: ClientSession;
@@ -80,6 +86,7 @@ export class FinanceSalesWorkflowService {
   private readonly roleResolver: FinanceSalesAccountResolverPort;
   private readonly journalService: FinanceSalesJournalPort;
   private readonly rulesService: FinanceSalesPostingRulesService;
+  private readonly cogsService: FinanceSalesCogsPort;
 
   constructor(
     context: FinanceTenantContext,
@@ -89,6 +96,7 @@ export class FinanceSalesWorkflowService {
       roleResolver?: FinanceSalesAccountResolverPort;
       journalService?: FinanceSalesJournalPort;
       rulesService?: FinanceSalesPostingRulesService;
+      cogsService?: FinanceSalesCogsPort;
     }
   ) {
     assertFinanceTenant(context);
@@ -107,6 +115,9 @@ export class FinanceSalesWorkflowService {
     this.rulesService =
       dependencies?.rulesService ??
       new FinanceSalesPostingRulesService();
+    this.cogsService =
+      dependencies?.cogsService ??
+      new FinanceInventoryCogsService(context);
   }
 
   async process(
@@ -320,6 +331,18 @@ export class FinanceSalesWorkflowService {
     session?: ClientSession
   ): Promise<FinanceSalesWorkflowResultDTO> {
     try {
+      const cogs = await this.cogsService.prepare(
+        {
+          source_order_id: context.source_order_id,
+          source_order_number:
+            transaction.source_order_number,
+          transaction_date: new Date(
+            intent.transaction_date
+          ),
+          lines: transaction.source_lines,
+        },
+        session
+      );
       const accountByRole = new Map<
         FinanceSalesPostingIntentDTO['lines'][number]['account_role'],
         string
@@ -349,27 +372,43 @@ export class FinanceSalesWorkflowService {
             source_id: context.source_order_id,
             source_event: intent.source_event,
             idempotency_key: intent.idempotency_key,
-            lines: intent.lines.map((line) => ({
-              account_id:
-                accountByRole.get(line.account_role) ?? '',
-              debit: line.debit,
-              credit: line.credit,
-              dimensions: {
-                platform: context.platform,
-                ...(context.store_id
-                  ? { store_id: context.store_id }
-                  : {}),
-              },
-            })),
+            lines: [
+              ...intent.lines.map((line) => ({
+                account_id:
+                  accountByRole.get(line.account_role) ??
+                  '',
+                debit: line.debit,
+                credit: line.credit,
+                dimensions: {
+                  platform: context.platform,
+                  ...(context.store_id
+                    ? { store_id: context.store_id }
+                    : {}),
+                },
+              })),
+              ...cogs.journal_lines,
+            ],
           },
           session
         );
+
+      const movementIds = await this.cogsService.finalize(
+        cogs,
+        journalResult.journal_entry.id,
+        session
+      );
 
       const posted =
         await this.transactionRepository.markPosted(
           String(transaction._id),
           journalResult.journal_entry.id,
-          session
+          session,
+          {
+            status: cogs.status,
+            reason: cogs.reason,
+            total_cost: cogs.total_cost,
+            movement_ids: movementIds,
+          }
         );
 
       if (!posted) {
@@ -397,6 +436,15 @@ export class FinanceSalesWorkflowService {
         reason: null,
       });
     } catch (error: unknown) {
+      if (
+        session &&
+        error instanceof FinanceDomainError &&
+        error.code ===
+          'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
+      ) {
+        throw error;
+      }
+
       const reason = getSafeFailureReason(error);
       const blocked =
         await this.transactionRepository.markBlocked(
@@ -452,8 +500,7 @@ export class FinanceSalesWorkflowService {
       !transaction.intent_source_event ||
       !transaction.intent_transaction_date ||
       !transaction.intent_description ||
-      transaction.intent_lines.length === 0 ||
-      !transaction.inventory_cogs_deferred_reason
+      transaction.intent_lines.length === 0
     ) {
       return null;
     }
@@ -471,9 +518,13 @@ export class FinanceSalesWorkflowService {
         idempotency_key: transaction.idempotency_key,
         lines: transaction.intent_lines,
         inventory_cogs: {
-          status: 'deferred',
+          status:
+            transaction.inventory_cogs_status ?? 'deferred',
           reason:
-            transaction.inventory_cogs_deferred_reason,
+            transaction.inventory_cogs_status === 'posted'
+              ? null
+              : (transaction.inventory_cogs_deferred_reason ??
+                'HPP belum diposting.'),
         },
       });
 
@@ -531,6 +582,10 @@ export class FinanceSalesWorkflowService {
       intent_lines: intent?.lines ?? [],
       inventory_cogs_deferred_reason:
         intent?.inventory_cogs.reason ?? null,
+      inventory_cogs_status:
+        intent?.inventory_cogs.status ?? 'deferred',
+      inventory_cogs_total_cost: null,
+      inventory_movement_ids: [],
     };
   }
 

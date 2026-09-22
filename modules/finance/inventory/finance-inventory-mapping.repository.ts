@@ -11,6 +11,17 @@ export type FinanceInventoryMappingCount = {
   count: number;
 };
 
+export type FinanceInventoryMappingPersistenceRecord = {
+  _id: Types.ObjectId;
+  organization: Types.ObjectId;
+  product: Types.ObjectId;
+  variant_id?: string;
+  variant_key: string;
+  inventory_item: Types.ObjectId;
+  mapping_method: string;
+  is_active: boolean;
+};
+
 export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceInventoryMapping> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryMappingModel, context);
@@ -43,5 +54,38 @@ export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceIn
       ]);
     if (session) aggregate.session(session);
     return aggregate.exec();
+  }
+
+  async findActiveByProductVariant(
+    productId: string,
+    variantId?: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMappingPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(productId)) return null;
+
+    const exactQuery = this.model.findOne({
+      ...this.getTenantFilter(),
+      product: new Types.ObjectId(productId),
+      ...(variantId
+        ? { variant_key: variantId }
+        : { variant_key: '__product__' }),
+      is_active: true,
+    });
+    if (session) exactQuery.session(session);
+    const exact = await exactQuery
+      .lean<FinanceInventoryMappingPersistenceRecord | null>()
+      .exec();
+    if (exact || !variantId) return exact;
+
+    const fallbackQuery = this.model.findOne({
+      ...this.getTenantFilter(),
+      product: new Types.ObjectId(productId),
+      variant_key: '__product__',
+      is_active: true,
+    });
+    if (session) fallbackQuery.session(session);
+    return fallbackQuery
+      .lean<FinanceInventoryMappingPersistenceRecord | null>()
+      .exec();
   }
 }

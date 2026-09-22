@@ -205,6 +205,7 @@ export function FinanceSalesTransactions({
                   <TableHead>Order source</TableHead>
                   <TableHead>Platform</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>HPP</TableHead>
                   <TableHead className="text-right">
                     Nilai
                   </TableHead>
@@ -246,6 +247,20 @@ export function FinanceSalesTransactions({
                           {transaction.blocked_reason}
                         </p>
                       ) : null}
+                    </TableCell>
+                    <TableCell>
+                      <InventoryCogsBadge
+                        status={
+                          transaction.inventory_cogs_status
+                        }
+                        totalCost={
+                          transaction.inventory_cogs_total_cost
+                        }
+                        currency={transaction.currency}
+                        reason={
+                          transaction.inventory_cogs_deferred_reason
+                        }
+                      />
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {transaction.sales_amount === null
@@ -338,6 +353,39 @@ function StatusBadge({
     >
       {status}
     </Badge>
+  );
+}
+
+function InventoryCogsBadge({
+  status,
+  totalCost,
+  currency,
+  reason,
+}: {
+  status: 'deferred' | 'posted';
+  totalCost: number | null;
+  currency: string;
+  reason: string | null;
+}) {
+  return (
+    <div className="space-y-1">
+      <Badge
+        variant={
+          status === 'posted' ? 'success' : 'warning'
+        }
+      >
+        {status === 'posted' ? 'Posted' : 'Ditunda'}
+      </Badge>
+      {status === 'posted' && totalCost !== null ? (
+        <p className="font-mono text-xs">
+          {formatMoney(totalCost, currency)}
+        </p>
+      ) : reason ? (
+        <p className="text-muted-foreground max-w-xs text-xs whitespace-normal">
+          {reason}
+        </p>
+      ) : null}
+    </div>
   );
 }
 

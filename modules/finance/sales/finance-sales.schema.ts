@@ -9,6 +9,7 @@ import {
   FINANCE_SALES_PROJECTION_ISSUE_CODES,
   FINANCE_SALES_PROJECTION_STATUS_VALUES,
   FINANCE_SALES_TRANSACTION_STATUS_VALUES,
+  FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES,
 } from './finance-sales.constants';
 
 const ObjectIdStringSchema = z
@@ -163,6 +164,22 @@ export const FinanceSalesPostingJournalLineIntentSchema = z
     'Posting intent line harus memiliki tepat satu sisi debit atau credit.'
   );
 
+export const FinanceSalesInventoryCogsStatusSchema = z.enum(
+  FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES
+);
+
+export const FinanceSalesInventoryCogsIntentSchema =
+  z.discriminatedUnion('status', [
+    z.object({
+      status: z.literal('deferred'),
+      reason: z.string().min(1),
+    }),
+    z.object({
+      status: z.literal('posted'),
+      reason: z.string().nullable(),
+    }),
+  ]);
+
 export const FinanceSalesPostingIntentSchema = z
   .object({
     source_order_id: z.string(),
@@ -177,10 +194,7 @@ export const FinanceSalesPostingIntentSchema = z
     lines: z
       .array(FinanceSalesPostingJournalLineIntentSchema)
       .min(2),
-    inventory_cogs: z.object({
-      status: z.literal('deferred'),
-      reason: z.string().min(1),
-    }),
+    inventory_cogs: FinanceSalesInventoryCogsIntentSchema,
   })
   .superRefine((intent, context) => {
     const totalDebit = intent.lines.reduce(
@@ -270,6 +284,14 @@ export const FinanceSalesTransactionSummarySchema =
     idempotency_key: z.string(),
     blocked_reason: z.string().nullable(),
     journal_entry_id: z.string().nullable(),
+    inventory_cogs_status:
+      FinanceSalesInventoryCogsStatusSchema,
+    inventory_cogs_deferred_reason: z.string().nullable(),
+    inventory_cogs_total_cost: z
+      .number()
+      .int()
+      .nonnegative()
+      .nullable(),
     created_at: z.string().datetime(),
     updated_at: z.string().datetime(),
   });

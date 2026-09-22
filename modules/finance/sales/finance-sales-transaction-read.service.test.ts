@@ -61,6 +61,9 @@ const makeRecord =
       },
     ],
     inventory_cogs_deferred_reason: 'Ditunda ke Plan 05.',
+    inventory_cogs_status: 'deferred',
+    inventory_cogs_total_cost: null,
+    inventory_movement_ids: [],
     created_at: new Date('2026-09-22T00:00:00.000Z'),
     updated_at: new Date('2026-09-22T00:00:00.000Z'),
   });

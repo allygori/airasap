@@ -82,6 +82,22 @@ export const FINANCE_INVENTORY_DEFAULT_ADJUSTMENT_ACCOUNT =
     code: '6900',
   } as const;
 
+export const FINANCE_INVENTORY_DEFAULT_COGS_ACCOUNT_BY_ITEM_TYPE =
+  {
+    merchandise: {
+      subtype: 'merchandise_cost',
+      code: '5100',
+    },
+    packaging: {
+      subtype: 'packaging_cost',
+      code: '5200',
+    },
+    supplies: {
+      subtype: 'packaging_expense',
+      code: '6100',
+    },
+  } as const;
+
 export type FinanceInventoryItemType =
   (typeof FINANCE_INVENTORY_ITEM_TYPE_VALUES)[number];
 

@@ -13,6 +13,7 @@ import type {
   FinanceSalesTransactionListQueryDTO,
   FinanceSalesPostingModeDTO,
   FinanceSalesTransactionStatusDTO,
+  FinanceSalesInventoryCogsStatusDTO,
 } from './finance-sales.dto';
 
 export type FinanceSalesTransactionPersistenceRecord = {
@@ -37,6 +38,9 @@ export type FinanceSalesTransactionPersistenceRecord = {
   intent_description: string | null;
   intent_lines: TFinanceSalesTransaction['intent_lines'];
   inventory_cogs_deferred_reason: string | null;
+  inventory_cogs_status: FinanceSalesInventoryCogsStatusDTO;
+  inventory_cogs_total_cost: number | null;
+  inventory_movement_ids: Types.ObjectId[];
   created_at?: Date;
   updated_at?: Date;
 };
@@ -181,7 +185,13 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
   async markPosted(
     id: string,
     journalEntryId: string,
-    session?: ClientSession
+    session?: ClientSession,
+    cogs?: {
+      status: FinanceSalesInventoryCogsStatusDTO;
+      reason: string | null;
+      total_cost: number | null;
+      movement_ids: string[];
+    }
   ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
     if (!Types.ObjectId.isValid(journalEntryId))
       return null;
@@ -199,6 +209,21 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
             journalEntryId
           ),
           blocked_reason: null,
+          ...(cogs
+            ? {
+                inventory_cogs_status: cogs.status,
+                inventory_cogs_deferred_reason: cogs.reason,
+                inventory_cogs_total_cost: cogs.total_cost,
+                inventory_movement_ids: cogs.movement_ids
+                  .filter((movementId) =>
+                    Types.ObjectId.isValid(movementId)
+                  )
+                  .map(
+                    (movementId) =>
+                      new Types.ObjectId(movementId)
+                  ),
+              }
+            : {}),
         },
       },
       {

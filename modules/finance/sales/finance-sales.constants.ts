@@ -43,6 +43,11 @@ export const FINANCE_SALES_TRANSACTION_STATUS_VALUES = [
   'reversed',
 ] as const;
 
+export const FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES = [
+  'deferred',
+  'posted',
+] as const;
+
 export type FinanceSalesProjectionStatus =
   (typeof FINANCE_SALES_PROJECTION_STATUS_VALUES)[number];
 
@@ -57,3 +62,6 @@ export type FinanceSalesPostingMode =
 
 export type FinanceSalesTransactionStatus =
   (typeof FINANCE_SALES_TRANSACTION_STATUS_VALUES)[number];
+
+export type FinanceSalesInventoryCogsStatus =
+  (typeof FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES)[number];

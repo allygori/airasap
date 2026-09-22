@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import mongoose from 'mongoose';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -11,6 +12,7 @@ import {
   assertFinanceModuleActive,
   FinanceDomainError,
   FinanceSalesWorkflowService,
+  type FinanceSalesWorkflowResultDTO,
 } from '@/modules/finance';
 
 const FinanceSalesTransactionRouteParamsSchema = z
@@ -41,11 +43,22 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const result = await new FinanceSalesWorkflowService(
-        tenantContext
-      ).postTransaction(validatedParams!.transactionId);
+      const session = await mongoose.startSession();
+      let result: FinanceSalesWorkflowResultDTO;
+      try {
+        await session.withTransaction(async () => {
+          result = await new FinanceSalesWorkflowService(
+            tenantContext
+          ).postTransaction(
+            validatedParams!.transactionId,
+            session
+          );
+        });
+      } finally {
+        await session.endSession();
+      }
 
-      return apiSuccess(result);
+      return apiSuccess(result!);
     } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {
         const status =
@@ -56,7 +69,9 @@ export const POST = withValidation(
             : error.code === 'FINANCE_NOT_ACTIVE'
               ? 403
               : error.code ===
-                  'FINANCE_SALES_TRANSACTION_NOT_POSTABLE'
+                    'FINANCE_SALES_TRANSACTION_NOT_POSTABLE' ||
+                  error.code ===
+                    'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
                 ? 409
                 : 422;
 

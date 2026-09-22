@@ -10,6 +10,7 @@ import {
   FINANCE_SALES_POSTING_EVENT_VALUES,
   FINANCE_SALES_POSTING_MODE_VALUES,
   FINANCE_SALES_TRANSACTION_STATUS_VALUES,
+  FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES,
   type FinanceSalesPostingMode,
   type FinanceSalesTransactionStatus,
 } from './finance-sales.constants';
@@ -62,6 +63,9 @@ export type TFinanceSalesTransaction = Document & {
   intent_description: string | null;
   intent_lines: TFinanceSalesTransactionIntentLine[];
   inventory_cogs_deferred_reason: string | null;
+  inventory_cogs_status: 'deferred' | 'posted';
+  inventory_cogs_total_cost: number | null;
+  inventory_movement_ids: Types.ObjectId[];
   created_at?: Date;
   updated_at?: Date;
 };
@@ -170,6 +174,20 @@ const FinanceSalesTransactionSchema =
       inventory_cogs_deferred_reason: {
         type: String,
         default: null,
+      },
+      inventory_cogs_status: {
+        type: String,
+        enum: FINANCE_SALES_INVENTORY_COGS_STATUS_VALUES,
+        default: 'deferred',
+      },
+      inventory_cogs_total_cost: {
+        type: Number,
+        default: null,
+        min: 0,
+      },
+      inventory_movement_ids: {
+        type: [Schema.Types.ObjectId],
+        default: [],
       },
     },
     {

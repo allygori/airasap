@@ -57,6 +57,11 @@ export type CreateFinanceInventoryMovementRecord = Omit<
   '_id' | 'organization'
 >;
 
+export type CreatePostedFinanceInventoryMovementRecord =
+  Omit<CreateFinanceInventoryMovementRecord, 'status'> & {
+    journal_entry?: Types.ObjectId;
+  };
+
 export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceInventoryMovement> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryMovementModel, context);
@@ -94,6 +99,26 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
       .exec();
   }
 
+  async listPostedByJournalEntry(
+    journalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord[]> {
+    if (!Types.ObjectId.isValid(journalEntryId)) return [];
+
+    const query = this.model
+      .find({
+        ...this.getTenantFilter(),
+        journal_entry: new Types.ObjectId(journalEntryId),
+        status: 'posted',
+      })
+      .sort({ _id: 1 });
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceInventoryMovementPersistenceRecord[]>()
+      .exec();
+  }
+
   async createDraft(
     data: CreateFinanceInventoryMovementRecord,
     session?: ClientSession
@@ -102,6 +127,21 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
       ...data,
       organization: this.tenantContext.organizationId,
       status: 'draft',
+    });
+    const saved = await document.save(
+      session ? { session } : undefined
+    );
+    return saved.toObject() as unknown as FinanceInventoryMovementPersistenceRecord;
+  }
+
+  async createPosted(
+    data: CreatePostedFinanceInventoryMovementRecord,
+    session?: ClientSession
+  ): Promise<FinanceInventoryMovementPersistenceRecord> {
+    const document = new this.model({
+      ...data,
+      organization: this.tenantContext.organizationId,
+      status: 'posted',
     });
     const saved = await document.save(
       session ? { session } : undefined

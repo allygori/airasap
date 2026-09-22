@@ -4,8 +4,9 @@ Status: [CURRENT / IN PROGRESS]
 
 ## Goal
 
-Provide Finance inventory behavior for stock visibility, adjustments, warehouse
-transfers, and cost of sales while leaving the basic Products module intact.
+Provide Finance inventory behavior for stock visibility, adjustments, deferred
+warehouse transfers, and cost of sales while leaving the basic Products module
+intact.
 
 ## Boundary
 
@@ -102,6 +103,19 @@ Acceptance criteria:
 - transfer is traceable;
 - transfer does not create revenue or expense by itself.
 
+Implementation status: [DEFERRED]
+
+This phase is intentionally deferred from the initial Finance release. The
+initial target is the common single-location seller/UMKM workflow, so adding a
+transfer form before the multi-location policy is needed would add UI and
+posting complexity without helping that workflow. No transfer endpoint or
+transfer-specific journal behavior is part of the current release.
+
+Phase 5.4 therefore only calculates HPP when exactly one active Finance
+inventory location exists. If an organization has multiple active locations,
+HPP remains explicitly deferred until the transfer/location policy is
+implemented.
+
 ### Phase 5.4 — Cost of sales integration
 
 Connect eligible sales events to inventory reduction and HPP.
@@ -113,13 +127,35 @@ Acceptance criteria:
 - selected costing method is documented;
 - inventory value and HPP can be traced to source movements.
 
+Implementation status: [CURRENT]
+
+- The initial costing method is moving average. The service uses the posted
+  quantity and value balance for the active location, then carries the
+  calculated balance across lines in the same sale.
+- HPP is integrated into Finance sales posting only. The existing Orders and
+  Products modules are not changed, and Finance uses the copied Finance sales
+  source-line contract and Finance-owned product-to-inventory mapping.
+- When mapping, quantity tracking, value tracking, account mapping, stock, and
+  exactly one active location are ready, sales posting adds Dr HPP / Cr
+  inventory lines and creates an immutable posted `sale` movement linked to
+  the sales journal.
+- When those prerequisites are not ready, the sales journal can still post
+  revenue/receivable, but the transaction stores `inventory_cogs_status:
+  deferred` and a user-visible reason. Finance never guesses a cost.
+- HPP movement creation is idempotent. Reversing a sales journal in the
+  Finance endpoint also creates an inbound `return` movement linked to the
+  reversal journal, inside the same database transaction.
+- The sales Finance screen shows whether HPP is posted or deferred and shows
+  the calculated total when it is posted.
+
 ## Open questions
 
-- Moving average, FIFO, or another costing method?
-- Which existing inventory collections remain canonical?
-
-The costing method remains open for Phase 5.4; Phase 5.1 and Phase 5.2 do not
-silently choose FIFO or moving average.
+- Whether a future multi-location release needs transfers before allowing HPP
+  posting for organizations with more than one active location.
+- Whether FIFO or batch/lot costing is needed after real Finance usage. It is
+  not part of the initial moving-average release.
+- Which existing inventory collections remain canonical for future migrations;
+  the current Finance repositories intentionally isolate that decision.
 
 ## Not in scope
 
