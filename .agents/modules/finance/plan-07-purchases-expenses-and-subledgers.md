@@ -131,6 +131,28 @@ Implementation status: [CURRENT]
   this phase reports overdue status as `not_configured` and does not infer
   overdue from transaction date. Due-date policy remains a future decision.
 
+#### Opening-balance compatibility [TARGET]
+
+Opening supplier payables, and optional opening receivables, are not ordinary
+`purchase`, `expense`, or `order` source transactions. They are created by
+Finance onboarding and use `source_type: opening_balance` while retaining a
+counterparty or reference label.
+
+Before onboarding opening balances is released, this phase must also support
+those opening source items in the same read and settlement rules:
+
+- opening payable items appear in Accounts Payable and can be settled without
+  editing the opening journal;
+- opening receivable items, when enabled, appear in Accounts Receivable and
+  can be settled in the same way;
+- aggregate balances without a source label are allowed only as an explicit
+  summary item and must remain clearly identifiable as such;
+- settlement still creates a new journal and leaves the opening journal
+  immutable.
+
+This is a compatibility extension to the Finance subledger only. It must not
+change the Orders, Products, Reports, or legacy accounting modules.
+
 ### Phase 7.4 — Basic controls and tax inputs
 
 Add only the tax and control fields required by the first release.

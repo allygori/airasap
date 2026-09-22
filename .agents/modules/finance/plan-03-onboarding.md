@@ -1,11 +1,20 @@
 # Finance Plan 03 — Onboarding
 
-Status: [TARGET]
+Status: [CURRENT / IN PROGRESS]
 
 ## Goal
 
 Provide a guided but practical setup flow for activating Finance for one
 organization.
+
+The onboarding must establish a reliable opening position before normal
+Finance transactions begin. It is intentionally small enough for sellers and
+UMKM users, but it must not create an opening journal that cannot be traced to
+cash, inventory, or outstanding obligations.
+
+The attached reference `List_Opening_Balance_Toko_Online.md` is used as a
+product reference, not as a requirement to expose every possible account in
+the first release.
 
 ## Reuse direction
 
@@ -13,6 +22,9 @@ The old accounting onboarding UI components and relevant validation or
 preview logic may be reused after review. The Finance onboarding service,
 contracts, and activation behavior must be explicit and must not inherit
 unneeded legacy complexity automatically.
+
+Reuse means copying and adapting useful behavior into the Finance boundary.
+Finance must not depend on the legacy accounting module remaining installed.
 
 ## Implementation progress
 
@@ -26,7 +38,8 @@ and the onboarding page can reload the saved state without losing progress.
 
 The persisted Finance state supports `blocked` and an optional
 `blocked_reason`; final activation and the configuration steps remain in the
-later onboarding phases.
+later onboarding phases. This phase does not introduce a second database
+connection, authentication path, tenant context, or response envelope.
 
 ## Phases
 
@@ -41,48 +54,92 @@ Acceptance criteria:
 - activation is idempotent;
 - blockers come from the server, not hardcoded UI assumptions.
 
-### Phase 3.2 — Required and optional setup
+### Phase 3.2 — Required setup and opening balance draft [TARGET]
 
-Define the smallest required setup:
+Define the smallest setup that produces a meaningful opening position. Currency
+and accounting timezone are not required in the first Finance release. The
+current product does not need them to establish the initial ledger, and adding
+them here would make onboarding look more complete without solving an actual
+seller problem.
 
-- currency;
-- accounting timezone;
-- accounting start date;
-- Chart of Accounts template or existing COA selection;
-- confirmation that Finance should be activated.
+Required setup:
 
-Optional setup may include:
+- a Finance cut-off date;
+- a usable Finance Chart of Accounts template or existing COA selection;
+- confirmation that Finance should be activated after validation;
+- an explicit opening-balance choice: enter balances now or start at zero.
 
-- opening cash and bank balances;
-- opening inventory;
-- opening receivables and payables;
-- tax preferences;
-- account mapping overrides.
+When the user chooses to enter balances, the first-release core is:
 
-The exact required/optional list remains a product decision.
+- Kas, Bank, E-wallet, and marketplace/payment-gateway balances, entered per
+  mapped postable account;
+- inventory entered per Finance item and location with quantity and unit cost,
+  rather than as one unsupported total;
+- supplier payables entered as one or more opening items with supplier or
+  reference text, so they can be shown and settled later;
+- Modal Pemilik as the user-provided equity input;
+- Saldo Laba/retained earnings as a system-calculated balancing equity amount.
 
-### Phase 3.3 — Finalization and post-activation behavior
+The UI should allow an explicit zero or “not used” choice for a category that
+does not apply. Missing values must not silently become zero. Revenue,
+expenses, tax balances, and historical order reconstruction are not opening
+balance inputs.
 
-Finalize Finance atomically and make future Finance routes available.
+The following remain optional or deferred: opening receivables, advances or
+deposits, fixed assets and accumulated depreciation, other liabilities, VAT,
+loans, and prive. Opening receivables may be entered only with a counterparty
+or reference; an aggregate value without a source is not settlement-ready.
+
+### Phase 3.3 — Opening balance validation and finalization [TARGET]
+
+Validate the draft opening position, create its Finance effects atomically, and
+then make future Finance routes available.
 
 Acceptance criteria:
 
-- incomplete setup cannot activate Finance;
-- optional opening balances may be skipped safely;
-- activation does not mass-post old orders implicitly;
-- Finance posting can begin only after activation;
-- refresh and retry do not duplicate opening entries.
+- the cut-off date and required COA setup are present before activation;
+- the opening draft is balanced using permanent accounts only: assets,
+  liabilities, and equity;
+- inventory opening lines create traceable Finance inventory movements linked
+  to the opening journal; the valuation is based on the entered quantity and
+  unit cost;
+- supplier payable and optional receivable opening items retain their source
+  label/reference so the subledger can display them;
+- the system creates one idempotent opening batch for an organization,
+  cut-off date, and onboarding version. The batch produces a balanced journal
+  with `source_type: opening_balance` and any required inventory or subledger
+  records;
+- choosing “start at zero” is stored as an explicit decision and does not
+  create misleading non-zero entries;
+- a posted opening journal and its related movements are immutable. A mistake
+  is corrected with a reversal or a separate adjustment transaction, not by
+  editing posted lines;
+- activation does not mass-post old orders implicitly. Order posting is
+  attempted only by the Finance-aware import flow when Finance is active;
+- incomplete setup cannot activate Finance, and refresh or retry cannot
+  duplicate the opening batch.
+
+Period locking before the cut-off date, tax setup, and financial reporting are
+deliberately outside this phase. The cut-off date is still required as the
+reference point for the opening batch; it must not be described as a complete
+historical period-locking feature until that control is implemented.
 
 ## Open questions
 
-- Should onboarding be one-time, resumable, or restartable before activation?
-- Is opening balance entered during onboarding or through a later menu?
-- Should the old wizard's preview behavior be retained?
-- What is the default accounting start date?
+- Should a user be able to reopen an unposted opening draft after leaving the
+  onboarding page, or is the current resumable onboarding state sufficient?
+- Should the first release show a separate preview of the journal and
+  inventory effects before finalization, or is the category summary enough?
+- Should the default cut-off date be today, the first day of the current
+  month, or be entered without a default?
+- Should opening receivables be included in the first onboarding UI, or remain
+  a later optional flow after the core opening balance is stable?
 
 ## Not in scope
 
 - historical reconstruction;
 - bank statement import;
 - advanced tax setup;
+- currency and timezone configuration;
+- automatic migration of legacy accounting opening balances;
 - replacing existing organization/store setup.
