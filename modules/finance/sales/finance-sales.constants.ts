@@ -31,6 +31,17 @@ export const FINANCE_SALES_ACCOUNT_ROLE_VALUES = [
   'sales_revenue',
 ] as const;
 
+export const FINANCE_SALES_POSTING_MODE_VALUES = [
+  'automatic',
+  'manual',
+] as const;
+
+export const FINANCE_SALES_TRANSACTION_STATUS_VALUES = [
+  'pending',
+  'blocked',
+  'posted',
+] as const;
+
 export type FinanceSalesProjectionStatus =
   (typeof FINANCE_SALES_PROJECTION_STATUS_VALUES)[number];
 
@@ -39,3 +50,9 @@ export type FinanceSalesProjectionIssueCode =
 
 export type FinanceSalesPostingDecision =
   (typeof FINANCE_SALES_POSTING_DECISION_VALUES)[number];
+
+export type FinanceSalesPostingMode =
+  (typeof FINANCE_SALES_POSTING_MODE_VALUES)[number];
+
+export type FinanceSalesTransactionStatus =
+  (typeof FINANCE_SALES_TRANSACTION_STATUS_VALUES)[number];

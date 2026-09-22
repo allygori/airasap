@@ -36,6 +36,21 @@ idempotency key based on the source order. Orders with other statuses are
 Inventory movement and HPP remain deferred to Plan 05, while released funds,
 payouts, returns, and refunds remain separate events for later decisions.
 
+### Phase 4.3 — [CURRENT] Automatic and manual posting workflow
+
+Finance now owns a sales transaction work item that supports `automatic` and
+`manual` posting modes. When Finance is not active, the workflow returns a
+disabled result without creating a Finance transaction or journal. In manual
+mode, an eligible completed order is stored as `pending`; automatic mode
+resolves the Finance-owned account roles and attempts to post the immutable
+journal. Missing account mappings, journal errors, and finalization conflicts
+become `blocked` work with a safe reason so the source order/import is not
+failed.
+
+Until Finance configuration is introduced, an omitted mode uses the safe
+`manual` fallback. This does not add onboarding fields or change the existing
+Orders importer.
+
 ## Phases
 
 ### Phase 4.1 — Finance sales projection and adapter

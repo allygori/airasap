@@ -6,6 +6,9 @@ import {
   FinanceSalesPostingDecisionSchema,
   FinanceSalesPostingIntentSchema,
   FinanceSalesPostingJournalLineIntentSchema,
+  FinanceSalesPostingModeSchema,
+  FinanceSalesTransactionStatusSchema,
+  FinanceSalesWorkflowResultSchema,
 } from './finance-sales.schema';
 
 export type FinanceSalesOrderSourceDTO = ReturnType<
@@ -35,4 +38,16 @@ export type FinanceSalesPostingIntentDTO = ReturnType<
 
 export type FinanceSalesPostingDecisionDTO = ReturnType<
   typeof FinanceSalesPostingDecisionSchema.parse
+>;
+
+export type FinanceSalesPostingModeDTO = ReturnType<
+  typeof FinanceSalesPostingModeSchema.parse
+>;
+
+export type FinanceSalesTransactionStatusDTO = ReturnType<
+  typeof FinanceSalesTransactionStatusSchema.parse
+>;
+
+export type FinanceSalesWorkflowResultDTO = ReturnType<
+  typeof FinanceSalesWorkflowResultSchema.parse
 >;

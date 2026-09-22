@@ -128,6 +128,42 @@ export class FinanceAccountRepository {
       .exec();
   }
 
+  async findSelectableByCode(
+    code: string,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    const query = FinanceAccountModel.findOne({
+      organization: this.organizationId,
+      code,
+      is_active: true,
+      is_postable: true,
+    });
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findSelectableBySubtype(
+    subtype: string,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    const query = FinanceAccountModel.findOne({
+      organization: this.organizationId,
+      subtype,
+      is_active: true,
+      is_postable: true,
+    }).sort({ display_order: 1, code: 1 });
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
   async findByIds(
     accountIds: string[],
     session?: ClientSession

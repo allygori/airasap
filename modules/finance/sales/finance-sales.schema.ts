@@ -4,9 +4,11 @@ import {
   FINANCE_SALES_ACCOUNT_ROLE_VALUES,
   FINANCE_SALES_POSTING_DECISION_VALUES,
   FINANCE_SALES_POSTING_EVENT_VALUES,
+  FINANCE_SALES_POSTING_MODE_VALUES,
   FINANCE_SALES_POSTING_REASON_CODES,
   FINANCE_SALES_PROJECTION_ISSUE_CODES,
   FINANCE_SALES_PROJECTION_STATUS_VALUES,
+  FINANCE_SALES_TRANSACTION_STATUS_VALUES,
 } from './finance-sales.constants';
 
 const ObjectIdStringSchema = z
@@ -212,4 +214,27 @@ export const FinanceSalesPostingDecisionSchema = z.object({
     .nullable(),
   message: z.string().min(1),
   intent: FinanceSalesPostingIntentSchema.nullable(),
+});
+
+export const FinanceSalesPostingModeSchema = z.enum(
+  FINANCE_SALES_POSTING_MODE_VALUES
+);
+
+export const FinanceSalesTransactionStatusSchema = z.enum(
+  FINANCE_SALES_TRANSACTION_STATUS_VALUES
+);
+
+export const FinanceSalesWorkflowResultSchema = z.object({
+  status: z.enum([
+    'disabled',
+    'not_eligible',
+    'pending',
+    'blocked',
+    'posted',
+  ]),
+  mode: FinanceSalesPostingModeSchema,
+  source_order_id: z.string(),
+  transaction_id: z.string().nullable(),
+  journal_entry_id: z.string().nullable(),
+  reason: z.string().nullable(),
 });
