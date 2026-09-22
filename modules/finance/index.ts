@@ -5,6 +5,7 @@ export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
 export { FinancePeriodService } from './periods/finance-period.service';
 export { FinanceSalesProjectionService } from './sales/finance-sales.service';
+export { FinanceSalesPostingRulesService } from './sales/finance-sales-rules.service';
 export {
   FinanceReadinessResponseSchema,
   FinanceReadinessSchema,
@@ -42,9 +43,14 @@ export type {
   FinanceSalesProjectionDTO,
   FinanceSalesProjectionIssueDTO,
   FinanceSalesProjectionLineDTO,
+  FinanceSalesPostingDecisionDTO,
+  FinanceSalesPostingIntentDTO,
+  FinanceSalesPostingJournalLineIntentDTO,
 } from './sales/finance-sales.dto';
 export {
   FinanceSalesOrderSourceSchema,
+  FinanceSalesPostingDecisionSchema,
+  FinanceSalesPostingIntentSchema,
   FinanceSalesProjectionSchema,
 } from './sales/finance-sales.schema';
 export type {

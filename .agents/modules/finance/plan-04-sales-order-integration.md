@@ -26,6 +26,16 @@ The adapter reports `ready` or `incomplete` with actionable data-shape issues,
 but it does not choose eligible order statuses, post journals, or mutate the
 Orders collection. Those decisions remain in later phases.
 
+### Phase 4.2 — [CURRENT] Sales posting rules
+
+The first sales rule treats only the existing `selesai` order status as an
+eligible completed-order event. It produces a balanced journal intent using
+the logical roles `marketplace_receivable` and `sales_revenue`, with a stable
+idempotency key based on the source order. Orders with other statuses are
+`not_eligible`; completed orders with incomplete source data are `blocked`.
+Inventory movement and HPP remain deferred to Plan 05, while released funds,
+payouts, returns, and refunds remain separate events for later decisions.
+
 ## Phases
 
 ### Phase 4.1 — Finance sales projection and adapter

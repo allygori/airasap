@@ -3,6 +3,9 @@ import {
   FinanceSalesProjectionIssueSchema,
   FinanceSalesProjectionLineSchema,
   FinanceSalesProjectionSchema,
+  FinanceSalesPostingDecisionSchema,
+  FinanceSalesPostingIntentSchema,
+  FinanceSalesPostingJournalLineIntentSchema,
 } from './finance-sales.schema';
 
 export type FinanceSalesOrderSourceDTO = ReturnType<
@@ -19,4 +22,17 @@ export type FinanceSalesProjectionLineDTO = ReturnType<
 
 export type FinanceSalesProjectionDTO = ReturnType<
   typeof FinanceSalesProjectionSchema.parse
+>;
+
+export type FinanceSalesPostingJournalLineIntentDTO =
+  ReturnType<
+    typeof FinanceSalesPostingJournalLineIntentSchema.parse
+  >;
+
+export type FinanceSalesPostingIntentDTO = ReturnType<
+  typeof FinanceSalesPostingIntentSchema.parse
+>;
+
+export type FinanceSalesPostingDecisionDTO = ReturnType<
+  typeof FinanceSalesPostingDecisionSchema.parse
 >;

@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { ORDER_PLATFORM_VALUES } from '@/constant/order-platform';
 import {
+  FINANCE_SALES_ACCOUNT_ROLE_VALUES,
+  FINANCE_SALES_POSTING_DECISION_VALUES,
+  FINANCE_SALES_POSTING_EVENT_VALUES,
+  FINANCE_SALES_POSTING_REASON_CODES,
   FINANCE_SALES_PROJECTION_ISSUE_CODES,
   FINANCE_SALES_PROJECTION_STATUS_VALUES,
 } from './finance-sales.constants';
@@ -142,4 +146,70 @@ export const FinanceSalesProjectionSchema = z.object({
   lines: z.array(FinanceSalesProjectionLineSchema),
   readiness: z.enum(FINANCE_SALES_PROJECTION_STATUS_VALUES),
   issues: z.array(FinanceSalesProjectionIssueSchema),
+});
+
+export const FinanceSalesPostingJournalLineIntentSchema = z
+  .object({
+    account_role: z.enum(FINANCE_SALES_ACCOUNT_ROLE_VALUES),
+    debit: z.number().int().nonnegative(),
+    credit: z.number().int().nonnegative(),
+  })
+  .refine(
+    (line) =>
+      (line.debit > 0 && line.credit === 0) ||
+      (line.credit > 0 && line.debit === 0),
+    'Posting intent line harus memiliki tepat satu sisi debit atau credit.'
+  );
+
+export const FinanceSalesPostingIntentSchema = z
+  .object({
+    source_order_id: z.string(),
+    source_order_number: z.string(),
+    source_event: z.enum(
+      FINANCE_SALES_POSTING_EVENT_VALUES
+    ),
+    transaction_date: z.string().datetime(),
+    currency: z.string().length(3),
+    description: z.string().min(1),
+    idempotency_key: z.string().min(1),
+    lines: z
+      .array(FinanceSalesPostingJournalLineIntentSchema)
+      .min(2),
+    inventory_cogs: z.object({
+      status: z.literal('deferred'),
+      reason: z.string().min(1),
+    }),
+  })
+  .superRefine((intent, context) => {
+    const totalDebit = intent.lines.reduce(
+      (sum, line) => sum + line.debit,
+      0
+    );
+    const totalCredit = intent.lines.reduce(
+      (sum, line) => sum + line.credit,
+      0
+    );
+
+    if (totalDebit !== totalCredit) {
+      context.addIssue({
+        code: 'custom',
+        path: ['lines'],
+        message:
+          'Posting intent harus memiliki total debit dan credit yang seimbang.',
+      });
+    }
+  });
+
+export const FinanceSalesPostingDecisionSchema = z.object({
+  decision: z.enum(FINANCE_SALES_POSTING_DECISION_VALUES),
+  source_order_id: z.string(),
+  source_status: z.string().nullable(),
+  event: z
+    .enum(FINANCE_SALES_POSTING_EVENT_VALUES)
+    .nullable(),
+  reason_code: z
+    .enum(FINANCE_SALES_POSTING_REASON_CODES)
+    .nullable(),
+  message: z.string().min(1),
+  intent: FinanceSalesPostingIntentSchema.nullable(),
 });
