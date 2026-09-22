@@ -54,7 +54,7 @@ Acceptance criteria:
 - activation is idempotent;
 - blockers come from the server, not hardcoded UI assumptions.
 
-### Phase 3.2 — Required setup and opening balance draft [TARGET]
+### Phase 3.2 — Required setup and opening balance draft [CURRENT / IN PROGRESS]
 
 Define the smallest setup that produces a meaningful opening position. Currency
 and accounting timezone are not required in the first Finance release. The
@@ -89,6 +89,18 @@ The following remain optional or deferred: opening receivables, advances or
 deposits, fixed assets and accumulated depreciation, other liabilities, VAT,
 loans, and prive. Opening receivables may be entered only with a counterparty
 or reference; an aggregate value without a source is not settlement-ready.
+
+Implementation status:
+
+- Finance-owned opening balance draft contracts, persistence, and server-side
+  validation are implemented under `modules/finance/onboarding`.
+- The draft endpoint is `GET/PUT
+  /api/v1/dashboard/finance/onboarding/opening-balance`.
+- The onboarding UI now supports cut-off date, explicit entered/zero mode,
+  cash and bank balances, detailed inventory lines, payable/receivable draft
+  lines, and owner capital input.
+- Saving a draft does not create a journal, inventory movement, subledger
+  source, or active Finance state. Those effects remain Phase 3.3 work.
 
 ### Phase 3.3 — Opening balance validation and finalization [TARGET]
 

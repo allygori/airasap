@@ -1,5 +1,6 @@
 export { FinanceDomainError } from './finance.error';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
+export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
@@ -35,6 +36,13 @@ export {
   FinanceReadinessSchema,
 } from './onboarding/finance-onboarding.schema';
 export {
+  FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceDraftSchema,
+  FinanceOpeningBalanceSetupResponseSchema,
+  FinanceOpeningBalanceModeSchema,
+  FinanceOpeningBalanceStatusSchema,
+} from './onboarding/finance-opening-balance.schema';
+export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
 } from './accounts/finance-account.constants';
@@ -62,6 +70,17 @@ export type {
   FinanceReadinessDTO,
   FinanceReadinessResponseDTO,
 } from './onboarding/finance-onboarding.dto';
+export type {
+  FinanceOpeningBalanceDraftInputDTO,
+  FinanceOpeningBalanceDraftDTO,
+  FinanceOpeningBalanceSetupResponseDTO,
+  FinanceOpeningBalanceSummaryDTO,
+  FinanceOpeningBalanceAccountOptionDTO,
+  FinanceOpeningBalanceInventoryItemOptionDTO,
+  FinanceOpeningBalanceLocationOptionDTO,
+  FinanceOpeningBalanceModeDTO,
+  FinanceOpeningBalanceStatusDTO,
+} from './onboarding/finance-opening-balance.dto';
 export type {
   FinanceSalesOrderSourceDTO,
   FinanceSalesProjectionDTO,

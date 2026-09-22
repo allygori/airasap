@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/card';
 import type { FinanceState } from '@/modules/finance';
 import type { FinanceReadinessDTO } from '@/modules/finance';
+import FinanceOpeningBalanceForm from './finance-opening-balance-form';
 
 type FinanceOnboardingData = {
   finance: Pick<
@@ -158,10 +159,9 @@ export default function FinanceOnboarding({
 
             {data.readiness.can_resume && (
               <div className="border-info/30 bg-info/5 rounded-xl border p-4 text-sm">
-                Setup Finance sudah dimulai. Data status
-                tersimpan; langkah konfigurasi berikutnya
-                akan ditambahkan pada phase onboarding
-                berikutnya.
+                Setup Finance sudah dimulai. Lengkapi saldo
+                awal sebelum masuk ke tahap finalisasi dan
+                aktivasi.
               </div>
             )}
 
@@ -197,6 +197,11 @@ export default function FinanceOnboarding({
           </CardContent>
         </Card>
       </div>
+
+      {status === 'in_progress' &&
+        data.readiness.owner_access && (
+          <FinanceOpeningBalanceForm enabled />
+        )}
 
       {data.readiness.blockers.length > 0 && (
         <Card className="border-warning/40 bg-warning/5">
