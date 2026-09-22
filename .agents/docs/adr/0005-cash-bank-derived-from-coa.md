@@ -1,6 +1,6 @@
 # ADR 0005 — Cash and Bank Uses COA Accounts and Posted Journals
 
-Status: Accepted
+Status: [CURRENT]
 
 ## Context
 
@@ -28,4 +28,3 @@ reconciliation are deferred.
 - Transfer transactions need idempotency and reversal behavior.
 - The Rekonsiliasi Bank menu must not imply bank-feed functionality before that
   scope is implemented.
-

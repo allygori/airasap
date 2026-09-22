@@ -1,6 +1,6 @@
 # Finance Plan 06 — Cash and Bank
 
-Status: [TARGET]
+Status: [CURRENT / IN PROGRESS]
 
 ## Goal
 
@@ -28,6 +28,25 @@ Acceptance criteria:
 - account details are tenant-scoped;
 - opening balance behavior is visible.
 
+Implementation status: [CURRENT]
+
+- Finance reads eligible postable asset accounts from the existing COA. The
+  first view includes `cash`, `bank`, `e_wallet`, and
+  `marketplace_balance` subtypes; group accounts and receivables are excluded.
+- Current balances are calculated from posted journal lines using each
+  account's normal balance. Journal entries with status `reversed` are not
+  counted; their separate reversal journal remains the traceable correction.
+- Opening balance is displayed separately from the current balance by
+  classifying posted journal lines whose source type is `opening_balance`.
+- Accounts with no journal activity remain visible with a zero balance, so a
+  newly created bank or cash account is not mistaken for missing data.
+- Optional bank metadata is limited to safe display fields such as institution
+  and last four digits. No full bank account number or bank statement data is
+  introduced.
+- The new API is `GET /api/v1/dashboard/finance/cash-and-bank` and the UI is
+  `/dashboard/finance/cash-and-bank`. Both enforce the Finance activation
+  guard and tenant context.
+
 ### Phase 6.2 — Transfer transaction
 
 Create a transfer form with source account, destination account, amount, date,
@@ -51,7 +70,10 @@ decided.
 
 ## Open questions
 
-- Are marketplace balances included in the first Cash and Bank view?
+- [DECIDED] Marketplace balances are included because they are liquid-asset
+  accounts already represented in the COA, but they remain visibly labeled as
+  marketplace balances rather than bank cash.
 - Should transfers support pending approval or post immediately?
-- Which account metadata is required for a bank account?
-
+- [DECIDED] Phase 6.1 only displays existing optional metadata: institution,
+  last four digits, account holder, and provider. Full bank identity and
+  statement import remain outside this phase.

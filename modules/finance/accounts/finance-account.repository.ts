@@ -25,6 +25,12 @@ export type FinanceAccountPersistenceRecord = {
   is_active: boolean;
   display_order: number;
   description?: string;
+  account_metadata?: {
+    institution?: string;
+    account_last4?: string;
+    account_holder?: string;
+    provider?: string;
+  };
 };
 
 const escapeRegex = (value: string) =>
@@ -181,6 +187,42 @@ export class FinanceAccountRepository {
       _id: { $in: objectIds },
     });
 
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord[]>()
+      .exec();
+  }
+
+  async listPostableBySubtypes(
+    subtypes: string[],
+    filter: { search?: string; limit: number },
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord[]> {
+    if (subtypes.length === 0) return [];
+
+    const queryFilter: QueryFilter<TFinanceAccount> = {
+      organization: this.organizationId,
+      type: 'asset',
+      is_active: true,
+      is_postable: true,
+      subtype: { $in: subtypes },
+    };
+
+    if (filter.search) {
+      const search = new RegExp(
+        escapeRegex(filter.search),
+        'i'
+      );
+      queryFilter.$or = [
+        { code: search },
+        { name: search },
+      ];
+    }
+
+    const query = FinanceAccountModel.find(queryFilter)
+      .sort({ display_order: 1, code: 1 })
+      .limit(filter.limit);
     if (session) query.session(session);
 
     return query

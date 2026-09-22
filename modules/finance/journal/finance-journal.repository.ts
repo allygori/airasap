@@ -1,6 +1,7 @@
 import {
   Types,
   type ClientSession,
+  type PipelineStage,
   type QueryFilter,
 } from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
@@ -28,6 +29,16 @@ export type FinanceLedgerPersistenceRow = {
   source_type: string;
   line_index: number;
   lines: TFinanceJournalEntry['lines'][number];
+};
+
+export type FinanceAccountBalancePersistenceRecord = {
+  _id: Types.ObjectId;
+  debit_total: number;
+  credit_total: number;
+  opening_debit_total: number;
+  opening_credit_total: number;
+  journal_line_count: number;
+  last_transaction_date: Date | null;
 };
 
 const escapeRegex = (value: string) =>
@@ -230,6 +241,73 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
     ]);
 
     return { rows, total: countRows[0]?.total ?? 0 };
+  }
+
+  async aggregatePostedAccountBalances(
+    accountIds: string[],
+    session?: ClientSession
+  ): Promise<FinanceAccountBalancePersistenceRecord[]> {
+    const objectIds = accountIds
+      .filter((accountId) =>
+        Types.ObjectId.isValid(accountId)
+      )
+      .map((accountId) => new Types.ObjectId(accountId));
+    if (objectIds.length === 0) return [];
+
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          ...this.getTenantFilter(),
+          status: 'posted',
+        },
+      },
+      { $unwind: '$lines' },
+      {
+        $match: {
+          'lines.account_id': { $in: objectIds },
+        },
+      },
+      {
+        $group: {
+          _id: '$lines.account_id',
+          debit_total: { $sum: '$lines.debit' },
+          credit_total: { $sum: '$lines.credit' },
+          opening_debit_total: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ['$source_type', 'opening_balance'],
+                },
+                '$lines.debit',
+                0,
+              ],
+            },
+          },
+          opening_credit_total: {
+            $sum: {
+              $cond: [
+                {
+                  $eq: ['$source_type', 'opening_balance'],
+                },
+                '$lines.credit',
+                0,
+              ],
+            },
+          },
+          journal_line_count: { $sum: 1 },
+          last_transaction_date: {
+            $max: '$transaction_date',
+          },
+        },
+      },
+    ];
+
+    const aggregate =
+      this.model.aggregate<FinanceAccountBalancePersistenceRecord>(
+        pipeline
+      );
+    if (session) aggregate.session(session);
+    return aggregate.exec();
   }
 
   async findByReversalOf(
