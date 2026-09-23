@@ -6,6 +6,7 @@ import {
 } from '@/lib/api/response';
 import { db } from '@/lib/db/connection';
 import {
+  assertFinancePremium,
   FinanceDomainError,
   FinanceOpeningBalanceService,
   type FinanceOpeningBalancePreviewDTO,
@@ -23,6 +24,7 @@ export async function GET() {
     }
 
     await db.connect();
+    await assertFinancePremium(tenantContext);
     const preview: FinanceOpeningBalancePreviewDTO =
       await new FinanceOpeningBalanceService(
         tenantContext
@@ -31,7 +33,8 @@ export async function GET() {
   } catch (error: unknown) {
     if (error instanceof FinanceDomainError) {
       const status =
-        error.code === 'FINANCE_OWNER_REQUIRED'
+        error.code === 'FINANCE_OWNER_REQUIRED' ||
+        error.code === 'FINANCE_NOT_ACTIVE'
           ? 403
           : error.code === 'FINANCE_ORGANIZATION_NOT_FOUND'
             ? 404

@@ -21,7 +21,10 @@ import {
   resolveProductCost,
 } from './product-matching';
 import type { MassUploadResponseDTO } from '../order.dto';
-import type { MarketplaceSettlementService } from '@/modules/accounting/settlements/settlement.service';
+import {
+  safeFinanceIntegrationError,
+  type OrderFinanceIntegrationService,
+} from './order-finance-integration.service';
 
 export type ReleasedFundsImporterDependencies = {
   repository: OrderRepository;
@@ -30,8 +33,7 @@ export type ReleasedFundsImporterDependencies = {
   tenantContext: ConstructorParameters<
     typeof OrderService
   >[0];
-  settlementService?: MarketplaceSettlementService;
-  destinationAccountId?: string;
+  financeService?: OrderFinanceIntegrationService;
 };
 
 type ReleasedFundsVersion = 1 | 2;
@@ -127,7 +129,30 @@ function buildReleasedFundsFee(
         : order.returnToSellerFee ||
           order.returnToSenderShippingFee,
     shipping_fee_refund: order.shippingFeeRefund,
+    refund_to_buyer: Math.max(
+      Math.abs(toNumber(order.buyerRefundAmount)),
+      Math.abs(toNumber(order.refundToBuyer)),
+      Math.abs(toNumber(order.buyerRefund))
+    ),
   };
+}
+
+function hasMarketplaceReturn(
+  order: ParsedReleasedFundsOrder
+) {
+  return [
+    order.buyerRefundAmount,
+    order.refundToBuyer,
+    order.buyerRefund,
+    order.returnShippingFee,
+    order.returnToSenderShippingFee,
+    order.returnToSellerFee,
+    order.shippingFeeRefund,
+    order.proRatedRedeemedCoinForReturn,
+    order.proRatedShopeeVoucherForReturn,
+    order.proRatedBankPaymentPromotionForReturn,
+    order.proRatedShopeePaymentPromotionForReturn,
+  ].some((value) => Math.abs(toNumber(value)) > 0);
 }
 
 async function buildItemsForOrder(
@@ -332,6 +357,9 @@ async function processReleasedFundsOrders(
       released_funds_at: order.releasedFundDate,
       settlement_reference:
         valueOrEmpty(order.noSubmission) || undefined,
+      ...(hasMarketplaceReturn(order)
+        ? { marketplace_return_detected: true }
+        : {}),
       enrichments,
     };
 
@@ -352,7 +380,7 @@ async function processReleasedFundsOrders(
     await dependencies.repository.bulkWrite(operations);
   }
 
-  if (dependencies.settlementService) {
+  if (dependencies.financeService) {
     for (const order of orders) {
       const orderId = String(order.orderId);
       const storedOrder =
@@ -365,28 +393,27 @@ async function processReleasedFundsOrders(
         (item) => item.order_id === orderId
       );
       try {
-        const settlement =
-          await dependencies.settlementService.recordFromOrder(
+        const release =
+          await dependencies.financeService.recordMarketplaceRelease(
             String(storedOrder._id),
-            {
-              source_file: fileId,
-              destination_account_id:
-                dependencies.destinationAccountId,
-            }
+            fileId
           );
-        if (result) {
+        if (!result) continue;
+
+        if (release.status === 'posted') {
           result.message =
-            settlement.status === 'posted'
-              ? 'Released funds diperbarui dan settlement berhasil diposting.'
-              : `Released funds diperbarui, settlement tertahan dengan status ${settlement.status}.`;
+            'Released funds diperbarui dan journal Finance berhasil diposting atau dikonfirmasi idempotent.';
+        } else if (release.status === 'blocked') {
+          result.message = `Released funds diperbarui, posting Finance tertahan: ${release.reason ?? 'perlu ditinjau.'}`;
+        } else if (release.status === 'disabled') {
+          result.message =
+            'Released funds diperbarui; Finance belum aktif sehingga tidak ada journal dibuat.';
         }
-      } catch (error) {
+      } catch (error: unknown) {
         if (result) {
-          result.message = `Released funds diperbarui, tetapi settlement tertahan: ${
-            error instanceof Error
-              ? error.message
-              : 'validasi belum lengkap'
-          }`;
+          result.message = `Released funds diperbarui, tetapi posting Finance gagal: ${safeFinanceIntegrationError(
+            error
+          )}`;
         }
       }
     }

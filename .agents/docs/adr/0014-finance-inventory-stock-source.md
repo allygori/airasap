@@ -1,6 +1,6 @@
 # ADR 0014 — Finance inventory stock source and read boundary
 
-Status: Accepted for Phase 5.1
+Status: Superseded by [ADR 0022](0022-finance-owned-inventory-collections.md)
 
 ## Context
 

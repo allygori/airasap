@@ -30,8 +30,11 @@ necessarily its contractual due date.
    - payable: debit Accounts Payable and credit selected Cash/Bank.
 5. Do not edit or reverse the source journal as part of ordinary settlement.
    Idempotency protects both the settlement source record and its journal.
-6. Mark overdue status as `not_configured` until a due-date policy and source
-   fields are designed. Do not treat transaction date as due date.
+6. Keep overdue status `not_configured` while a source or user-entered due date
+   is absent. Never treat transaction date as due date. Once an explicit due
+   date is supported, mark an item overdue only when its outstanding balance
+   is positive and that due date is earlier than the organization's business
+   date.
 
 ## Consequences
 
@@ -41,8 +44,8 @@ necessarily its contractual due date.
   journal are separate and linked.
 - Settlement totals are calculated from posted settlement records, so the
   displayed outstanding amount agrees with the journal workflow.
-- Due-date reminders and automatic overdue classification are intentionally
-  deferred rather than guessed.
+- Due-date reminders and classification are intentionally deferred until the
+  source contract supports an explicit due date; missing dates are not guessed.
 
 ## Scope boundary
 

@@ -2,6 +2,7 @@ import type { ClientSession } from 'mongoose';
 import { FinanceAccountRoleResolverService } from '../accounts/finance-account-role-resolver.service';
 import { FinanceDomainError } from '../finance.error';
 import { FinanceLifecycleService } from '../finance-lifecycle.service';
+import { FinanceEntitlementService } from '../finance-entitlement.service';
 import {
   assertFinanceTenant,
   type FinanceTenantContext,
@@ -36,6 +37,8 @@ type FinanceSalesLifecyclePort = Pick<
   FinanceLifecycleService,
   'getState'
 >;
+
+type FinancePremiumAccessChecker = () => Promise<boolean>;
 
 type FinanceSalesTransactionRepositoryPort = Pick<
   FinanceSalesTransactionRepository,
@@ -87,6 +90,7 @@ export class FinanceSalesWorkflowService {
   private readonly journalService: FinanceSalesJournalPort;
   private readonly rulesService: FinanceSalesPostingRulesService;
   private readonly cogsService: FinanceSalesCogsPort;
+  private readonly premiumAccessChecker: FinancePremiumAccessChecker;
 
   constructor(
     context: FinanceTenantContext,
@@ -97,6 +101,7 @@ export class FinanceSalesWorkflowService {
       journalService?: FinanceSalesJournalPort;
       rulesService?: FinanceSalesPostingRulesService;
       cogsService?: FinanceSalesCogsPort;
+      premiumAccessChecker?: FinancePremiumAccessChecker;
     }
   ) {
     assertFinanceTenant(context);
@@ -118,6 +123,14 @@ export class FinanceSalesWorkflowService {
     this.cogsService =
       dependencies?.cogsService ??
       new FinanceInventoryCogsService(context);
+    this.premiumAccessChecker =
+      dependencies?.premiumAccessChecker ??
+      (async () =>
+        (
+          await new FinanceEntitlementService(
+            context
+          ).getAvailability()
+        ).available);
   }
 
   async process(
@@ -126,6 +139,17 @@ export class FinanceSalesWorkflowService {
   ): Promise<FinanceSalesWorkflowResultDTO> {
     const mode = input?.mode ?? 'manual';
     const session = input?.session;
+    if (!(await this.premiumAccessChecker())) {
+      return this.result({
+        status: 'disabled',
+        mode,
+        source_order_id: projection.source_order_id,
+        transaction_id: null,
+        journal_entry_id: null,
+        reason:
+          'Finance tidak tersedia untuk paket organisasi ini.',
+      });
+    }
     const finance =
       await this.lifecycleService.getState(session);
 

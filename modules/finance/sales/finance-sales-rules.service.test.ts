@@ -88,4 +88,27 @@ describe('FinanceSalesPostingRulesService', () => {
       intent: null,
     });
   });
+
+  it('blocks a completed order with returned quantity until refund rules exist', () => {
+    const result =
+      new FinanceSalesPostingRulesService().evaluate(
+        getProjection({
+          items: [
+            {
+              product_id: 'SKU-001',
+              quantity: 1,
+              returned_quantity: 1,
+              subtotal: 125000,
+            },
+          ],
+        })
+      );
+
+    expect(result).toMatchObject({
+      decision: 'blocked',
+      event: 'completed_order',
+      reason_code: 'RETURN_REFUND_UNSUPPORTED',
+      intent: null,
+    });
+  });
 });

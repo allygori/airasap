@@ -17,6 +17,31 @@ the final data contract.
 Existing inventory logic may be reused selectively after checking its lifecycle,
 cost, location, and journal behavior.
 
+## Confirmed direction for the initial release [TARGET]
+
+- Inventory is one shared pool per organization across its stores/brands and
+  selling channels. Store/platform identifiers remain useful source metadata,
+  but do not partition inventory balances in this release.
+- Keep one primary Finance inventory location as the simple first-use path.
+  Multi-location transfers remain deferred under Phase 5.3.
+- Products remains the seller's catalog. Only products or variants the user
+  chooses to stock need a Finance inventory item and mapping. A mapping links a
+  catalog product/variant to a Finance stock item; it does not create stock or
+  a stock movement.
+- Imported marketplace sales and offline sales should consume the same shared
+  stock source. Publishing or reading a quantity at a platform is not itself a
+  stock movement or journal event.
+- Finance remains optional. No Finance inventory side effect may run when the
+  organization has not activated Finance.
+
+## Current usability gap [CURRENT]
+
+The stock view, adjustment form, purchase form, and opening-balance form read
+existing Finance items and locations. There is no Finance UI/API flow to create
+inventory items, locations, or product mappings. As a result, an organization
+with an empty Finance inventory has no user-facing way to satisfy the setup
+required by those workflows. Phase 5.5 is the next implementation priority.
+
 ## Phases
 
 ### Phase 5.1 — Stock view and inventory contract
@@ -33,9 +58,10 @@ Acceptance criteria:
 
 Implementation status: [CURRENT]
 
-- Finance now reads active inventory items through Finance-owned repositories
-  over the existing `inventory_items`, `inventory_locations`,
-  `inventory_item_mappings`, and `inventory_movements` collections.
+- Finance reads active inventory items through Finance-owned repositories and
+  Finance-owned collections: `finance_inventory_items`,
+  `finance_inventory_locations`, `finance_inventory_item_mappings`, and
+  `finance_inventory_movements`. Legacy Inventory data is not read or migrated.
 - Only tenant-scoped `posted` movements are included in the stock balance.
   Known inbound and outbound movement types are classified explicitly; an
   unknown movement type is not guessed and marks the item as `needs_review`.
@@ -134,9 +160,10 @@ Implementation status: [CURRENT]
 - The initial costing method is moving average. The service uses the posted
   quantity and value balance for the active location, then carries the
   calculated balance across lines in the same sale.
-- HPP is integrated into Finance sales posting only. The existing Orders and
-  Products modules are not changed, and Finance uses the copied Finance sales
-  source-line contract and Finance-owned product-to-inventory mapping.
+- HPP is integrated into Finance sales posting only. The Orders import seam
+  may invoke Finance when the organization has activated the optional module,
+  but Finance owns the copied sales snapshot and product-to-inventory mapping;
+  Products and Reports remain unchanged.
 - When mapping, quantity tracking, value tracking, account mapping, stock, and
   exactly one active location are ready, sales posting adds Dr HPP / Cr
   inventory lines and creates an immutable posted `sale` movement linked to
@@ -150,17 +177,128 @@ Implementation status: [CURRENT]
 - The sales Finance screen shows whether HPP is posted or deferred and shows
   the calculated total when it is posted.
 
+### Phase 5.5 — Inventory setup and first-use flow
+
+Implementation status: [TARGET — NEXT]
+
+Make the existing stock, purchase, adjustment, and opening-balance workflows
+usable from a clean Finance setup without requiring manual database setup.
+
+Acceptance criteria:
+
+- An owner can create a Finance inventory item from a selected Products
+  product/variant, with a concise review of SKU, name, unit, and quantity/value
+  tracking. Non-catalog items such as packaging can be entered manually.
+- Creating an item from a catalog product/variant also creates or confirms its
+  Finance mapping in that same flow; mapping is not a separate mandatory
+  wizard for every product in Products.
+- The first-use path creates or reuses one active default location per
+  organization idempotently. The common one-location path does not ask the
+  seller to design a warehouse hierarchy.
+- Empty states on stock, purchase, and adjustment lead to the setup action
+  instead of ending at “data belum siap”. Setup may be skipped when the seller
+  does not track inventory.
+- Inventory items and the default location are available to the existing
+  opening-balance flow before finalization, so starting stock is entered as an
+  opening balance with quantity and unit cost—not disguised as a shrinkage
+  adjustment.
+- Duplicate SKU and ambiguous product/variant matches are shown for explicit
+  resolution; matching by product name alone never silently combines stock.
+- The setup remains tenant-scoped and uses only Finance-owned collections.
+
+Before implementation, confirm how Finance should handle an organization that
+has already activated using “start at zero” but later reports physical stock
+that existed before activation. Do not post that balance as a purchase or
+shrinkage adjustment without an agreed accounting treatment.
+
+### Phase 5.6 — Simple product mapping and shared sales stock events
+
+Implementation status: [TARGET]
+
+Connect the already-integrated order sources to the shared organization
+inventory with a minimal mapping experience and repeat-safe stock lifecycle.
+
+Acceptance criteria:
+
+- First inspect the identifiers and variant data that each current Orders
+  importer provides. Mapping uses stable product/variant references; SKU may
+  suggest a match, but ambiguous or missing identifiers require confirmation.
+- Multiple channel listings that represent the same physical SKU can point to
+  one Finance item when the source identity has been verified. Products that
+  are dropshipped, non-stock, or not selected for tracking do not require a
+  Finance mapping.
+- A valid order event reserves stock once, lowering sellable availability;
+  cancellation releases that reservation once. The marketplace's raw status
+  names are not assumed to have identical meaning across platforms.
+- The eligible fulfillment/completion event converts the reservation into the
+  appropriate outbound inventory and HPP effects. The exact source status per
+  platform must be agreed before posting behavior is changed. Existing revenue
+  posting remains separate; missing mapping/cost must continue to defer HPP,
+  never invent it.
+- Re-imports and status enrichment are idempotent per source order line and
+  event. A shortage is visible and never silently creates a negative stock
+  balance. Finance failures do not roll back basic Orders import.
+- A simple offline sale uses the same sales/stock workflow and reduces the
+  shared pool; it is not represented as a generic stock adjustment. Its
+  minimum payment and revenue fields must be defined with the Finance sales
+  contract before implementation.
+- Finance inactive: none of these Finance reservations, movements, or journals
+  are created, and existing marketplace Orders import remains unaffected.
+
+### Phase 5.7 — Platform availability, buffer, and synchronization
+
+Implementation status: [TARGET — DISCOVERY REQUIRED]
+
+Expose a safe sellable quantity from the shared inventory to supported sales
+channels without creating duplicate per-platform stock ledgers.
+
+Recommended simple starting policy (buffer granularity remains a proposal to
+confirm before implementation):
+
+- Keep physical/on-hand, reserved, unavailable, and sellable quantities
+  conceptually distinct. Consider a per-item safety buffer held back from
+  channel availability; it is not a stock movement.
+- Publish a computed sellable quantity and refresh other connected channels
+  after a relevant reservation, fulfillment, cancellation, receipt, or
+  adjustment. Synchronization itself creates no movement or journal.
+- Start with one shared pool and a simple buffer policy; defer per-channel
+  stock quotas unless testing shows the oversell risk is unacceptable. A
+  buffer reduces risk but cannot guarantee zero overselling while external
+  platform quantities are stale or concurrent orders arrive.
+- Before implementing a channel adapter, verify that the platform has a usable
+  stock read/write API and that the application has the required connection
+  credentials and permissions. Do not infer APIs from the existing file
+  importers.
+- Synchronization retries must be safe and failures visible; a failed platform
+  update must not rewrite the Finance stock ledger.
+
+This phase does not expand into a general warehouse system. It establishes the
+first supported channel stock flow and records the remaining synchronization
+limitations for users.
+
 ## Open questions
 
 - Whether a future multi-location release needs transfers before allowing HPP
   posting for organizations with more than one active location.
+- Which order status from each supported platform should reserve stock, release
+  a reservation, and confirm the sale/stock issue.
+- How to handle physical opening stock discovered after Finance was activated
+  with an explicit zero-opening-balance choice.
+- Whether the first channel-sync release can accept eventual consistency with
+  a per-item buffer, or needs per-channel stock allocations to meet the
+  seller's oversell tolerance.
+- Which platform APIs and authorization scopes are actually available for
+  stock synchronization; existing file import support does not establish
+  stock-write capability.
 - Whether FIFO or batch/lot costing is needed after real Finance usage. It is
   not part of the initial moving-average release.
-- Which existing inventory collections remain canonical for future migrations;
-  the current Finance repositories intentionally isolate that decision.
 
 ## Not in scope
 
 - product catalog redesign;
-- marketplace product mapping redesign;
+- broad marketplace catalog-mapping redesign beyond the minimal Finance
+  product/variant-to-inventory link;
+- per-store inventory partitioning within one organization in this release;
+- multi-channel stock quotas and a guarantee of zero overselling in the first
+  synchronization release;
 - advanced batch/lot/serial tracking.

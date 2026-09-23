@@ -46,6 +46,38 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
   const { data: session } = useSession();
+  const sessionUpdatedAt = session?.session.updatedAt;
+  const [financeAvailable, setFinanceAvailable] =
+    React.useState(false);
+
+  React.useEffect(() => {
+    const controller = new AbortController();
+
+    setFinanceAvailable(false);
+    void fetch('/api/v1/dashboard/finance/access', {
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok) return false;
+        const payload: unknown = await response.json();
+        if (!payload || typeof payload !== 'object') {
+          return false;
+        }
+        const envelope = payload as {
+          success?: unknown;
+          data?: { available?: unknown };
+        };
+        return (
+          envelope.success === true &&
+          envelope.data?.available === true
+        );
+      })
+      .then((available) => setFinanceAvailable(available))
+      .catch(() => setFinanceAvailable(false));
+
+    return () => controller.abort();
+  }, [sessionUpdatedAt]);
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -67,9 +99,10 @@ export function AppSidebar({
       <SidebarContent>
         {/* <NavMain items={mainNav} /> */}
         <NavStore items={mainNav} />
-        {(financeNav || []).length > 0 && (
-          <NavOrganization items={financeNav} />
-        )}
+        {financeAvailable &&
+          (financeNav || []).length > 0 && (
+            <NavOrganization items={financeNav} />
+          )}
         {(organizationNav || []).length > 0 && (
           <NavOrganization items={organizationNav} />
         )}

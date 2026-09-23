@@ -149,6 +149,7 @@ const makeRepository = () => {
 };
 
 const makeDependencies = (repository: RepositoryPort) => ({
+  premiumAccessChecker: async () => true,
   lifecycleService: lifecycle('active'),
   transactionRepository: repository,
   roleResolver: {
@@ -177,6 +178,7 @@ describe('FinanceSalesWorkflowService', () => {
     const workflow = new FinanceSalesWorkflowService(
       { organizationId },
       {
+        premiumAccessChecker: async () => true,
         lifecycleService: lifecycle('not_started'),
         transactionRepository: state.repository,
         journalService: {

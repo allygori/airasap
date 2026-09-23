@@ -1,6 +1,6 @@
 # Finance Plan 02 — Core Accounting and Journal Contract
 
-Status: [TARGET]
+Status: [CURRENT / IN PROGRESS]
 
 ## Goal
 
@@ -109,8 +109,12 @@ Acceptance criteria:
 
 ## Open questions
 
-- Is manual journal available in the first release or only after operational
-  posting is stable?
+- Manual journal is not implemented in Finance yet. The existing legacy
+  Accounting journal widgets are approved as a visual/interaction reference
+  and may be copied and adapted. Finance must provide its own validation, API,
+  service, and persistence; no runtime dependency on legacy Accounting is
+  allowed. The Finance manual-journal UI remains a follow-up after the current
+  order/released-funds flow is exercised.
 
 ## Not in scope
 

@@ -7,6 +7,7 @@ import {
 } from '@/lib/api/response';
 import { db } from '@/lib/db/connection';
 import {
+  assertFinancePremium,
   FinanceDomainError,
   FinanceOpeningBalanceFinalizeInputSchema,
   FinanceOpeningBalanceService,
@@ -26,6 +27,7 @@ export const POST = withValidation(
       }
 
       await db.connect();
+      await assertFinancePremium(tenantContext);
       const result = await new FinanceOpeningBalanceService(
         tenantContext
       ).finalize(validatedBody!);
@@ -38,7 +40,8 @@ export const POST = withValidation(
     } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {
         const status =
-          error.code === 'FINANCE_OWNER_REQUIRED'
+          error.code === 'FINANCE_OWNER_REQUIRED' ||
+          error.code === 'FINANCE_NOT_ACTIVE'
             ? 403
             : error.code ===
                 'FINANCE_ORGANIZATION_NOT_FOUND'

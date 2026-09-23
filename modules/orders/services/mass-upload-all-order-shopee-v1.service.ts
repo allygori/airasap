@@ -17,7 +17,10 @@ import {
   matchProductAndVariant,
   resolveProductCost,
 } from './product-matching';
-import type { OrderAccountingIntegrationService } from './order-accounting-integration.service';
+import {
+  safeFinanceIntegrationError,
+  type OrderFinanceIntegrationService,
+} from './order-finance-integration.service';
 
 export type ShopeeAllOrderImporterDependencies = {
   repository: OrderRepository;
@@ -27,8 +30,7 @@ export type ShopeeAllOrderImporterDependencies = {
     storeId?: string;
     userId?: string;
   };
-  accountingService?: OrderAccountingIntegrationService;
-  inventoryLocationId?: string;
+  financeService?: OrderFinanceIntegrationService;
 };
 
 export async function massUploadAllOrderShopeeV1(
@@ -364,24 +366,24 @@ export async function massUploadAllOrderShopeeV1(
         if (
           payload.status ===
             SHOPEE_ORDER_STATUS.completed.value &&
-          dependencies.accountingService
+          dependencies.financeService
         ) {
           try {
-            await dependencies.accountingService.postCompletedOrder(
-              String(createdOrder._id),
-              {
-                location_id:
-                  dependencies.inventoryLocationId,
-              }
-            );
-            message =
-              'Order dibuat dan accounting berhasil diposting.';
+            const result =
+              await dependencies.financeService.postCompletedOrder(
+                String(createdOrder._id)
+              );
+            if (result.status === 'posted') {
+              message =
+                'Jurnal penjualan Finance berhasil diposting.';
+            } else if (result.status === 'blocked') {
+              message = `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
+            } else if (result.status === 'pending') {
+              message =
+                'Transaksi Finance menunggu posting.';
+            }
           } catch (error) {
-            message = `Order dibuat, tetapi accounting tertahan: ${
-              error instanceof Error
-                ? error.message
-                : 'validasi belum lengkap'
-            }`;
+            message = `Order dibuat, tetapi posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
           }
         }
         createdCount++;
@@ -395,24 +397,24 @@ export async function massUploadAllOrderShopeeV1(
         if (
           existingOrder.status ===
             SHOPEE_ORDER_STATUS.completed.value &&
-          dependencies.accountingService
+          dependencies.financeService
         ) {
           try {
-            await dependencies.accountingService.postCompletedOrder(
-              String(existingOrder._id),
-              {
-                location_id:
-                  dependencies.inventoryLocationId,
-              }
-            );
-            message =
-              'Order sudah ada; accounting berhasil diposting atau dikonfirmasi idempotent.';
+            const result =
+              await dependencies.financeService.postCompletedOrder(
+                String(existingOrder._id)
+              );
+            if (result.status === 'posted') {
+              message =
+                'Jurnal Finance sudah diposting atau terkonfirmasi idempotent.';
+            } else if (result.status === 'blocked') {
+              message = `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
+            } else if (result.status === 'pending') {
+              message =
+                'Transaksi Finance menunggu posting.';
+            }
           } catch (error) {
-            message = `Order sudah ada, tetapi accounting tertahan: ${
-              error instanceof Error
-                ? error.message
-                : 'validasi belum lengkap'
-            }`;
+            message = `Order sudah ada, tetapi posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
           }
         }
         orderResults.push({

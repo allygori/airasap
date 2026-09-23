@@ -68,8 +68,9 @@ function FinanceStateView({
           Finance
         </h1>
         <p className="text-muted-foreground leading-7">
-          Modul keuangan untuk transaksi, persediaan, saldo,
-          jurnal, dan laporan keuangan.
+          Fitur keuangan opsional untuk mengelola penjualan,
+          pembelian, pengeluaran, persediaan, saldo
+          kas/bank, dan jurnal.
         </p>
       </div>
 
@@ -86,8 +87,8 @@ function FinanceStateView({
         </CardHeader>
         <CardContent className="text-muted-foreground">
           {finance.status === 'active'
-            ? 'Finance siap digunakan. Fitur transaksi dan laporan akan tersedia melalui tahap berikutnya.'
-            : 'Selesaikan onboarding Finance sebelum membuat transaksi atau jurnal.'}
+            ? 'Finance aktif. Buka menu Finance di sidebar untuk menggunakan modul transaksi dan persediaan. Laporan keuangan lengkap akan dilanjutkan setelah alur utama teruji.'
+            : 'Finance adalah fitur opsional. Owner organisasi dapat menyelesaikan onboarding sebelum membuat transaksi atau jurnal.'}
           {finance.status !== 'active' && (
             <Link
               href="/dashboard/finance/onboarding"

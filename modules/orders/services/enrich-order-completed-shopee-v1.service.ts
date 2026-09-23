@@ -17,7 +17,10 @@ import {
   matchProductAndVariant,
   resolveProductCost,
 } from './product-matching';
-import type { OrderAccountingIntegrationService } from './order-accounting-integration.service';
+import {
+  safeFinanceIntegrationError,
+  type OrderFinanceIntegrationService,
+} from './order-finance-integration.service';
 
 export type ShopeeCompletedOrderImporterDependencies = {
   repository: OrderRepository;
@@ -25,8 +28,7 @@ export type ShopeeCompletedOrderImporterDependencies = {
   tenantContext: ConstructorParameters<
     typeof OrderService
   >[0];
-  accountingService?: OrderAccountingIntegrationService;
-  inventoryLocationId?: string;
+  financeService?: OrderFinanceIntegrationService;
 };
 
 export async function massUploadEnrichWithOrderCompletedShopeeV1(
@@ -140,28 +142,25 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
         if (updateResult.modifiedCount > 0) {
           updatedCount++;
         }
-        let accountingMessage: string | undefined;
+        let financeMessage: string | undefined;
         if (
           completedStatus ===
             SHOPEE_ORDER_STATUS.completed.value &&
-          dependencies.accountingService
+          dependencies.financeService
         ) {
           try {
-            await dependencies.accountingService.postCompletedOrder(
-              String(existingOrder._id),
-              {
-                location_id:
-                  dependencies.inventoryLocationId,
-              }
-            );
-            accountingMessage =
-              ' Accounting berhasil diposting atau dikonfirmasi idempotent.';
+            const result =
+              await dependencies.financeService.postCompletedOrder(
+                String(existingOrder._id)
+              );
+            if (result.status === 'posted') {
+              financeMessage =
+                ' Jurnal Finance berhasil diposting atau dikonfirmasi idempotent.';
+            } else if (result.status === 'blocked') {
+              financeMessage = ` Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
+            }
           } catch (error) {
-            accountingMessage = ` Accounting tertahan: ${
-              error instanceof Error
-                ? error.message
-                : 'validasi belum lengkap'
-            }`;
+            financeMessage = ` Posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
           }
         }
         orderResults.push({
@@ -174,7 +173,7 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
             (updateResult.modifiedCount > 0
               ? 'Data order completed diperbarui tanpa menimpa perubahan manual.'
               : 'Enrichment completed sudah pernah diproses untuk file ini.') +
-            (accountingMessage ?? ''),
+            (financeMessage ?? ''),
         });
         continue;
       }
@@ -439,34 +438,32 @@ export async function massUploadEnrichWithOrderCompletedShopeeV1(
       const createdOrder =
         await dependencies.repository.create(payload);
       createdCount++;
-      let accountingMessage: string | undefined;
+      let financeMessage: string | undefined;
       if (
         completedStatus ===
           SHOPEE_ORDER_STATUS.completed.value &&
-        dependencies.accountingService
+        dependencies.financeService
       ) {
         try {
-          await dependencies.accountingService.postCompletedOrder(
-            String(createdOrder._id),
-            {
-              location_id: dependencies.inventoryLocationId,
-            }
-          );
-          accountingMessage =
-            ' Accounting berhasil diposting.';
+          const result =
+            await dependencies.financeService.postCompletedOrder(
+              String(createdOrder._id)
+            );
+          if (result.status === 'posted') {
+            financeMessage =
+              'Jurnal Finance berhasil diposting.';
+          } else if (result.status === 'blocked') {
+            financeMessage = `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
+          }
         } catch (error) {
-          accountingMessage = ` Accounting tertahan: ${
-            error instanceof Error
-              ? error.message
-              : 'validasi belum lengkap'
-          }`;
+          financeMessage = `Posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
         }
       }
       orderResults.push({
         order_id: orderId,
         status: 'created',
-        ...(accountingMessage
-          ? { message: accountingMessage.trim() }
+        ...(financeMessage
+          ? { message: financeMessage.trim() }
           : {}),
       });
     }

@@ -2,6 +2,7 @@ import { Types, type ClientSession } from 'mongoose';
 import { MemberModel } from '@/modules/members/member.model';
 import { OrganizationRepository } from '@/modules/organizations/organization.repository';
 import { FinanceAccountService } from './accounts/finance-account.service';
+import { FinanceEntitlementService } from './finance-entitlement.service';
 import { FinanceDomainError } from './finance.error';
 import {
   assertFinanceTenant,
@@ -44,6 +45,7 @@ type FinanceLifecycleDependencies = {
   defaultAccountInitializer?: (
     session?: ClientSession
   ) => Promise<unknown>;
+  premiumAccessChecker?: () => Promise<unknown>;
 };
 
 export class FinanceLifecycleService {
@@ -53,6 +55,7 @@ export class FinanceLifecycleService {
   private readonly defaultAccountInitializer: (
     session?: ClientSession
   ) => Promise<unknown>;
+  private readonly premiumAccessChecker: () => Promise<unknown>;
 
   constructor(
     context: FinanceTenantContext,
@@ -74,6 +77,12 @@ export class FinanceLifecycleService {
         new FinanceAccountService(
           context
         ).ensureDefaultAccounts(session));
+    this.premiumAccessChecker =
+      dependencies?.premiumAccessChecker ??
+      (() =>
+        new FinanceEntitlementService(
+          context
+        ).assertPremium());
   }
 
   async getState(
@@ -193,6 +202,7 @@ export class FinanceLifecycleService {
   }
 
   async start(session?: ClientSession) {
+    await this.premiumAccessChecker();
     await this.assertOwner();
     const current = await this.getState(session);
 

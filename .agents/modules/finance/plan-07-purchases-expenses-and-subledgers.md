@@ -132,7 +132,12 @@ Implementation status: [CURRENT]
   traceable through the source journal id.
 - Existing source transactions do not contain a due-date field. Therefore
   this phase reports overdue status as `not_configured` and does not infer
-  overdue from transaction date. Due-date policy remains a future decision.
+  overdue from transaction date. This is the current safe policy, not an
+  overdue calculation bug: a transaction date is not a contractual due date.
+  When a source or user-entered due date is added later, classify overdue only
+  if the due date is explicit, the balance remains positive, and the due date
+  is earlier than the organization's business date. Missing due dates stay
+  `not_configured`.
 
 #### Opening-balance compatibility [CURRENT]
 
@@ -161,6 +166,14 @@ change the Orders, Products, Reports, or legacy accounting modules.
 
 ### Phase 7.4 — Basic controls and tax inputs
 
+Implementation status: [DEFERRED BY PRODUCT DECISION]
+
+Tax and related controls are intentionally paused until the core Finance
+workflows have been exercised and shown to work reliably. Do not treat tax
+configuration or tax fields as a prerequisite for the current Finance test
+phase. Resume this phase only after the product owner confirms the core module
+is sufficiently stable.
+
 Add only the tax and control fields required by the first release.
 
 Acceptance criteria:
@@ -172,9 +185,9 @@ Acceptance criteria:
 ## Open questions
 
 - Is supplier/customer master data required now or can names remain transactional?
-- Are partial payments needed in the first release?
-- What tax scenarios are actually required for target sellers?
 - Should purchase invoices and goods receipt be separate workflows?
+- Which explicit due-date source should be stored for supplier payables and
+  marketplace receivables? Do not infer it from transaction dates.
 
 ## Not in scope
 

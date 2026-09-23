@@ -23,6 +23,7 @@ export type TOrder = Document &
   OrderBaseDTO & {
     organization: Types.ObjectId;
     store: Types.ObjectId;
+    // [LEGACY] Retained only while the old Accounting module exists.
     accounting_journal_entry?: Types.ObjectId;
     accounting_inventory_movements?: Types.ObjectId[];
     accounting_posted_at?: Date;
@@ -282,6 +283,11 @@ const OrderFeeSchema = new Schema<TOrderFee>(
       required: false,
       default: 0,
       alias: 'shippingFeeRefund',
+    },
+    refund_to_buyer: {
+      type: Number,
+      required: false,
+      default: 0,
     },
   },
   { _id: false }
@@ -545,10 +551,15 @@ const OrderSchema = new Schema<TOrder>(
     settlement_reference: {
       type: String,
     },
+    marketplace_return_detected: {
+      type: Boolean,
+      default: false,
+    },
     completed_at: {
       type: Date,
       alias: 'orderCompletionTime',
     },
+    // [LEGACY] Retained only while the old Accounting module exists.
     accounting_status: {
       type: String,
       enum: ['pending', 'posted', 'blocked'],

@@ -1,5 +1,7 @@
 /** Server-side Finance API. Client Components must import from ./client. */
 export { FinanceDomainError } from './finance.error';
+export { FinanceEntitlementService } from './finance-entitlement.service';
+export { FinanceMarketplaceReleaseService } from './marketplace-releases/finance-marketplace-release.service';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
@@ -49,6 +51,7 @@ export {
 export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
+  FINANCE_ACCOUNT_ROLE_VALUES,
 } from './accounts/finance-account.constants';
 export { FinanceAccountFilterSchema } from './accounts/finance-account.schema';
 export {
@@ -59,7 +62,10 @@ export {
   FinanceJournalEntryResponseSchema,
 } from './journal/finance-journal.schema';
 export { FinanceClosePeriodSchema } from './periods/finance-period.schema';
-export { assertFinanceModuleActive } from './finance-module.guard';
+export {
+  assertFinanceModuleActive,
+  assertFinancePremium,
+} from './finance-module.guard';
 export {
   assertFinanceTenant,
   normalizeFinanceState,
@@ -105,6 +111,15 @@ export type {
   FinanceSalesTransactionDetailResponseDTO,
   FinanceSalesInventoryCogsStatusDTO,
 } from './sales/finance-sales.dto';
+export {
+  FinanceMarketplaceReleaseSourceSchema,
+  FinanceMarketplaceReleaseResponseSchema,
+} from './marketplace-releases/finance-marketplace-release.schema';
+export type {
+  FinanceMarketplaceReleaseSourceDTO,
+  FinanceMarketplaceReleaseSourceInputDTO,
+  FinanceMarketplaceReleaseResponseDTO,
+} from './marketplace-releases/finance-marketplace-release.schema';
 export type { FinanceSalesWorkflowInput } from './sales/finance-sales-workflow.service';
 export type {
   FinanceSalesPostingMode,

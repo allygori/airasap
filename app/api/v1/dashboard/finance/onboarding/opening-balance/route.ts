@@ -8,12 +8,14 @@ import {
 import { db } from '@/lib/db/connection';
 import {
   FinanceDomainError,
+  assertFinancePremium,
   FinanceOpeningBalanceDraftInputSchema,
   FinanceOpeningBalanceService,
 } from '@/modules/finance';
 
 const getErrorStatus = (code: string) => {
   if (code === 'FINANCE_OWNER_REQUIRED') return 403;
+  if (code === 'FINANCE_NOT_ACTIVE') return 403;
   if (code === 'FINANCE_ORGANIZATION_NOT_FOUND') return 404;
   if (
     code === 'FINANCE_ONBOARDING_NOT_IN_PROGRESS' ||
@@ -37,6 +39,7 @@ export async function GET() {
     }
 
     await db.connect();
+    await assertFinancePremium(tenantContext);
     const result = await new FinanceOpeningBalanceService(
       tenantContext
     ).getSetup();
@@ -77,6 +80,7 @@ export const PUT = withValidation(
       }
 
       await db.connect();
+      await assertFinancePremium(tenantContext);
       const result = await new FinanceOpeningBalanceService(
         tenantContext
       ).saveDraft(validatedBody!);

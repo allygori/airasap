@@ -33,7 +33,7 @@ different accounting result.
 ## Consequences
 
 - Repeated import and repeated posting are safe to retry.
-- Finance can show actionable work without making the Orders importer depend on
-  Finance availability.
+- Finance can show actionable work through the importer seam without making
+  Finance availability a prerequisite for Orders import.
 - The transaction detail provides source and journal traceability while HPP and
   inventory effects remain deferred to Plan 05.

@@ -142,6 +142,7 @@ export const OrderFeeSchema = z.object({
     .int()
     .optional()
     .default(0),
+  refund_to_buyer: z.number().int().optional(),
 });
 
 export const OrderBaseSchema = z.object({
@@ -232,8 +233,10 @@ export const OrderBaseSchema = z.object({
   placed_at: z.string().optional(),
   released_funds_at: z.string().optional(),
   settlement_reference: z.string().trim().optional(),
+  marketplace_return_detected: z.boolean().optional(),
   completed_at: z.string().optional(),
 
+  // [LEGACY] Retained only while the old Accounting module exists.
   accounting_status: OrderAccountingStatusSchema.optional(),
   accounting_error: z.string().optional(),
   accounting_block_reason: z.string().optional(),

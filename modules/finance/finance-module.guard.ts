@@ -4,11 +4,24 @@ import type {
   FinanceState,
   FinanceTenantContext,
 } from './finance.types';
+import { FinanceEntitlementService } from './finance-entitlement.service';
 
-export const assertFinanceModuleActive = (
+export const assertFinancePremium = (
+  context: FinanceTenantContext
+): Promise<{
+  available: boolean;
+  status: import('./finance.types').FinanceStatus | null;
+}> =>
+  new FinanceEntitlementService(context).assertPremium();
+
+export const assertFinanceModuleActive = async (
   context: FinanceTenantContext,
   session?: ClientSession
-): Promise<FinanceState> =>
-  new FinanceLifecycleService(context).assertActive(
+): Promise<FinanceState> => {
+  await new FinanceEntitlementService(
+    context
+  ).assertPremium();
+  return new FinanceLifecycleService(context).assertActive(
     session
   );
+};

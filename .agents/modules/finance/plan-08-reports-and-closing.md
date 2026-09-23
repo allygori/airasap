@@ -1,6 +1,18 @@
 # Finance Plan 08 — Reports and Period Closing
 
-Status: [TARGET]
+Status: [TARGET / DEFERRED UNTIL CORE FINANCE IS VERIFIED]
+
+## Start gate
+
+This plan is intentionally deferred. Begin it after the product owner is
+comfortable that the core Finance workflows are working reliably enough in
+realistic development use. The gate should cover onboarding/opening balances,
+sales source integration, journal posting and reversal, inventory/HPP where
+applicable, cash/bank transfers, purchases/expenses, and settlements—including
+retry behavior on standalone MongoDB. This does not require every future edge
+case to be complete. Basic period close/posting guards already exist in the
+core accounting plan; this plan adds the reports and broader close-readiness
+workflow.
 
 ## Goal
 
@@ -65,4 +77,3 @@ Acceptance criteria:
 - tax filing submission;
 - bank statement reconciliation;
 - multi-currency reporting;
-

@@ -9,13 +9,13 @@
 Finance defines its own normalized sales-source contract under
 `modules/finance/sales`. The contract retains the source order ID and order
 number, organization/store, platform, source status, dates, monetary totals,
-and line-level product references and costs needed by later posting and COGS
-work.
+and line-level product references and costs needed by posting and COGS work.
 
-The adapter is pure and produces either a `ready` or `incomplete` projection
-with explicit data-shape issues. It does not import the Orders or Products
-module, mutate their collections, decide which order statuses are eligible, or
-post a journal.
+The projection service is pure and produces either a `ready` or `incomplete`
+projection with explicit data-shape issues. A narrow adapter in the Orders
+import flow maps persisted Orders into that contract. Finance does not import
+Orders or Products, mutate their collections, or decide the source order's
+operational status. The Finance workflow owns eligibility and journal posting.
 
 ## Rationale
 
@@ -26,10 +26,12 @@ keeps the product/status decision available for discussion in Phase 4.2.
 
 ## Consequences
 
-- Existing Orders, Products, Reports, and importers are unchanged.
-- An importer or future Finance orchestration service must explicitly map its
-  source snapshot into the Finance contract.
+- Orders remains the source of truth; its import/enrichment flow invokes the
+  optional Finance adapter only for eligible events.
+- Products and Reports are not changed by this integration.
+- Finance stores its own source snapshot and never modifies the canonical
+  order while projecting or posting it.
 - Currency defaults to IDR at the transaction boundary; it is not an
   onboarding question in this phase.
-- Posting, retry, blocked state, and persistence are intentionally deferred to
-  later sales-integration phases.
+- Posting, retry, blocked state, and persistence are owned by later Finance
+  sales workflow layers; the projection itself remains side-effect free.

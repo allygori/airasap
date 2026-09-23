@@ -29,14 +29,14 @@ import {
 import { massUploadAllOrderShopeeV1 as runAllOrderImport } from './services/mass-upload-all-order-shopee-v1.service';
 import { massUploadEnrichWithOrderCompletedShopeeV1 as runCompletedOrderEnrichment } from './services/enrich-order-completed-shopee-v1.service';
 import { enrichWithReleasedFunds as runReleasedFundsEnrichment } from './services/enrich-released-funds.service';
-import { OrderAccountingIntegrationService } from './services/order-accounting-integration.service';
-import { MarketplaceSettlementService } from '@/modules/accounting/settlements/settlement.service';
+import { OrderFinanceIntegrationService } from './services/order-finance-integration.service';
 
 export class OrderService {
   private tenantContext;
   private repository: OrderRepository;
   private productService: ProductService;
   private storeService: StoreService;
+  private financeService: OrderFinanceIntegrationService;
 
   constructor(tenantContext: {
     organizationId: string;
@@ -47,6 +47,8 @@ export class OrderService {
     this.repository = new OrderRepository(tenantContext);
     this.productService = new ProductService(tenantContext);
     this.storeService = new StoreService(tenantContext);
+    this.financeService =
+      new OrderFinanceIntegrationService(tenantContext);
   }
 
   /**
@@ -511,35 +513,21 @@ export class OrderService {
    * @returns
    */
   async massUploadAllOrderShopeeV1(
-    fileBuffer: ArrayBuffer,
-    inventoryLocationId?: string
+    fileBuffer: ArrayBuffer
   ): Promise<MassUploadResponseDTO> {
     return runAllOrderImport(
       {
         repository: this.repository,
         productService: this.productService,
         tenantContext: this.tenantContext,
-        accountingService:
-          new OrderAccountingIntegrationService(
-            this.tenantContext
-          ),
-        inventoryLocationId,
+        financeService: this.financeService,
       },
       fileBuffer
     );
   }
 
-  async postCompletedOrderToAccounting(
-    orderId: string,
-    inventoryLocationId?: string
-  ) {
-    const accountingService =
-      new OrderAccountingIntegrationService(
-        this.tenantContext
-      );
-    return accountingService.postCompletedOrder(orderId, {
-      location_id: inventoryLocationId,
-    });
+  async postCompletedOrderToFinance(orderId: string) {
+    return this.financeService.postCompletedOrder(orderId);
   }
 
   /**
@@ -549,19 +537,14 @@ export class OrderService {
    */
   async massUploadEnrichWithOrderCompletedShopeeV1(
     fileBuffer: ArrayBuffer,
-    fileId: string,
-    inventoryLocationId?: string
+    fileId: string
   ): Promise<MassUploadResponseDTO> {
     return runCompletedOrderEnrichment(
       {
         repository: this.repository,
         productService: this.productService,
         tenantContext: this.tenantContext,
-        accountingService:
-          new OrderAccountingIntegrationService(
-            this.tenantContext
-          ),
-        inventoryLocationId,
+        financeService: this.financeService,
       },
       fileBuffer,
       fileId
@@ -573,8 +556,7 @@ export class OrderService {
    */
   async enrichWithReleasedFunds(
     fileBuffer: ArrayBuffer,
-    fileId: string,
-    destinationAccountId?: string
+    fileId: string
   ): Promise<MassUploadResponseDTO> {
     return runReleasedFundsEnrichment(
       {
@@ -582,10 +564,7 @@ export class OrderService {
         productService: this.productService,
         storeService: this.storeService,
         tenantContext: this.tenantContext,
-        settlementService: new MarketplaceSettlementService(
-          this.tenantContext
-        ),
-        destinationAccountId,
+        financeService: this.financeService,
       },
       fileBuffer,
       fileId

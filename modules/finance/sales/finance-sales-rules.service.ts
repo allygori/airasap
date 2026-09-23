@@ -25,6 +25,23 @@ export class FinanceSalesPostingRulesService {
       });
     }
 
+    if (
+      projection.lines.some(
+        (line) => line.returned_quantity > 0
+      )
+    ) {
+      return this.decision({
+        decision: 'blocked',
+        source_order_id: projection.source_order_id,
+        source_status: projection.source_status,
+        event: 'completed_order',
+        reason_code: 'RETURN_REFUND_UNSUPPORTED',
+        message:
+          'Order memiliki retur/refund; koreksi penjualan Finance belum tersedia.',
+        intent: null,
+      });
+    }
+
     if (projection.readiness !== 'ready') {
       return this.decision({
         decision: 'blocked',

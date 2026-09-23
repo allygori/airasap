@@ -8,10 +8,10 @@ import {
   FinanceAccountRepository,
   type FinanceAccountPersistenceRecord,
 } from './finance-account.repository';
-import { FINANCE_SALES_ACCOUNT_ROLE_VALUES } from '../sales/finance-sales.constants';
+import { FINANCE_ACCOUNT_ROLE_VALUES } from './finance-account.constants';
 
 export type FinanceAccountRole =
-  (typeof FINANCE_SALES_ACCOUNT_ROLE_VALUES)[number];
+  (typeof FINANCE_ACCOUNT_ROLE_VALUES)[number];
 
 type FinanceAccountRoleDefinition = {
   subtype: string;
@@ -29,6 +29,26 @@ const ROLE_DEFINITIONS: Record<
   sales_revenue: {
     subtype: 'product_sales',
     fallback_code: '4100',
+  },
+  marketplace_balance: {
+    subtype: 'marketplace_balance',
+    fallback_code: '1130',
+  },
+  marketplace_admin_fee: {
+    subtype: 'marketplace_admin_fee',
+    fallback_code: '6310',
+  },
+  payment_processing_fee: {
+    subtype: 'payment_processing_fee',
+    fallback_code: '6320',
+  },
+  campaign_and_affiliate: {
+    subtype: 'campaign_and_affiliate',
+    fallback_code: '6330',
+  },
+  shipping_and_transport: {
+    subtype: 'shipping_and_transport',
+    fallback_code: '6200',
   },
 };
 

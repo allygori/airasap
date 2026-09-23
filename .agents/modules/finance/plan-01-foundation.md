@@ -1,6 +1,6 @@
 # Finance Plan 01 — Foundation and Optional Access
 
-Status: [TARGET]
+Status: [CURRENT / IMPLEMENTED]
 
 ## Goal
 
@@ -21,9 +21,21 @@ Acceptance criteria:
 - disabled Finance does not block basic application features;
 - the exact persistence owner is documented before implementation.
 
-Open question: reuse the existing organization accounting state or introduce a
-Finance-owned state. Do not decide by naming alone; inspect current consumers
-first.
+Implementation status: Finance lifecycle state is organization-owned at
+`organization.finance`. The Finance route/UI shell, shared API/auth/tenant
+infrastructure, and server-side activation guard are in place. Finance
+disabled paths are covered by focused tests. Sales source integration with the
+Orders import/enrichment flows is implemented in Plan 04. A temporary
+development override currently allows Finance access for all organization
+plans so the owner can test the module. The premium-plan check is kept
+commented at `FinanceEntitlementService`; restore it only after Finance flows
+have been verified. Authentication, an active organization, and the Finance
+lifecycle are still required for their respective pages/actions.
+
+Legacy Accounting compatibility fields and retry/reconstruction services
+remain [LEGACY] while that package is still present. New Finance modules do
+not import or use them. Remove the compatibility surface together with the
+legacy Accounting package after the Finance review, without a data migration.
 
 ### Phase 1.2 — Finance route and UI shell
 
@@ -33,7 +45,8 @@ and API route boundary under the finance paths.
 Acceptance criteria:
 
 - financeNav is the only navigation entry point for the optional module;
-- inactive Finance shows a simple gate or onboarding entry;
+- inactive Finance shows its landing/onboarding state;
+- the premium-plan gate is temporarily bypassed for development testing;
 - no old accounting page is required to render the Finance shell;
 - route-level access is enforced server-side.
 
@@ -63,4 +76,3 @@ Acceptance criteria:
 - financeNav;
 - current dashboard layout;
 - decision on Finance activation persistence.
-

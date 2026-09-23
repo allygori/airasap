@@ -1,131 +1,134 @@
 # Finance Plan 04 — Sales and Order Integration
 
-Status: [TARGET]
+Status: [CURRENT / INTEGRATED — CORE SETTLEMENT CASES BLOCK SAFELY]
 
 ## Goal
 
-Allow Finance to create sales transactions and journals from the existing
-Orders/importer flow without replacing the Orders module.
+Connect the optional Finance module to existing Orders import workflows without
+making Finance a prerequisite for order import or changing Reports.
 
 ## Boundary
 
-Orders remains the operational source of truth. Finance stores its own
-transaction/reference data only as needed for financial posting and traceability.
+Orders remains the operational source of truth. A narrow adapter in
+`modules/orders/services/order-finance-integration.service.ts` maps stored
+orders into Finance contracts. Finance owns its sales work items,
+marketplace-release records, journals, account roles, and idempotency keys.
+No runtime path in the new Finance module imports legacy Accounting,
+Inventory, or Expenses.
 
-The old importer must continue to import orders when Finance is disabled.
+The old Order Accounting fields/service are retained as [LEGACY] compatibility
+only while the old Accounting package remains in the repository; active order
+import and row actions no longer invoke them. Remove these compatibility
+contracts together with the legacy Accounting package in the later cleanup,
+not as a one-off data migration.
 
-## Implementation progress
+## Implemented behavior
 
-### Phase 4.1 — [CURRENT] Finance sales projection and adapter
+### Phase 4.1 — Sales source projection
 
-Finance now owns a narrow sales-source contract and a pure projection adapter.
-It copies only the order fields needed for future financial posting and
-traceability: source order identity, organization/store, platform, source
-status, dates, monetary totals, and line-level product references/cost data.
-The adapter reports `ready` or `incomplete` with actionable data-shape issues,
-but it does not choose eligible order statuses, post journals, or mutate the
-Orders collection. Those decisions remain in later phases.
+Finance has its own normalized projection and source snapshot. The Orders-side
+adapter maps organization/store, order/platform/status, dates, totals, line
+references, quantities, returns, and product cost fields. The Finance
+projection validates this input and never mutates the canonical order.
 
-### Phase 4.2 — [CURRENT] Sales posting rules
+### Phase 4.2 — Completed-order recognition
 
-The first sales rule treats only the existing `selesai` order status as an
-eligible completed-order event. It produces a balanced journal intent using
-the logical roles `marketplace_receivable` and `sales_revenue`, with a stable
-idempotency key based on the source order. Orders with other statuses are
-`not_eligible`; completed orders with incomplete source data are `blocked`.
-Inventory movement and HPP remain deferred to Plan 05, while released funds,
-payouts, returns, and refunds remain separate events for later decisions.
+Only an order with status `selesai` is an eligible completed-order event.
+When Finance is active, current Shopee import and completed-order enrichment
+call the Finance workflow in automatic mode. The resulting journal debits
+Marketplace Receivable and credits Sales Revenue. Processing is idempotent.
+Orders with returned quantity are blocked until Finance return/refund rules are
+implemented; they are not posted as unreduced sales. A return found after a
+sale journal is already posted does not edit that journal. The import result
+flags the marketplace return and blocks release posting; correction of the
+already-posted sale requires a separate explicit Finance reversal/correction
+until dedicated refund handling is implemented.
 
-### Phase 4.3 — [CURRENT] Automatic and manual posting workflow
+If Finance is not active, the workflow returns `disabled` without creating a
+Finance work item or journal. Import still succeeds. A Finance posting or
+mapping failure is reported in that order's result and does not fail the
+underlying order import.
 
-Finance now owns a sales transaction work item that supports `automatic` and
-`manual` posting modes. When Finance is not active, the workflow returns a
-disabled result without creating a Finance transaction or journal. In manual
-mode, an eligible completed order is stored as `pending`; automatic mode
-resolves the Finance-owned account roles and attempts to post the immutable
-journal. Missing account mappings, journal errors, and finalization conflicts
-become `blocked` work with a safe reason so the source order/import is not
-failed.
+### Phase 4.3 — Automatic/manual workflow and recovery
 
-Until Finance configuration is introduced, an omitted mode uses the safe
-`manual` fallback. This does not add onboarding fields or change the existing
-Orders importer.
+Finance supports `automatic` and `manual` modes. The current importer seam
+uses automatic mode only after the Finance lifecycle is active. Manual mode
+remains available through the Finance work-item workflow/API. Work items use
+`pending`, `blocked`, `posted`, and `reversed` states; retry uses the
+stored Finance snapshot and journal idempotency contract. Posted journal lines
+are immutable; corrections use reversal/correcting transactions.
 
-### Phase 4.4 — [CURRENT] Status, retry, and reconciliation behavior
+### Phase 4.4 — Importer integration and existing orders
 
-Finance now persists and exposes the complete sales work-item lifecycle:
-`pending`, `blocked`, `posted`, and `reversed`. Repeated processing uses the
-Finance transaction idempotency key, while journal posting continues to use the
-same immutable journal idempotency contract. A manual `post`/`retry` action
-reuses the stored Finance intent and source snapshot; it does not reread or
-mutate the canonical order. Reversing a linked Finance journal marks the
-corresponding sales transaction `reversed`.
+Both new and already-imported completed orders can reach the Finance workflow
+when the relevant import/enrichment is run again. Finance failure is isolated
+from order persistence and surfaced as a safe per-order message. This provides
+a practical reprocessing path without silently changing an existing order's
+accounting snapshot.
 
-The Finance sales page and versioned API expose list/detail traceability,
-blocked reasons, explicit post/retry actions, and links to the resulting
-journal. Inventory/HPP remains a deferred effect until Plan 05.
+### Phase 4.5 — Released funds to marketplace balance
 
-## Phases
+The released-funds importer updates Orders as before, then passes the stored
+order snapshot to the Finance-owned `FinanceMarketplaceReleaseService`.
+Finance stores source/reconciliation state in
+`finance_marketplace_releases`. It does not reuse the legacy settlement
+collection.
 
-### Phase 4.1 — Finance sales projection and adapter
+The posting is attempted only when Finance is active and the completed-sale
+journal is already posted. A fully reconciled release creates a new balanced
+journal:
 
-Create the Finance-side sales contract and a narrow adapter from existing order
-data/import results.
+- debit the COA account with role `marketplace_balance` for net released
+  funds (the money is still in the marketplace wallet, not the bank);
+- debit mapped marketplace-fee expense accounts;
+- credit `marketplace_receivable` for the original gross receivable.
 
-Acceptance criteria:
+The fee total plus released amount must exactly reconcile to the posted sale
+receivable. Missing source values, mismatch, tax components, unsupported
+shipping-fee refunds, buyer-refund amounts from either supported Shopee file
+format, or order returns are saved as `blocked`; the buyer-refund amount is
+retained on the Finance release record. They do not create a journal. The
+event is idempotent and the importer continues to succeed. Tax posting remains
+deliberately deferred by product decision.
 
-- Finance does not duplicate the canonical order master;
-- the adapter accepts the existing order shape through an explicit boundary;
-- old accounting side effects are not copied accidentally;
-- source order ID is retained for traceability.
+A later withdrawal from marketplace balance to a real bank account is a
+separate user-entered Finance Cash & Bank transfer. The released-funds file
+does not imply that a bank payout already happened, and no bank mutation or
+statement import is part of this flow.
 
-### Phase 4.2 — Sales posting rules
+## Remaining boundaries
 
-Define which order event creates which accounting result.
+- Due dates are not inferred from order or transaction dates. Subledger
+  `overdue_status: not_configured` remains intentional until a source or
+  explicit user-entered due date is designed.
+- Returns/refunds need a supported marketplace source, recognition/correction
+  rule, and test cases before Finance can post them. Until then, affected sales
+  and releases are blocked with a reason.
+- Tax components are blocked and Phase 7.4 remains deferred.
+- A future generic feature-flag/entitlement platform is out of scope. For
+  development testing, the premium-plan check is temporarily bypassed; the
+  Finance lifecycle still controls whether posting occurs.
 
-Candidate events:
+## Verification criteria
 
-- completed order: revenue, receivable, and inventory/HPP impact;
-- released funds: marketplace receivable to marketplace balance;
-- payout: marketplace balance to cash or bank;
-- return/refund: reversal or correcting financial event.
+- A new order and an existing completed order can be processed without
+  duplicate sales journals.
+- Finance inactive: no Finance work item/journal is created and order import
+  remains successful.
+- Finance active: mapping or source failures become visible blocked work and
+  do not undo the imported order.
+- Released funds debit marketplace balance—not bank—only after exact
+  reconciliation with a posted sales journal.
+- Unsupported returns, refunds, tax, and mismatches never produce guessed
+  journal lines.
+- Reports and the legacy Orders/Products/Reports user experience are not
+  replaced by this plan.
 
-The exact order status mapping is an open product decision.
+## Deferred follow-up
 
-### Phase 4.3 — Automatic and manual modes
-
-Support the agreed posting modes:
-
-- Finance disabled: no Finance transaction or journal;
-- Finance enabled and automatic: eligible events attempt posting;
-- Finance enabled and manual: eligible events remain pending until posted.
-
-Posting failures must not fail the underlying order import. They become
-blocked Finance work with a safe retry path.
-
-### Phase 4.4 — Status, retry, and reconciliation behavior
-
-Implement and verify pending, posted, blocked, and reversed states.
-
-Acceptance criteria:
-
-- repeated import is idempotent;
-- repeated posting does not create duplicate journal entries;
-- blocked records explain the actionable reason;
-- retry does not silently change the source order;
-- Finance can trace the resulting journal and inventory effects.
-
-## Open questions
-
-- Which exact order statuses are eligible?
-- Should Finance post automatically by default or require an organization
-  choice?
-- Should already-imported eligible orders be backfilled?
-- Should released funds and payout be included in the first sales release?
-
-## Not in scope
-
-- replacing order import parsers;
-- changing order status semantics;
-- redesigning Products;
-- marketplace-specific settlement features beyond the agreed first slice.
+- Decide whether the Sales page needs a manual “post” action in addition to
+  importer-triggered automatic posting.
+- Define due-date sources and overdue behavior only when marketplace or
+  supplier source data supports it.
+- Add marketplace-specific return/refund accounting once the core flows have
+  been exercised successfully.

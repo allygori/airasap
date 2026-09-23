@@ -20,9 +20,14 @@ reviewed.
 
 Orders with other statuses are returned as `not_eligible`. A completed order
 whose Finance projection is incomplete is returned as `blocked` with an
-actionable reason. Inventory movement and HPP are explicitly deferred to Plan
-05. Released funds, payout, returns, and refunds are not silently inferred
-from the completed-order event.
+actionable reason. If any source line has a returned quantity, the completed
+sale is blocked until the Finance return/refund correction rule is available;
+Finance must not recognize the unreduced amount as a normal sale. HPP is
+governed by Plan 05. Released funds and payout are separate events and are not
+silently inferred from the completed-order event. If a return is discovered
+after a sale is posted, the original journal stays immutable; a separate
+Finance reversal/correction is required until dedicated refund handling is
+implemented.
 
 ## Rationale
 
@@ -36,7 +41,9 @@ particular COA code or to the legacy accounting resolver.
 - The rule is deterministic and easy to replay without changing the source
   order.
 - Settlement timing does not get confused with revenue recognition.
-- The first release does not yet post marketplace fees, funds release, payout,
-  returns, or COGS.
+- The completed-order event itself does not post marketplace fees, funds
+  release, or payout. The separate released-funds event is specified in Plan
+  04. Returns/refunds remain safely blocked until their correction rule is
+  implemented; HPP is governed by Plan 05.
 - Changing eligible statuses later is a deliberate rule/ADR change rather than
   an accidental importer side effect.

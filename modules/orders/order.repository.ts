@@ -14,6 +14,7 @@ import { OrderModel, TOrder } from './order.model';
 import { type OrderPlatform } from '@/constant/order-platform';
 import { type QueryOptions } from '@/lib/api/query-builder';
 
+// [LEGACY] Retained only for the old Accounting module; Finance does not use it.
 type OrderAccountingState = {
   accounting_status: 'pending' | 'posted' | 'blocked';
   accounting_error?: string | null;
@@ -79,6 +80,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
       .lean();
   }
 
+  // [LEGACY] Kept until the legacy Accounting module is removed.
   async findAccountingCandidates(limit = 50) {
     return this.model
       .find({
@@ -159,6 +161,7 @@ export class OrderRepository extends BaseRepository<TOrder> {
     return await query.lean();
   }
 
+  // [LEGACY] Finance writes to its own transaction collections instead.
   async updateAccountingState(
     id: string,
     state: OrderAccountingState,

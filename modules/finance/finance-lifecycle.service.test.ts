@@ -84,6 +84,7 @@ describe('FinanceLifecycleService readiness', () => {
           startFinance,
         },
         ownerAccessChecker: jest.fn(async () => true),
+        premiumAccessChecker: jest.fn(async () => true),
         defaultAccountInitializer,
       }
     );
@@ -117,6 +118,7 @@ describe('FinanceLifecycleService readiness', () => {
           }),
         },
         ownerAccessChecker: jest.fn(async () => true),
+        premiumAccessChecker: jest.fn(async () => true),
         defaultAccountInitializer: jest.fn(async () => {
           calls.push('seed');
         }),

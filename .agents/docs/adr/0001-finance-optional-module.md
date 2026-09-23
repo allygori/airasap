@@ -21,6 +21,12 @@ No generic feature-flag provider or permission engine is implemented as part of
 the first Finance release. The boundary should remain small enough to migrate
 to the future platform-level feature flag or entitlement system.
 
+For development testing, the premium-organization-plan check is temporarily
+bypassed in `FinanceEntitlementService`. This does not make Finance globally
+active: a signed-in user still needs an active organization, and journal
+posting remains gated by that organization's `organization.finance` lifecycle
+state. Restore the plan check only after the Finance workflows are verified.
+
 ## Consequences
 
 - Orders import must not post Finance journals when Finance is inactive.
@@ -28,4 +34,3 @@ to the future platform-level feature flag or entitlement system.
 - Basic modules must not depend on Finance completion.
 - Future generic rollout and entitlement infrastructure remains a separate
   platform goal.
-

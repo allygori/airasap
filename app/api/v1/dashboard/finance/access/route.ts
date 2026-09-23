@@ -6,9 +6,8 @@ import {
 } from '@/lib/api/response';
 import { db } from '@/lib/db/connection';
 import {
-  assertFinancePremium,
   FinanceDomainError,
-  FinanceLifecycleService,
+  FinanceEntitlementService,
 } from '@/modules/finance';
 
 export async function GET() {
@@ -24,33 +23,29 @@ export async function GET() {
     }
 
     await db.connect();
-    await assertFinancePremium(tenantContext);
-
-    const readiness = await new FinanceLifecycleService(
+    const result = await new FinanceEntitlementService(
       tenantContext
-    ).getReadiness();
+    ).getAvailability();
 
-    return apiSuccess(readiness);
-  } catch (error) {
+    return apiSuccess(result);
+  } catch (error: unknown) {
     if (error instanceof FinanceDomainError) {
-      const status =
+      return apiError(
+        error.code,
+        error.message,
         error.code === 'FINANCE_ORGANIZATION_NOT_FOUND'
           ? 404
-          : error.code === 'FINANCE_NOT_ACTIVE'
-            ? 403
-            : 400;
-
-      return apiError(error.code, error.message, status);
+          : 403
+      );
     }
 
     console.error(
-      '[GET /api/v1/dashboard/finance/status]',
+      '[GET /api/v1/dashboard/finance/access]',
       error
     );
-
     return apiError(
       ErrorCodes.INTERNAL_ERROR,
-      'Gagal memuat status Finance.',
+      'Gagal memeriksa akses Finance.',
       500
     );
   }

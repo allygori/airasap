@@ -50,6 +50,16 @@ export class OrganizationRepository extends BaseRepository<TOrganization> {
     return query.lean();
   }
 
+  async findFinanceAccessState(session?: ClientSession) {
+    const query = this.model
+      .findOne({
+        _id: this.tenantContext.organizationId,
+      })
+      .select('plan finance');
+    if (session) query.session(session);
+    return query.lean();
+  }
+
   async startFinance(
     data: {
       onboarding_version: number;

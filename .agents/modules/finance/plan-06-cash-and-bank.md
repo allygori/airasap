@@ -1,6 +1,6 @@
 # Finance Plan 06 — Cash and Bank
 
-Status: [CURRENT / IN PROGRESS]
+Status: [CURRENT / IMPLEMENTED]
 
 ## Goal
 
@@ -79,6 +79,10 @@ Implementation status: [CURRENT]
   different payload is rejected.
 - Transfers post immediately. Approval queues, bank statement import, and
   reconciliation remain outside this phase.
+- Released funds are recorded in the marketplace-balance COA account, not a
+  bank account. A seller's later withdrawal to a bank is a separate transfer
+  from Marketplace Balance to Bank; no payout is inferred from the
+  released-funds file.
 
 ### Phase 6.3 — Correction and usability
 

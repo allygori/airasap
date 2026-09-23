@@ -33,15 +33,20 @@ work rather than importer failures.
    mode falls back to `manual`. This keeps the default conservative and does
    not expand onboarding.
 7. The workflow stores a Finance-owned source snapshot and source order ID for
-   traceability; it does not modify the Orders importer or canonical order
-   records.
+   traceability. The Orders importer calls the Finance adapter at a narrow
+   seam only when Finance is active; Finance does not modify canonical order
+   records, and an unavailable/failed Finance workflow does not fail import.
 
 ## Consequences
 
-- Finance can be enabled without changing the operational order import path.
+- Finance stays optional: the existing import path continues to succeed when
+  Finance is inactive, while an active module can post eligible orders
+  automatically.
 - Automatic posting is idempotent through the Finance transaction key and the
   journal service key.
 - Manual posting and retry/reconciliation UI/API remain follow-up work in
   Phase 4.4.
-- Inventory movement, HPP, released funds, payout, returns, and refunds remain
-  outside this decision.
+- Released funds, payout, returns, and refunds are separate events. Plan 04
+  defines released funds as marketplace balance; withdrawal is a separate
+  transfer. Return/refund posting remains blocked until its correction rule is
+  implemented. HPP is governed by Plan 05.

@@ -34,7 +34,8 @@ export async function POST() {
   } catch (error) {
     if (error instanceof FinanceDomainError) {
       const status =
-        error.code === 'FINANCE_OWNER_REQUIRED'
+        error.code === 'FINANCE_OWNER_REQUIRED' ||
+        error.code === 'FINANCE_NOT_ACTIVE'
           ? 403
           : error.code ===
               'FINANCE_ONBOARDING_ALREADY_COMPLETED'
