@@ -89,7 +89,7 @@ export const FinanceInventoryStockResponseSchema = z.object(
       total_pages: z.number().int().nonnegative(),
     }),
     source: z.object({
-      collection: z.literal('inventory_movements'),
+      collection: z.literal('finance_inventory_movements'),
       status: z.literal('posted'),
       costing_note: z.string().min(1),
     }),

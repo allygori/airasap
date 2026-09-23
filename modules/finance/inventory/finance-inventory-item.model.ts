@@ -72,5 +72,5 @@ export const FinanceInventoryItemModel =
   model<TFinanceInventoryItem>(
     'FinanceInventoryItem',
     FinanceInventoryItemSchema,
-    'inventory_items'
+    'finance_inventory_items'
   );

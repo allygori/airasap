@@ -65,5 +65,5 @@ export const FinanceInventoryLocationModel =
   model<TFinanceInventoryLocation>(
     'FinanceInventoryLocation',
     FinanceInventoryLocationSchema,
-    'inventory_locations'
+    'finance_inventory_locations'
   );

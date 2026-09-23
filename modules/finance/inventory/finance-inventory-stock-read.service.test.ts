@@ -108,6 +108,9 @@ describe('FinanceInventoryStockReadService', () => {
       location_count: 2,
       status: 'ready',
     });
+    expect(result.source.collection).toBe(
+      'finance_inventory_movements'
+    );
   });
 
   it('marks ambiguous cost or negative quantity as needing review', async () => {

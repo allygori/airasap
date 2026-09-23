@@ -125,5 +125,5 @@ export const FinanceInventoryMovementModel =
   model<TFinanceInventoryMovement>(
     'FinanceInventoryMovement',
     FinanceInventoryMovementSchema,
-    'inventory_movements'
+    'finance_inventory_movements'
   );

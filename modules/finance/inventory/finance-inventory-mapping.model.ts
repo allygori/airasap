@@ -65,5 +65,5 @@ export const FinanceInventoryMappingModel =
   model<TFinanceInventoryMapping>(
     'FinanceInventoryMapping',
     FinanceInventoryMappingSchema,
-    'inventory_item_mappings'
+    'finance_inventory_item_mappings'
   );

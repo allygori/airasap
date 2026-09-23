@@ -223,7 +223,7 @@ export class FinanceInventoryStockReadService {
         total_pages: Math.ceil(items.total / query.limit),
       },
       source: {
-        collection: 'inventory_movements',
+        collection: 'finance_inventory_movements',
         status: 'posted',
         costing_note:
           'Nilai berasal dari total_cost movement posted; average unit cost hanya indikator saldo, bukan keputusan FIFO atau moving average final.',
