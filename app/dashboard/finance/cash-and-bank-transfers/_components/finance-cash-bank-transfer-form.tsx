@@ -19,7 +19,7 @@ import {
   type FinanceCashBankAccountDTO,
   type FinanceCashBankTransferListResponseDTO,
   type FinanceCashBankTransferSummaryDTO,
-} from '@/modules/finance';
+} from '@/modules/finance/client';
 
 const ActionResponseSchema = z.object({
   success: z.literal(true),

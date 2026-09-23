@@ -8,6 +8,7 @@ export type FinanceOpeningBalanceMode =
 
 export const FINANCE_OPENING_BALANCE_STATUS_VALUES = [
   'draft',
+  'finalizing',
   'posted',
   'skipped',
 ] as const;

@@ -31,7 +31,8 @@ cost would make the ledger look complete while making it unreliable.
    reason. Finance never estimates or silently guesses HPP.
 5. Posted inventory movements and posted journals remain immutable. Reversing
    a sales journal creates a new reversal journal and a new inbound `return`
-   movement for each linked sale movement, in one database transaction.
+   movement for each linked sale movement. On standalone MongoDB, both steps
+   use stable idempotency keys and can be resumed if a write is interrupted.
 
 ## Consequences
 

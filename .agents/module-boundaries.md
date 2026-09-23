@@ -81,6 +81,11 @@ The public entry point should expose services, input types, and domain errors
 that another module is allowed to use. It should not expose raw collection
 queries merely for convenience.
 
+[CURRENT] Finance exposes `modules/finance/index.ts` for server-side pages and
+route handlers, and `modules/finance/client.ts` for browser-safe schemas,
+constants, and type-only DTOs. Finance Client Components must use the latter;
+they must not import the server entry point.
+
 ## Cross-module communication
 
 - Call another module's service/use case, not its repository or model.

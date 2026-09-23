@@ -27,6 +27,10 @@ period collection and service belong to the legacy module.
   onboarding.
 - A closed period is enforced by the posting service, not only by the UI.
 - Reversals are traceable as separate journal entries.
-- Period close and reversal need transaction/session composition when they are
-  later combined with inventory or order workflows.
-
+- Finance posting and reversal workflows do not require MongoDB transactions,
+  so they run on standalone MongoDB. Multi-document effects are sequenced with
+  stable idempotency keys; a retry resumes finalization after a partial write.
+- Because standalone MongoDB cannot atomically commit those documents, a
+  journal may be visible before its source or inventory movement reaches its
+  final status. The source remains retryable, and the posted journal itself is
+  never edited or deleted.

@@ -330,6 +330,8 @@ export class FinanceSalesWorkflowService {
     mode: FinanceSalesPostingModeDTO,
     session?: ClientSession
   ): Promise<FinanceSalesWorkflowResultDTO> {
+    let journalPosted = false;
+
     try {
       const cogs = await this.cogsService.prepare(
         {
@@ -391,6 +393,7 @@ export class FinanceSalesWorkflowService {
           },
           session
         );
+      journalPosted = true;
 
       const movementIds = await this.cogsService.finalize(
         cogs,
@@ -436,12 +439,10 @@ export class FinanceSalesWorkflowService {
         reason: null,
       });
     } catch (error: unknown) {
-      if (
-        session &&
-        error instanceof FinanceDomainError &&
-        error.code ===
-          'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
-      ) {
+      // On standalone MongoDB the journal cannot be rolled back together
+      // with its source transaction. Keep the source retryable if any step
+      // fails after the journal has been posted.
+      if (journalPosted) {
         throw error;
       }
 

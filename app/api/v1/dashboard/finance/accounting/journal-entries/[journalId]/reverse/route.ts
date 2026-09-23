@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import mongoose from 'mongoose';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -16,7 +15,6 @@ import {
   FinanceInventoryCogsService,
   FinanceCashBankTransferRepository,
   FinanceSalesTransactionRepository,
-  type FinanceJournalPostResultDTO,
 } from '@/modules/finance';
 
 const FinanceJournalRouteParamsSchema = z
@@ -43,55 +41,39 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const session = await mongoose.startSession();
-      let result: FinanceJournalPostResultDTO;
-      try {
-        result = await session.withTransaction(
-          async (): Promise<FinanceJournalPostResultDTO> => {
-            const reversalResult =
-              await new FinanceJournalService(
-                tenantContext
-              ).reverse(
-                validatedParams!.journalId,
-                validatedBody!,
-                session
-              );
-
-            await new FinanceInventoryCogsService(
-              tenantContext
-            ).reversePostedSalesMovements(
-              validatedParams!.journalId,
-              reversalResult.journal_entry.id,
-              validatedBody!.effective_date ?? new Date(),
-              session
-            );
-
-            await new FinanceSalesTransactionRepository(
-              tenantContext
-            ).markReversedByJournalEntry(
-              validatedParams!.journalId,
-              session
-            );
-
-            await new FinanceCashBankTransferRepository(
-              tenantContext
-            ).markReversedByJournalEntry(
-              validatedParams!.journalId,
-              reversalResult.journal_entry.id,
-              session
-            );
-
-            return reversalResult;
-          }
+      const reversalResult =
+        await new FinanceJournalService(
+          tenantContext
+        ).reverse(
+          validatedParams!.journalId,
+          validatedBody!
         );
-      } finally {
-        await session.endSession();
-      }
+
+      await new FinanceInventoryCogsService(
+        tenantContext
+      ).reversePostedSalesMovements(
+        validatedParams!.journalId,
+        reversalResult.journal_entry.id,
+        validatedBody!.effective_date ?? new Date()
+      );
+
+      await new FinanceSalesTransactionRepository(
+        tenantContext
+      ).markReversedByJournalEntry(
+        validatedParams!.journalId
+      );
+
+      await new FinanceCashBankTransferRepository(
+        tenantContext
+      ).markReversedByJournalEntry(
+        validatedParams!.journalId,
+        reversalResult.journal_entry.id
+      );
 
       return apiSuccess(
-        result!,
+        reversalResult,
         undefined,
-        result!.replayed ? 200 : 201
+        reversalResult.replayed ? 200 : 201
       );
     } catch (error) {
       if (error instanceof FinanceDomainError) {

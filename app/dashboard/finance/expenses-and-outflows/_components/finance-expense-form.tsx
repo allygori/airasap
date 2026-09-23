@@ -17,7 +17,7 @@ import {
   FinanceExpenseResponseSchema,
   type FinanceExpenseListResponseDTO,
   type FinanceExpenseSummaryDTO,
-} from '@/modules/finance';
+} from '@/modules/finance/client';
 
 type ExpenseAccountOption = {
   id: string;

@@ -107,8 +107,8 @@ Implementation status:
 
 ### Phase 3.3 — Opening balance validation and finalization [CURRENT / IMPLEMENTED]
 
-Validate the draft opening position, create its Finance effects atomically, and
-then make future Finance routes available.
+Validate the draft opening position, persist its Finance effects with
+idempotent retry, and then make future Finance routes available.
 
 Acceptance criteria:
 
@@ -142,8 +142,10 @@ Implementation status:
 - The server preview validates account roles, opening totals, inventory
   valuation, and source labels before the user confirms finalization.
 - One Finance journal is posted for an entered opening balance. Inventory
-  movements and per-source opening payable/receivable items are created in the
-  same MongoDB transaction and linked to that journal.
+  movements and per-source opening payable/receivable items are linked to that
+  journal. On standalone MongoDB, the draft is frozen during finalization and
+  these writes can be resumed without duplication after an interruption;
+  Finance activates only after the batch is complete.
 - Opening subledger items retain a distinct source-item ID, so settlement
   totals remain separate even though those items share one opening journal.
 - Finalization records the batch state and cut-off date on the organization,

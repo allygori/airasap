@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -32,20 +31,12 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const session = await mongoose.startSession();
-      let result: FinanceInventoryAdjustmentResponseDTO;
-      try {
-        await session.withTransaction(async () => {
-          result =
-            await new FinanceInventoryAdjustmentService(
-              tenantContext
-            ).post(validatedBody!, session);
-        });
-      } finally {
-        await session.endSession();
-      }
+      const result: FinanceInventoryAdjustmentResponseDTO =
+        await new FinanceInventoryAdjustmentService(
+          tenantContext
+        ).post(validatedBody!);
 
-      return apiSuccess(result!);
+      return apiSuccess(result);
     } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {
         const notFoundCodes = new Set([

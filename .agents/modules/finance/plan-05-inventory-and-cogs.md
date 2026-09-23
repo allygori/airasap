@@ -81,8 +81,10 @@ Implementation status: [CURRENT]
   by an API caller when a different approved account is required.
 - A quantity-only item can post the movement without a journal because no
   value claim is being made.
-- The posted movement and journal are created in one database transaction.
-  Posted movements are immutable; any correction is another adjustment.
+- The draft movement, journal, and posted movement are finalized in sequence
+  with stable idempotency keys for standalone MongoDB. A retry completes an
+  interrupted finalization. Posted movements are immutable; any correction is
+  another adjustment.
 - Idempotency keys replay the original posted adjustment and reject a reused
   key with different adjustment data.
 
@@ -144,7 +146,7 @@ Implementation status: [CURRENT]
   deferred` and a user-visible reason. Finance never guesses a cost.
 - HPP movement creation is idempotent. Reversing a sales journal in the
   Finance endpoint also creates an inbound `return` movement linked to the
-  reversal journal, inside the same database transaction.
+  reversal journal; retry resumes this sequence if interrupted.
 - The sales Finance screen shows whether HPP is posted or deferred and shows
   the calculated total when it is posted.
 

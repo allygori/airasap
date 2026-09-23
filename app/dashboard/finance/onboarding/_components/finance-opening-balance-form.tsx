@@ -13,17 +13,15 @@ import {
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type {
-  FinanceOpeningBalanceDraftInputDTO,
-  FinanceOpeningBalanceFinalizeResponseDTO,
-  FinanceOpeningBalancePreviewDTO,
-  FinanceOpeningBalanceSetupResponseDTO,
-} from '@/modules/finance';
 import {
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
   FinanceOpeningBalanceSetupResponseSchema,
-} from '@/modules/finance';
+  type FinanceOpeningBalanceDraftInputDTO,
+  type FinanceOpeningBalanceFinalizeResponseDTO,
+  type FinanceOpeningBalancePreviewDTO,
+  type FinanceOpeningBalanceSetupResponseDTO,
+} from '@/modules/finance/client';
 
 type FinanceOpeningBalanceFormProps = {
   enabled: boolean;
@@ -523,6 +521,11 @@ export default function FinanceOpeningBalanceForm({
     }
   };
 
+  const isResumable =
+    setup.draft?.status === 'finalizing' ||
+    setup.draft?.status === 'posted' ||
+    setup.draft?.status === 'skipped';
+
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
       <Card className="overflow-hidden">
@@ -536,17 +539,40 @@ export default function FinanceOpeningBalanceForm({
                 mengaktifkan Finance.
               </CardDescription>
             </div>
-            <Badge variant="info">Draft</Badge>
+            <Badge variant="info">
+              {isResumable ? 'Finalisasi' : 'Draft'}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-8 pt-6">
+          {isResumable && (
+            <div className="border-warning/40 bg-warning/5 flex flex-wrap items-center justify-between gap-4 rounded-lg border p-4">
+              <p className="text-sm">
+                Finalisasi sebelumnya belum mengaktifkan
+                Finance. Draft sudah dikunci agar saldo awal
+                tidak berubah. Lanjutkan untuk menyelesaikan
+                langkah yang tersisa tanpa menduplikasi
+                jurnal atau stok.
+              </p>
+              <Button
+                type="button"
+                onClick={finalizeOpeningBalance}
+                disabled={isFinalizing || finalized}
+              >
+                {isFinalizing
+                  ? 'Melanjutkan…'
+                  : 'Lanjutkan finalisasi'}
+              </Button>
+            </div>
+          )}
           <fieldset
             className="contents"
             disabled={
               isSaving ||
               isPreviewing ||
               isFinalizing ||
-              finalized
+              finalized ||
+              isResumable
             }
           >
             <div className="grid gap-4 md:grid-cols-[12rem_1fr]">
@@ -812,7 +838,10 @@ export default function FinanceOpeningBalanceForm({
                 type="button"
                 onClick={saveDraft}
                 disabled={
-                  isSaving || isPreviewing || finalized
+                  isSaving ||
+                  isPreviewing ||
+                  finalized ||
+                  isResumable
                 }
               >
                 {isSaving ? 'Menyimpan…' : 'Simpan draft'}
@@ -822,7 +851,10 @@ export default function FinanceOpeningBalanceForm({
                 variant="outline"
                 onClick={showPreview}
                 disabled={
-                  isSaving || isPreviewing || finalized
+                  isSaving ||
+                  isPreviewing ||
+                  finalized ||
+                  isResumable
                 }
               >
                 {isPreviewing

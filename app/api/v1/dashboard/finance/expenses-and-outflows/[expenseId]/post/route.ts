@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import { z } from 'zod';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
@@ -34,24 +33,15 @@ export const POST = withValidation(
 
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
-      const session = await mongoose.startSession();
-      let result: FinanceExpenseResponseDTO;
-      try {
-        result = await session.withTransaction(
-          async (): Promise<FinanceExpenseResponseDTO> =>
-            new FinanceExpenseService(tenantContext).post(
-              validatedParams!.expenseId,
-              session
-            )
+      const result: FinanceExpenseResponseDTO =
+        await new FinanceExpenseService(tenantContext).post(
+          validatedParams!.expenseId
         );
-      } finally {
-        await session.endSession();
-      }
 
       return apiSuccess(
-        result!,
+        result,
         undefined,
-        result!.replayed ? 200 : 201
+        result.replayed ? 200 : 201
       );
     } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {

@@ -16,7 +16,7 @@ import {
   FinanceInventoryAdjustmentResponseSchema,
   type FinanceInventoryAdjustmentItemOptionDTO,
   type FinanceInventoryAdjustmentLocationOptionDTO,
-} from '@/modules/finance';
+} from '@/modules/finance/client';
 
 const ActionResponseSchema = z.object({
   success: z.literal(true),

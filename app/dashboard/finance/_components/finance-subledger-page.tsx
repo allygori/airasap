@@ -19,7 +19,7 @@ import {
   type FinanceSubledgerBalanceDTO,
   type FinanceSubledgerListResponseDTO,
   type FinanceSubledgerTypeDTO,
-} from '@/modules/finance';
+} from '@/modules/finance/client';
 import type { FinanceSubledgerPaymentAccountOption } from '../_lib/load-subledger-page-data';
 
 const ActionResponseSchema = z.object({

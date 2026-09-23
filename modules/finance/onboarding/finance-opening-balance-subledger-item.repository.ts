@@ -1,6 +1,7 @@
 import { Types, type ClientSession } from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
+import { FinanceDomainError } from '../finance.error';
 import {
   FinanceOpeningBalanceSubledgerItemModel,
   type TFinanceOpeningBalanceSubledgerItem,
@@ -40,14 +41,60 @@ export class FinanceOpeningBalanceSubledgerItemRepository extends BaseRepository
     session?: ClientSession
   ): Promise<void> {
     if (records.length === 0) return;
-    const documents = records.map((record) => ({
-      ...record,
-      organization: this.tenantContext.organizationId,
-    }));
-    await this.model.insertMany(documents, {
-      ...(session ? { session } : {}),
-      ordered: true,
-    });
+    for (const record of records) {
+      const filter = {
+        ...this.getTenantFilter(),
+        opening_balance_draft: record.opening_balance_draft,
+        source_id: record.source_id,
+      };
+      try {
+        await this.model.updateOne(
+          filter,
+          {
+            $setOnInsert: {
+              ...record,
+              organization:
+                this.tenantContext.organizationId,
+            },
+          },
+          {
+            upsert: true,
+            runValidators: true,
+            ...(session ? { session } : {}),
+          }
+        );
+      } catch (error: unknown) {
+        if (
+          !error ||
+          typeof error !== 'object' ||
+          !('code' in error) ||
+          error.code !== 11000
+        ) {
+          throw error;
+        }
+      }
+
+      const query = this.model.findOne(filter);
+      if (session) query.session(session);
+      const persisted = await query
+        .lean<FinanceOpeningBalanceSubledgerItemPersistenceRecord | null>()
+        .exec();
+      if (
+        !persisted ||
+        String(persisted.journal_entry) !==
+          String(record.journal_entry) ||
+        String(persisted.account_id) !==
+          String(record.account_id) ||
+        persisted.amount !== record.amount ||
+        persisted.balance_type !== record.balance_type ||
+        persisted.status !== 'posted'
+      ) {
+        throw new FinanceDomainError(
+          'Item saldo awal berbeda dari draft yang sedang difinalisasi.',
+          'FINANCE_OPENING_BALANCE_FINALIZATION_FAILED'
+        );
+      }
+    }
   }
 
   async listPosted(

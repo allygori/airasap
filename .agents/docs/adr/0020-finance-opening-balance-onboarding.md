@@ -60,6 +60,12 @@ Products, and Reports modules remain outside this decision.
    reporting as hidden prerequisites.
 10. Opening-balance account selection uses the Finance-owned Chart of Accounts
     and default template described in ADR 0021.
+11. [CURRENT] Opening-balance finalization supports standalone MongoDB. It
+    freezes the draft as `finalizing`, writes each effect with a stable
+    idempotency key, marks the batch complete, and activates Finance last.
+    Interrupted attempts resume from the frozen draft. This is recoverable
+    sequencing, not a multi-document ACID transaction. Finance posting and
+    reversal endpoints follow the same standalone-compatible strategy.
 
 ## Consequences
 
@@ -76,6 +82,10 @@ Products, and Reports modules remain outside this decision.
 - The Finance module remains independently removable from the legacy modules;
   this decision does not require changes to Orders, Products, Reports, or
   their importers.
+- On standalone MongoDB, a failed attempt can temporarily leave some opening
+  effects persisted while Finance is still inactive. Retrying finalization
+  completes the missing effects; the batch is not exposed as active before
+  all writes succeed.
 
 ## Scope boundary
 

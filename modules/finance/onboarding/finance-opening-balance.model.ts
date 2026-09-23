@@ -181,6 +181,26 @@ FinanceOpeningBalanceDraftSchema.index(
 );
 FinanceOpeningBalanceDraftSchema.plugin(multiTenancyPlugin);
 
+const registeredModel = models.FinanceOpeningBalanceDraft;
+const registeredStatusEnum =
+  registeredModel?.schema.path('status')?.options.enum;
+const registeredStatusValues = Array.isArray(
+  registeredStatusEnum
+)
+  ? registeredStatusEnum.filter(
+      (value): value is string => typeof value === 'string'
+    )
+  : [];
+
+if (
+  registeredModel &&
+  FINANCE_OPENING_BALANCE_STATUS_VALUES.some(
+    (value) => !registeredStatusValues.includes(value)
+  )
+) {
+  delete models.FinanceOpeningBalanceDraft;
+}
+
 export const FinanceOpeningBalanceDraftModel =
   models.FinanceOpeningBalanceDraft ||
   model<TFinanceOpeningBalanceDraft>(

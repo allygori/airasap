@@ -69,8 +69,9 @@ Implementation status: [CURRENT]
   `e_wallet`, or `marketplace_balance` may be selected. Source and destination
   must be different accounts.
 - The transfer journal is balanced as Dr destination / Cr source and uses its
-  own source type and idempotency key. The source transaction and journal are
-  created or finalized in one database transaction at the API boundary.
+  own source type and idempotency key. On standalone MongoDB, the source is
+  stored first and journal/final status are written in sequence so a retry can
+  finish an interrupted request.
 - The API is `POST /api/v1/dashboard/finance/cash-and-bank-transfers` and the
   form is `/dashboard/finance/cash-and-bank-transfers`.
 - Repeating a request with the same idempotency key and payload returns the

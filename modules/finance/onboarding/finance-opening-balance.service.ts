@@ -68,7 +68,7 @@ type FinanceOpeningBalanceDraftRepositoryPort = Pick<
   Partial<
     Pick<
       FinanceOpeningBalanceDraftRepository,
-      'markFinalized'
+      'beginFinalization' | 'markFinalized'
     >
   >;
 
@@ -86,6 +86,11 @@ type FinanceOpeningBalanceJournalPort = Pick<
 type FinanceOpeningBalanceMovementPort = Pick<
   FinanceInventoryMovementRepository,
   'createPosted' | 'findByIdempotencyKey'
+>;
+
+type FinanceOpeningBalanceSubledgerPort = Pick<
+  FinanceOpeningBalanceSubledgerItemRepository,
+  'createMany'
 >;
 
 type FinanceOpeningBalancePlan = {
@@ -337,7 +342,7 @@ export class FinanceOpeningBalanceService {
   private readonly locationRepository: FinanceOpeningBalanceLocationRepositoryPort;
   private readonly journalService: FinanceOpeningBalanceJournalPort;
   private readonly movementRepository: FinanceOpeningBalanceMovementPort;
-  private readonly subledgerItemRepository: FinanceOpeningBalanceSubledgerItemRepository;
+  private readonly subledgerItemRepository: FinanceOpeningBalanceSubledgerPort;
 
   constructor(
     context: FinanceTenantContext,
@@ -349,7 +354,7 @@ export class FinanceOpeningBalanceService {
       locationRepository?: FinanceOpeningBalanceLocationRepositoryPort;
       journalService?: FinanceOpeningBalanceJournalPort;
       movementRepository?: FinanceOpeningBalanceMovementPort;
-      subledgerItemRepository?: FinanceOpeningBalanceSubledgerItemRepository;
+      subledgerItemRepository?: FinanceOpeningBalanceSubledgerPort;
     }
   ) {
     assertFinanceTenant(context);
@@ -663,7 +668,7 @@ export class FinanceOpeningBalanceService {
     FinanceOpeningBalanceFinalizeInputSchema.parse(input);
     await this.lifecycle.assertOwner();
     const state = await this.lifecycle.getState(session);
-    const draft = await this.draftRepository.findCurrent(
+    let draft = await this.draftRepository.findCurrent(
       state.onboarding_version,
       session
     );
@@ -686,21 +691,57 @@ export class FinanceOpeningBalanceService {
       }
       return this.toFinalizeResponse(draft, true);
     }
-    if (
-      state.status !== 'in_progress' ||
-      draft.status !== 'draft'
-    ) {
+    if (state.status !== 'in_progress') {
       throw new FinanceDomainError(
         'Draft opening balance tidak dapat difinalisasi pada status saat ini.',
         'FINANCE_LIFECYCLE_CONFLICT'
       );
     }
     if (
+      !this.draftRepository.beginFinalization ||
       !this.draftRepository.markFinalized ||
       !this.lifecycle.activate
     ) {
       throw new FinanceDomainError(
         'Finalisasi opening balance belum tersedia.',
+        'FINANCE_LIFECYCLE_CONFLICT'
+      );
+    }
+
+    if (draft.status === 'draft') {
+      // Report validation errors while the draft is still editable.
+      if (draft.mode === 'entered') {
+        await this.buildPlan(draft, session);
+      }
+      const claimed =
+        await this.draftRepository.beginFinalization(
+          String(draft._id),
+          session
+        );
+      draft =
+        claimed ??
+        (await this.draftRepository.findCurrent(
+          state.onboarding_version,
+          session
+        ));
+    }
+    if (
+      draft?.status === 'posted' ||
+      draft?.status === 'skipped'
+    ) {
+      await this.lifecycle.activate(
+        {
+          onboarding_version: state.onboarding_version,
+          cut_off_date: draft.cut_off_date,
+          completed_at: draft.finalized_at ?? new Date(),
+        },
+        session
+      );
+      return this.toFinalizeResponse(draft, true);
+    }
+    if (!draft || draft.status !== 'finalizing') {
+      throw new FinanceDomainError(
+        'Draft opening balance berubah saat finalisasi. Coba lagi.',
         'FINANCE_LIFECYCLE_CONFLICT'
       );
     }
@@ -755,28 +796,54 @@ export class FinanceOpeningBalanceService {
             session
           );
         if (!created) {
-          created =
-            await this.movementRepository.createPosted(
-              {
-                inventory_item: movement.item._id,
-                location: movement.location._id,
-                movement_type: 'opening_balance',
-                quantity: movement.quantity,
-                unit_cost: movement.unit_cost,
-                total_cost: movement.total_cost,
-                occurred_at: draft.cut_off_date,
-                source_type:
-                  FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
-                source_id: String(draft._id),
-                idempotency_key: idempotencyKey,
-                reference: data.description,
-                notes: `Saldo awal ${movement.item.sku}`,
-                journal_entry: new Types.ObjectId(
-                  journalEntryId
-                ),
-              },
-              session
-            );
+          try {
+            created =
+              await this.movementRepository.createPosted(
+                {
+                  inventory_item: movement.item._id,
+                  location: movement.location._id,
+                  movement_type: 'opening_balance',
+                  quantity: movement.quantity,
+                  unit_cost: movement.unit_cost,
+                  total_cost: movement.total_cost,
+                  occurred_at: draft.cut_off_date,
+                  source_type:
+                    FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
+                  source_id: String(draft._id),
+                  idempotency_key: idempotencyKey,
+                  reference: data.description,
+                  notes: `Saldo awal ${movement.item.sku}`,
+                  journal_entry: new Types.ObjectId(
+                    journalEntryId
+                  ),
+                },
+                session
+              );
+          } catch (error: unknown) {
+            if (!isDuplicateKeyError(error)) throw error;
+            created =
+              await this.movementRepository.findByIdempotencyKey(
+                idempotencyKey,
+                session
+              );
+            if (!created) throw error;
+          }
+        }
+        if (
+          created.status !== 'posted' ||
+          String(created.inventory_item) !==
+            String(movement.item._id) ||
+          String(created.location) !==
+            String(movement.location._id) ||
+          String(created.journal_entry) !==
+            journalEntryId ||
+          created.quantity !== movement.quantity ||
+          created.total_cost !== movement.total_cost
+        ) {
+          throw new FinanceDomainError(
+            'Movement saldo awal berbeda dari draft yang sedang difinalisasi.',
+            'FINANCE_OPENING_BALANCE_FINALIZATION_FAILED'
+          );
         }
         movementIds.push(created._id);
       }

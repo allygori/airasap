@@ -128,6 +128,30 @@ export class FinanceOpeningBalanceDraftRepository extends BaseRepository<TFinanc
       .exec();
   }
 
+  async beginFinalization(
+    id: string,
+    session?: ClientSession
+  ): Promise<FinanceOpeningBalanceDraftPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    return this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          _id: new Types.ObjectId(id),
+          status: 'draft',
+        },
+        { $set: { status: 'finalizing' } },
+        {
+          returnDocument: 'after',
+          runValidators: true,
+          ...(session ? { session } : {}),
+        }
+      )
+      .lean<FinanceOpeningBalanceDraftPersistenceRecord | null>()
+      .exec();
+  }
+
   async markFinalized(
     id: string,
     status: Extract<
@@ -148,7 +172,7 @@ export class FinanceOpeningBalanceDraftRepository extends BaseRepository<TFinanc
       {
         ...this.getTenantFilter(),
         _id: new Types.ObjectId(id),
-        status: 'draft',
+        status: 'finalizing',
       },
       {
         $set: {

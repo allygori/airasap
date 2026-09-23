@@ -21,11 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type {
-  FinanceSalesTransactionListQueryDTO,
-  FinanceSalesTransactionListResponseDTO,
-} from '@/modules/finance';
-import { FinanceSalesWorkflowResultSchema } from '@/modules/finance/sales/finance-sales.schema';
+import {
+  FinanceSalesWorkflowResultSchema,
+  type FinanceSalesTransactionListQueryDTO,
+  type FinanceSalesTransactionListResponseDTO,
+} from '@/modules/finance/client';
 
 const ActionResponseSchema = z.object({
   success: z.literal(true),

@@ -39,8 +39,9 @@ Implementation status: [CURRENT]
 - A purchase starts as `draft`. Draft creation only validates and snapshots
   inventory item/location data; it does not create a journal or change stock.
 - Posting creates a balanced journal and one posted `purchase` inventory
-  movement per line in the same database transaction. Inventory lines are
-  limited to active items that track both quantity and value.
+  movement per line. On standalone MongoDB, stable idempotency keys let a retry
+  finish interrupted movement finalization. Inventory lines are limited to
+  active items that track both quantity and value.
 - Payment timing is explicit: `paid` credits a selected active Cash, Bank,
   E-wallet, or Marketplace Balance account; `payable` credits the configured
   Accounts Payable account (subtype `accounts_payable`, with `2100` as the
@@ -113,9 +114,11 @@ Implementation status: [CURRENT]
   Receivable and posted `purchase`/`expense` journals that credit Accounts
   Payable as Hutang Usaha. Only outstanding source journals are shown.
 - A settlement is stored in the Finance-owned `finance_settlements` collection
-  and posted in one database transaction. Receivable settlement debits the
-  selected Kas/Bank account and credits Piutang; payable settlement debits
-  Utang Usaha and credits the selected Kas/Bank account.
+  and posted with a stable journal idempotency key. On standalone MongoDB,
+  journal creation and settlement finalization are separate recoverable steps.
+  Receivable settlement debits the selected Kas/Bank account and credits
+  Piutang; payable settlement debits Utang Usaha and credits the selected
+  Kas/Bank account.
 - Partial settlement is allowed up to the outstanding amount. A fully settled
   source disappears from the open-balance list, while a partially settled
   source remains with its reduced balance. Repeating the same idempotency key

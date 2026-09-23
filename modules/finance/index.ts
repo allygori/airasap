@@ -1,3 +1,4 @@
+/** Server-side Finance API. Client Components must import from ./client. */
 export { FinanceDomainError } from './finance.error';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';

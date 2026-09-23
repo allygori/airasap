@@ -109,6 +109,15 @@ FinanceInventoryMovementSchema.index({
   location: 1,
   occurred_at: 1,
 });
+FinanceInventoryMovementSchema.index(
+  { organization: 1, idempotency_key: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      idempotency_key: { $exists: true },
+    },
+  }
+);
 FinanceInventoryMovementSchema.plugin(multiTenancyPlugin);
 
 export const FinanceInventoryMovementModel =

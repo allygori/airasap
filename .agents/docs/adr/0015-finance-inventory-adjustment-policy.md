@@ -37,9 +37,10 @@ The posting rules are:
    decrease posts `Dr Offset / Cr Inventory`.
 5. Quantity-only items post the movement without a journal because Finance has
    no value claim to record.
-6. The movement and journal are finalized in one database transaction. A
-   posted adjustment cannot be edited or deleted; a correction is a new
-   adjustment.
+6. On standalone MongoDB, the draft movement, journal, and posted movement are
+   written in order with stable idempotency keys. If finalization is interrupted,
+   retry reuses the journal and completes the movement. A posted adjustment
+   cannot be edited or deleted; a correction is a new adjustment.
 7. An idempotency key is persisted. Replaying the same request returns the
    posted result, while reusing the key with different data is rejected.
 

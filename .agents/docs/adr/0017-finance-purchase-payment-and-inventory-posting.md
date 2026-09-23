@@ -22,7 +22,9 @@ Products, Reports, and their importers must remain unchanged.
    Finance inventory item and location, stores item/location snapshots, and
    requires quantity and value tracking.
 3. Posting creates one balanced journal and one posted `purchase` inventory
-   movement per line in the same database transaction:
+   movement per line. On standalone MongoDB, the journal and movements are
+   finalized in sequence with stable idempotency keys; retry completes any
+   interrupted movement finalization:
    - debit the configured inventory account for each line;
    - credit the selected payment account when `payment_timing` is `paid`;
    - credit Accounts Payable when `payment_timing` is `payable`.
@@ -50,4 +52,3 @@ Products, Reports, and their importers must remain unchanged.
 This decision applies only to the new Finance module. It does not modify or
 replace existing Orders, Products, Reports, legacy Expense code, or their
 importers.
-

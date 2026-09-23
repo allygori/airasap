@@ -104,7 +104,11 @@ const makeDraft =
       },
     ],
     payable_lines: [
-      { account_id: payableId, amount: 200_000 },
+      {
+        account_id: payableId,
+        amount: 200_000,
+        counterparty: 'Supplier A',
+      },
     ],
     receivable_lines: [],
     owner_capital_account_id: equityId,
@@ -129,7 +133,11 @@ const input = {
     },
   ],
   payable_lines: [
-    { account_id: String(payableId), amount: 200_000 },
+    {
+      account_id: String(payableId),
+      amount: 200_000,
+      counterparty: 'Supplier A',
+    },
   ],
   receivable_lines: [],
   owner_capital_account_id: String(equityId),
@@ -228,5 +236,242 @@ describe('FinanceOpeningBalanceService', () => {
     ).rejects.toMatchObject<Partial<FinanceDomainError>>({
       code: 'FINANCE_OPENING_BALANCE_LOCATION_INVALID',
     });
+  });
+
+  it('finalizes a zero opening balance without a MongoDB session and replays after activation', async () => {
+    let status: 'in_progress' | 'active' = 'in_progress';
+    const draft = {
+      ...makeDraft(),
+      mode: 'zero' as const,
+      cash_bank_lines: [],
+      inventory_lines: [],
+      payable_lines: [],
+      owner_capital_amount: 0,
+    };
+    const beginFinalization = jest.fn(async () => {
+      draft.status = 'finalizing';
+      return draft;
+    });
+    const markFinalized = jest.fn(async () => {
+      draft.status = 'skipped';
+      return draft;
+    });
+    const activate = jest.fn(async () => {
+      status = 'active';
+      return {
+        status: 'active' as const,
+        onboarding_version: 1,
+      };
+    });
+    const service = new FinanceOpeningBalanceService(
+      { organizationId },
+      {
+        lifecycle: {
+          assertOwner: jest.fn(async () => true),
+          getState: jest.fn(async () => ({
+            status,
+            onboarding_version: 1,
+          })),
+          activate,
+        },
+        draftRepository: {
+          findCurrent: jest.fn(async () => draft),
+          createDraft: jest.fn(async () => draft),
+          updateDraft: jest.fn(async () => draft),
+          beginFinalization,
+          markFinalized,
+        },
+      }
+    );
+
+    const first = await service.finalize({
+      confirmed: true,
+    });
+    const replay = await service.finalize({
+      confirmed: true,
+    });
+
+    expect(first).toMatchObject({
+      status: 'skipped',
+      finance_status: 'active',
+      replayed: false,
+    });
+    expect(replay.replayed).toBe(true);
+    expect(beginFinalization).toHaveBeenCalledTimes(1);
+    expect(markFinalized).toHaveBeenCalledTimes(1);
+    expect(activate).toHaveBeenCalledTimes(1);
+  });
+
+  it('resumes a frozen draft after a subledger write fails without duplicating the journal', async () => {
+    let status: 'in_progress' | 'active' = 'in_progress';
+    const draft = {
+      ...makeDraft(),
+      cash_bank_lines: [
+        { account_id: cashId, amount: 1_000_000 },
+      ],
+      inventory_lines: [],
+      payable_lines: [
+        {
+          account_id: payableId,
+          amount: 200_000,
+          counterparty: 'Supplier A',
+        },
+      ],
+      owner_capital_amount: 800_000,
+    };
+    const journalId = new Types.ObjectId(
+      '507f1f77bcf86cd799439019'
+    );
+    const postOperational = jest.fn(
+      async (_input: unknown) => ({
+        journal_entry: {
+          id: String(journalId),
+          entry_number: 'FIN-OPENING-1',
+          transaction_date: '2026-09-20T00:00:00.000Z',
+          posting_date: '2026-09-20T00:00:00.000Z',
+          period: '2026-09',
+          currency: 'IDR',
+          description: 'Saldo awal Finance',
+          source_type: 'opening_balance',
+          source_id: String(draft._id),
+          source_event: 'opening_balance_posted',
+          idempotency_key: 'opening-test',
+          status: 'posted' as const,
+          posted_at: '2026-09-20T00:00:00.000Z',
+          posted_by: null,
+          reversal_of: null,
+          lines: [],
+        },
+        replayed: false,
+      })
+    );
+    const createMany = jest
+      .fn()
+      .mockRejectedValueOnce(new Error('write interrupted'))
+      .mockResolvedValue(undefined);
+    const markFinalized = jest.fn(async () => {
+      draft.status = 'posted';
+      draft.journal_entry = journalId;
+      return draft;
+    });
+    const service = new FinanceOpeningBalanceService(
+      { organizationId },
+      {
+        lifecycle: {
+          assertOwner: jest.fn(async () => true),
+          getState: jest.fn(async () => ({
+            status,
+            onboarding_version: 1,
+          })),
+          activate: jest.fn(async () => {
+            status = 'active';
+            return {
+              status: 'active' as const,
+              onboarding_version: 1,
+            };
+          }),
+        },
+        draftRepository: {
+          findCurrent: jest.fn(async () => draft),
+          createDraft: jest.fn(async () => draft),
+          updateDraft: jest.fn(async () => draft),
+          beginFinalization: jest.fn(async () => {
+            draft.status = 'finalizing';
+            return draft;
+          }),
+          markFinalized,
+        },
+        accountRepository: {
+          list: jest.fn(async () => accounts),
+          findSelectableByIds: jest.fn(
+            async () => accounts
+          ),
+        },
+        itemRepository: {
+          listActive: jest.fn(async () => ({
+            records: [],
+            total: 0,
+          })),
+          findActiveById: jest.fn(async () => null),
+        },
+        locationRepository: {
+          listActive: jest.fn(async () => []),
+          findActiveById: jest.fn(async () => null),
+        },
+        journalService: { postOperational },
+        subledgerItemRepository: { createMany },
+      }
+    );
+
+    await expect(
+      service.finalize({ confirmed: true })
+    ).rejects.toThrow('write interrupted');
+    expect(draft.status).toBe('finalizing');
+    expect(markFinalized).not.toHaveBeenCalled();
+
+    const result = await service.finalize({
+      confirmed: true,
+    });
+
+    expect(result).toMatchObject({
+      status: 'posted',
+      finance_status: 'active',
+      payable_item_count: 1,
+    });
+    expect(postOperational).toHaveBeenCalledTimes(2);
+    expect(postOperational.mock.calls[0][0]).toEqual(
+      postOperational.mock.calls[1][0]
+    );
+    expect(createMany).toHaveBeenCalledTimes(2);
+    expect(markFinalized).toHaveBeenCalledTimes(1);
+  });
+
+  it('activates a batch already marked complete after an interrupted activation', async () => {
+    const draft = {
+      ...makeDraft(),
+      status: 'skipped' as const,
+      mode: 'zero' as const,
+      finalized_at: new Date('2026-09-20T01:00:00.000Z'),
+    };
+    const activate = jest.fn(async () => ({
+      status: 'active' as const,
+      onboarding_version: 1,
+    }));
+    const service = new FinanceOpeningBalanceService(
+      { organizationId },
+      {
+        lifecycle: {
+          assertOwner: jest.fn(async () => true),
+          getState: jest.fn(async () => ({
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+          })),
+          activate,
+        },
+        draftRepository: {
+          findCurrent: jest.fn(async () => draft),
+          createDraft: jest.fn(async () => draft),
+          updateDraft: jest.fn(async () => draft),
+          beginFinalization: jest.fn(async () => null),
+          markFinalized: jest.fn(async () => null),
+        },
+      }
+    );
+
+    const result = await service.finalize({
+      confirmed: true,
+    });
+
+    expect(result).toMatchObject({
+      status: 'skipped',
+      finance_status: 'active',
+      replayed: true,
+    });
+    expect(activate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        completed_at: draft.finalized_at,
+      }),
+      undefined
+    );
   });
 });

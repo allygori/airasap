@@ -10,8 +10,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import type { FinanceState } from '@/modules/finance';
-import type { FinanceReadinessDTO } from '@/modules/finance';
+import type {
+  FinanceState,
+  FinanceReadinessDTO,
+} from '@/modules/finance/client';
 import FinanceOpeningBalanceForm from './finance-opening-balance-form';
 
 type FinanceOnboardingData = {

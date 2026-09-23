@@ -17,7 +17,7 @@ import {
   FinancePurchaseResponseSchema,
   type FinancePurchaseListResponseDTO,
   type FinancePurchaseSummaryDTO,
-} from '@/modules/finance';
+} from '@/modules/finance/client';
 
 type PurchaseItemOption = {
   id: string;

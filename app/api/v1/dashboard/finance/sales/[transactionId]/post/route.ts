@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import mongoose from 'mongoose';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { withValidation } from '@/lib/api/validate';
 import {
@@ -43,22 +42,12 @@ export const POST = withValidation(
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
 
-      const session = await mongoose.startSession();
-      let result: FinanceSalesWorkflowResultDTO;
-      try {
-        await session.withTransaction(async () => {
-          result = await new FinanceSalesWorkflowService(
-            tenantContext
-          ).postTransaction(
-            validatedParams!.transactionId,
-            session
-          );
-        });
-      } finally {
-        await session.endSession();
-      }
+      const result: FinanceSalesWorkflowResultDTO =
+        await new FinanceSalesWorkflowService(
+          tenantContext
+        ).postTransaction(validatedParams!.transactionId);
 
-      return apiSuccess(result!);
+      return apiSuccess(result);
     } catch (error: unknown) {
       if (error instanceof FinanceDomainError) {
         const status =
