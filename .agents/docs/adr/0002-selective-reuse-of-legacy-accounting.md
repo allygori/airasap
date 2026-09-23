@@ -1,6 +1,6 @@
 # ADR 0002 — Selective Reuse of Existing Accounting Components
 
-Status: Accepted
+Status: Superseded by [ADR 0021](0021-finance-owned-chart-of-accounts.md)
 
 ## Context
 

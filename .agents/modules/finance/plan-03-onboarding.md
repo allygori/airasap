@@ -65,7 +65,7 @@ seller problem.
 Required setup:
 
 - a Finance cut-off date;
-- a usable Finance Chart of Accounts template or existing COA selection;
+- a usable Finance-owned Chart of Accounts template;
 - confirmation that Finance should be activated after validation;
 - an explicit opening-balance choice: enter balances now or start at zero.
 
@@ -99,6 +99,9 @@ Implementation status:
 - The onboarding UI now supports cut-off date, explicit entered/zero mode,
   cash and bank balances, detailed inventory lines, payable/receivable draft
   lines, and owner capital input.
+- Finance seeds its own default CoA into `finance_accounts` when the owner
+  starts onboarding. The seed is idempotent and does not read or migrate old
+  Accounting data.
 - Saving a draft does not create a journal, inventory movement, subledger
   source, or active Finance state.
 
@@ -148,20 +151,12 @@ Implementation status:
   zero-start choice records a skipped opening batch and activates Finance
   without ledger entries.
 - Posted journal and movement records are not editable through onboarding.
-  This phase does not seed or migrate Chart of Accounts data; Finance uses the
-  available Finance COA adapter and validates any accounts used by the opening
-  input.
+  Finance validates all selected accounts against its own CoA collection.
 
 Period locking before the cut-off date, tax setup, and financial reporting are
 deliberately outside this phase. The cut-off date is still required as the
 reference point for the opening batch; it must not be described as a complete
 historical period-locking feature until that control is implemented.
-
-## Open questions
-
-- Should Finance provide its own account-template seeding for organizations
-  that do not already have usable COA records, or is the existing COA adapter
-  and data lifecycle sufficient after legacy Accounting is removed?
 
 ## Not in scope
 
@@ -169,5 +164,5 @@ historical period-locking feature until that control is implemented.
 - bank statement import;
 - advanced tax setup;
 - currency and timezone configuration;
-- automatic migration of legacy accounting opening balances;
+- migration of legacy Accounting accounts, opening balances, or journals;
 - replacing existing organization/store setup.

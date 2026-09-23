@@ -9,8 +9,27 @@ import {
   FinanceAccountRepository,
   type FinanceAccountPersistenceRecord,
 } from './finance-account.repository';
-import { FinanceAccountResponseSchema } from './finance-account.schema';
-import type { FinanceTenantContext } from '../finance.types';
+import {
+  FinanceAccountResponseSchema,
+  FinanceAccountTemplateRecordSchema,
+} from './finance-account.schema';
+import {
+  assertFinanceTenant,
+  type FinanceTenantContext,
+} from '../finance.types';
+import accountTemplate from './finance-account.seed.json';
+
+type FinanceAccountRepositoryPort = Pick<
+  FinanceAccountRepository,
+  | 'list'
+  | 'findSelectableById'
+  | 'findByCode'
+  | 'upsertDefaultAccount'
+>;
+
+type FinanceAccountServiceDependencies = {
+  repository?: FinanceAccountRepositoryPort;
+};
 
 const mapAccount = (
   record: FinanceAccountPersistenceRecord,
@@ -77,10 +96,92 @@ const getDepths = (
 };
 
 export class FinanceAccountService {
-  private readonly repository: FinanceAccountRepository;
+  private readonly repository: FinanceAccountRepositoryPort;
+  private readonly context: FinanceTenantContext;
 
-  constructor(context: FinanceTenantContext) {
-    this.repository = new FinanceAccountRepository(context);
+  constructor(
+    context: FinanceTenantContext,
+    dependencies?: FinanceAccountServiceDependencies
+  ) {
+    assertFinanceTenant(context);
+    this.context = context;
+    this.repository =
+      dependencies?.repository ??
+      new FinanceAccountRepository(context);
+  }
+
+  async ensureDefaultAccounts(
+    session?: ClientSession
+  ): Promise<{
+    organization_id: string;
+    account_count: number;
+  }> {
+    const pending =
+      FinanceAccountTemplateRecordSchema.array().parse(
+        accountTemplate.accounts
+      );
+    const accountsByCode = new Map<
+      string,
+      FinanceAccountPersistenceRecord
+    >();
+
+    while (pending.length > 0) {
+      const ready = pending.filter(
+        (record) =>
+          record.parent_code === null ||
+          accountsByCode.has(record.parent_code)
+      );
+
+      if (ready.length === 0) {
+        throw new FinanceDomainError(
+          'Template Chart of Accounts Finance memiliki hierarki yang tidak valid.',
+          'FINANCE_ACCOUNT_TEMPLATE_INVALID'
+        );
+      }
+
+      for (const record of ready) {
+        const parent = record.parent_code
+          ? accountsByCode.get(record.parent_code)
+          : undefined;
+        const {
+          parent_code: _parentCode,
+          ...accountRecord
+        } = record;
+        const account =
+          await this.repository.upsertDefaultAccount(
+            accountRecord,
+            parent?._id ?? null,
+            session
+          );
+
+        if (!account) {
+          throw new FinanceDomainError(
+            `Gagal menyiapkan akun Finance ${record.code}.`,
+            'FINANCE_ACCOUNT_SEED_FAILED'
+          );
+        }
+
+        accountsByCode.set(record.code, account);
+      }
+
+      const readyCodes = new Set(
+        ready.map((record) => record.code)
+      );
+      for (
+        let index = pending.length - 1;
+        index >= 0;
+        index -= 1
+      ) {
+        if (readyCodes.has(pending[index].code)) {
+          pending.splice(index, 1);
+        }
+      }
+    }
+
+    return {
+      organization_id: this.context.organizationId,
+      account_count: accountsByCode.size,
+    };
   }
 
   async list(

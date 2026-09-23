@@ -7,9 +7,28 @@ import {
   FinanceAccountModel,
   type TFinanceAccount,
 } from './finance-account.model';
-import { assertFinanceTenant } from '../finance.types';
-import type { FinanceTenantContext } from '../finance.types';
+import {
+  assertFinanceTenant,
+  type FinanceTenantContext,
+} from '../finance.types';
 import type { FinanceAccountFilterDTO } from './finance-account.dto';
+import type {
+  FinanceAccountType,
+  FinanceNormalBalance,
+} from './finance-account.constants';
+
+export type FinanceAccountSeedRecord = {
+  code: string;
+  name: string;
+  type: FinanceAccountType;
+  subtype?: string;
+  normal_balance: FinanceNormalBalance;
+  is_system: boolean;
+  is_postable: boolean;
+  is_active: boolean;
+  display_order: number;
+  description?: string;
+};
 
 export type FinanceAccountPersistenceRecord = {
   _id: Types.ObjectId;
@@ -36,11 +55,14 @@ export type FinanceAccountPersistenceRecord = {
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/**
- * Compatibility boundary for the existing accounting_accounts collection.
- * Finance owns the query contract; the old model remains only as a temporary
- * persistence adapter until the legacy accounting module is removed.
- */
+const isDuplicateKeyError = (
+  error: unknown
+): error is { code: number } =>
+  typeof error === 'object' &&
+  error !== null &&
+  'code' in error &&
+  error.code === 11000;
+
 export class FinanceAccountRepository {
   private readonly organizationId: Types.ObjectId;
 
@@ -49,6 +71,57 @@ export class FinanceAccountRepository {
     this.organizationId = new Types.ObjectId(
       context.organizationId
     );
+  }
+
+  async findByCode(
+    code: string,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    const query = FinanceAccountModel.findOne({
+      organization: this.organizationId,
+      code,
+    });
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
+  async upsertDefaultAccount(
+    record: FinanceAccountSeedRecord,
+    parentAccount: Types.ObjectId | null,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    try {
+      const query = FinanceAccountModel.findOneAndUpdate(
+        {
+          organization: this.organizationId,
+          code: record.code,
+        },
+        {
+          $setOnInsert: {
+            ...record,
+            organization: this.organizationId,
+            parent_account: parentAccount,
+          },
+        },
+        {
+          upsert: true,
+          returnDocument: 'after',
+          runValidators: true,
+          ...(session ? { session } : {}),
+        }
+      );
+
+      return await query
+        .lean<FinanceAccountPersistenceRecord | null>()
+        .exec();
+    } catch (error: unknown) {
+      if (!isDuplicateKeyError(error)) throw error;
+      return this.findByCode(record.code, session);
+    }
   }
 
   async list(

@@ -5,30 +5,28 @@ Status: [TARGET]
 ## Goal
 
 Establish the minimum double-entry accounting core used by all Finance
-transactions while reusing proven accounting components where safe.
+transactions, with Finance-owned persistence and contracts.
 
 ## Reuse direction
 
-The existing Chart of Accounts taxonomy and seed are a direct reuse candidate.
-The existing account model, repository, resolver, and journal implementation
-must be reviewed before deciding whether they can remain canonical or need a
-Finance adapter.
-
-New Finance-owned concepts must not be forced into an incompatible legacy
-contract.
+The old account taxonomy is a reference for the Finance-owned default template.
+Finance owns the account model, repository, seed lifecycle, and API contract;
+no runtime import from `modules/accounting` is permitted. New Finance concepts
+must not be forced into a legacy persistence contract.
 
 ## Implementation progress
 
-### Phase 2.1 — [CURRENT] Chart of Accounts adapter
+### Phase 2.1 — [CURRENT / IMPLEMENTED] Finance-owned Chart of Accounts
 
 Finance now exposes its own account filter, response DTO, service, repository,
-model, and route under the Finance namespace. The Finance model reads the
-existing `accounting_accounts` collection so existing COA data remains
-available during the transition, but it does not import the legacy accounting
-service, resolver, model, page, or UI. The Finance contract exposes hierarchy
-depth and an explicit `is_selectable` flag, which is true only for active,
-postable accounts. Role-based account mapping is intentionally not persisted
-in this phase and remains part of onboarding design.
+model, and route under the Finance namespace. Finance persists its own chart in
+`finance_accounts` and owns the default template in
+`finance-account.seed.json`; the template is initialized idempotently when an
+organization owner starts Finance onboarding. No Accounting model, service,
+resolver, or collection is used at runtime. The Finance contract exposes
+hierarchy depth and an explicit `is_selectable` flag, which is true only for
+active, postable accounts. Role-based account mapping is intentionally not
+persisted in this phase and remains part of onboarding design.
 
 ### Phase 2.2 — [CURRENT] Operational journal posting contract
 
@@ -62,15 +60,18 @@ large histories.
 
 ### Phase 2.1 — Chart of Accounts contract
 
-Verify the existing account taxonomy, account types, postable/group behavior,
-account mappings, and operational metadata.
+Define the Finance account taxonomy, default tree, postability rules, and
+account roles needed by Finance transactions.
 
 Acceptance criteria:
 
 - account hierarchy supports the Finance menu requirements;
 - account selection validates active and postable accounts;
-- logical roles do not depend only on hardcoded account numbers;
-- reuse or replacement of each account component is documented.
+- Finance owns a separate account collection and an organization-scoped
+  default account template;
+- account selection validates active and postable Finance accounts;
+- logical roles resolve from Finance account subtypes before fallback codes;
+- Finance's account code imports no legacy Accounting module.
 
 ### Phase 2.2 — Journal posting contract
 

@@ -34,12 +34,12 @@ posting finance ketika Finance aktif dan prasyarat posting terpenuhi.
 
 1. Finance optional. Organisasi dapat menggunakan aplikasi dasar tanpa
    onboarding atau posting Finance.
-2. Finance baru memiliki contract, service, repository, dan API boundary
-   sendiri.
+2. Finance memiliki contract, service, repository, API boundary, dan collection
+   CoA sendiri.
 3. Infrastruktur bersama tetap digunakan: koneksi database, auth, tenant
    context, validasi, response envelope, dan komponen UI yang relevan.
-4. Komponen atau logic accounting lama boleh digunakan jika sudah diverifikasi
-   cocok. Chart of Accounts lama adalah reuse candidate utama.
+4. Logic atau data lama hanya boleh menjadi referensi. Finance tidak boleh
+   memiliki dependency runtime pada modul Accounting lama.
 5. Jangan menduplikasi master data yang masih valid. Order lama tetap menjadi
    referensi order; Product lama tetap menjadi referensi product.
 6. Jurnal posted immutable. Koreksi dilakukan melalui reversal atau transaksi
@@ -83,7 +83,8 @@ Reuse is selective, not automatic.
 
 Likely reuse candidates:
 
-- existing Chart of Accounts seed and account taxonomy;
+- existing Chart of Accounts taxonomy as a reviewed reference, copied into a
+  Finance-owned seed rather than imported at runtime;
 - validated account tree behavior;
 - existing shared form primitives;
 - existing tenant/auth/database infrastructure;
@@ -105,8 +106,6 @@ Do not copy old accounting side effects into the new importer without review.
 
 - Should Finance activation state reuse the old organization accounting state or
   use a new Finance-owned state?
-- Which old accounting collections remain canonical, especially COA and
-  journal entries?
 - Which order statuses create Finance events?
 - Is order posting automatic, manual, or configurable per organization?
 - Should existing eligible orders be backfilled after Finance activation?
@@ -124,4 +123,3 @@ capability. Phases remain sections inside the plan files unless a phase becomes
 large enough to require its own document.
 
 Architecture rationale and stable decisions belong under .agents/docs/adr/.
-

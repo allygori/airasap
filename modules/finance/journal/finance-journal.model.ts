@@ -51,7 +51,7 @@ const FinanceJournalLineMongooseSchema =
     {
       account_id: {
         type: Schema.Types.ObjectId,
-        ref: 'FinanceAccount',
+        ref: 'FinanceChartAccount',
         required: true,
       },
       debit: { type: Number, required: true, min: 0 },

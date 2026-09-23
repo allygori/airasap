@@ -12,6 +12,22 @@ export const FinanceNormalBalanceSchema = z.enum(
   FINANCE_NORMAL_BALANCE_VALUES
 );
 
+export const FinanceAccountTemplateRecordSchema = z
+  .object({
+    code: z.string().trim().min(1),
+    name: z.string().trim().min(1),
+    type: FinanceAccountTypeSchema,
+    subtype: z.string().trim().min(1).optional(),
+    parent_code: z.string().trim().min(1).nullable(),
+    normal_balance: FinanceNormalBalanceSchema,
+    is_system: z.boolean(),
+    is_postable: z.boolean(),
+    is_active: z.boolean(),
+    display_order: z.number().int(),
+    description: z.string().trim().optional(),
+  })
+  .strict();
+
 const BooleanQuerySchema = z
   .enum(['true', 'false'])
   .transform((value) => value === 'true');

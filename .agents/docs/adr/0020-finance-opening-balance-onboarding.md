@@ -58,6 +58,8 @@ Products, and Reports modules remain outside this decision.
 9. Do not add currency or accounting-timezone configuration to this first
    onboarding scope. Do not add bank-statement import, advanced tax setup, or
    reporting as hidden prerequisites.
+10. Opening-balance account selection uses the Finance-owned Chart of Accounts
+    and default template described in ADR 0021.
 
 ## Consequences
 
@@ -74,12 +76,6 @@ Products, and Reports modules remain outside this decision.
 - The Finance module remains independently removable from the legacy modules;
   this decision does not require changes to Orders, Products, Reports, or
   their importers.
-
-## Follow-up work
-
-- Decide whether Finance should seed a default Chart of Accounts for
-  organizations without existing usable COA data, rather than relying on the
-  Finance adapter to the existing account collection.
 
 ## Scope boundary
 

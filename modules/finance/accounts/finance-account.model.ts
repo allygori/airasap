@@ -54,7 +54,7 @@ const FinanceAccountSchema = new Schema<TFinanceAccount>(
     subtype: { type: String },
     parent_account: {
       type: Schema.Types.ObjectId,
-      ref: 'FinanceAccount',
+      ref: 'FinanceChartAccount',
       default: null,
     },
     normal_balance: {
@@ -94,14 +94,10 @@ FinanceAccountSchema.index({
 
 FinanceAccountSchema.plugin(multiTenancyPlugin);
 
-/**
- * The collection name is retained so existing COA data remains available
- * during the transition away from the legacy accounting module.
- */
 export const FinanceAccountModel =
-  models.FinanceAccount ||
+  models.FinanceChartAccount ||
   model<TFinanceAccount>(
-    'FinanceAccount',
+    'FinanceChartAccount',
     FinanceAccountSchema,
-    'accounting_accounts'
+    'finance_accounts'
   );

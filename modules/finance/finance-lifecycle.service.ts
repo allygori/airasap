@@ -1,6 +1,7 @@
 import { Types, type ClientSession } from 'mongoose';
 import { MemberModel } from '@/modules/members/member.model';
 import { OrganizationRepository } from '@/modules/organizations/organization.repository';
+import { FinanceAccountService } from './accounts/finance-account.service';
 import { FinanceDomainError } from './finance.error';
 import {
   assertFinanceTenant,
@@ -40,12 +41,18 @@ type FinanceLifecycleRepository = {
 type FinanceLifecycleDependencies = {
   organizationRepository?: FinanceLifecycleRepository;
   ownerAccessChecker?: () => Promise<boolean>;
+  defaultAccountInitializer?: (
+    session?: ClientSession
+  ) => Promise<unknown>;
 };
 
 export class FinanceLifecycleService {
   private readonly organizationRepository: FinanceLifecycleRepository;
   private readonly context: FinanceTenantContext;
   private readonly ownerAccessChecker: () => Promise<boolean>;
+  private readonly defaultAccountInitializer: (
+    session?: ClientSession
+  ) => Promise<unknown>;
 
   constructor(
     context: FinanceTenantContext,
@@ -61,6 +68,12 @@ export class FinanceLifecycleService {
     this.ownerAccessChecker =
       dependencies?.ownerAccessChecker ??
       (() => this.hasOwnerAccess());
+    this.defaultAccountInitializer =
+      dependencies?.defaultAccountInitializer ??
+      ((session) =>
+        new FinanceAccountService(
+          context
+        ).ensureDefaultAccounts(session));
   }
 
   async getState(
@@ -189,6 +202,8 @@ export class FinanceLifecycleService {
         'FINANCE_ONBOARDING_ALREADY_COMPLETED'
       );
     }
+
+    await this.defaultAccountInitializer(session);
 
     if (current.status === 'in_progress') {
       return current;

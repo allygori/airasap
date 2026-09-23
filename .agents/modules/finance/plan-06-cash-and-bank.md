@@ -30,7 +30,7 @@ Acceptance criteria:
 
 Implementation status: [CURRENT]
 
-- Finance reads eligible postable asset accounts from the existing COA. The
+- Finance reads eligible postable asset accounts from its own COA. The
   first view includes `cash`, `bank`, `e_wallet`, and
   `marketplace_balance` subtypes; group accounts and receivables are excluded.
 - Current balances are calculated from posted journal lines using each

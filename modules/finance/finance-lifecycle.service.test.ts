@@ -68,6 +68,9 @@ describe('FinanceLifecycleService readiness', () => {
 
   it('keeps an in-progress onboarding start request idempotent', async () => {
     const startFinance = jest.fn(async () => null);
+    const defaultAccountInitializer = jest.fn(
+      async () => undefined
+    );
     const service = new FinanceLifecycleService(
       { organizationId, userId: 'user-1' },
       {
@@ -81,6 +84,7 @@ describe('FinanceLifecycleService readiness', () => {
           startFinance,
         },
         ownerAccessChecker: jest.fn(async () => true),
+        defaultAccountInitializer,
       }
     );
 
@@ -88,5 +92,39 @@ describe('FinanceLifecycleService readiness', () => {
 
     expect(result.status).toBe('in_progress');
     expect(startFinance).not.toHaveBeenCalled();
+    expect(defaultAccountInitializer).toHaveBeenCalledTimes(
+      1
+    );
+  });
+
+  it('seeds Finance accounts before starting onboarding', async () => {
+    const calls: string[] = [];
+    const service = new FinanceLifecycleService(
+      { organizationId, userId: 'user-1' },
+      {
+        organizationRepository: {
+          findFinanceState: jest.fn(async () => ({
+            finance: undefined,
+          })),
+          startFinance: jest.fn(async () => {
+            calls.push('start');
+            return {
+              finance: {
+                status: 'in_progress' as const,
+                onboarding_version: 1,
+              },
+            };
+          }),
+        },
+        ownerAccessChecker: jest.fn(async () => true),
+        defaultAccountInitializer: jest.fn(async () => {
+          calls.push('seed');
+        }),
+      }
+    );
+
+    await service.start();
+
+    expect(calls).toEqual(['seed', 'start']);
   });
 });

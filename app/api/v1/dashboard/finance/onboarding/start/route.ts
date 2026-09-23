@@ -42,7 +42,14 @@ export async function POST() {
             : error.code ===
                 'FINANCE_ORGANIZATION_NOT_FOUND'
               ? 404
-              : 400;
+              : error.code === 'FINANCE_LIFECYCLE_CONFLICT'
+                ? 409
+                : error.code ===
+                      'FINANCE_ACCOUNT_TEMPLATE_INVALID' ||
+                    error.code ===
+                      'FINANCE_ACCOUNT_SEED_FAILED'
+                  ? 500
+                  : 400;
 
       return apiError(error.code, error.message, status);
     }
