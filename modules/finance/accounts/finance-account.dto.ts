@@ -1,7 +1,9 @@
 import {
   FinanceAccountFilterSchema,
+  FinanceAccountDetailsResponseSchema,
   FinanceAccountListResponseSchema,
   FinanceAccountResponseSchema,
+  FinanceAccountUpdateDetailsSchema,
 } from './finance-account.schema';
 
 export type FinanceAccountFilterDTO = ReturnType<
@@ -14,4 +16,12 @@ export type FinanceAccountDTO = ReturnType<
 
 export type FinanceAccountListResponseDTO = ReturnType<
   typeof FinanceAccountListResponseSchema.parse
+>;
+
+export type FinanceAccountUpdateDetailsDTO = ReturnType<
+  typeof FinanceAccountUpdateDetailsSchema.parse
+>;
+
+export type FinanceAccountDetailsDTO = ReturnType<
+  typeof FinanceAccountDetailsResponseSchema.parse
 >;

@@ -1,15 +1,18 @@
 import type { ClientSession } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
 import type {
+  FinanceAccountDetailsDTO,
   FinanceAccountDTO,
   FinanceAccountFilterDTO,
   FinanceAccountListResponseDTO,
+  FinanceAccountUpdateDetailsDTO,
 } from './finance-account.dto';
 import {
   FinanceAccountRepository,
   type FinanceAccountPersistenceRecord,
 } from './finance-account.repository';
 import {
+  FinanceAccountDetailsResponseSchema,
   FinanceAccountResponseSchema,
   FinanceAccountTemplateRecordSchema,
 } from './finance-account.schema';
@@ -22,6 +25,8 @@ import accountTemplate from './finance-account.seed.json';
 type FinanceAccountRepositoryPort = Pick<
   FinanceAccountRepository,
   | 'list'
+  | 'findById'
+  | 'updateAccountDetails'
   | 'findSelectableById'
   | 'findByCode'
   | 'upsertDefaultAccount'
@@ -207,6 +212,51 @@ export class FinanceAccountService {
         limit: filter.limit,
       },
     };
+  }
+
+  async updateDetails(
+    accountId: string,
+    data: FinanceAccountUpdateDetailsDTO,
+    session?: ClientSession
+  ): Promise<FinanceAccountDetailsDTO> {
+    const account = await this.repository.findById(
+      accountId,
+      session
+    );
+
+    if (!account) {
+      throw new FinanceDomainError(
+        'Akun tidak ditemukan.',
+        'FINANCE_ACCOUNT_NOT_FOUND'
+      );
+    }
+
+    if (account.is_system) {
+      throw new FinanceDomainError(
+        'System account tidak dapat diubah.',
+        'FINANCE_SYSTEM_ACCOUNT_READ_ONLY'
+      );
+    }
+
+    const updated =
+      await this.repository.updateAccountDetails(
+        accountId,
+        data,
+        session
+      );
+
+    if (!updated) {
+      throw new FinanceDomainError(
+        'Akun tidak dapat diubah.',
+        'FINANCE_ACCOUNT_UPDATE_FAILED'
+      );
+    }
+
+    return FinanceAccountDetailsResponseSchema.parse({
+      id: String(updated._id),
+      name: updated.name,
+      description: updated.description ?? null,
+    });
   }
 
   async requireSelectable(

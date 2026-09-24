@@ -57,7 +57,10 @@ export {
   FINANCE_NORMAL_BALANCE_VALUES,
   FINANCE_ACCOUNT_ROLE_VALUES,
 } from './accounts/finance-account.constants';
-export { FinanceAccountFilterSchema } from './accounts/finance-account.schema';
+export {
+  FinanceAccountFilterSchema,
+  FinanceAccountUpdateDetailsSchema,
+} from './accounts/finance-account.schema';
 export {
   FinanceOperationalPostingSchema,
   FinanceJournalReversalSchema,

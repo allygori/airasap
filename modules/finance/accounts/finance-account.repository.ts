@@ -89,6 +89,50 @@ export class FinanceAccountRepository {
       .exec();
   }
 
+  async findById(
+    accountId: string,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(accountId)) return null;
+
+    const query = FinanceAccountModel.findOne({
+      organization: this.organizationId,
+      _id: new Types.ObjectId(accountId),
+    });
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
+  async updateAccountDetails(
+    accountId: string,
+    data: { name: string; description: string | null },
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(accountId)) return null;
+
+    const query = FinanceAccountModel.findOneAndUpdate(
+      {
+        organization: this.organizationId,
+        _id: new Types.ObjectId(accountId),
+        is_system: false,
+      },
+      { $set: data },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
   async upsertDefaultAccount(
     record: FinanceAccountSeedRecord,
     parentAccount: Types.ObjectId | null,

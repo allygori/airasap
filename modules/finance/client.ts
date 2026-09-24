@@ -15,12 +15,28 @@ export {
 export { FinancePurchaseResponseSchema } from './purchases/finance-purchase.schema';
 export { FinanceSalesWorkflowResultSchema } from './sales/finance-sales.schema';
 export {
+  FinanceAccountDetailsResponseSchema,
+  FinanceAccountListResponseSchema,
+  FinanceAccountUpdateDetailsSchema,
+} from './accounts/finance-account.schema';
+export {
   FinanceOfflineSaleFormOptionsSchema,
   FinanceOfflineSaleResponseSchema,
 } from './sales/finance-offline-sale.schema';
 export { FinanceSettlementResponseSchema } from './subledgers/finance-subledger.schema';
 
 export type { FinanceState } from './finance.types';
+export type {
+  FinanceAccountDTO,
+  FinanceAccountDetailsDTO,
+  FinanceAccountFilterDTO,
+  FinanceAccountListResponseDTO,
+  FinanceAccountUpdateDetailsDTO,
+} from './accounts/finance-account.dto';
+export type {
+  FinanceAccountType,
+  FinanceNormalBalance,
+} from './accounts/finance-account.constants';
 export type { FinanceCashBankAccountDTO } from './cash-and-bank/finance-cash-bank.dto';
 export type {
   FinanceCashBankTransferListResponseDTO,

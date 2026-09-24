@@ -28,6 +28,21 @@ export const FinanceAccountTemplateRecordSchema = z
   })
   .strict();
 
+export const FinanceAccountUpdateDetailsSchema = z
+  .object({
+    name: z.string().trim().min(1).max(120),
+    description: z.string().trim().max(500).nullable(),
+  })
+  .strict();
+
+export const FinanceAccountDetailsResponseSchema = z.object(
+  {
+    id: z.string(),
+    name: z.string(),
+    description: z.string().nullable(),
+  }
+);
+
 const BooleanQuerySchema = z
   .enum(['true', 'false'])
   .transform((value) => value === 'true');
