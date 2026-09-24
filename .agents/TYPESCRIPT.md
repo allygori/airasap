@@ -69,7 +69,10 @@ original type and stack context. Do not expose the raw error to the client.
 
 ## Naming
 
-- Files: lower-case kebab-case with an intentional suffix, such as `product.service.ts`, `order.schema.ts`, and `report.client.tsx`.
+- Files: lower-case kebab-case with an intentional suffix, such as
+  `product.service.ts`, `order.schema.ts`, `report.client.tsx`, and feature
+  form components named `<feature>.form.tsx` (for example,
+  `purchase.form.tsx`).
 - Components/classes: PascalCase, such as `ProductForm` and `ProductService`.
 - Functions, variables, hooks, and methods: camelCase, such as `getProduct` and `useProductFilters`.
 - Constants: existing code uses both uppercase constants and camelCase configuration; follow the local convention and prefer descriptive names over abbreviations.

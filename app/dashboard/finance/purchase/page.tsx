@@ -21,7 +21,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinancePurchaseForm } from './_components/finance-purchase-form';
+import { FinancePurchaseClient } from './_components/purchase.client';
 
 type PurchaseItemOption = {
   id: string;
@@ -69,7 +69,7 @@ export default async function FinancePurchasePage() {
   }
 
   return (
-    <FinancePurchaseForm
+    <FinancePurchaseClient
       items={data.items}
       locations={data.locations}
       paymentAccounts={data.paymentAccounts}

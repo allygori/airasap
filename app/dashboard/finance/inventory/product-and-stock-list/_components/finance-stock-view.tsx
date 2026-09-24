@@ -1,9 +1,6 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import {
-  Button,
-  buttonVariants,
-} from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -23,6 +20,7 @@ import type {
   FinanceInventoryStockQueryDTO,
   FinanceInventoryStockResponseDTO,
 } from '@/modules/finance';
+import { FinanceStockFilterForm } from './finance-stock-filter.form';
 
 export function FinanceStockView({
   data,
@@ -101,42 +99,13 @@ export function FinanceStockView({
               {data.pagination.total_pages || 1}.
             </CardDescription>
           </div>
-          <form
-            method="get"
-            className="flex w-full flex-col gap-2 sm:flex-row sm:items-end lg:w-auto"
-          >
-            <label className="grid gap-1 text-xs font-medium">
-              Cari
-              <input
-                name="search"
-                type="search"
-                placeholder="SKU atau nama item"
-                defaultValue={query.search ?? ''}
-                className="border-input bg-background placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3 sm:w-56"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Tipe
-              <select
-                name="item_type"
-                defaultValue={query.item_type ?? ''}
-                className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-              >
-                <option value="">Semua tipe</option>
-                <option value="merchandise">
-                  Merchandise
-                </option>
-                <option value="packaging">Packaging</option>
-                <option value="supplies">Supplies</option>
-                <option value="fixed_asset">
-                  Fixed asset
-                </option>
-              </select>
-            </label>
-            <Button type="submit" variant="secondary">
-              Terapkan
-            </Button>
-          </form>
+          <FinanceStockFilterForm
+            key={`${query.search ?? ''}:${query.item_type ?? ''}`}
+            initialValues={{
+              search: query.search ?? '',
+              item_type: query.item_type ?? 'all',
+            }}
+          />
         </CardHeader>
         <CardContent className="p-0">
           {data.items.length === 0 ? (

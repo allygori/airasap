@@ -29,6 +29,7 @@ import {
   type FinanceSalesTransactionListQueryDTO,
   type FinanceSalesTransactionListResponseDTO,
 } from '@/modules/finance/client';
+import { FinanceSalesFilterForm } from './finance-sales-filter.form';
 
 const ActionResponseSchema = z.object({
   success: z.literal(true),
@@ -159,50 +160,14 @@ export function FinanceSalesTransactions({
               {data.pagination.total_pages || 1}
             </CardDescription>
           </div>
-          <form
-            method="get"
-            className="flex w-full flex-col gap-2 sm:flex-row sm:items-end lg:w-auto"
-          >
-            <label className="grid gap-1 text-xs font-medium">
-              Cari
-              <input
-                name="search"
-                type="search"
-                placeholder="Nomor, source ID, alasan"
-                defaultValue={query.search ?? ''}
-                className="border-input bg-background placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3 sm:w-56"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Status
-              <select
-                name="status"
-                defaultValue={query.status ?? ''}
-                className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-              >
-                <option value="">Semua status</option>
-                <option value="pending">Pending</option>
-                <option value="blocked">Blocked</option>
-                <option value="posted">Posted</option>
-                <option value="reversed">Reversed</option>
-              </select>
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Mode
-              <select
-                name="posting_mode"
-                defaultValue={query.posting_mode ?? ''}
-                className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-              >
-                <option value="">Semua mode</option>
-                <option value="manual">Manual</option>
-                <option value="automatic">Automatic</option>
-              </select>
-            </label>
-            <Button type="submit" variant="secondary">
-              Terapkan
-            </Button>
-          </form>
+          <FinanceSalesFilterForm
+            key={`${query.search ?? ''}:${query.status ?? ''}:${query.posting_mode ?? ''}`}
+            initialValues={{
+              search: query.search ?? '',
+              status: query.status ?? 'all',
+              posting_mode: query.posting_mode ?? 'all',
+            }}
+          />
         </CardHeader>
         <CardContent className="p-0">
           {data.transactions.length === 0 ? (

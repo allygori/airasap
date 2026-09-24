@@ -74,6 +74,57 @@ new one.
 - Preserve user input when a non-field server error occurs where practical.
 - Do not duplicate the same schema with slightly different rules in the page and route.
 
+### Required pattern for new and refactored forms
+
+- Name each feature form component `<feature>.form.tsx`, such as
+  `purchase.form.tsx` or `inventory-item.form.tsx`. Keep it beside its route
+  feature under `app/<route>/_components/` when it is route-specific. Use
+  `.schema.ts` for validation contracts; do not use `.form.tsx` for schemas.
+- Instantiate the typed form with `useAppForm` from
+  `components/form/form.hook.tsx`, typically in the feature/page component
+  that owns submission and API side effects. Compose its UI in the matching
+  `<feature>.form.tsx` using the shared `withForm` helper and pass the form
+  through its typed `form` prop.
+- Render fields with `form.AppField` and the registered shared field
+  components (`TextField`, `SelectField`, `DateField`, `MoneyField`,
+  `TextareaField`, etc.). These wrappers use the project's shadcn components
+  backed by Base UI. Do not replace them with raw `<input>`, `<select>`, or
+  `<textarea>` controls in a TanStack form.
+- Keep submit/API orchestration in the component that creates the form; keep
+  the `.form.tsx` component focused on field composition, layout, and user
+  interaction. Use the form's `onSubmit` handler, `form.handleSubmit()`, and
+  field-level validation rather than maintaining a parallel set of React
+  state values for the same fields.
+- For repeated rows, use the TanStack form values/array helpers and stable row
+  keys. Lay out fields with `FieldGroup` and responsive grids; include `min-w-0`,
+  adequate `gap-*` and card padding so labels, controls, and validation messages
+  do not get squeezed or clipped at narrow widths.
+- Keep pending, success, and server-error states visible and accessible, and
+  preserve entered values when a request fails.
+
+Existing forms may still use older patterns. Apply this convention to new
+forms and to forms explicitly being refactored; do not broaden a focused form
+change into unrelated routes.
+
+### Shared form-field reuse and extension
+
+- Before adding a field, inspect `components/form/fields/`, the registrations
+  in `components/form/form.hook.tsx`, and current consumers with `rg`. Reuse a
+  registered field when its behavior fits; do not copy a field into a feature
+  merely to change its label, placeholder, or layout.
+- Add a shared field only when the existing field primitives cannot express
+  the required control behavior. Put reusable behavior in one
+  `components/form/fields/<name>.tsx` implementation and register it once in
+  `form.hook.tsx`; keep domain-specific combinations in the owning
+  `<feature>.form.tsx`.
+- Before changing an existing shared field, inspect all its consumers and
+  preserve its existing props and default behavior. Prefer additive optional
+  props or a new distinct field when semantics differ; add or update a focused
+  regression test when behavior changes, then run typecheck and lint.
+- Do not change shared fields just to make one screen's layout work. Prefer
+  layout props/classes at the call site when the field's behavior itself is
+  already correct.
+
 ## Tables and collections
 
 There are multiple existing table systems. For new work, first determine

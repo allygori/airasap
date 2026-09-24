@@ -6,8 +6,10 @@ import {
   useMemo,
   useState,
 } from 'react';
+import { useStore } from '@tanstack/react-form';
 import Link from 'next/link';
 import { z } from 'zod';
+import { useAppForm } from '@/components/form/form.hook';
 import {
   ArrowRight01Icon,
   BookOpen01Icon,
@@ -19,7 +21,6 @@ import {
   Layers01Icon,
   RefreshIcon,
   Search01Icon,
-  SlidersHorizontalIcon,
   Tree01Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -43,36 +44,12 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from '@/components/ui/field';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { ChartOfAccountsTreeFilter } from './chart-of-accounts-tree-filter.form';
+import { FinanceAccountEditClient } from './finance-account-edit.client';
 import {
-  FinanceAccountDetailsResponseSchema,
   FinanceAccountListResponseSchema,
-  FinanceAccountUpdateDetailsSchema,
   type FinanceAccountDTO,
   type FinanceAccountDetailsDTO,
   type FinanceAccountType,
@@ -94,13 +71,6 @@ const FinanceApiErrorSchema = z.object({
   error: z.object({
     code: z.string(),
     message: z.string(),
-  }),
-});
-
-const FinanceAccountUpdateSuccessSchema = z.object({
-  success: z.literal(true),
-  data: z.object({
-    account: FinanceAccountDetailsResponseSchema,
   }),
 });
 
@@ -481,231 +451,6 @@ function AccountTreeNode({
   );
 }
 
-function AccountEditDialog({
-  account,
-  open,
-  onOpenChange,
-  onSaved,
-}: {
-  account: FinanceAccountDTO;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSaved: (account: FinanceAccountDetailsDTO) => void;
-}) {
-  const [name, setName] = useState(account.name);
-  const [description, setDescription] = useState(
-    account.description ?? ''
-  );
-  const [isSaving, setIsSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-    event.preventDefault();
-
-    const input =
-      FinanceAccountUpdateDetailsSchema.safeParse({
-        name,
-        description: description.trim() || null,
-      });
-
-    if (!input.success) {
-      setError(
-        input.error.issues[0]?.message ??
-          'Periksa kembali input.'
-      );
-      return;
-    }
-
-    setIsSaving(true);
-    setError(null);
-
-    try {
-      const response = await fetch(
-        `/api/v1/dashboard/finance/accounting/chart-of-accounts/${account.id}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(input.data),
-        }
-      );
-      const payload: unknown = await response.json();
-      const parsed =
-        FinanceAccountUpdateSuccessSchema.safeParse(
-          payload
-        );
-
-      if (!response.ok) {
-        const errorPayload =
-          FinanceApiErrorSchema.safeParse(payload);
-        setError(
-          errorPayload.success
-            ? errorPayload.data.error.message
-            : 'Gagal menyimpan perubahan akun.'
-        );
-        return;
-      }
-
-      if (!parsed.success) {
-        setError('Respons server Finance tidak valid.');
-        return;
-      }
-
-      onOpenChange(false);
-      onSaved(parsed.data.data.account);
-    } catch {
-      setError('Tidak dapat menghubungi server Finance.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[calc(100vh-2rem)] overflow-y-auto sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle>Edit Chart of Accounts</DialogTitle>
-          <DialogDescription>
-            Ubah nama dan deskripsi akun. Kode, struktur,
-            tipe, dan aturan posting tidak dapat diubah.
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="bg-muted/40 grid gap-3 rounded-xl border p-4 sm:grid-cols-2">
-          <ReadOnlyValue
-            label="Code"
-            value={account.code}
-          />
-          <ReadOnlyValue
-            label="Account type"
-            value={formatType(account.type)}
-          />
-          <ReadOnlyValue
-            label="Normal balance"
-            value={account.normal_balance}
-          />
-          <ReadOnlyValue
-            label="Posting"
-            value={
-              account.is_postable
-                ? 'Postable'
-                : 'Group only'
-            }
-          />
-        </div>
-
-        <form
-          onSubmit={handleSubmit}
-          className="flex flex-col gap-5"
-        >
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="finance-account-edit-name">
-                Account name
-              </FieldLabel>
-              <Input
-                id="finance-account-edit-name"
-                value={name}
-                onChange={(event) =>
-                  setName(event.target.value)
-                }
-                maxLength={120}
-                autoFocus
-                disabled={isSaving}
-              />
-              <FieldDescription>
-                Nama akun dapat disesuaikan tanpa mengubah
-                kode akun.
-              </FieldDescription>
-            </Field>
-
-            <Field>
-              <FieldLabel htmlFor="finance-account-edit-description">
-                Description
-              </FieldLabel>
-              <Textarea
-                id="finance-account-edit-description"
-                value={description}
-                onChange={(event) =>
-                  setDescription(event.target.value)
-                }
-                placeholder="Tambahkan konteks penggunaan akun…"
-                maxLength={500}
-                rows={4}
-                disabled={isSaving}
-              />
-              <FieldDescription>
-                Opsional, maksimal 500 karakter.
-              </FieldDescription>
-            </Field>
-          </FieldGroup>
-
-          {error ? (
-            <Alert variant="destructive">
-              <HugeiconsIcon
-                icon={InformationCircleIcon}
-                size={18}
-              />
-              <AlertTitle>
-                Perubahan belum disimpan
-              </AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          ) : null}
-
-          <DialogFooter>
-            <DialogClose
-              render={
-                <Button
-                  type="button"
-                  variant="outline"
-                  disabled={isSaving}
-                />
-              }
-            >
-              Batal
-            </DialogClose>
-            <Button
-              type="submit"
-              disabled={isSaving || !name.trim()}
-            >
-              {isSaving ? (
-                <Spinner data-icon="inline-start" />
-              ) : (
-                <HugeiconsIcon
-                  icon={CheckmarkCircle01Icon}
-                  data-icon="inline-start"
-                />
-              )}
-              {isSaving ? 'Menyimpan…' : 'Simpan perubahan'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function ReadOnlyValue({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="min-w-0">
-      <p className="text-muted-foreground text-xs font-medium">
-        {label}
-      </p>
-      <p className="mt-1 truncate text-sm font-medium">
-        {value}
-      </p>
-    </div>
-  );
-}
-
 function DetailCell({
   label,
   value,
@@ -839,6 +584,17 @@ function AccountDetails({
 }
 
 export function FinanceChartOfAccountsTree() {
+  const filterForm = useAppForm({
+    defaultValues: { query: '', typeFilter: 'all' },
+  });
+  const query = useStore(
+    filterForm.store,
+    (state) => state.values.query
+  );
+  const typeFilter = useStore(
+    filterForm.store,
+    (state) => state.values.typeFilter
+  );
   const [accounts, setAccounts] =
     useState<FinanceAccountDTO[]>(EMPTY_ACCOUNTS);
   const [expanded, setExpanded] = useState<
@@ -847,8 +603,6 @@ export function FinanceChartOfAccountsTree() {
   const [selectedId, setSelectedId] = useState<
     string | null
   >(null);
-  const [query, setQuery] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isFinanceInactive, setIsFinanceInactive] =
     useState(false);
@@ -1105,51 +859,11 @@ export function FinanceChartOfAccountsTree() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2 pt-2 sm:flex-row">
-                <div className="relative min-w-0 flex-1">
-                  <HugeiconsIcon
-                    icon={Search01Icon}
-                    size={17}
-                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 -translate-y-1/2"
-                  />
-                  <Input
-                    value={query}
-                    onChange={(event) =>
-                      setQuery(event.target.value)
-                    }
-                    placeholder="Search code, account name, or subtype"
-                    aria-label="Search chart of accounts"
-                    className="pl-9"
-                  />
-                </div>
-                <Select
-                  value={typeFilter}
-                  onValueChange={(value) =>
-                    setTypeFilter(value ?? 'all')
-                  }
-                >
-                  <SelectTrigger
-                    className="w-full sm:w-52"
-                    aria-label="Filter account type"
-                  >
-                    <HugeiconsIcon
-                      icon={SlidersHorizontalIcon}
-                      size={16}
-                      className="text-muted-foreground"
-                    />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ACCOUNT_TYPES.map((type) => (
-                      <SelectItem
-                        key={type.value}
-                        value={type.value}
-                      >
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="flex min-w-0 flex-col gap-3 pt-2 sm:flex-row sm:items-end">
+                <ChartOfAccountsTreeFilter
+                  form={filterForm}
+                  accountTypes={ACCOUNT_TYPES}
+                />
                 <Button
                   type="button"
                   variant="outline"
@@ -1213,10 +927,7 @@ export function FinanceChartOfAccountsTree() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      setQuery('');
-                      setTypeFilter('all');
-                    }}
+                    onClick={() => filterForm.reset()}
                   >
                     Reset filters
                   </Button>
@@ -1249,7 +960,7 @@ export function FinanceChartOfAccountsTree() {
       </div>
 
       {editingAccount ? (
-        <AccountEditDialog
+        <FinanceAccountEditClient
           key={editingAccount.id}
           account={editingAccount}
           open

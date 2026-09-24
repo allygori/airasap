@@ -1,6 +1,5 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -20,6 +19,7 @@ import type {
   FinanceJournalListQueryDTO,
   FinanceJournalListResponseDTO,
 } from '@/modules/finance';
+import { GeneralJournalFilterForm } from './general-journal-filter.form';
 
 export function FinanceGeneralJournal({
   data,
@@ -86,45 +86,14 @@ export function FinanceGeneralJournal({
               {data.pagination.total_pages || 1}
             </CardDescription>
           </div>
-          <form
-            method="get"
-            className="flex w-full flex-col gap-2 sm:flex-row sm:items-end lg:w-auto"
-          >
-            <label className="grid gap-1 text-xs font-medium">
-              Cari
-              <input
-                name="search"
-                type="search"
-                placeholder="Nomor, deskripsi, source ID"
-                defaultValue={query.search ?? ''}
-                className="border-input bg-background placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3 sm:w-56"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Periode
-              <input
-                name="period"
-                type="month"
-                defaultValue={query.period ?? ''}
-                className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-              />
-            </label>
-            <label className="grid gap-1 text-xs font-medium">
-              Status
-              <select
-                name="status"
-                defaultValue={query.status ?? ''}
-                className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-8 rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
-              >
-                <option value="">Semua status</option>
-                <option value="posted">Posted</option>
-                <option value="reversed">Reversed</option>
-              </select>
-            </label>
-            <Button type="submit" variant="secondary">
-              Terapkan
-            </Button>
-          </form>
+          <GeneralJournalFilterForm
+            key={`${query.search ?? ''}:${query.period ?? ''}:${query.status ?? ''}`}
+            initialValues={{
+              search: query.search ?? '',
+              period: query.period ?? '',
+              status: query.status ?? 'all',
+            }}
+          />
         </CardHeader>
         <CardContent className="p-0">
           {data.entries.length === 0 ? (

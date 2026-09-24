@@ -18,7 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinanceStockAdjustmentForm } from './_components/finance-stock-adjustment-form';
+import { FinanceStockAdjustmentClient } from './_components/finance-stock-adjustment.client';
 
 type StockAdjustmentPageProps = {
   searchParams?: Promise<
@@ -53,7 +53,7 @@ export default async function StockAdjustmentsPage({
   }
 
   return (
-    <FinanceStockAdjustmentForm
+    <FinanceStockAdjustmentClient
       items={data.items}
       locations={data.locations}
     />

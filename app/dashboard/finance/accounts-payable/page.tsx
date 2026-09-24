@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { getSubledgerPageData } from '../_lib/load-subledger-page-data';
-import { FinanceSubledgerPage } from '../_components/finance-subledger-page';
+import { FinanceSubledgerPage } from '../_components/finance-subledger.client';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,

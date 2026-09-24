@@ -3,9 +3,13 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  revalidateLogic,
+  useStore,
+} from '@tanstack/react-form';
 import { z } from 'zod';
+import { useAppForm } from '@/components/form/form.hook';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -21,6 +25,14 @@ import {
   type FinanceSubledgerTypeDTO,
 } from '@/modules/finance/client';
 import type { FinanceSubledgerPaymentAccountOption } from '../_lib/load-subledger-page-data';
+import {
+  SubledgerSettlementForm,
+  createSubledgerSettlementFormDefaults,
+} from './subledger-settlement.form';
+import {
+  createFinanceSubledgerSettlementFormSchema,
+  type FinanceSubledgerSettlementFormValues,
+} from './finance-subledger-settlement-form.schema';
 
 const ActionResponseSchema = z.object({
   success: z.literal(true),
@@ -44,16 +56,6 @@ export function FinanceSubledgerPage({
   paymentAccounts,
 }: FinanceSubledgerPageProps) {
   const router = useRouter();
-  const [selectedSourceKey, setSelectedSourceKey] =
-    useState(balances.balances[0]?.source_key ?? '');
-  const [amount, setAmount] = useState('');
-  const [settlementDate, setSettlementDate] = useState(
-    new Date().toISOString().slice(0, 10)
-  );
-  const [paymentAccountId, setPaymentAccountId] = useState(
-    paymentAccounts[0]?.id ?? ''
-  );
-  const [reference, setReference] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<
     string | null
@@ -62,9 +64,6 @@ export function FinanceSubledgerPage({
     string | null
   >(null);
 
-  const selectedBalance = balances.balances.find(
-    (balance) => balance.source_key === selectedSourceKey
-  );
   const isReceivable = balanceType === 'receivable';
   const title = isReceivable ? 'Piutang' : 'Hutang';
   const actionLabel = isReceivable
@@ -72,9 +71,11 @@ export function FinanceSubledgerPage({
     : 'Catat pembayaran';
 
   const submit = async (
-    event: React.FormEvent<HTMLFormElement>
+    values: FinanceSubledgerSettlementFormValues
   ) => {
-    event.preventDefault();
+    const selectedBalance = balances.balances.find(
+      (balance) => balance.source_key === values.source_key
+    );
     if (!selectedBalance) {
       setErrorMessage(
         'Pilih saldo yang ingin diselesaikan.'
@@ -94,18 +95,18 @@ export function FinanceSubledgerPage({
           body: JSON.stringify({
             balance_type: balanceType,
             source_journal_entry_id:
-              selectedBalance?.source_journal_entry_id,
-            ...(selectedBalance?.source_item_id
+              selectedBalance.source_journal_entry_id,
+            ...(selectedBalance.source_item_id
               ? {
                   source_item_id:
                     selectedBalance.source_item_id,
                 }
               : {}),
-            amount: Number(amount),
-            settlement_date: `${settlementDate}T00:00:00.000Z`,
-            payment_account_id: paymentAccountId,
-            ...(reference.trim()
-              ? { reference: reference.trim() }
+            amount: Number(values.amount),
+            settlement_date: `${values.settlement_date}T00:00:00.000Z`,
+            payment_account_id: values.payment_account_id,
+            ...(values.reference.trim()
+              ? { reference: values.reference.trim() }
               : {}),
             idempotency_key: crypto.randomUUID(),
           }),
@@ -129,8 +130,8 @@ export function FinanceSubledgerPage({
       setSuccessMessage(
         getSuccessMessage(parsed.data.data, isReceivable)
       );
-      setAmount('');
-      setReference('');
+      form.setFieldValue('amount', '');
+      form.setFieldValue('reference', '');
       router.refresh();
     } catch {
       setErrorMessage(
@@ -140,6 +141,28 @@ export function FinanceSubledgerPage({
       setIsSubmitting(false);
     }
   };
+
+  const form = useAppForm({
+    defaultValues: createSubledgerSettlementFormDefaults(
+      balances.balances,
+      paymentAccounts
+    ),
+    validationLogic: revalidateLogic(),
+    validators: {
+      onDynamic: createFinanceSubledgerSettlementFormSchema(
+        {
+          balances: balances.balances,
+          paymentAccounts,
+        }
+      ),
+    },
+    onSubmit: async ({ value }) => submit(value),
+  });
+
+  const selectedSourceKey = useStore(
+    form.store,
+    (state) => state.values.source_key
+  );
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -208,7 +231,8 @@ export function FinanceSubledgerPage({
                       balance.source_key
                     }
                     onSelect={() =>
-                      setSelectedSourceKey(
+                      form.setFieldValue(
+                        'source_key',
                         balance.source_key
                       )
                     }
@@ -227,152 +251,16 @@ export function FinanceSubledgerPage({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <form
-                className="grid gap-4"
-                onSubmit={submit}
-              >
-                <label className="grid gap-2 text-sm font-medium">
-                  Sumber saldo
-                  <select
-                    value={selectedSourceKey}
-                    onChange={(event) =>
-                      setSelectedSourceKey(
-                        event.target.value
-                      )
-                    }
-                    className={InputClass}
-                    required
-                  >
-                    {balances.balances.map((balance) => (
-                      <option
-                        key={balance.source_key}
-                        value={balance.source_key}
-                      >
-                        {balance.source_label} —{' '}
-                        {formatMoney(
-                          balance.outstanding_amount
-                        )}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-medium">
-                  Nominal (IDR)
-                  <input
-                    type="number"
-                    min="1"
-                    max={
-                      selectedBalance?.outstanding_amount
-                    }
-                    step="1"
-                    value={amount}
-                    onChange={(event) =>
-                      setAmount(event.target.value)
-                    }
-                    placeholder={
-                      selectedBalance
-                        ? String(
-                            selectedBalance.outstanding_amount
-                          )
-                        : '100000'
-                    }
-                    className={InputClass}
-                    required
-                  />
-                  {selectedBalance ? (
-                    <span className="text-muted-foreground text-xs">
-                      Maksimal{' '}
-                      {formatMoney(
-                        selectedBalance.outstanding_amount
-                      )}
-                      .
-                    </span>
-                  ) : null}
-                </label>
-                <label className="grid gap-2 text-sm font-medium">
-                  {isReceivable
-                    ? 'Diterima ke'
-                    : 'Dibayar dari'}
-                  <select
-                    value={paymentAccountId}
-                    onChange={(event) =>
-                      setPaymentAccountId(
-                        event.target.value
-                      )
-                    }
-                    className={InputClass}
-                    required
-                    disabled={paymentAccounts.length === 0}
-                  >
-                    {paymentAccounts.map((account) => (
-                      <option
-                        key={account.id}
-                        value={account.id}
-                      >
-                        {account.code} — {account.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm font-medium">
-                  Tanggal settlement
-                  <input
-                    type="date"
-                    value={settlementDate}
-                    onChange={(event) =>
-                      setSettlementDate(event.target.value)
-                    }
-                    className={InputClass}
-                    required
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-medium">
-                  Referensi (opsional)
-                  <input
-                    value={reference}
-                    onChange={(event) =>
-                      setReference(event.target.value)
-                    }
-                    maxLength={120}
-                    placeholder="Contoh: PAYOUT-001"
-                    className={InputClass}
-                  />
-                </label>
-
-                <div className="border-info/30 bg-info/5 text-info-foreground rounded-lg border px-3 py-3 text-xs leading-5">
-                  Jatuh tempo belum diatur pada source
-                  transaction. Finance tidak menandai
-                  transaksi sebagai overdue secara otomatis.
-                </div>
-                {errorMessage ? (
-                  <div
-                    role="alert"
-                    className="border-destructive/30 bg-destructive/10 text-destructive rounded-lg border px-3 py-3 text-sm"
-                  >
-                    {errorMessage}
-                  </div>
-                ) : null}
-                {successMessage ? (
-                  <div
-                    role="status"
-                    className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-3 text-sm"
-                  >
-                    {successMessage}
-                  </div>
-                ) : null}
-                <Button
-                  type="submit"
-                  disabled={
-                    isSubmitting ||
-                    paymentAccounts.length === 0 ||
-                    !selectedBalance
-                  }
-                >
-                  {isSubmitting
-                    ? 'Mem-posting…'
-                    : actionLabel}
-                </Button>
-              </form>
+              <SubledgerSettlementForm
+                form={form}
+                balances={balances.balances}
+                paymentAccounts={paymentAccounts}
+                isReceivable={isReceivable}
+                actionLabel={actionLabel}
+                isSubmitting={isSubmitting}
+                errorMessage={errorMessage}
+                successMessage={successMessage}
+              />
             </CardContent>
           </Card>
         </div>
@@ -432,9 +320,6 @@ function BalanceRow({
     </button>
   );
 }
-
-const InputClass =
-  'border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 h-10 rounded-lg border px-3 text-sm outline-none focus-visible:ring-3';
 
 const formatMoney = (value: number) =>
   new Intl.NumberFormat('id-ID', {

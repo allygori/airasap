@@ -44,6 +44,11 @@ const MultiselectField = lazy(() =>
     default: m.MultiselectField,
   }))
 );
+const ToggleGroupField = lazy(() =>
+  import('../form/fields/toggle-group').then((m) => ({
+    default: m.ToggleGroupField,
+  }))
+);
 const DateTimeField = lazy(() =>
   import('./fields/date-time').then((m) => ({
     default: m.DateTimeField,
@@ -91,6 +96,7 @@ export const { useAppForm, withForm, withFieldGroup } =
       SwitchField,
       SelectField,
       MultiselectField,
+      ToggleGroupField,
       DateField,
       DateTimeField,
       DateRangePresetsField,

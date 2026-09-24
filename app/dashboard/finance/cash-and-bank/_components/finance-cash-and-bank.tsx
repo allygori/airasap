@@ -6,7 +6,6 @@ import {
   type FinanceCashBankResponseDTO,
 } from '@/modules/finance';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -22,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { CashAndBankFilterForm } from './cash-and-bank-filter.form';
 
 type FinanceCashAndBankProps = {
   data: FinanceCashBankResponseDTO;
@@ -90,28 +90,10 @@ export function FinanceCashAndBank({
               titik awal bisnis mudah ditelusuri.
             </CardDescription>
           </div>
-          <form
-            method="get"
-            className="flex w-full gap-2 sm:w-auto"
-          >
-            <label
-              className="sr-only"
-              htmlFor="cash-bank-search"
-            >
-              Cari akun
-            </label>
-            <input
-              id="cash-bank-search"
-              name="search"
-              type="search"
-              placeholder="Cari nama atau kode akun"
-              defaultValue={query.search ?? ''}
-              className="border-input bg-background placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 h-9 min-w-0 flex-1 rounded-lg border px-3 text-sm outline-none focus-visible:ring-3 sm:w-64"
-            />
-            <Button type="submit" variant="secondary">
-              Cari
-            </Button>
-          </form>
+          <CashAndBankFilterForm
+            key={query.search ?? ''}
+            initialValues={{ search: query.search ?? '' }}
+          />
         </CardHeader>
         <CardContent className="p-0">
           {data.accounts.length === 0 ? (

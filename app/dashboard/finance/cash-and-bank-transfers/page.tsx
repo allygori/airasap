@@ -20,7 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinanceCashBankTransferForm } from './_components/finance-cash-bank-transfer-form';
+import { FinanceCashBankTransferClient } from './_components/finance-cash-bank-transfer.client';
 
 type PageData =
   | {
@@ -48,7 +48,7 @@ export default async function CashAndBankTransfersPage() {
   }
 
   return (
-    <FinanceCashBankTransferForm
+    <FinanceCashBankTransferClient
       accounts={data.accounts}
       transfers={data.transfers}
     />

@@ -27,7 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { FinanceSaleFullReturn } from './_components/finance-sale-full-return';
+import { FinanceSaleFullReturnClient } from './_components/finance-sale-full-return.client';
 
 type FinanceSalesDetailPageProps = {
   params: Promise<{ transactionId: string }>;
@@ -184,7 +184,7 @@ export default async function FinanceSalesDetailPage({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FinanceSaleFullReturn
+            <FinanceSaleFullReturnClient
               journalEntryId={transaction.journal_entry_id}
               initialDate={getBusinessDate()}
             />

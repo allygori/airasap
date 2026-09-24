@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinanceOfflineSaleForm } from './_components/finance-offline-sale-form';
+import { FinanceOfflineSaleClient } from './_components/finance-offline-sale.client';
 
 type PageState =
   | {
@@ -39,7 +39,7 @@ export default async function FinanceOfflineSalePage() {
   }
 
   return (
-    <FinanceOfflineSaleForm
+    <FinanceOfflineSaleClient
       options={state.options}
       initialDate={getBusinessDate()}
     />

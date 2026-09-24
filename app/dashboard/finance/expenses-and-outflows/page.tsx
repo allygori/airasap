@@ -19,7 +19,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinanceExpenseForm } from './_components/finance-expense-form';
+import { FinanceExpenseClient } from './_components/finance-expense.client';
 
 type ExpenseAccountOption = {
   id: string;
@@ -60,7 +60,7 @@ export default async function FinanceExpensesAndOutflowsPage() {
   }
 
   return (
-    <FinanceExpenseForm
+    <FinanceExpenseClient
       categoryAccounts={data.categoryAccounts}
       paymentAccounts={data.paymentAccounts}
       expenses={data.expenses}

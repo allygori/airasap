@@ -12,7 +12,10 @@ export {
   FinanceOpeningBalancePreviewSchema,
   FinanceOpeningBalanceSetupResponseSchema,
 } from './onboarding/finance-opening-balance.schema';
-export { FinancePurchaseResponseSchema } from './purchases/finance-purchase.schema';
+export {
+  FinancePurchaseInputSchema,
+  FinancePurchaseResponseSchema,
+} from './purchases/finance-purchase.schema';
 export { FinanceSalesWorkflowResultSchema } from './sales/finance-sales.schema';
 export {
   FinanceAccountDetailsResponseSchema,
@@ -21,6 +24,7 @@ export {
 } from './accounts/finance-account.schema';
 export {
   FinanceOfflineSaleFormOptionsSchema,
+  FinanceOfflineSaleInputSchema,
   FinanceOfflineSaleResponseSchema,
 } from './sales/finance-offline-sale.schema';
 export { FinanceSettlementResponseSchema } from './subledgers/finance-subledger.schema';
@@ -71,6 +75,7 @@ export type {
   FinanceSalesTransactionListResponseDTO,
 } from './sales/finance-sales.dto';
 export type {
+  FinanceOfflineSaleInputDTO,
   FinanceOfflineSaleFormOptionsDTO,
   FinanceOfflineSaleResponseDTO,
 } from './sales/finance-offline-sale.dto';
