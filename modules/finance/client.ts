@@ -3,6 +3,7 @@ export { FINANCE_CASH_BANK_SUBTYPE_LABELS } from './cash-and-bank/finance-cash-b
 export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-cash-bank-transfer.schema';
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
+  FinanceInventoryItemTypeSchema,
   FinanceInventoryAdjustmentResponseSchema,
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,
