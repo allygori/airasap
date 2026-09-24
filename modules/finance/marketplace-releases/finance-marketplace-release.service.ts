@@ -6,6 +6,7 @@ import { FinanceLifecycleService } from '../finance-lifecycle.service';
 import { FinanceAccountRoleResolverService } from '../accounts/finance-account-role-resolver.service';
 import { FinanceJournalService } from '../journal/finance-journal.service';
 import { FinanceSalesTransactionRepository } from '../sales/finance-sales-transaction.repository';
+import { makeFinanceSalesIdempotencyKey } from '../sales/finance-sales.keys';
 import {
   assertFinanceTenant,
   type FinanceTenantContext,
@@ -271,7 +272,11 @@ export class FinanceMarketplaceReleaseService {
 
     const salesTransaction =
       await this.salesTransactionRepository.findByIdempotencyKey(
-        `finance-sales:completed:${source.source_order_id}`
+        makeFinanceSalesIdempotencyKey({
+          platform: source.platform,
+          store_id: source.store_id ?? null,
+          source_order_id: source.source_order_id,
+        })
       );
     const feeLines = this.getFeeLines(source.fee);
     const feeAmount = feeLines.reduce(

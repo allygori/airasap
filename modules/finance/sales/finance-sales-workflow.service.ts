@@ -15,6 +15,7 @@ import type {
   FinanceSalesProjectionDTO,
   FinanceSalesWorkflowResultDTO,
 } from './finance-sales.dto';
+import { makeFinanceSalesIdempotencyKey } from './finance-sales.keys';
 import { FinanceSalesPostingRulesService } from './finance-sales-rules.service';
 import { FinanceInventoryCogsService } from '../inventory/finance-inventory-cogs.service';
 import {
@@ -66,6 +67,8 @@ type FinanceSalesCogsPort = Pick<
 
 export type FinanceSalesWorkflowInput = {
   mode?: FinanceSalesPostingModeDTO;
+  payment_account_id?: string;
+  require_inventory_cogs?: boolean;
   session?: ClientSession;
 };
 
@@ -164,7 +167,12 @@ export class FinanceSalesWorkflowService {
       });
     }
 
-    const decision = this.rulesService.evaluate(projection);
+    const decision = this.rulesService.evaluate(
+      projection,
+      {
+        payment_account_id: input?.payment_account_id,
+      }
+    );
     const existing =
       await this.transactionRepository.findByIdempotencyKey(
         this.getIdempotencyKey(decision, projection),
@@ -265,7 +273,8 @@ export class FinanceSalesWorkflowService {
       intent,
       transaction,
       mode,
-      session
+      session,
+      input?.require_inventory_cogs ?? false
     );
   }
 
@@ -343,7 +352,8 @@ export class FinanceSalesWorkflowService {
       intent,
       transaction,
       transaction.posting_mode,
-      session
+      session,
+      transaction.platform === 'offline'
     );
   }
 
@@ -352,7 +362,8 @@ export class FinanceSalesWorkflowService {
     intent: FinanceSalesPostingIntentDTO,
     transaction: FinanceSalesTransactionPersistenceRecord,
     mode: FinanceSalesPostingModeDTO,
-    session?: ClientSession
+    session?: ClientSession,
+    requireInventoryCogs = false
   ): Promise<FinanceSalesWorkflowResultDTO> {
     let journalPosted = false;
 
@@ -362,6 +373,8 @@ export class FinanceSalesWorkflowService {
           source_order_id: context.source_order_id,
           source_order_number:
             transaction.source_order_number,
+          platform: transaction.platform,
+          store_id: transaction.store_id,
           transaction_date: new Date(
             intent.transaction_date
           ),
@@ -369,20 +382,29 @@ export class FinanceSalesWorkflowService {
         },
         session
       );
-      const accountByRole = new Map<
-        FinanceSalesPostingIntentDTO['lines'][number]['account_role'],
-        string
-      >();
+      if (
+        requireInventoryCogs &&
+        cogs.status !== 'posted'
+      ) {
+        throw new FinanceDomainError(
+          cogs.reason ??
+            'HPP dan pengurangan stok belum dapat diproses.',
+          'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
+        );
+      }
+      const accountByRole = new Map<string, string>();
 
       for (const line of intent.lines) {
-        const account = await this.roleResolver.resolve(
-          line.account_role,
-          session
-        );
-        accountByRole.set(
-          line.account_role,
-          String(account._id)
-        );
+        if ('account_role' in line) {
+          const account = await this.roleResolver.resolve(
+            line.account_role,
+            session
+          );
+          accountByRole.set(
+            line.account_role,
+            String(account._id)
+          );
+        }
       }
 
       const journalResult =
@@ -394,15 +416,21 @@ export class FinanceSalesWorkflowService {
             posting_date: new Date(intent.transaction_date),
             currency: intent.currency,
             description: intent.description,
-            source_type: 'order',
+            source_type:
+              context.platform === 'offline'
+                ? 'offline_sale'
+                : 'order',
             source_id: context.source_order_id,
             source_event: intent.source_event,
             idempotency_key: intent.idempotency_key,
             lines: [
               ...intent.lines.map((line) => ({
                 account_id:
-                  accountByRole.get(line.account_role) ??
-                  '',
+                  ('account_id' in line
+                    ? line.account_id
+                    : accountByRole.get(
+                        line.account_role
+                      )) ?? '',
                 debit: line.debit,
                 credit: line.credit,
                 dimensions: {
@@ -623,12 +651,25 @@ export class FinanceSalesWorkflowService {
   ) {
     if (
       decisionOrIntent &&
+      'intent' in decisionOrIntent &&
+      decisionOrIntent.intent
+    ) {
+      return decisionOrIntent.intent.idempotency_key;
+    }
+
+    if (
+      decisionOrIntent &&
       'idempotency_key' in decisionOrIntent
     ) {
       return decisionOrIntent.idempotency_key;
     }
 
-    return `finance-sales:completed:${projection.source_order_id}`;
+    return makeFinanceSalesIdempotencyKey(
+      projection,
+      projection.platform === 'offline'
+        ? 'offline-sale'
+        : 'completed'
+    );
   }
 
   private result(

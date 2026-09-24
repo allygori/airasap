@@ -13,9 +13,13 @@ export { FinanceSalesPostingRulesService } from './sales/finance-sales-rules.ser
 export { FinanceSalesWorkflowService } from './sales/finance-sales-workflow.service';
 export { FinanceSalesTransactionReadService } from './sales/finance-sales-transaction-read.service';
 export { FinanceSalesTransactionRepository } from './sales/finance-sales-transaction.repository';
+export { FinanceOfflineSaleService } from './sales/finance-offline-sale.service';
 export { FinanceInventoryStockReadService } from './inventory/finance-inventory-stock-read.service';
 export { FinanceInventoryAdjustmentService } from './inventory/finance-inventory-adjustment.service';
+export { FinanceInventorySetupService } from './inventory/finance-inventory-setup.service';
 export { FinanceInventoryCogsService } from './inventory/finance-inventory-cogs.service';
+export { FinanceInventoryReservationService } from './inventory/finance-inventory-reservation.service';
+export type { FinanceInventoryReservationSyncResult } from './inventory/finance-inventory-reservation.service';
 export { FinanceCashBankReadService } from './cash-and-bank/finance-cash-bank-read.service';
 export { FinanceCashBankTransferService } from './cash-and-bank/finance-cash-bank-transfer.service';
 export { FinanceCashBankTransferReadService } from './cash-and-bank/finance-cash-bank-transfer-read.service';
@@ -111,6 +115,11 @@ export type {
   FinanceSalesTransactionDetailResponseDTO,
   FinanceSalesInventoryCogsStatusDTO,
 } from './sales/finance-sales.dto';
+export type {
+  FinanceOfflineSaleFormOptionsDTO,
+  FinanceOfflineSaleInputDTO,
+  FinanceOfflineSaleResponseDTO,
+} from './sales/finance-offline-sale.dto';
 export {
   FinanceMarketplaceReleaseSourceSchema,
   FinanceMarketplaceReleaseResponseSchema,
@@ -138,6 +147,11 @@ export type {
   FinanceInventoryAdjustmentDTO,
   FinanceInventoryAdjustmentDirectionDTO,
   FinanceInventoryAdjustmentReasonDTO,
+  FinanceInventorySetupQueryDTO,
+  FinanceInventorySetupActionInputDTO,
+  FinanceInventorySetupProductOptionDTO,
+  FinanceInventorySetupResponseDTO,
+  FinanceInventorySetupActionResponseDTO,
   FinanceInventoryAdjustmentItemOptionDTO,
   FinanceInventoryAdjustmentLocationOptionDTO,
   FinanceInventoryAdjustmentResponseDTO,
@@ -197,6 +211,10 @@ export {
   FinanceInventoryStockResponseSchema,
   FinanceInventoryAdjustmentSchema,
   FinanceInventoryAdjustmentResponseSchema,
+  FinanceInventorySetupQuerySchema,
+  FinanceInventorySetupActionSchema,
+  FinanceInventorySetupResponseSchema,
+  FinanceInventorySetupActionResponseSchema,
 } from './inventory/finance-inventory.schema';
 export {
   FinanceCashBankQuerySchema,
@@ -260,6 +278,11 @@ export {
   FinanceSalesTransactionDetailSchema,
   FinanceSalesTransactionDetailResponseSchema,
 } from './sales/finance-sales.schema';
+export {
+  FinanceOfflineSaleInputSchema,
+  FinanceOfflineSaleFormOptionsSchema,
+  FinanceOfflineSaleResponseSchema,
+} from './sales/finance-offline-sale.schema';
 export type {
   FinanceAccountDTO,
   FinanceAccountFilterDTO,

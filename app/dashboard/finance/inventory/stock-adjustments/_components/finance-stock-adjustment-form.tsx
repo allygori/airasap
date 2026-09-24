@@ -4,7 +4,10 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -161,6 +164,16 @@ export function FinanceStockAdjustmentForm({
             Pastikan sudah ada item inventory aktif dan
             minimal satu lokasi aktif sebelum membuat
             adjustment.
+            <div className="mt-4 flex flex-wrap gap-3">
+              <Link
+                href="/dashboard/finance/inventory/setup"
+                className={buttonVariants({
+                  variant: 'outline',
+                })}
+              >
+                Siapkan inventory
+              </Link>
+            </div>
           </CardContent>
         </Card>
       ) : (

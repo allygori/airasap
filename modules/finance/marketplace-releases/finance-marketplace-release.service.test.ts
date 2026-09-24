@@ -44,7 +44,8 @@ const salesTransaction =
     sales_amount: 125000,
     posting_mode: 'automatic',
     status: 'posted',
-    idempotency_key: 'finance-sales:completed:SP-1001',
+    idempotency_key:
+      'finance-sales:completed:shopee:507f1f77bcf86cd799439012:SP-1001',
     blocked_reason: null,
     journal_entry_id: new Types.ObjectId(journalEntryId),
     source_lines: [],

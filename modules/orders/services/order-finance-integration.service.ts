@@ -5,11 +5,13 @@ import {
   FinanceSalesProjectionService,
   FinanceSalesWorkflowService,
   FinanceMarketplaceReleaseService,
+  FinanceInventoryReservationService,
   type FinanceSalesProjectionDTO,
   type FinanceSalesWorkflowResultDTO,
   type FinanceMarketplaceReleaseResponseDTO,
   type FinanceMarketplaceReleaseSourceInputDTO,
   type FinanceTenantContext,
+  type FinanceInventoryReservationSyncResult,
 } from '@/modules/finance';
 import { OrderRepository } from '../order.repository';
 
@@ -54,14 +56,18 @@ type FinanceWorkflowPort = Pick<
   'process'
 >;
 
-type OrderRepositoryPort = Pick<
-  OrderRepository,
-  'findById'
->;
+type OrderRepositoryPort = {
+  findById(orderId: string): Promise<unknown>;
+};
 
 type FinanceMarketplaceReleasePort = Pick<
   FinanceMarketplaceReleaseService,
   'recordFromOrder'
+>;
+
+type FinanceInventoryReservationPort = Pick<
+  FinanceInventoryReservationService,
+  'sync'
 >;
 
 const toObjectIdString = (
@@ -120,6 +126,7 @@ export class OrderFinanceIntegrationService {
   private readonly projectionService: FinanceProjectionPort;
   private readonly workflowService: FinanceWorkflowPort;
   private readonly marketplaceReleaseService: FinanceMarketplaceReleasePort;
+  private readonly inventoryReservationService: FinanceInventoryReservationPort;
 
   constructor(
     private readonly context: FinanceTenantContext,
@@ -128,6 +135,7 @@ export class OrderFinanceIntegrationService {
       projectionService?: FinanceProjectionPort;
       workflowService?: FinanceWorkflowPort;
       marketplaceReleaseService?: FinanceMarketplaceReleasePort;
+      inventoryReservationService?: FinanceInventoryReservationPort;
     }
   ) {
     this.orderRepository =
@@ -144,6 +152,9 @@ export class OrderFinanceIntegrationService {
     this.marketplaceReleaseService =
       dependencies?.marketplaceReleaseService ??
       new FinanceMarketplaceReleaseService(context);
+    this.inventoryReservationService =
+      dependencies?.inventoryReservationService ??
+      new FinanceInventoryReservationService(context);
   }
 
   async postCompletedOrder(
@@ -164,9 +175,37 @@ export class OrderFinanceIntegrationService {
         toProjectionInput(this.context, source)
       );
 
-    return this.workflowService.process(projection, {
-      mode: 'automatic',
-    });
+    const result = await this.workflowService.process(
+      projection,
+      {
+        mode: 'automatic',
+      }
+    );
+    await this.inventoryReservationService.sync(projection);
+    return result;
+  }
+
+  async syncInventoryLifecycle(
+    orderId: string
+  ): Promise<FinanceInventoryReservationSyncResult> {
+    const order =
+      await this.orderRepository.findById(orderId);
+    if (!order) {
+      throw new FinanceDomainError(
+        'Order tidak ditemukan pada organization aktif.',
+        'FINANCE_SALES_SOURCE_NOT_FOUND'
+      );
+    }
+
+    const projection = this.projectionService.projectOrder(
+      toProjectionInput(
+        this.context,
+        order as unknown as OrderFinanceSource
+      )
+    );
+    return this.inventoryReservationService.sync(
+      projection
+    );
   }
 
   async recordMarketplaceRelease(

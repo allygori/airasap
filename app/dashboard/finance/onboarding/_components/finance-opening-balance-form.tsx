@@ -1,9 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -160,6 +164,8 @@ export default function FinanceOpeningBalanceForm({
   const [form, setForm] = useState<FormState | null>(null);
   const [isLoading, setIsLoading] = useState(enabled);
   const [isSaving, setIsSaving] = useState(false);
+  const [isRefreshingInventory, setIsRefreshingInventory] =
+    useState(false);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [preview, setPreview] =
@@ -282,6 +288,51 @@ export default function FinanceOpeningBalanceForm({
     setForm((current) =>
       current ? { ...current, ...next } : current
     );
+  };
+
+  const refreshInventoryOptions = async () => {
+    setIsRefreshingInventory(true);
+    setErrorMessage(null);
+
+    try {
+      const response = await fetch(
+        '/api/v1/dashboard/finance/onboarding/opening-balance',
+        { cache: 'no-store' }
+      );
+      const payload: unknown = await response.json();
+      const nextSetup = parseSetupResponse(payload);
+
+      if (!response.ok || !nextSetup) {
+        setErrorMessage(
+          getErrorMessage(payload) ??
+            'Pilihan inventory gagal diperbarui.'
+        );
+        return;
+      }
+
+      setSetup((current) =>
+        current
+          ? {
+              ...current,
+              options: {
+                ...current.options,
+                inventory_items:
+                  nextSetup.options.inventory_items,
+                locations: nextSetup.options.locations,
+              },
+            }
+          : nextSetup
+      );
+      setSuccessMessage(
+        'Pilihan item dan lokasi sudah diperbarui. Isian opening balance tetap tersimpan di layar.'
+      );
+    } catch {
+      setErrorMessage(
+        'Pilihan inventory gagal diperbarui. Periksa koneksi lalu coba lagi.'
+      );
+    } finally {
+      setIsRefreshingInventory(false);
+    }
   };
 
   const saveDraft = async (): Promise<boolean> => {
@@ -687,6 +738,30 @@ export default function FinanceOpeningBalanceForm({
                     title="Persediaan barang"
                     description="Satu baris untuk satu item pada satu lokasi. Unit cost dipakai untuk nilai inventory."
                   />
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Link
+                      href="/dashboard/finance/inventory/setup"
+                      target="_blank"
+                      rel="noreferrer"
+                      className={buttonVariants({
+                        variant: 'outline',
+                      })}
+                    >
+                      Siapkan item &amp; lokasi
+                    </Link>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={isRefreshingInventory}
+                      onClick={() =>
+                        void refreshInventoryOptions()
+                      }
+                    >
+                      {isRefreshingInventory
+                        ? 'Memuat pilihan…'
+                        : 'Muat ulang pilihan inventory'}
+                    </Button>
+                  </div>
                   {form.inventory_lines.map(
                     (line, index) => (
                       <InventoryLine

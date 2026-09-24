@@ -4,6 +4,7 @@ import type { FinanceInventoryLocationRepository } from './finance-inventory-loc
 import type { FinanceInventoryMappingRepository } from './finance-inventory-mapping.repository';
 import type { FinanceInventoryBalancePersistenceRecord } from './finance-inventory-movement.repository';
 import type { FinanceInventoryMovementRepository } from './finance-inventory-movement.repository';
+import type { FinanceInventoryReservationRepository } from './finance-inventory-reservation.repository';
 import type { FinanceInventoryItemPersistenceRecord } from './finance-inventory-item.repository';
 import { FinanceInventoryStockReadService } from './finance-inventory-stock-read.service';
 
@@ -56,12 +57,18 @@ type MappingPort = Pick<
   FinanceInventoryMappingRepository,
   'countActiveByInventoryItemIds'
 >;
+type ReservationPort = Pick<
+  FinanceInventoryReservationRepository,
+  | 'aggregateActiveByInventoryItemIds'
+  | 'countIssuesByInventoryItemIds'
+>;
 
 const makeService = (options?: {
   itemRepository?: ItemPort;
   locationRepository?: LocationPort;
   movementRepository?: MovementPort;
   mappingRepository?: MappingPort;
+  reservationRepository?: ReservationPort;
 }) =>
   new FinanceInventoryStockReadService(
     { organizationId },
@@ -89,6 +96,13 @@ const makeService = (options?: {
           { _id: itemId, count: 1 },
         ],
       },
+      reservationRepository:
+        options?.reservationRepository ?? {
+          aggregateActiveByInventoryItemIds: async () => [
+            { _id: itemId, quantity: 3 },
+          ],
+          countIssuesByInventoryItemIds: async () => [],
+        },
     }
   );
 
@@ -102,9 +116,12 @@ describe('FinanceInventoryStockReadService', () => {
     expect(result.items[0]).toMatchObject({
       sku: 'SKU-001',
       quantity_on_hand: 8,
+      reserved_quantity: 3,
+      sellable_quantity: 5,
       value_on_hand: 800000,
       average_unit_cost: 100000,
       mapping_count: 1,
+      reservation_issue_count: 0,
       location_count: 2,
       status: 'ready',
     });
@@ -130,6 +147,22 @@ describe('FinanceInventoryStockReadService', () => {
       quantity_on_hand: -2,
       status: 'needs_review',
       missing_cost_movement_count: 1,
+    });
+  });
+
+  it('marks an item with a shortage reservation as needing review', async () => {
+    const result = await makeService({
+      reservationRepository: {
+        aggregateActiveByInventoryItemIds: async () => [],
+        countIssuesByInventoryItemIds: async () => [
+          { _id: itemId, count: 1 },
+        ],
+      },
+    }).list({ page: 1, limit: 25 });
+
+    expect(result.items[0]).toMatchObject({
+      reservation_issue_count: 1,
+      status: 'needs_review',
     });
   });
 

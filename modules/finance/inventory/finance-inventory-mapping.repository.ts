@@ -1,4 +1,8 @@
-import { Types, type ClientSession } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type UpdateQuery,
+} from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -20,6 +24,12 @@ export type FinanceInventoryMappingPersistenceRecord = {
   inventory_item: Types.ObjectId;
   mapping_method: string;
   is_active: boolean;
+};
+
+export type UpsertFinanceInventoryMappingRecord = {
+  product_id: string;
+  variant_id?: string;
+  inventory_item_id: string;
 };
 
 export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceInventoryMapping> {
@@ -87,5 +97,83 @@ export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceIn
     return fallbackQuery
       .lean<FinanceInventoryMappingPersistenceRecord | null>()
       .exec();
+  }
+
+  async listActiveForProductIds(
+    productIds: string[]
+  ): Promise<FinanceInventoryMappingPersistenceRecord[]> {
+    const objectIds = productIds
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (objectIds.length === 0) return [];
+
+    return this.model
+      .find({
+        ...this.getTenantFilter(),
+        product: { $in: objectIds },
+        is_active: true,
+      })
+      .select(
+        '_id organization product variant_id variant_key inventory_item mapping_method is_active'
+      )
+      .lean<FinanceInventoryMappingPersistenceRecord[]>()
+      .exec();
+  }
+
+  async upsertActive(
+    data: UpsertFinanceInventoryMappingRecord
+  ): Promise<FinanceInventoryMappingPersistenceRecord> {
+    const productId = new Types.ObjectId(data.product_id);
+    const inventoryItemId = new Types.ObjectId(
+      data.inventory_item_id
+    );
+    const variantKey = data.variant_id ?? '__product__';
+    const set: Record<string, unknown> = {
+      inventory_item: inventoryItemId,
+      mapping_method: 'manual_setup',
+      is_active: true,
+      ...(data.variant_id
+        ? { variant_id: data.variant_id }
+        : {}),
+    };
+    const update: UpdateQuery<TFinanceInventoryMapping> = {
+      $set: set,
+      $setOnInsert: {
+        organization: new Types.ObjectId(
+          this.tenantContext.organizationId
+        ),
+        product: productId,
+        variant_key: variantKey,
+      },
+    };
+
+    const mapping = await this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          product: productId,
+          variant_key: variantKey,
+        },
+        update,
+        {
+          upsert: true,
+          returnDocument: 'after',
+          runValidators: true,
+          setDefaultsOnInsert: true,
+        }
+      )
+      .select(
+        '_id organization product variant_id variant_key inventory_item mapping_method is_active'
+      )
+      .lean<FinanceInventoryMappingPersistenceRecord | null>()
+      .exec();
+
+    if (!mapping) {
+      throw new Error(
+        'Finance inventory product mapping could not be saved.'
+      );
+    }
+
+    return mapping;
   }
 }

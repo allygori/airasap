@@ -35,7 +35,8 @@ export type TFinanceSalesTransactionSourceLine = {
 };
 
 export type TFinanceSalesTransactionIntentLine = {
-  account_role: string;
+  account_role?: string;
+  account_id?: string;
   debit: number;
   credit: number;
 };
@@ -108,7 +109,8 @@ const SourceLineSchema =
 const IntentLineSchema =
   new Schema<TFinanceSalesTransactionIntentLine>(
     {
-      account_role: { type: String, required: true },
+      account_role: { type: String },
+      account_id: { type: String },
       debit: { type: Number, required: true, min: 0 },
       credit: { type: Number, required: true, min: 0 },
     },

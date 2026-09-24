@@ -151,6 +151,8 @@ const makeService = (overrides?: {
 const source = {
   source_order_id: 'ORDER-001',
   source_order_number: 'SP-001',
+  platform: 'shopee',
+  store_id: null,
   transaction_date: new Date('2026-09-22T00:00:00.000Z'),
   lines: [
     {
@@ -286,7 +288,7 @@ describe('FinanceInventoryCogsService', () => {
             source_type: 'order',
             source_id: source.source_order_id,
             idempotency_key:
-              'finance-sales-cogs:ORDER-001:ORDER-001:0',
+              'finance-sales-cogs:shopee::ORDER-001:ORDER-001%3A0',
             status: 'posted' as const,
             journal_entry: new Types.ObjectId(),
           },

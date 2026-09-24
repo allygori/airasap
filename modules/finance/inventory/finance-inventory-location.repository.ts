@@ -55,4 +55,40 @@ export class FinanceInventoryLocationRepository extends BaseRepository<TFinanceI
       .lean<FinanceInventoryLocationPersistenceRecord[]>()
       .exec();
   }
+
+  async ensureDefaultLocation(): Promise<FinanceInventoryLocationPersistenceRecord> {
+    const location = await this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          code: 'MAIN',
+        },
+        {
+          $set: { is_active: true },
+          $setOnInsert: {
+            organization: this.tenantContext.organizationId,
+            code: 'MAIN',
+            name: 'Gudang Utama',
+            type: 'warehouse',
+          },
+        },
+        {
+          upsert: true,
+          returnDocument: 'after',
+          runValidators: true,
+          setDefaultsOnInsert: true,
+        }
+      )
+      .select('_id organization code name is_active')
+      .lean<FinanceInventoryLocationPersistenceRecord | null>()
+      .exec();
+
+    if (!location) {
+      throw new Error(
+        'Default Finance inventory location could not be created.'
+      );
+    }
+
+    return location;
+  }
 }

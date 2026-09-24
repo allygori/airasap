@@ -44,7 +44,7 @@ describe('FinanceSalesPostingRulesService', () => {
     expect(result.intent).toMatchObject({
       source_event: 'completed_order',
       idempotency_key:
-        'finance-sales:completed:507f1f77bcf86cd799439099',
+        'finance-sales:completed:shopee:507f1f77bcf86cd799439011:507f1f77bcf86cd799439099',
       inventory_cogs: { status: 'deferred' },
     });
     expect(result.intent?.lines).toEqual([

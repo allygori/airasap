@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -53,12 +56,22 @@ export function FinanceStockView({
             otomatis.
           </p>
         </div>
-        <Link
-          href="/dashboard/finance/accounting/general-journal"
-          className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-        >
-          Lihat journal →
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/finance/inventory/setup"
+            className={buttonVariants({
+              variant: 'outline',
+            })}
+          >
+            Siapkan inventory
+          </Link>
+          <Link
+            href="/dashboard/finance/accounting/general-journal"
+            className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Lihat journal →
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -127,9 +140,19 @@ export function FinanceStockView({
         </CardHeader>
         <CardContent className="p-0">
           {data.items.length === 0 ? (
-            <div className="text-muted-foreground px-6 py-12 text-center text-sm">
-              Belum ada item inventory aktif yang cocok
-              dengan filter.
+            <div className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+              <p className="text-muted-foreground text-sm">
+                Belum ada item inventory aktif yang cocok
+                dengan filter.
+              </p>
+              <Link
+                href="/dashboard/finance/inventory/setup"
+                className={buttonVariants({
+                  variant: 'secondary',
+                })}
+              >
+                Siapkan inventory
+              </Link>
             </div>
           ) : (
             <Table>
@@ -139,6 +162,12 @@ export function FinanceStockView({
                   <TableHead>Tipe</TableHead>
                   <TableHead className="text-right">
                     Qty on hand
+                  </TableHead>
+                  <TableHead className="text-right">
+                    Dipesan
+                  </TableHead>
+                  <TableHead className="text-right">
+                    Tersedia
                   </TableHead>
                   <TableHead className="text-right">
                     Nilai
@@ -160,6 +189,12 @@ export function FinanceStockView({
                         {item.sku} · {item.location_count}{' '}
                         lokasi
                       </p>
+                      {item.reservation_issue_count > 0 ? (
+                        <p className="text-destructive mt-1 text-xs">
+                          {item.reservation_issue_count}{' '}
+                          reservasi perlu ditinjau
+                        </p>
+                      ) : null}
                     </TableCell>
                     <TableCell className="text-sm">
                       {item.item_type}
@@ -168,6 +203,16 @@ export function FinanceStockView({
                       {item.quantity_on_hand === null
                         ? 'Tidak dilacak'
                         : `${formatNumber(item.quantity_on_hand)} ${item.unit}`}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {item.reserved_quantity === null
+                        ? 'Tidak dilacak'
+                        : `${formatNumber(item.reserved_quantity)} ${item.unit}`}
+                    </TableCell>
+                    <TableCell className="text-right font-mono text-xs">
+                      {item.sellable_quantity === null
+                        ? 'Tidak dilacak'
+                        : `${formatNumber(item.sellable_quantity)} ${item.unit}`}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {item.value_on_hand === null

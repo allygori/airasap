@@ -20,7 +20,7 @@ const makeRecord =
     posting_mode: 'manual',
     status: 'blocked',
     idempotency_key:
-      'finance-sales:completed:507f1f77bcf86cd799439099',
+      'finance-sales:completed:shopee:507f1f77bcf86cd799439011:507f1f77bcf86cd799439099',
     blocked_reason: 'Account belum tersedia.',
     journal_entry_id: null,
     source_lines: [

@@ -31,6 +31,14 @@ export const FINANCE_INVENTORY_STOCK_STATUS_VALUES = [
   'value_not_tracked',
 ] as const;
 
+export const FINANCE_INVENTORY_RESERVATION_STATUS_VALUES = [
+  'active',
+  'released',
+  'consumed',
+  'shortage',
+  'blocked',
+] as const;
+
 export const FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES =
   ['increase', 'decrease'] as const;
 
@@ -109,6 +117,9 @@ export type FinanceInventoryMovementStatus =
 
 export type FinanceInventoryStockStatus =
   (typeof FINANCE_INVENTORY_STOCK_STATUS_VALUES)[number];
+
+export type FinanceInventoryReservationStatus =
+  (typeof FINANCE_INVENTORY_RESERVATION_STATUS_VALUES)[number];
 
 export type FinanceInventoryAdjustmentDirection =
   (typeof FINANCE_INVENTORY_ADJUSTMENT_DIRECTION_VALUES)[number];

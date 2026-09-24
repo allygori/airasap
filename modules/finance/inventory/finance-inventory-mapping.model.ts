@@ -58,6 +58,10 @@ FinanceInventoryMappingSchema.index({
   inventory_item: 1,
   is_active: 1,
 });
+FinanceInventoryMappingSchema.index(
+  { organization: 1, product: 1, variant_key: 1 },
+  { unique: true }
+);
 FinanceInventoryMappingSchema.plugin(multiTenancyPlugin);
 
 export const FinanceInventoryMappingModel =

@@ -6,8 +6,25 @@
 
 import { BaseRepository } from '../base.repository';
 import { ProductModel, TProduct } from './product.model';
-import { QueryFilter, UpdateQuery } from 'mongoose';
+import { QueryFilter, Types, UpdateQuery } from 'mongoose';
 import { type OrderPlatform } from '@/constant/order-platform';
+
+export type ProductInventorySourceRecord = {
+  _id: Types.ObjectId;
+  product_id: string;
+  name: string;
+  platform?: OrderPlatform;
+  parent_sku?: string;
+  has_variation: boolean;
+  variants: Array<{
+    variant_id: string;
+    name: string;
+    child_sku?: string | null;
+  }>;
+};
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class ProductRepository extends BaseRepository<TProduct> {
   constructor(tenantContext: {
@@ -15,6 +32,79 @@ export class ProductRepository extends BaseRepository<TProduct> {
     storeId?: string;
   }) {
     super(ProductModel, tenantContext);
+  }
+
+  async listActiveInventorySources(input: {
+    page: number;
+    limit: number;
+    search?: string;
+  }): Promise<{
+    records: ProductInventorySourceRecord[];
+    total: number;
+  }> {
+    const filter: QueryFilter<TProduct> = {
+      ...this.getTenantFilter(),
+      is_active: true,
+      $or: [
+        { deleted_at: null },
+        { deleted_at: { $exists: false } },
+      ],
+    };
+
+    if (input.search) {
+      const search = new RegExp(
+        escapeRegex(input.search),
+        'i'
+      );
+      filter.$and = [
+        {
+          $or: [
+            { name: search },
+            { product_id: search },
+            { parent_sku: search },
+            { 'variants.child_sku': search },
+          ],
+        },
+      ];
+    }
+
+    const [records, total] = await Promise.all([
+      this.model
+        .find(filter)
+        .select(
+          '_id product_id name platform parent_sku has_variation variants.variant_id variants.name variants.child_sku'
+        )
+        .sort({ name: 1, _id: 1 })
+        .skip((input.page - 1) * input.limit)
+        .limit(input.limit)
+        .lean<ProductInventorySourceRecord[]>()
+        .exec(),
+      this.model.countDocuments(filter).exec(),
+    ]);
+
+    return { records, total };
+  }
+
+  async findActiveInventorySourceById(
+    id: string
+  ): Promise<ProductInventorySourceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    return this.model
+      .findOne({
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        is_active: true,
+        $or: [
+          { deleted_at: null },
+          { deleted_at: { $exists: false } },
+        ],
+      })
+      .select(
+        '_id product_id name platform parent_sku has_variation variants.variant_id variants.name variants.child_sku'
+      )
+      .lean<ProductInventorySourceRecord | null>()
+      .exec();
   }
 
   /**
@@ -44,7 +134,7 @@ export class ProductRepository extends BaseRepository<TProduct> {
         .split(',')
         .map((f) => f.trim());
       fields.forEach((field) => {
-        query = query.populate(field) as any;
+        query = query.populate(field) as typeof query;
       });
     }
 

@@ -363,6 +363,10 @@ export const financeNav = [
         url: '/dashboard/finance/sales',
       },
       {
+        title: 'Penjualan Offline',
+        url: '/dashboard/finance/sales/offline',
+      },
+      {
         title: 'Pembelian',
         url: '/dashboard/finance/purchase',
       },
@@ -385,6 +389,10 @@ export const financeNav = [
       {
         title: 'Daftar Produk & Stok',
         url: '/dashboard/finance/inventory/product-and-stock-list',
+      },
+      {
+        title: 'Setup & Mapping Inventory',
+        url: '/dashboard/finance/inventory/setup',
       },
       {
         title: 'Penyesuaian Stok',

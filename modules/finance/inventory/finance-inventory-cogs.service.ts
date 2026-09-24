@@ -6,6 +6,7 @@ import {
   type FinanceTenantContext,
 } from '../finance.types';
 import type { TFinanceSalesTransactionSourceLine } from '../sales/finance-sales-transaction.model';
+import { makeFinanceSalesCogsIdempotencyKey } from '../sales/finance-sales.keys';
 import {
   FINANCE_INVENTORY_DEFAULT_ACCOUNT_BY_ITEM_TYPE,
   FINANCE_INVENTORY_DEFAULT_COGS_ACCOUNT_BY_ITEM_TYPE,
@@ -54,6 +55,8 @@ type FinanceInventoryCogsAccountPort = Pick<
 export type FinanceInventoryCogsSource = {
   source_order_id: string;
   source_order_number: string;
+  platform: string;
+  store_id: string | null;
   transaction_date: Date;
   lines: TFinanceSalesTransactionSourceLine[];
 };
@@ -79,6 +82,7 @@ export type FinanceInventoryCogsMovementPlan = {
   occurred_at: Date;
   source_order_id: string;
   source_order_number: string;
+  source_type: 'order' | 'offline_sale';
 };
 
 export type FinanceInventoryCogsPreparation = {
@@ -260,7 +264,13 @@ export class FinanceInventoryCogsService {
         );
       }
 
-      const movementKey = `finance-sales-cogs:${source.source_order_id}:${line.source_line_id}`;
+      const movementKey =
+        makeFinanceSalesCogsIdempotencyKey({
+          platform: source.platform,
+          store_id: source.store_id,
+          source_order_id: source.source_order_id,
+          source_line_id: line.source_line_id,
+        });
       const existing =
         await this.movementRepository.findByIdempotencyKey(
           movementKey,
@@ -354,6 +364,10 @@ export class FinanceInventoryCogsService {
         occurred_at: source.transaction_date,
         source_order_id: source.source_order_id,
         source_order_number: source.source_order_number,
+        source_type:
+          source.platform === 'offline'
+            ? 'offline_sale'
+            : 'order',
       });
     }
 
@@ -413,7 +427,7 @@ export class FinanceInventoryCogsService {
           unit_cost: plan.unit_cost,
           total_cost: plan.total_cost,
           occurred_at: plan.occurred_at,
-          source_type: 'order',
+          source_type: plan.source_type,
           source_id: plan.source_order_id,
           idempotency_key: plan.idempotency_key,
           reference: plan.source_order_number,

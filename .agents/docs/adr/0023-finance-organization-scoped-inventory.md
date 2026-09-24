@@ -1,6 +1,6 @@
 # ADR 0023 — Organization-Scoped Finance Inventory
 
-Status: [TARGET]
+Status: [CURRENT]
 
 ## Context
 
@@ -11,10 +11,10 @@ operations. For the first release, requiring a separate stock pool for each
 store would add setup and mapping work before the user has a reliable central
 stock view.
 
-Finance already owns inventory collections separate from legacy Inventory.
-The current Finance item and location models are organization-scoped. Product
-mapping is used by Finance HPP, but there is not yet a user-facing item,
-location, or mapping setup flow.
+Finance owns inventory collections separate from legacy Inventory. Finance
+items and locations are organization-scoped. The setup flow reads catalog
+sources through a narrow public Products service, and writes only Finance
+items, locations, and product/variant mappings.
 
 ## Decision
 
@@ -36,12 +36,19 @@ location, or mapping setup flow.
 5. Finance remains optional: if Finance is inactive, its inventory and
    accounting side effects do not run.
 
+Implementation details: the first-use location is an idempotent organization
+record with code `MAIN` and name `Gudang Utama`. Creating or mapping an item
+does not add stock or create a movement. Initial quantity and unit cost are
+entered through opening balance before activation. Catalog product and variant
+identity is explicit; SKU is a suggested value, never an automatic merge key.
+
 ## Consequences
 
 - Sellers can manage a common stock pool without maintaining a separate
   quantity for every channel.
 - A user-facing setup flow is required before purchase, adjustment, opening
-  balance, or HPP workflows can be used from a clean database.
+  balance, or HPP workflows can be used from a clean database; that flow is
+  implemented in Finance inventory setup.
 - The initial release cannot report independent on-hand balances by store or
   brand. Adding that capability later requires an explicit store-level stock
   dimension and corresponding movement, mapping, and reporting rules.
@@ -52,6 +59,10 @@ location, or mapping setup flow.
 - Exact product/variant matching and per-platform reservation status mappings
   must be verified against current importer data before implementing those
   flows; this ADR does not invent those source contracts.
+- The treatment of pre-existing physical stock after an organization has
+  activated Finance with “start at zero” remains unresolved. Do not represent
+  that stock as a purchase or shrinkage adjustment until an accounting policy
+  is agreed.
 
 ## Scope boundary
 

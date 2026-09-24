@@ -22,6 +22,10 @@ import {
   type FinanceInventoryBalancePersistenceRecord,
 } from './finance-inventory-movement.repository';
 import { FinanceInventoryMappingRepository } from './finance-inventory-mapping.repository';
+import {
+  FinanceInventoryReservationRepository,
+  type FinanceInventoryReservedQuantityRecord,
+} from './finance-inventory-reservation.repository';
 
 type FinanceInventoryItemReadPort = Pick<
   FinanceInventoryItemRepository,
@@ -43,6 +47,12 @@ type FinanceInventoryMappingReadPort = Pick<
   'countActiveByInventoryItemIds'
 >;
 
+type FinanceInventoryReservationReadPort = Pick<
+  FinanceInventoryReservationRepository,
+  | 'aggregateActiveByInventoryItemIds'
+  | 'countIssuesByInventoryItemIds'
+>;
+
 const toMap = (
   records: FinanceInventoryBalancePersistenceRecord[]
 ) =>
@@ -60,19 +70,32 @@ const toCountMap = (
     ])
   );
 
+const toReservedMap = (
+  records: FinanceInventoryReservedQuantityRecord[]
+) =>
+  new Map(
+    records.map((record) => [
+      String(record._id),
+      record.quantity,
+    ])
+  );
+
 const getStockStatus = ({
   item,
   quantity,
   balance,
+  reservationIssueCount,
 }: {
   item: FinanceInventoryItemPersistenceRecord;
   quantity: number | null;
   balance: FinanceInventoryBalancePersistenceRecord;
+  reservationIssueCount: number;
 }): FinanceInventoryBalanceDTO['status'] => {
   if (!item.track_quantity) return 'quantity_not_tracked';
   if (
     (quantity !== null && quantity < 0) ||
     balance.unresolved_movement_count > 0 ||
+    reservationIssueCount > 0 ||
     (item.track_value &&
       balance.missing_cost_movement_count > 0)
   ) {
@@ -86,10 +109,14 @@ const mapBalance = ({
   item,
   balance,
   mappingCount,
+  reservedQuantity,
+  reservationIssueCount,
 }: {
   item: FinanceInventoryItemPersistenceRecord;
   balance?: FinanceInventoryBalancePersistenceRecord;
   mappingCount: number;
+  reservedQuantity: number;
+  reservationIssueCount: number;
 }): FinanceInventoryBalanceDTO => {
   const current = balance ?? {
     _id: item._id,
@@ -104,6 +131,13 @@ const mapBalance = ({
   const quantity = item.track_quantity
     ? current.inbound_quantity - current.outbound_quantity
     : null;
+  const reserved = item.track_quantity
+    ? reservedQuantity
+    : null;
+  const sellable =
+    quantity !== null && reserved !== null
+      ? Math.max(quantity - reserved, 0)
+      : null;
   const value = item.track_value
     ? current.inbound_value - current.outbound_value
     : null;
@@ -119,11 +153,14 @@ const mapBalance = ({
     item_type: item.item_type,
     unit: item.unit,
     quantity_on_hand: quantity,
+    reserved_quantity: reserved,
+    sellable_quantity: sellable,
     value_on_hand: value,
     average_unit_cost: averageUnitCost,
     track_quantity: item.track_quantity,
     track_value: item.track_value,
     mapping_count: mappingCount,
+    reservation_issue_count: reservationIssueCount,
     location_count: current.location_count,
     unresolved_movement_count:
       current.unresolved_movement_count,
@@ -133,6 +170,7 @@ const mapBalance = ({
       item,
       quantity,
       balance: current,
+      reservationIssueCount,
     }),
   };
 };
@@ -142,6 +180,7 @@ export class FinanceInventoryStockReadService {
   private readonly locationRepository: FinanceInventoryLocationReadPort;
   private readonly movementRepository: FinanceInventoryMovementReadPort;
   private readonly mappingRepository: FinanceInventoryMappingReadPort;
+  private readonly reservationRepository: FinanceInventoryReservationReadPort;
 
   constructor(
     context: FinanceTenantContext,
@@ -150,6 +189,7 @@ export class FinanceInventoryStockReadService {
       locationRepository?: FinanceInventoryLocationReadPort;
       movementRepository?: FinanceInventoryMovementReadPort;
       mappingRepository?: FinanceInventoryMappingReadPort;
+      reservationRepository?: FinanceInventoryReservationReadPort;
     }
   ) {
     assertFinanceTenant(context);
@@ -165,6 +205,9 @@ export class FinanceInventoryStockReadService {
     this.mappingRepository =
       dependencies?.mappingRepository ??
       new FinanceInventoryMappingRepository(context);
+    this.reservationRepository =
+      dependencies?.reservationRepository ??
+      new FinanceInventoryReservationRepository(context);
   }
 
   async list(
@@ -195,7 +238,12 @@ export class FinanceInventoryStockReadService {
     const itemIds = items.records.map((item) =>
       String(item._id)
     );
-    const [balances, mappings] = await Promise.all([
+    const [
+      balances,
+      mappings,
+      reservations,
+      reservationIssues,
+    ] = await Promise.all([
       this.movementRepository.aggregatePostedBalances(
         itemIds,
         query.location_id
@@ -203,9 +251,20 @@ export class FinanceInventoryStockReadService {
       this.mappingRepository.countActiveByInventoryItemIds(
         itemIds
       ),
+      this.reservationRepository.aggregateActiveByInventoryItemIds(
+        itemIds,
+        query.location_id
+      ),
+      this.reservationRepository.countIssuesByInventoryItemIds(
+        itemIds
+      ),
     ]);
     const balanceMap = toMap(balances);
     const mappingMap = toCountMap(mappings);
+    const reservedMap = toReservedMap(reservations);
+    const reservationIssueMap = toCountMap(
+      reservationIssues
+    );
 
     return FinanceInventoryStockResponseSchema.parse({
       items: items.records.map((item) =>
@@ -214,6 +273,10 @@ export class FinanceInventoryStockReadService {
           balance: balanceMap.get(String(item._id)),
           mappingCount:
             mappingMap.get(String(item._id)) ?? 0,
+          reservedQuantity:
+            reservedMap.get(String(item._id)) ?? 0,
+          reservationIssueCount:
+            reservationIssueMap.get(String(item._id)) ?? 0,
         })
       ),
       pagination: {

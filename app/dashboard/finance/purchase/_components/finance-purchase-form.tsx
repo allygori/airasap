@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -309,6 +312,16 @@ export function FinancePurchaseForm({
           <CardContent className="text-muted-foreground leading-7">
             Buat minimal satu inventory item aktif dan satu
             lokasi aktif sebelum mencatat purchase.
+            <div className="mt-4">
+              <Link
+                href="/dashboard/finance/inventory/setup"
+                className={buttonVariants({
+                  variant: 'outline',
+                })}
+              >
+                Siapkan inventory
+              </Link>
+            </div>
           </CardContent>
         </Card>
       ) : (

@@ -2,7 +2,10 @@ import {
   shopeeV1AllOrderParser,
   type ParsedAllOrderRow,
 } from '@/lib/xlsx/shopee/v1/order/all';
-import { shopeeV2AllOrderParser } from '@/lib/xlsx/shopee/v2/order/all';
+import {
+  shopeeV2AllOrderParser,
+  type ParsedAllOrderRow as ParsedAllOrderRowV2,
+} from '@/lib/xlsx/shopee/v2/order/all';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import type { MassUploadResponseDTO } from '../order.dto';
@@ -33,12 +36,60 @@ export type ShopeeAllOrderImporterDependencies = {
   financeService?: OrderFinanceIntegrationService;
 };
 
+const syncFinanceForImportedOrder = async (
+  financeService:
+    | OrderFinanceIntegrationService
+    | undefined,
+  orderId: string,
+  status: string | null | undefined
+): Promise<string | undefined> => {
+  if (!financeService) return undefined;
+
+  try {
+    if (status === SHOPEE_ORDER_STATUS.completed.value) {
+      const result =
+        await financeService.postCompletedOrder(orderId);
+      if (result.status === 'posted') {
+        return 'Jurnal penjualan dan stok Finance sudah diproses.';
+      }
+      if (result.status === 'blocked') {
+        return `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
+      }
+      if (result.status === 'pending') {
+        return 'Transaksi Finance menunggu posting.';
+      }
+      return result.status === 'disabled'
+        ? 'Finance belum aktif; order tersimpan tanpa perubahan stok Finance.'
+        : undefined;
+    }
+
+    const result =
+      await financeService.syncInventoryLifecycle(orderId);
+    if (result.status === 'review') {
+      return `Stok Finance perlu ditinjau: ${result.reason ?? 'mapping atau stok belum siap.'}`;
+    }
+    if (result.status === 'synced') {
+      if (result.active_count > 0) {
+        return 'Stok untuk order berhasil direservasi di Finance.';
+      }
+      if (result.released_count > 0) {
+        return 'Reservasi stok Finance berhasil dilepas.';
+      }
+    }
+    return undefined;
+  } catch (error: unknown) {
+    return `Order tersimpan, tetapi sinkronisasi Finance tertahan: ${safeFinanceIntegrationError(error)}`;
+  }
+};
+
 export async function massUploadAllOrderShopeeV1(
   dependencies: ShopeeAllOrderImporterDependencies,
   fileBuffer: ArrayBuffer
 ): Promise<MassUploadResponseDTO> {
   try {
-    let orders: any[];
+    let orders: Array<
+      ParsedAllOrderRow | ParsedAllOrderRowV2
+    >;
     try {
       orders = await shopeeV2AllOrderParser(fileBuffer);
     } catch {
@@ -53,7 +104,7 @@ export async function massUploadAllOrderShopeeV1(
 
     const ordersMap = new Map<
       string,
-      ParsedAllOrderRow[]
+      Array<ParsedAllOrderRow | ParsedAllOrderRowV2>
     >();
     const productNames = new Set<string>();
     const parentSkus = new Set<string>();
@@ -362,30 +413,11 @@ export async function massUploadAllOrderShopeeV1(
       if (!existingOrder) {
         const createdOrder =
           await dependencies.repository.create(payload);
-        let message: string | undefined;
-        if (
-          payload.status ===
-            SHOPEE_ORDER_STATUS.completed.value &&
-          dependencies.financeService
-        ) {
-          try {
-            const result =
-              await dependencies.financeService.postCompletedOrder(
-                String(createdOrder._id)
-              );
-            if (result.status === 'posted') {
-              message =
-                'Jurnal penjualan Finance berhasil diposting.';
-            } else if (result.status === 'blocked') {
-              message = `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
-            } else if (result.status === 'pending') {
-              message =
-                'Transaksi Finance menunggu posting.';
-            }
-          } catch (error) {
-            message = `Order dibuat, tetapi posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
-          }
-        }
+        const message = await syncFinanceForImportedOrder(
+          dependencies.financeService,
+          String(createdOrder._id),
+          payload.status
+        );
         createdCount++;
         orderResults.push({
           order_id: orderId,
@@ -393,35 +425,29 @@ export async function massUploadAllOrderShopeeV1(
           ...(message ? { message } : {}),
         });
       } else {
-        let message: string | undefined;
-        if (
-          existingOrder.status ===
-            SHOPEE_ORDER_STATUS.completed.value &&
-          dependencies.financeService
-        ) {
-          try {
-            const result =
-              await dependencies.financeService.postCompletedOrder(
-                String(existingOrder._id)
-              );
-            if (result.status === 'posted') {
-              message =
-                'Jurnal Finance sudah diposting atau terkonfirmasi idempotent.';
-            } else if (result.status === 'blocked') {
-              message = `Posting Finance tertahan: ${result.reason ?? 'perlu ditinjau.'}`;
-            } else if (result.status === 'pending') {
-              message =
-                'Transaksi Finance menunggu posting.';
-            }
-          } catch (error) {
-            message = `Order sudah ada, tetapi posting Finance tertahan: ${safeFinanceIntegrationError(error)}`;
-          }
-        }
+        const statusChanged =
+          Boolean(payload.status) &&
+          payload.status !== existingOrder.status;
+        const currentOrder = statusChanged
+          ? await dependencies.repository.updateImportedStatus(
+              String(existingOrder._id),
+              payload.status!
+            )
+          : existingOrder;
+        if (statusChanged && currentOrder) updatedCount++;
+        const message = await syncFinanceForImportedOrder(
+          dependencies.financeService,
+          String(existingOrder._id),
+          currentOrder?.status
+        );
         orderResults.push({
           order_id: orderId,
-          status: 'ignored',
+          status: statusChanged ? 'updated' : 'ignored',
           message:
-            message ?? 'Order sudah ada dan tidak ditimpa.',
+            message ??
+            (statusChanged
+              ? 'Status order diperbarui; data lain tidak ditimpa.'
+              : 'Order sudah ada dan tidak ditimpa.'),
         });
       }
 
@@ -444,9 +470,9 @@ export async function massUploadAllOrderShopeeV1(
       total_orders: ordersMap.size,
       order_results: orderResults,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     throw new Error(
-      `Gagal memproses mass upload order: ${error.message}`
+      `Gagal memproses mass upload order: ${error instanceof Error ? error.message : 'Terjadi kesalahan internal.'}`
     );
   }
 }

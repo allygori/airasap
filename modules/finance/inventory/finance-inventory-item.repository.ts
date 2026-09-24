@@ -25,6 +25,15 @@ export type FinanceInventoryItemPersistenceRecord = {
   cogs_account?: Types.ObjectId;
 };
 
+export type CreateFinanceInventoryItemRecord = {
+  sku: string;
+  name: string;
+  item_type: FinanceInventoryItemTypeDTO;
+  unit: string;
+  track_quantity: boolean;
+  track_value: boolean;
+};
+
 type FinanceInventoryItemListFilter = {
   page: number;
   limit: number;
@@ -110,5 +119,53 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
     return query
       .lean<FinanceInventoryItemPersistenceRecord | null>()
       .exec();
+  }
+
+  async findBySku(
+    sku: string
+  ): Promise<FinanceInventoryItemPersistenceRecord | null> {
+    return this.model
+      .findOne({
+        ...this.getTenantFilter(),
+        sku: sku.trim(),
+      })
+      .select(
+        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+      )
+      .lean<FinanceInventoryItemPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findActiveByIds(
+    ids: string[]
+  ): Promise<FinanceInventoryItemPersistenceRecord[]> {
+    const objectIds = ids
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (objectIds.length === 0) return [];
+
+    return this.model
+      .find({
+        ...this.getTenantFilter(),
+        _id: { $in: objectIds },
+        is_active: true,
+      })
+      .select(
+        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+      )
+      .lean<FinanceInventoryItemPersistenceRecord[]>()
+      .exec();
+  }
+
+  async createInventoryItem(
+    data: CreateFinanceInventoryItemRecord
+  ): Promise<FinanceInventoryItemPersistenceRecord> {
+    const document = new this.model({
+      ...data,
+      organization: this.tenantContext.organizationId,
+      is_active: true,
+    });
+    const saved = await document.save();
+    return saved.toObject() as unknown as FinanceInventoryItemPersistenceRecord;
   }
 }

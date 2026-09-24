@@ -88,7 +88,7 @@ const journalResult = {
     source_type: 'order',
     source_id: sourceOrderId,
     source_event: 'completed_order',
-    idempotency_key: `finance-sales:completed:${sourceOrderId}`,
+    idempotency_key: `finance-sales:completed:shopee:507f1f77bcf86cd799439011:${sourceOrderId}`,
     status: 'posted' as const,
     posted_at: '2026-09-22T00:00:00.000Z',
     posted_by: null,

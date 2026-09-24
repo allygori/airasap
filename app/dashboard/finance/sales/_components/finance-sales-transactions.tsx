@@ -5,7 +5,10 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import {
+  Button,
+  buttonVariants,
+} from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -95,12 +98,22 @@ export function FinanceSalesTransactions({
             direverse.
           </p>
         </div>
-        <Link
-          href="/dashboard/finance/accounting/general-journal"
-          className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-        >
-          Lihat General Journal →
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href="/dashboard/finance/accounting/general-journal"
+            className={buttonVariants({
+              variant: 'outline',
+            })}
+          >
+            Lihat General Journal
+          </Link>
+          <Link
+            href="/dashboard/finance/sales/offline"
+            className={buttonVariants()}
+          >
+            + Penjualan offline
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
@@ -203,7 +216,7 @@ export function FinanceSalesTransactions({
                 <TableRow>
                   <TableHead>Tanggal</TableHead>
                   <TableHead>Order source</TableHead>
-                  <TableHead>Platform</TableHead>
+                  <TableHead>Sumber</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>HPP</TableHead>
                   <TableHead className="text-right">
@@ -236,7 +249,9 @@ export function FinanceSalesTransactions({
                       </p>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {transaction.platform}
+                      {transaction.platform === 'offline'
+                        ? 'Offline'
+                        : transaction.platform}
                     </TableCell>
                     <TableCell>
                       <StatusBadge

@@ -14,6 +14,11 @@ import {
   FinanceInventoryAdjustmentItemOptionSchema,
   FinanceInventoryAdjustmentLocationOptionSchema,
   FinanceInventoryAdjustmentResponseSchema,
+  FinanceInventorySetupActionResponseSchema,
+  FinanceInventorySetupActionSchema,
+  FinanceInventorySetupProductOptionSchema,
+  FinanceInventorySetupQuerySchema,
+  FinanceInventorySetupResponseSchema,
 } from './finance-inventory.schema';
 
 export type FinanceInventoryItemTypeDTO = ReturnType<
@@ -80,4 +85,27 @@ export type FinanceInventoryAdjustmentResponseDTO =
 export type FinanceInventoryStockMovementSourceDTO =
   ReturnType<
     typeof FinanceInventoryStockMovementSourceSchema.parse
+  >;
+
+export type FinanceInventorySetupQueryDTO = ReturnType<
+  typeof FinanceInventorySetupQuerySchema.parse
+>;
+
+export type FinanceInventorySetupActionInputDTO =
+  ReturnType<
+    typeof FinanceInventorySetupActionSchema.parse
+  >;
+
+export type FinanceInventorySetupProductOptionDTO =
+  ReturnType<
+    typeof FinanceInventorySetupProductOptionSchema.parse
+  >;
+
+export type FinanceInventorySetupResponseDTO = ReturnType<
+  typeof FinanceInventorySetupResponseSchema.parse
+>;
+
+export type FinanceInventorySetupActionResponseDTO =
+  ReturnType<
+    typeof FinanceInventorySetupActionResponseSchema.parse
   >;

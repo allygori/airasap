@@ -27,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { FinanceSaleFullReturn } from './_components/finance-sale-full-return';
 
 type FinanceSalesDetailPageProps = {
   params: Promise<{ transactionId: string }>;
@@ -85,8 +86,12 @@ export default async function FinanceSalesDetailPage({
               mono
             />
             <InfoRow
-              label="Platform"
-              value={transaction.platform}
+              label="Sumber"
+              value={
+                transaction.platform === 'offline'
+                  ? 'Offline'
+                  : transaction.platform
+              }
             />
             <InfoRow
               label="Status source"
@@ -166,6 +171,26 @@ export default async function FinanceSalesDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      {transaction.status === 'posted' &&
+      transaction.journal_entry_id ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Koreksi retur</CardTitle>
+            <CardDescription>
+              Jurnal posted tetap immutable. Koreksi membuat
+              jurnal reversal baru dan mencatat pergerakan
+              stok balik.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FinanceSaleFullReturn
+              journalEntryId={transaction.journal_entry_id}
+              initialDate={getBusinessDate()}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>
@@ -302,6 +327,18 @@ function getStatusVariant(
       : status === 'reversed'
         ? 'warning'
         : 'info';
+}
+
+function getBusinessDate() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const part = (type: 'year' | 'month' | 'day') =>
+    parts.find((item) => item.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
 function UnavailableState() {

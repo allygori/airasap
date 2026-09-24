@@ -1,6 +1,6 @@
 # Finance Plan 05 — Inventory and Cost of Sales
 
-Status: [CURRENT / IN PROGRESS]
+Status: [CURRENT / IN PROGRESS — PHASE 5.7 REMAINS]
 
 ## Goal
 
@@ -34,13 +34,12 @@ cost, location, and journal behavior.
 - Finance remains optional. No Finance inventory side effect may run when the
   organization has not activated Finance.
 
-## Current usability gap [CURRENT]
+## Inventory setup flow [CURRENT]
 
 The stock view, adjustment form, purchase form, and opening-balance form read
-existing Finance items and locations. There is no Finance UI/API flow to create
-inventory items, locations, or product mappings. As a result, an organization
-with an empty Finance inventory has no user-facing way to satisfy the setup
-required by those workflows. Phase 5.5 is the next implementation priority.
+Finance-owned items and locations. Phase 5.5 now supplies the setup UI/API for
+those master records and product mappings, so a clean organization can prepare
+inventory without editing the database.
 
 ## Phases
 
@@ -179,7 +178,14 @@ Implementation status: [CURRENT]
 
 ### Phase 5.5 — Inventory setup and first-use flow
 
-Implementation status: [TARGET — NEXT]
+Implementation status: [CURRENT]
+
+The first-use screen now leads with catalog selection and one action to prepare
+stock for the selected product. SKU, name, unit, and tracking defaults can be
+reviewed in an optional detail panel; a missing catalog SKU is requested in the
+main flow. Linking another listing to an existing item and creating a
+non-catalog item are secondary actions. The default location is created on the
+first item save, so it does not require a separate setup step.
 
 Make the existing stock, purchase, adjustment, and opening-balance workflows
 usable from a clean Finance setup without requiring manual database setup.
@@ -205,15 +211,63 @@ Acceptance criteria:
 - Duplicate SKU and ambiguous product/variant matches are shown for explicit
   resolution; matching by product name alone never silently combines stock.
 - The setup remains tenant-scoped and uses only Finance-owned collections.
+- Product catalog reads go through a narrow public Products service and are
+  scoped to the organization across its stores. No Orders, Reports, or legacy
+  Inventory write path is changed by setup.
+- Setup is available to the organization owner during Finance onboarding and
+  to authenticated organization members after Finance is active. The API and
+  service enforce this; sidebar visibility is not authorization.
+- Opening balance links to setup in another tab and can refresh item/location
+  options without replacing the user's in-progress form state.
 
-Before implementation, confirm how Finance should handle an organization that
-has already activated using “start at zero” but later reports physical stock
-that existed before activation. Do not post that balance as a purchase or
-shrinkage adjustment without an agreed accounting treatment.
+Out of scope for this phase: accounting treatment for physical stock that
+predates Finance activation when the organization previously chose “start at
+zero.” Do not record that case as a purchase or shrinkage adjustment. Agree on
+its treatment before adding a post-activation opening-stock workflow.
 
 ### Phase 5.6 — Simple product mapping and shared sales stock events
 
-Implementation status: [TARGET]
+Implementation status: [CURRENT — COMPLETE FOR SHOPEE AND OFFLINE SALES]
+
+The current implementation adds Finance-owned, organization-scoped stock
+reservations for the Shopee workbook import path. The inspected files expose
+product/variation names and parent/child SKU, but no stable marketplace product
+or variation ID. Orders continues to resolve its internal Product reference;
+Finance requires an explicit Product/variation mapping and never uses SKU alone
+as an automatic inventory merge key.
+
+Shopee statuses `perlu-dikirim`, `sedang-dikirim`, and `telah-dikirim` reserve
+stock. `batal` releases an unconsumed reservation. `selesai` consumes it only
+after the posted HPP movement exists. Return/refund and cancellation after HPP
+posting remain visible review cases. Re-importing an existing order may update
+its source status without replacing other order fields. Finance synchronization
+failure never rolls back the Orders import.
+
+The stock view now exposes on-hand, reserved, and sellable quantity. Shortage
+reservations mark the related item as needing review and sellable quantity is
+never displayed below zero. The implementation is retry-safe on standalone
+MongoDB through unique organization/platform/store/source-order/source-line
+reservation identity and idempotent HPP movements.
+
+Phase 5.6 delivery now includes a Finance-only offline-sale form and a
+full-sale return correction. The offline form records the transaction date,
+optional receipt reference, mapped product/variant lines, quantities, selling
+prices, and the selected Cash/Bank/E-wallet account. Posting debits the selected
+asset account, credits sales revenue, and posts HPP plus stock reduction through
+the shared inventory workflow. It requires one active inventory location,
+sufficient unreserved stock, and a resolvable HPP; an incomplete HPP setup
+blocks posting instead of creating a revenue-only offline sale. Sales are
+recorded without a separate tax line while the tax phase remains deferred.
+
+The correction action is intentionally limited to a full return where all goods
+are returned in resalable condition. It reverses the entire immutable sales
+journal and creates the corresponding stock-return movements. Partial returns,
+damaged/non-restockable goods, and refunds without goods returned are not
+supported by this action and must not be represented as a full reversal.
+
+Order imports other than Shopee remain deferred. Their source identifiers,
+product/variant mapping, and status semantics are recorded for follow-up under
+Phase 5.7 discovery; they must not inherit Shopee status rules by assumption.
 
 Connect the already-integrated order sources to the shared organization
 inventory with a minimal mapping experience and repeat-safe stock lifecycle.
@@ -239,9 +293,13 @@ Acceptance criteria:
   event. A shortage is visible and never silently creates a negative stock
   balance. Finance failures do not roll back basic Orders import.
 - A simple offline sale uses the same sales/stock workflow and reduces the
-  shared pool; it is not represented as a generic stock adjustment. Its
-  minimum payment and revenue fields must be defined with the Finance sales
-  contract before implementation.
+  shared pool; it is not represented as a generic stock adjustment. It records
+  date, optional receipt reference, mapped item lines, quantity, unit selling
+  price, and the selected Cash/Bank/E-wallet account; tax is not split in this
+  phase.
+- The first return-correction action is an explicit full-sale reversal only
+  when all items are returned in resalable condition. Partial returns,
+  non-restockable goods, and refund-only cases remain outside this phase.
 - Finance inactive: none of these Finance reservations, movements, or journals
   are created, and existing marketplace Orders import remains unaffected.
 
@@ -276,12 +334,16 @@ This phase does not expand into a general warehouse system. It establishes the
 first supported channel stock flow and records the remaining synchronization
 limitations for users.
 
+Marketplace importer follow-up is discovery only at this stage. Review
+Tokopedia, TikTok Shop, Lazada, and Blibli source identifiers and order-status
+semantics separately before connecting any of them to reservations or HPP.
+
 ## Open questions
 
 - Whether a future multi-location release needs transfers before allowing HPP
   posting for organizations with more than one active location.
-- Which order status from each supported platform should reserve stock, release
-  a reservation, and confirm the sale/stock issue.
+- Which order status from each platform other than Shopee should reserve stock,
+  release a reservation, and confirm the sale/stock issue.
 - How to handle physical opening stock discovered after Finance was activated
   with an explicit zero-opening-balance choice.
 - Whether the first channel-sync release can accept eventual consistency with

@@ -161,6 +161,21 @@ export class OrderRepository extends BaseRepository<TOrder> {
     return await query.lean();
   }
 
+  async updateImportedStatus(id: string, status: string) {
+    return this.model
+      .findOneAndUpdate(
+        {
+          ...this.getTenantFilter(),
+          _id: id,
+          deleted_at: null,
+        },
+        { $set: { status } },
+        { returnDocument: 'after', runValidators: true }
+      )
+      .select('+store')
+      .lean();
+  }
+
   // [LEGACY] Finance writes to its own transaction collections instead.
   async updateAccountingState(
     id: string,

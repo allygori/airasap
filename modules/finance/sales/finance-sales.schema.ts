@@ -16,6 +16,11 @@ const ObjectIdStringSchema = z
   .string()
   .regex(/^[0-9a-fA-F]{24}$/, 'ObjectId tidak valid');
 
+export const FinanceSalesPlatformSchema = z.union([
+  z.enum(ORDER_PLATFORM_VALUES),
+  z.literal('offline'),
+]);
+
 const FinanceSalesOrderItemSourceSchema = z
   .object({
     product_reference_id: z
@@ -134,7 +139,7 @@ export const FinanceSalesProjectionSchema = z.object({
   source_order_number: z.string(),
   organization_id: ObjectIdStringSchema,
   store_id: ObjectIdStringSchema.nullable(),
-  platform: z.enum(ORDER_PLATFORM_VALUES),
+  platform: FinanceSalesPlatformSchema,
   source_status: z.string().nullable(),
   currency: z.string().length(3),
   transaction_date: z.string().datetime().nullable(),
@@ -152,11 +157,24 @@ export const FinanceSalesProjectionSchema = z.object({
 });
 
 export const FinanceSalesPostingJournalLineIntentSchema = z
-  .object({
-    account_role: z.enum(FINANCE_SALES_ACCOUNT_ROLE_VALUES),
-    debit: z.number().int().nonnegative(),
-    credit: z.number().int().nonnegative(),
-  })
+  .union([
+    z
+      .object({
+        account_role: z.enum(
+          FINANCE_SALES_ACCOUNT_ROLE_VALUES
+        ),
+        debit: z.number().int().nonnegative(),
+        credit: z.number().int().nonnegative(),
+      })
+      .strict(),
+    z
+      .object({
+        account_id: ObjectIdStringSchema,
+        debit: z.number().int().nonnegative(),
+        credit: z.number().int().nonnegative(),
+      })
+      .strict(),
+  ])
   .refine(
     (line) =>
       (line.debit > 0 && line.credit === 0) ||
