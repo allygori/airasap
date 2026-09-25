@@ -29,6 +29,7 @@ import type {
   FinanceOpeningBalanceSetupResponseDTO,
 } from './finance-opening-balance.dto';
 import {
+  FinanceOpeningBalanceCompleteDraftInputSchema,
   FinanceOpeningBalanceDraftInputSchema,
   FinanceOpeningBalanceFinalizeInputSchema,
   FinanceOpeningBalanceFinalizeResponseSchema,
@@ -294,6 +295,23 @@ const toDraftInput = (
         }
       : {}),
   });
+
+const requireCompleteDraftInput = (
+  input: FinanceOpeningBalanceDraftInputDTO
+): FinanceOpeningBalanceDraftInputDTO => {
+  const parsed =
+    FinanceOpeningBalanceCompleteDraftInputSchema.safeParse(
+      input
+    );
+  if (!parsed.success) {
+    throw new FinanceDomainError(
+      parsed.error.issues[0]?.message ??
+        'Periksa kembali saldo awal sebelum melihat preview atau mengaktifkan Finance.',
+      'FINANCE_OPENING_BALANCE_DRAFT_INVALID'
+    );
+  }
+  return parsed.data;
+};
 
 const getSummary = (
   input:
@@ -719,6 +737,8 @@ export class FinanceOpeningBalanceService {
       // Report validation errors while the draft is still editable.
       if (draft.mode === 'entered') {
         await this.buildPlan(draft, session);
+      } else {
+        requireCompleteDraftInput(toDraftInput(draft));
       }
       const claimed =
         await this.draftRepository.beginFinalization(
@@ -970,7 +990,9 @@ export class FinanceOpeningBalanceService {
     draft: FinanceOpeningBalanceDraftPersistenceRecord,
     session?: ClientSession
   ): Promise<FinanceOpeningBalancePlan> {
-    const data = toDraftInput(draft);
+    const data = requireCompleteDraftInput(
+      toDraftInput(draft)
+    );
     if (data.mode === 'zero') {
       return {
         lines: [],
@@ -1571,14 +1593,16 @@ export class FinanceOpeningBalanceService {
           'FINANCE_OPENING_BALANCE_ITEM_INVALID'
         );
       }
-      const pair = `${line.inventory_item_id}:${line.location_id}`;
-      if (pairs.has(pair)) {
-        throw new FinanceDomainError(
-          'Satu item inventory pada lokasi yang sama hanya boleh dimasukkan sekali.',
-          'FINANCE_OPENING_BALANCE_DUPLICATE_LINE'
-        );
+      if (line.quantity > 0) {
+        const pair = `${line.inventory_item_id}:${line.location_id}`;
+        if (pairs.has(pair)) {
+          throw new FinanceDomainError(
+            'Satu item inventory pada lokasi yang sama hanya boleh dimasukkan sekali.',
+            'FINANCE_OPENING_BALANCE_DUPLICATE_LINE'
+          );
+        }
+        pairs.add(pair);
       }
-      pairs.add(pair);
     }
 
     return {

@@ -4,7 +4,10 @@ import { FinanceOpeningBalanceService } from './finance-opening-balance.service'
 import type { FinanceAccountPersistenceRecord } from '../accounts/finance-account.repository';
 import type { FinanceInventoryItemPersistenceRecord } from '../inventory/finance-inventory-item.repository';
 import type { FinanceInventoryLocationPersistenceRecord } from '../inventory/finance-inventory-location.repository';
-import type { FinanceOpeningBalanceDraftPersistenceRecord } from './finance-opening-balance.repository';
+import type {
+  CreateFinanceOpeningBalanceDraftRecord,
+  FinanceOpeningBalanceDraftPersistenceRecord,
+} from './finance-opening-balance.repository';
 
 const organizationId = '507f1f77bcf86cd799439010';
 const cashId = new Types.ObjectId(
@@ -148,10 +151,11 @@ const makeService = (
   draft: FinanceOpeningBalanceDraftPersistenceRecord | null = null
 ) => {
   const created = draft ?? makeDraft();
+  let persisted = created;
   const findCurrent = jest
     .fn()
     .mockResolvedValueOnce(null)
-    .mockResolvedValue(created);
+    .mockImplementation(async () => persisted);
 
   return new FinanceOpeningBalanceService(
     { organizationId },
@@ -165,8 +169,27 @@ const makeService = (
       },
       draftRepository: {
         findCurrent,
-        createDraft: jest.fn(async () => created),
-        updateDraft: jest.fn(async () => created),
+        createDraft: jest.fn(
+          async (
+            data: CreateFinanceOpeningBalanceDraftRecord
+          ) => {
+            persisted = {
+              ...data,
+              _id: created._id,
+              organization: created.organization,
+            };
+            return persisted;
+          }
+        ),
+        updateDraft: jest.fn(
+          async (
+            _id: string,
+            data: Partial<CreateFinanceOpeningBalanceDraftRecord>
+          ) => {
+            persisted = { ...created, ...data };
+            return persisted;
+          }
+        ),
       },
       accountRepository: {
         list: jest.fn(async () => accounts),
@@ -190,6 +213,26 @@ const makeService = (
 };
 
 describe('FinanceOpeningBalanceService', () => {
+  it('persists the selected cut-off date before the draft is complete', async () => {
+    const service = makeService();
+
+    const incompleteDraft = {
+      cut_off_date: '2026-09-18',
+      mode: 'entered',
+      cash_bank_lines: [],
+      inventory_lines: [],
+      payable_lines: [],
+      receivable_lines: [],
+    } as const;
+
+    const result = await service.saveDraft(incompleteDraft);
+
+    expect(result.draft?.cut_off_date).toBe('2026-09-18');
+    await expect(service.preview()).rejects.toMatchObject({
+      code: 'FINANCE_OPENING_BALANCE_DRAFT_INVALID',
+    });
+  });
+
   it('saves a validated draft and calculates the balancing summary', async () => {
     const service = makeService();
 
@@ -205,6 +248,28 @@ describe('FinanceOpeningBalanceService', () => {
       owner_capital_total: 900_000,
       retained_earnings_balance: 100_000,
     });
+  });
+
+  it('keeps zero-quantity inventory rows in the draft without treating them as duplicate stock', async () => {
+    const service = makeService();
+
+    const result = await service.saveDraft({
+      ...input,
+      inventory_lines: [
+        ...input.inventory_lines,
+        {
+          inventory_item_id: String(itemId),
+          location_id: String(locationId),
+          quantity: 0,
+        },
+      ],
+    });
+
+    expect(result.draft?.inventory_lines).toHaveLength(2);
+    expect(result.draft?.inventory_lines[1]?.quantity).toBe(
+      0
+    );
+    expect(result.summary.inventory_total).toBe(200_000);
   });
 
   it('rejects a future cut-off date on the server', async () => {

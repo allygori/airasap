@@ -219,6 +219,19 @@ export const FinanceInventorySetupActionSchema =
   z.discriminatedUnion('action', [
     z
       .object({
+        action: z.literal('prepare_from_products'),
+        page: z.coerce.number().int().positive().default(1),
+        limit: z.coerce
+          .number()
+          .int()
+          .positive()
+          .max(100)
+          .default(50),
+        search: z.string().trim().max(100).optional(),
+      })
+      .strict(),
+    z
+      .object({
         action: z.literal('ensure_default_location'),
       })
       .strict(),
@@ -335,6 +348,42 @@ export const FinanceInventorySetupResponseSchema = z.object(
 
 export const FinanceInventorySetupActionResponseSchema =
   z.discriminatedUnion('action', [
+    z.object({
+      action: z.literal('prepare_from_products'),
+      summary: z.object({
+        prepared: z.number().int().nonnegative(),
+        already_mapped: z.number().int().nonnegative(),
+        needs_review: z.number().int().nonnegative(),
+      }),
+      results: z.array(
+        z.object({
+          product_id: ObjectIdStringSchema,
+          product_name: z.string().min(1),
+          variant_id: z.string().optional(),
+          variant_name: z.string().optional(),
+          sku: z.string().nullable(),
+          status: z.enum([
+            'prepared',
+            'already_mapped',
+            'needs_review',
+          ]),
+          review_reason: z
+            .enum([
+              'missing_sku',
+              'duplicate_source_sku',
+              'existing_inventory_sku',
+              'source_item_unavailable',
+            ])
+            .optional(),
+          matched_item: z
+            .object({
+              id: ObjectIdStringSchema,
+              name: z.string().min(1),
+            })
+            .optional(),
+        })
+      ),
+    }),
     z.object({
       action: z.literal('ensure_default_location'),
       location: FinanceInventorySetupLocationSchema,

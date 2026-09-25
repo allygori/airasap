@@ -1,6 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { revalidateLogic } from '@tanstack/react-form';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
@@ -13,6 +18,8 @@ import {
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
   FinanceOpeningBalanceSetupResponseSchema,
+  FinanceInventorySetupActionResponseSchema,
+  FinanceInventorySetupResponseSchema,
   type FinanceBankAccountCreateInputDTO,
   type FinanceOpeningBalanceDraftInputDTO,
   type FinanceOpeningBalancePreviewDTO,
@@ -21,6 +28,7 @@ import {
 import {
   createEmptyFinanceOpeningBalanceFormValues,
   createFinanceOpeningBalanceFormValues,
+  getFinanceOpeningBalanceSteps,
   FinanceOpeningBalanceForm,
   FinanceOpeningBalanceFormValuesSchema,
   type FinanceOpeningBalanceFormValues,
@@ -31,7 +39,7 @@ type FinanceOpeningBalanceClientProps = {
   enabled: boolean;
 };
 
-type SubmitIntent = 'save' | 'preview';
+type SubmitIntent = 'continue' | 'preview';
 
 const numberValue = (value: string) => {
   const parsed = Number(value);
@@ -49,7 +57,7 @@ export default function FinanceOpeningBalanceClient({
   enabled,
 }: FinanceOpeningBalanceClientProps) {
   const router = useRouter();
-  const submitIntentRef = useRef<SubmitIntent>('save');
+  const submitIntentRef = useRef<SubmitIntent>('continue');
   const [setup, setSetup] =
     useState<FinanceOpeningBalanceSetupResponseDTO | null>(
       null
@@ -58,6 +66,16 @@ export default function FinanceOpeningBalanceClient({
   const [isSaving, setIsSaving] = useState(false);
   const [isRefreshingInventory, setIsRefreshingInventory] =
     useState(false);
+  const [
+    preparableProductCount,
+    setPreparableProductCount,
+  ] = useState<number | null>(null);
+  const [isLoadingProductCount, setIsLoadingProductCount] =
+    useState(enabled);
+  const [isPreparingProducts, setIsPreparingProducts] =
+    useState(false);
+  const [productCountError, setProductCountError] =
+    useState<string | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isCreatingBankAccount, setIsCreatingBankAccount] =
     useState(false);
@@ -77,52 +95,61 @@ export default function FinanceOpeningBalanceClient({
     string | null
   >(null);
 
+  const refreshProductPreparationCount =
+    useCallback(async () => {
+      setIsLoadingProductCount(true);
+      setProductCountError(null);
+
+      try {
+        const response = await fetch(
+          '/api/v1/dashboard/finance/inventory/setup?page=1&limit=50',
+          { cache: 'no-store' }
+        );
+        const payload: unknown = await response.json();
+        const parsed =
+          FinanceInventorySetupResponseSchema.safeParse(
+            getSuccessData(payload)
+          );
+
+        if (!response.ok || !parsed.success) {
+          setPreparableProductCount(null);
+          setProductCountError(
+            getErrorMessage(payload) ??
+              'Jumlah produk belum dapat dihitung.'
+          );
+          return;
+        }
+
+        setPreparableProductCount(
+          parsed.data.product_options.filter(
+            (product) => !product.mapped_inventory_item
+          ).length
+        );
+      } catch {
+        setPreparableProductCount(null);
+        setProductCountError(
+          'Jumlah produk belum dapat dihitung. Periksa koneksi lalu coba lagi.'
+        );
+      } finally {
+        setIsLoadingProductCount(false);
+      }
+    }, []);
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    const loadProductCount = async () => {
+      await refreshProductPreparationCount();
+    };
+
+    void loadProductCount();
+  }, [enabled, refreshProductPreparationCount]);
+
   const saveDraft = async (
     values: FinanceOpeningBalanceFormValues
   ): Promise<boolean> => {
     setErrorMessage(null);
     setSuccessMessage(null);
-
-    if (values.mode === 'entered') {
-      if (!values.owner_capital_account_id) {
-        setErrorMessage(
-          'Pilih akun Modal Pemilik. Jika tidak ada saldo modal yang ingin dicatat, isi jumlahnya 0.'
-        );
-        setCurrentStep('liabilities');
-        return false;
-      }
-      if (
-        values.inventory_lines.some(
-          (line) =>
-            numberValue(line.quantity) > 0 &&
-            line.unit_cost.trim() === ''
-        )
-      ) {
-        setErrorMessage(
-          'Isi harga perolehan untuk setiap item yang memiliki stok.'
-        );
-        setCurrentStep('inventory');
-        return false;
-      }
-      if (
-        [
-          ...values.payable_lines,
-          ...values.receivable_lines,
-        ].some(
-          (line) =>
-            numberValue(line.amount) > 0 &&
-            (!line.account_id ||
-              (!line.counterparty.trim() &&
-                !line.reference.trim()))
-        )
-      ) {
-        setErrorMessage(
-          'Untuk setiap utang/piutang, pilih akun dan isi nama pihak atau referensi.'
-        );
-        setCurrentStep('liabilities');
-        return false;
-      }
-    }
 
     setIsSaving(true);
     try {
@@ -147,22 +174,33 @@ export default function FinanceOpeningBalanceClient({
           inventory_lines:
             values.mode === 'entered'
               ? values.inventory_lines
-                  .filter(
-                    (line) => numberValue(line.quantity) > 0
+                  .filter((line) =>
+                    Boolean(
+                      line.inventory_item_id &&
+                      line.location_id
+                    )
                   )
                   .map((line) => ({
                     inventory_item_id:
                       line.inventory_item_id,
                     location_id: line.location_id,
                     quantity: numberValue(line.quantity),
-                    unit_cost: numberValue(line.unit_cost),
+                    ...(line.unit_cost.trim()
+                      ? {
+                          unit_cost: numberValue(
+                            line.unit_cost
+                          ),
+                        }
+                      : {}),
                   }))
               : [],
           payable_lines:
             values.mode === 'entered'
               ? values.payable_lines
                   .filter(
-                    (line) => numberValue(line.amount) > 0
+                    (line) =>
+                      numberValue(line.amount) > 0 &&
+                      Boolean(line.account_id)
                   )
                   .map((line) => ({
                     account_id: line.account_id,
@@ -182,7 +220,9 @@ export default function FinanceOpeningBalanceClient({
             values.mode === 'entered'
               ? values.receivable_lines
                   .filter(
-                    (line) => numberValue(line.amount) > 0
+                    (line) =>
+                      numberValue(line.amount) > 0 &&
+                      Boolean(line.account_id)
                   )
                   .map((line) => ({
                     account_id: line.account_id,
@@ -200,11 +240,15 @@ export default function FinanceOpeningBalanceClient({
               : [],
           ...(values.mode === 'entered'
             ? {
-                owner_capital_account_id:
-                  values.owner_capital_account_id,
                 owner_capital_amount: numberValue(
                   values.owner_capital_amount
                 ),
+                ...(values.owner_capital_account_id
+                  ? {
+                      owner_capital_account_id:
+                        values.owner_capital_account_id,
+                    }
+                  : {}),
               }
             : {}),
         });
@@ -295,10 +339,21 @@ export default function FinanceOpeningBalanceClient({
     },
     onSubmit: async ({ value }) => {
       const saved = await saveDraft(value);
-      if (saved && submitIntentRef.current === 'preview') {
-        await loadPreview();
+      if (saved) {
+        if (submitIntentRef.current === 'preview') {
+          await loadPreview();
+        } else {
+          const steps = getFinanceOpeningBalanceSteps(
+            value.mode
+          );
+          const stepIndex = steps.findIndex(
+            (item) => item.key === currentStep
+          );
+          const nextStep = steps[stepIndex + 1];
+          if (nextStep) setCurrentStep(nextStep.key);
+        }
       }
-      submitIntentRef.current = 'save';
+      submitIntentRef.current = 'continue';
     },
   });
   const createBankAccount = async (
@@ -422,8 +477,12 @@ export default function FinanceOpeningBalanceClient({
 
         if (!cancelled) {
           setSetup(nextSetup);
+          // Keep the hook's initial defaults so its next update won't overwrite this loaded draft.
           openingForm.reset(
-            createFinanceOpeningBalanceFormValues(nextSetup)
+            createFinanceOpeningBalanceFormValues(
+              nextSetup
+            ),
+            { keepDefaultValues: true }
           );
           if (isResumableDraft(nextSetup)) {
             setCurrentStep('review');
@@ -479,6 +538,7 @@ export default function FinanceOpeningBalanceClient({
             }
           : nextSetup
       );
+      await refreshProductPreparationCount();
       setSuccessMessage(
         'Pilihan item dan lokasi diperbarui; isian saldo tetap tersimpan.'
       );
@@ -491,8 +551,62 @@ export default function FinanceOpeningBalanceClient({
     }
   };
 
+  const prepareProductsFromOnboarding = async () => {
+    setIsPreparingProducts(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+
+    try {
+      const response = await fetch(
+        '/api/v1/dashboard/finance/inventory/setup',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'prepare_from_products',
+            page: 1,
+            limit: 50,
+          }),
+        }
+      );
+      const payload: unknown = await response.json();
+      const parsed =
+        FinanceInventorySetupActionResponseSchema.safeParse(
+          getSuccessData(payload)
+        );
+
+      if (
+        !response.ok ||
+        !parsed.success ||
+        parsed.data.action !== 'prepare_from_products'
+      ) {
+        setErrorMessage(
+          getErrorMessage(payload) ??
+            'Persiapan stok dari Produk gagal. Coba lagi.'
+        );
+        return;
+      }
+
+      await refreshInventoryOptions();
+      setSuccessMessage(
+        `${parsed.data.summary.prepared} disiapkan, ${parsed.data.summary.already_mapped} sudah terhubung, dan ${parsed.data.summary.needs_review} perlu ditinjau.`
+      );
+    } catch {
+      setErrorMessage(
+        'Persiapan stok dari Produk gagal. Periksa koneksi lalu coba lagi.'
+      );
+    } finally {
+      setIsPreparingProducts(false);
+    }
+  };
+
   const showPreview = () => {
     submitIntentRef.current = 'preview';
+    void openingForm.handleSubmit();
+  };
+
+  const saveAndContinue = () => {
+    submitIntentRef.current = 'continue';
     void openingForm.handleSubmit();
   };
 
@@ -580,6 +694,13 @@ export default function FinanceOpeningBalanceClient({
         void refreshInventoryOptions()
       }
       isRefreshingInventory={isRefreshingInventory}
+      preparableProductCount={preparableProductCount}
+      isLoadingProductCount={isLoadingProductCount}
+      isPreparingProducts={isPreparingProducts}
+      productCountError={productCountError}
+      onPrepareProducts={() =>
+        void prepareProductsFromOnboarding()
+      }
       isSaving={isSaving}
       isPreviewing={isPreviewing}
       isFinalizing={isFinalizing}
@@ -590,10 +711,7 @@ export default function FinanceOpeningBalanceClient({
       preview={preview}
       confirmed={confirmed}
       onConfirmedChange={setConfirmed}
-      onSaveDraft={() => {
-        submitIntentRef.current = 'save';
-        void openingForm.handleSubmit();
-      }}
+      onSaveAndContinue={saveAndContinue}
       onPreview={showPreview}
       onFinalize={() => void finalizeOpeningBalance()}
     />

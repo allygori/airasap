@@ -15,6 +15,7 @@ export type FinanceInventoryItemPersistenceRecord = {
   _id: Types.ObjectId;
   organization: Types.ObjectId;
   sku: string;
+  source_key?: string;
   name: string;
   item_type: FinanceInventoryItemTypeDTO;
   unit: string;
@@ -32,6 +33,7 @@ export type CreateFinanceInventoryItemRecord = {
   unit: string;
   track_quantity: boolean;
   track_value: boolean;
+  source_key?: string;
 };
 
 type FinanceInventoryItemListFilter = {
@@ -76,7 +78,7 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
     const query = this.model
       .find(queryFilter)
       .select(
-        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
       )
       .sort({ sku: 1, _id: 1 })
       .skip((filter.page - 1) * filter.limit)
@@ -112,7 +114,7 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
         is_active: true,
       })
       .select(
-        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
       );
     if (session) query.session(session);
 
@@ -130,7 +132,22 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
         sku: sku.trim(),
       })
       .select(
-        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+      )
+      .lean<FinanceInventoryItemPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findBySourceKey(
+    sourceKey: string
+  ): Promise<FinanceInventoryItemPersistenceRecord | null> {
+    return this.model
+      .findOne({
+        ...this.getTenantFilter(),
+        source_key: sourceKey,
+      })
+      .select(
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
       )
       .lean<FinanceInventoryItemPersistenceRecord | null>()
       .exec();
@@ -151,7 +168,7 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
         is_active: true,
       })
       .select(
-        '_id organization sku name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
       )
       .lean<FinanceInventoryItemPersistenceRecord[]>()
       .exec();
@@ -167,5 +184,38 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
     });
     const saved = await document.save();
     return saved.toObject() as unknown as FinanceInventoryItemPersistenceRecord;
+  }
+
+  async ensureInventoryItemFromProduct(
+    data: CreateFinanceInventoryItemRecord & {
+      source_key: string;
+    }
+  ): Promise<FinanceInventoryItemPersistenceRecord> {
+    const existing = await this.findBySourceKey(
+      data.source_key
+    );
+    if (existing) return existing;
+
+    try {
+      return await this.createInventoryItem(data);
+    } catch (error: unknown) {
+      if (
+        typeof error !== 'object' ||
+        error === null ||
+        !('code' in error) ||
+        error.code !== 11000
+      ) {
+        throw error;
+      }
+
+      // A repeated source key means a previous attempt created this item but
+      // may have stopped before writing its mapping. A SKU collision from a
+      // different source is rethrown for the setup service to review.
+      const createdByRetry = await this.findBySourceKey(
+        data.source_key
+      );
+      if (createdByRetry) return createdByRetry;
+      throw error;
+    }
   }
 }

@@ -2,10 +2,12 @@ import { Types } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
 import type {
   CreateFinanceInventoryItemRecord,
+  FinanceInventoryItemPersistenceRecord,
   FinanceInventoryItemRepository,
 } from './finance-inventory-item.repository';
 import type { FinanceInventoryLocationRepository } from './finance-inventory-location.repository';
 import type {
+  FinanceInventoryMappingPersistenceRecord,
   FinanceInventoryMappingRepository,
   UpsertFinanceInventoryMappingRecord,
 } from './finance-inventory-mapping.repository';
@@ -64,6 +66,8 @@ const makeService = (overrides?: {
 }) => {
   const createdItems: Array<Record<string, unknown>> = [];
   const mappings: Array<Record<string, unknown>> = [];
+  const activeMappings: FinanceInventoryMappingPersistenceRecord[] =
+    [];
   const service = new FinanceInventorySetupService(
     { organizationId, userId: '507f1f77bcf86cd799439011' },
     {
@@ -80,7 +84,16 @@ const makeService = (overrides?: {
           records: [inventoryItem],
           total: 1,
         }),
-        findBySku: async () => null,
+        findBySku: async (sku: string) =>
+          (createdItems.find((item) => item.sku === sku) as
+            | FinanceInventoryItemPersistenceRecord
+            | undefined) ?? null,
+        findBySourceKey: async (sourceKey: string) =>
+          (createdItems.find(
+            (item) => item.source_key === sourceKey
+          ) as
+            | FinanceInventoryItemPersistenceRecord
+            | undefined) ?? null,
         findActiveById: async () => inventoryItem,
         findActiveByIds: async () => [inventoryItem],
         createInventoryItem: async (
@@ -94,6 +107,25 @@ const makeService = (overrides?: {
           createdItems.push(created);
           return created;
         },
+        ensureInventoryItemFromProduct: async (
+          data: CreateFinanceInventoryItemRecord & {
+            source_key: string;
+          }
+        ) => {
+          const existing = createdItems.find(
+            (item) => item.source_key === data.source_key
+          );
+          if (existing) {
+            return existing as FinanceInventoryItemPersistenceRecord;
+          }
+          const created = {
+            ...inventoryItem,
+            ...data,
+            _id: new Types.ObjectId(),
+          };
+          createdItems.push(created);
+          return created as FinanceInventoryItemPersistenceRecord;
+        },
         ...overrides?.itemRepository,
       } as FinanceInventoryItemRepository,
       locationRepository: {
@@ -102,12 +134,12 @@ const makeService = (overrides?: {
         ...overrides?.locationRepository,
       } as FinanceInventoryLocationRepository,
       mappingRepository: {
-        listActiveForProductIds: async () => [],
+        listActiveForProductIds: async () => activeMappings,
         upsertActive: async (
           data: UpsertFinanceInventoryMappingRecord
         ) => {
           mappings.push(data);
-          return {
+          const savedMapping = {
             _id: new Types.ObjectId(),
             organization: new Types.ObjectId(
               organizationId
@@ -123,6 +155,8 @@ const makeService = (overrides?: {
             mapping_method: 'manual_setup',
             is_active: true,
           };
+          activeMappings.push(savedMapping);
+          return savedMapping;
         },
         ...overrides?.mappingRepository,
       } as FinanceInventoryMappingRepository,
@@ -256,6 +290,200 @@ describe('FinanceInventorySetupService', () => {
         inventory_item_id: result.item.id,
       },
     ]);
+  });
+
+  it('prepares unmapped products from the current catalog page and skips them on retry', async () => {
+    const { service, createdItems, mappings } =
+      makeService();
+
+    const first = await service.perform({
+      action: 'prepare_from_products',
+      page: 1,
+      limit: 50,
+    });
+    const second = await service.perform({
+      action: 'prepare_from_products',
+      page: 1,
+      limit: 50,
+    });
+
+    expect(first).toMatchObject({
+      action: 'prepare_from_products',
+      summary: {
+        prepared: 1,
+        already_mapped: 0,
+        needs_review: 0,
+      },
+    });
+    expect(second).toMatchObject({
+      action: 'prepare_from_products',
+      summary: {
+        prepared: 0,
+        already_mapped: 1,
+        needs_review: 0,
+      },
+    });
+    expect(createdItems).toHaveLength(1);
+    expect(createdItems[0]).toMatchObject({
+      sku: 'KAOS-HITAM-M',
+      source_key: `${String(productId)}:${variantId}`,
+    });
+    expect(mappings).toHaveLength(1);
+    expect(mappings[0]).toMatchObject({
+      product_id: String(productId),
+      variant_id: variantId,
+      mapping_method: 'auto_product_setup',
+    });
+  });
+
+  it('reuses the source item if saving its mapping failed during the previous attempt', async () => {
+    let mappingAttempts = 0;
+    const { service, createdItems } = makeService({
+      mappingRepository: {
+        upsertActive: async (data) => {
+          mappingAttempts += 1;
+          if (mappingAttempts === 1) {
+            throw new Error(
+              'Simulated mapping write failure'
+            );
+          }
+          return {
+            _id: new Types.ObjectId(),
+            organization: new Types.ObjectId(
+              organizationId
+            ),
+            product: new Types.ObjectId(data.product_id),
+            variant_key: data.variant_id ?? '__product__',
+            ...(data.variant_id
+              ? { variant_id: data.variant_id }
+              : {}),
+            inventory_item: new Types.ObjectId(
+              data.inventory_item_id
+            ),
+            mapping_method:
+              data.mapping_method ?? 'manual_setup',
+            is_active: true,
+          };
+        },
+      },
+    });
+
+    await expect(
+      service.perform({
+        action: 'prepare_from_products',
+        page: 1,
+        limit: 50,
+      })
+    ).rejects.toThrow('Simulated mapping write failure');
+
+    const retry = await service.perform({
+      action: 'prepare_from_products',
+      page: 1,
+      limit: 50,
+    });
+
+    expect(retry).toMatchObject({
+      action: 'prepare_from_products',
+      summary: {
+        prepared: 1,
+        already_mapped: 0,
+        needs_review: 0,
+      },
+    });
+    expect(createdItems).toHaveLength(1);
+    expect(mappingAttempts).toBe(2);
+  });
+
+  it('does not automatically link a product when its SKU already belongs to a Finance item', async () => {
+    const { service, createdItems, mappings } = makeService(
+      {
+        itemRepository: {
+          findBySku: async () => inventoryItem,
+        },
+      }
+    );
+
+    const result = await service.perform({
+      action: 'prepare_from_products',
+      page: 1,
+      limit: 50,
+    });
+
+    expect(result).toMatchObject({
+      action: 'prepare_from_products',
+      summary: {
+        prepared: 0,
+        already_mapped: 0,
+        needs_review: 1,
+      },
+      results: [
+        {
+          status: 'needs_review',
+          review_reason: 'existing_inventory_sku',
+          matched_item: { id: String(itemId) },
+        },
+      ],
+    });
+    expect(createdItems).toHaveLength(0);
+    expect(mappings).toHaveLength(0);
+  });
+
+  it('routes missing and duplicate source SKUs to review without creating stock items', async () => {
+    const duplicateProduct = {
+      ...product,
+      _id: new Types.ObjectId(),
+      product_id: 'external-product-2',
+      name: 'Kaos di toko lain',
+    };
+    const noSkuProduct = {
+      ...product,
+      has_variation: false,
+      parent_sku: undefined,
+      variants: [],
+    };
+    const { service, createdItems, mappings } = makeService(
+      {
+        productService: {
+          listActiveInventorySources: async () => ({
+            records: [
+              product,
+              duplicateProduct,
+              noSkuProduct,
+            ],
+            total: 3,
+          }),
+        },
+      }
+    );
+
+    const result = await service.perform({
+      action: 'prepare_from_products',
+      page: 1,
+      limit: 50,
+    });
+
+    expect(result).toMatchObject({
+      action: 'prepare_from_products',
+      summary: {
+        prepared: 0,
+        already_mapped: 0,
+        needs_review: 3,
+      },
+    });
+    if (result.action !== 'prepare_from_products') {
+      throw new Error(
+        'Expected product preparation result.'
+      );
+    }
+    expect(
+      result.results.map((entry) => entry.review_reason)
+    ).toEqual([
+      'duplicate_source_sku',
+      'duplicate_source_sku',
+      'missing_sku',
+    ]);
+    expect(createdItems).toHaveLength(0);
+    expect(mappings).toHaveLength(0);
   });
 
   it('allows one existing merchandise item to be mapped to another listing', async () => {

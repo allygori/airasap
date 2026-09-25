@@ -41,6 +41,7 @@ import {
   Stepper,
   type StepperStep,
 } from '@/components/ui/stepper';
+import { Spinner } from '@/components/ui/spinner';
 import {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   type FinanceOpeningBalancePreviewDTO,
@@ -74,7 +75,7 @@ const OpeningSubledgerLineFormSchema = z.object({
 
 export const FinanceOpeningBalanceFormValuesSchema = z
   .object({
-    cut_off_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    cut_off_date: z.string().date(),
     mode: z.enum(['entered', 'zero']),
     description: z.string().max(240),
     cash_bank_lines: z.array(
@@ -162,6 +163,13 @@ export const getTodayDateInputValue = () => {
   return `${part('year')}-${part('month')}-${part('day')}`;
 };
 
+const getCutOffDateValue = (value?: string | null) => {
+  const parsed = z.string().date().safeParse(value);
+  return parsed.success
+    ? parsed.data
+    : getTodayDateInputValue();
+};
+
 export const createFinanceOpeningBalanceFormValues = (
   setup: FinanceOpeningBalanceSetupResponseDTO
 ): FinanceOpeningBalanceFormValues => {
@@ -193,8 +201,7 @@ export const createFinanceOpeningBalanceFormValues = (
   }
 
   return {
-    cut_off_date:
-      draft?.cut_off_date ?? getTodayDateInputValue(),
+    cut_off_date: getCutOffDateValue(draft?.cut_off_date),
     mode: draft?.mode ?? 'entered',
     description: draft?.description ?? 'Saldo awal Finance',
     cash_bank_lines: cashBankLines,
@@ -203,7 +210,8 @@ export const createFinanceOpeningBalanceFormValues = (
         line_key: `opening-inventory-${index}`,
         inventory_item_id: line.inventory_item_id,
         location_id: line.location_id,
-        quantity: String(line.quantity),
+        quantity:
+          line.quantity > 0 ? String(line.quantity) : '',
         unit_cost: String(line.unit_cost ?? ''),
       })) ?? [],
     payable_lines:
@@ -234,7 +242,7 @@ export const createFinanceOpeningBalanceFormValues = (
 
 export const createEmptyFinanceOpeningBalanceFormValues =
   (): FinanceOpeningBalanceFormValues => ({
-    cut_off_date: '',
+    cut_off_date: getTodayDateInputValue(),
     mode: 'entered',
     description: 'Saldo awal Finance',
     cash_bank_lines: [],
@@ -282,6 +290,11 @@ type FinanceOpeningBalanceFormProps = {
   onCancelAddBankAccount: () => void;
   onRefreshInventory: () => void;
   isRefreshingInventory: boolean;
+  preparableProductCount: number | null;
+  isLoadingProductCount: boolean;
+  isPreparingProducts: boolean;
+  productCountError: string | null;
+  onPrepareProducts: () => void;
   isSaving: boolean;
   isPreviewing: boolean;
   isFinalizing: boolean;
@@ -292,7 +305,7 @@ type FinanceOpeningBalanceFormProps = {
   preview: FinanceOpeningBalancePreviewDTO | null;
   confirmed: boolean;
   onConfirmedChange: (confirmed: boolean) => void;
-  onSaveDraft: () => void;
+  onSaveAndContinue: () => void;
   onPreview: () => void;
   onFinalize: () => void;
 };
@@ -311,6 +324,11 @@ export const FinanceOpeningBalanceForm = withForm({
     onCancelAddBankAccount: () => undefined,
     onRefreshInventory: () => undefined,
     isRefreshingInventory: false,
+    preparableProductCount: null,
+    isLoadingProductCount: false,
+    isPreparingProducts: false,
+    productCountError: null,
+    onPrepareProducts: () => undefined,
     isSaving: false,
     isPreviewing: false,
     isFinalizing: false,
@@ -321,7 +339,7 @@ export const FinanceOpeningBalanceForm = withForm({
     preview: null,
     confirmed: false,
     onConfirmedChange: () => undefined,
-    onSaveDraft: () => undefined,
+    onSaveAndContinue: () => undefined,
     onPreview: () => undefined,
     onFinalize: () => undefined,
   } as FinanceOpeningBalanceFormProps,
@@ -338,6 +356,11 @@ export const FinanceOpeningBalanceForm = withForm({
     onCancelAddBankAccount,
     onRefreshInventory,
     isRefreshingInventory,
+    preparableProductCount,
+    isLoadingProductCount,
+    isPreparingProducts,
+    productCountError,
+    onPrepareProducts,
     isSaving,
     isPreviewing,
     isFinalizing,
@@ -348,7 +371,7 @@ export const FinanceOpeningBalanceForm = withForm({
     preview,
     confirmed,
     onConfirmedChange,
-    onSaveDraft,
+    onSaveAndContinue,
     onPreview,
     onFinalize,
   }) {
@@ -408,6 +431,7 @@ export const FinanceOpeningBalanceForm = withForm({
       capitalTotal;
     const isBusy =
       isSaving ||
+      isPreparingProducts ||
       isPreviewing ||
       isFinalizing ||
       isFinalized ||
@@ -419,11 +443,6 @@ export const FinanceOpeningBalanceForm = withForm({
         icon,
       })
     );
-
-    const changeToNextStep = () => {
-      const nextStep = steps[currentStepIndex + 1];
-      if (nextStep) onStepChange(nextStep.key);
-    };
 
     const changeToPreviousStep = () => {
       const previousStep = steps[currentStepIndex - 1];
@@ -508,6 +527,7 @@ export const FinanceOpeningBalanceForm = withForm({
               isBusy
                 ? undefined
                 : (index) =>
+                    index <= currentStepIndex &&
                     steps[index] &&
                     onStepChange(steps[index].key)
             }
@@ -748,6 +768,30 @@ export const FinanceOpeningBalanceForm = withForm({
                   />
 
                   <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      type="button"
+                      disabled={
+                        preparableProductCount === null ||
+                        preparableProductCount === 0 ||
+                        isLoadingProductCount ||
+                        isPreparingProducts ||
+                        isRefreshingInventory ||
+                        isBusy
+                      }
+                      onClick={onPrepareProducts}
+                    >
+                      {isPreparingProducts ||
+                      isLoadingProductCount ? (
+                        <Spinner data-icon="inline-start" />
+                      ) : null}
+                      {isPreparingProducts
+                        ? 'Menyiapkan…'
+                        : isLoadingProductCount
+                          ? 'Memuat produk…'
+                          : preparableProductCount === null
+                            ? 'Jumlah produk tidak tersedia'
+                            : `Siapkan ${preparableProductCount} produk`}
+                    </Button>
                     <Link
                       href="/dashboard/finance/inventory/setup"
                       className={buttonVariants({
@@ -756,7 +800,7 @@ export const FinanceOpeningBalanceForm = withForm({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Siapkan produk &amp; lokasi
+                      Kelola mapping
                     </Link>
                     <Button
                       type="button"
@@ -771,6 +815,15 @@ export const FinanceOpeningBalanceForm = withForm({
                         : 'Muat ulang pilihan'}
                     </Button>
                   </div>
+                  {productCountError ? (
+                    <p
+                      className="text-destructive text-sm"
+                      role="status"
+                    >
+                      {productCountError} Klik “Muat ulang
+                      pilihan” untuk mencoba lagi.
+                    </p>
+                  ) : null}
 
                   {setup.options.inventory_items.length ===
                     0 ||
@@ -827,26 +880,31 @@ export const FinanceOpeningBalanceForm = withForm({
                                     Hapus
                                   </Button>
                                 </div>
-                                <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                                  <form.AppField
-                                    name={
-                                      `inventory_lines[${index}].inventory_item_id` as const
-                                    }
-                                    children={(field) => (
-                                      <field.SelectField
-                                        label="Item inventory"
-                                        placeholder="Pilih item"
-                                        className="min-w-0"
-                                        disabled={isBusy}
-                                        items={getEligibleInventoryItems(
-                                          setup
-                                        ).map((option) => ({
-                                          value: option.id,
-                                          label: `${option.sku} — ${option.name}`,
-                                        }))}
-                                      />
-                                    )}
-                                  />
+                                <FieldGroup className="grid min-w-0 gap-4 md:grid-cols-3">
+                                  <div className="min-w-0 md:col-span-3">
+                                    <form.AppField
+                                      name={
+                                        `inventory_lines[${index}].inventory_item_id` as const
+                                      }
+                                      children={(field) => (
+                                        <field.SelectField
+                                          label="Item inventory"
+                                          placeholder="Pilih item"
+                                          className="min-w-0"
+                                          disabled={isBusy}
+                                          items={getEligibleInventoryItems(
+                                            setup
+                                          ).map(
+                                            (option) => ({
+                                              value:
+                                                option.id,
+                                              label: `${option.sku} — ${option.name}`,
+                                            })
+                                          )}
+                                        />
+                                      )}
+                                    />
+                                  </div>
                                   <form.AppField
                                     name={
                                       `inventory_lines[${index}].location_id` as const
@@ -1043,9 +1101,11 @@ export const FinanceOpeningBalanceForm = withForm({
                       onClick={onPreview}
                       disabled={isBusy}
                     >
-                      {isPreviewing
-                        ? 'Memvalidasi…'
-                        : 'Simpan draft & lihat preview'}
+                      {isSaving
+                        ? 'Menyimpan draft…'
+                        : isPreviewing
+                          ? 'Memvalidasi…'
+                          : 'Lihat preview'}
                     </Button>
                   ) : (
                     <OpeningBalancePreview
@@ -1087,26 +1147,18 @@ export const FinanceOpeningBalanceForm = withForm({
                 </Button>
 
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={onSaveDraft}
-                    disabled={isBusy}
-                  >
-                    {isSaving
-                      ? 'Menyimpan…'
-                      : 'Simpan draft'}
-                  </Button>
                   {step !== 'review' ? (
                     <Button
                       type="button"
-                      onClick={changeToNextStep}
+                      onClick={onSaveAndContinue}
                       disabled={
                         currentStepIndex >=
                           steps.length - 1 || isBusy
                       }
                     >
-                      Lanjutkan
+                      {isSaving
+                        ? 'Menyimpan…'
+                        : 'Simpan & Lanjutkan'}
                       <HugeiconsIcon
                         icon={ArrowRight02Icon}
                         data-icon="inline-end"

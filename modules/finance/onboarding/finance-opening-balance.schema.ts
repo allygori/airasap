@@ -80,7 +80,7 @@ export const FinanceOpeningBalanceStatusSchema = z.enum(
   FINANCE_OPENING_BALANCE_STATUS_VALUES
 );
 
-export const FinanceOpeningBalanceDraftInputSchema = z
+const FinanceOpeningBalanceDraftInputBaseSchema = z
   .object({
     cut_off_date: z.string().date(),
     mode: FinanceOpeningBalanceModeSchema,
@@ -110,99 +110,110 @@ export const FinanceOpeningBalanceDraftInputSchema = z
       ObjectIdStringSchema.optional(),
     owner_capital_amount: MoneySchema.optional(),
   })
-  .strict()
-  .superRefine((value, context) => {
-    if (value.mode === 'zero') {
-      const hasValues =
-        value.cash_bank_lines.some(
-          (line) => line.amount > 0
-        ) ||
-        value.inventory_lines.some(
-          (line) => line.quantity > 0
-        ) ||
-        value.payable_lines.some(
-          (line) => line.amount > 0
-        ) ||
-        value.receivable_lines.some(
-          (line) => line.amount > 0
-        ) ||
-        (value.owner_capital_amount ?? 0) > 0;
+  .strict();
 
-      if (hasValues) {
-        context.addIssue({
-          code: 'custom',
-          path: ['mode'],
-          message:
-            'Mode mulai dari nol tidak dapat menyimpan saldo opening.',
-        });
+export const FinanceOpeningBalanceDraftInputSchema =
+  FinanceOpeningBalanceDraftInputBaseSchema;
+
+export const FinanceOpeningBalanceCompleteDraftInputSchema =
+  FinanceOpeningBalanceDraftInputBaseSchema.superRefine(
+    (value, context) => {
+      if (value.mode === 'zero') {
+        const hasValues =
+          value.cash_bank_lines.some(
+            (line) => line.amount > 0
+          ) ||
+          value.inventory_lines.some(
+            (line) => line.quantity > 0
+          ) ||
+          value.payable_lines.some(
+            (line) => line.amount > 0
+          ) ||
+          value.receivable_lines.some(
+            (line) => line.amount > 0
+          ) ||
+          (value.owner_capital_amount ?? 0) > 0;
+
+        if (hasValues) {
+          context.addIssue({
+            code: 'custom',
+            path: ['mode'],
+            message:
+              'Mode mulai dari nol tidak dapat menyimpan saldo opening.',
+          });
+        }
+      }
+
+      if (value.mode === 'entered') {
+        if (!value.owner_capital_account_id) {
+          context.addIssue({
+            code: 'custom',
+            path: ['owner_capital_account_id'],
+            message: 'Akun Modal Pemilik wajib dipilih.',
+          });
+        }
+        if (value.owner_capital_amount === undefined) {
+          context.addIssue({
+            code: 'custom',
+            path: ['owner_capital_amount'],
+            message: 'Modal Pemilik wajib diisi.',
+          });
+        }
+      }
+
+      for (const [
+        index,
+        line,
+      ] of value.inventory_lines.entries()) {
+        if (
+          line.quantity > 0 &&
+          line.unit_cost === undefined
+        ) {
+          context.addIssue({
+            code: 'custom',
+            path: ['inventory_lines', index, 'unit_cost'],
+            message:
+              'Unit cost wajib diisi untuk inventory dengan quantity di atas nol.',
+          });
+        }
+      }
+
+      for (const [
+        index,
+        line,
+      ] of value.payable_lines.entries()) {
+        if (!line.counterparty && !line.reference) {
+          context.addIssue({
+            code: 'custom',
+            path: ['payable_lines', index, 'counterparty'],
+            message:
+              'Isi nama supplier atau reference agar saldo hutang dapat dikenali.',
+          });
+        }
+      }
+
+      for (const [
+        index,
+        line,
+      ] of value.receivable_lines.entries()) {
+        if (!line.counterparty && !line.reference) {
+          context.addIssue({
+            code: 'custom',
+            path: [
+              'receivable_lines',
+              index,
+              'counterparty',
+            ],
+            message:
+              'Isi counterparty atau reference agar saldo piutang dapat dikenali.',
+          });
+        }
       }
     }
-
-    if (value.mode === 'entered') {
-      if (!value.owner_capital_account_id) {
-        context.addIssue({
-          code: 'custom',
-          path: ['owner_capital_account_id'],
-          message: 'Akun Modal Pemilik wajib dipilih.',
-        });
-      }
-      if (value.owner_capital_amount === undefined) {
-        context.addIssue({
-          code: 'custom',
-          path: ['owner_capital_amount'],
-          message: 'Modal Pemilik wajib diisi.',
-        });
-      }
-    }
-
-    for (const [
-      index,
-      line,
-    ] of value.inventory_lines.entries()) {
-      if (
-        line.quantity > 0 &&
-        line.unit_cost === undefined
-      ) {
-        context.addIssue({
-          code: 'custom',
-          path: ['inventory_lines', index, 'unit_cost'],
-          message:
-            'Unit cost wajib diisi untuk inventory dengan quantity di atas nol.',
-        });
-      }
-    }
-
-    for (const [
-      index,
-      line,
-    ] of value.payable_lines.entries()) {
-      if (!line.counterparty && !line.reference) {
-        context.addIssue({
-          code: 'custom',
-          path: ['payable_lines', index, 'counterparty'],
-          message:
-            'Isi nama supplier atau reference agar saldo hutang dapat dikenali.',
-        });
-      }
-    }
-
-    for (const [
-      index,
-      line,
-    ] of value.receivable_lines.entries()) {
-      if (!line.counterparty && !line.reference) {
-        context.addIssue({
-          code: 'custom',
-          path: ['receivable_lines', index, 'counterparty'],
-          message:
-            'Isi counterparty atau reference agar saldo piutang dapat dikenali.',
-        });
-      }
-    }
-  });
+  );
 
 export const FinanceOpeningBalanceDraftSchema =
-  FinanceOpeningBalanceDraftInputSchema.extend({
+  FinanceOpeningBalanceDraftInputBaseSchema.extend({
     id: ObjectIdStringSchema,
     status: FinanceOpeningBalanceStatusSchema,
     onboarding_version: z.number().int().positive(),

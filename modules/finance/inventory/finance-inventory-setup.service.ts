@@ -42,9 +42,11 @@ type FinanceInventorySetupItemRepositoryPort = Pick<
   FinanceInventoryItemRepository,
   | 'listActive'
   | 'findBySku'
+  | 'findBySourceKey'
   | 'findActiveById'
   | 'findActiveByIds'
   | 'createInventoryItem'
+  | 'ensureInventoryItemFromProduct'
 >;
 
 type FinanceInventorySetupLocationRepositoryPort = Pick<
@@ -92,9 +94,19 @@ const isDuplicateKeyError = (error: unknown): boolean =>
   'code' in error &&
   error.code === 11000;
 
+type FlattenedProductOption = {
+  key: string;
+  product_id: string;
+  product_name: string;
+  platform?: ProductInventorySourceRecord['platform'];
+  variant_id?: string;
+  variant_name?: string;
+  sku: string | null;
+};
+
 const flattenProductOptions = (
   product: ProductInventorySourceRecord
-) => {
+): FlattenedProductOption[] => {
   if (product.has_variation) {
     return product.variants
       .filter(
@@ -122,6 +134,21 @@ const flattenProductOptions = (
       sku: product.parent_sku?.trim() || null,
     },
   ];
+};
+
+type ProductPreparationResult = {
+  product_id: string;
+  product_name: string;
+  variant_id?: string;
+  variant_name?: string;
+  sku: string | null;
+  status: 'prepared' | 'already_mapped' | 'needs_review';
+  review_reason?:
+    | 'missing_sku'
+    | 'duplicate_source_sku'
+    | 'existing_inventory_sku'
+    | 'source_item_unavailable';
+  matched_item?: { id: string; name: string };
 };
 
 export class FinanceInventorySetupService {
@@ -306,6 +333,10 @@ export class FinanceInventorySetupService {
       );
     }
 
+    if (action.action === 'prepare_from_products') {
+      return this.prepareFromProducts(action);
+    }
+
     const product =
       await this.productService.getActiveInventorySourceById(
         action.product_id
@@ -442,6 +473,7 @@ export class FinanceInventorySetupService {
     product_id: string;
     variant_id?: string;
     inventory_item_id: string;
+    mapping_method?: 'manual_setup' | 'auto_product_setup';
   }): Promise<void> {
     try {
       await this.mappingRepository.upsertActive(data);
@@ -454,6 +486,208 @@ export class FinanceInventorySetupService {
       }
       throw error;
     }
+  }
+
+  private async prepareFromProducts(
+    input: Extract<
+      FinanceInventorySetupActionInputDTO,
+      { action: 'prepare_from_products' }
+    >
+  ): Promise<FinanceInventorySetupActionResponseDTO> {
+    const productPage =
+      await this.productService.listActiveInventorySources({
+        page: input.page,
+        limit: input.limit,
+        search: input.search,
+      });
+    const options = productPage.records.flatMap(
+      flattenProductOptions
+    );
+    const productIds = [
+      ...new Set(
+        options.map((option) => option.product_id)
+      ),
+    ];
+    const existingMappings =
+      await this.mappingRepository.listActiveForProductIds(
+        productIds
+      );
+    const mappingKeys = new Set(
+      existingMappings.map(
+        (mapping) =>
+          `${String(mapping.product)}:${mapping.variant_key}`
+      )
+    );
+    const skuCounts = new Map<string, number>();
+    for (const option of options) {
+      if (!option.sku) continue;
+      const normalizedSku = option.sku.toLowerCase();
+      skuCounts.set(
+        normalizedSku,
+        (skuCounts.get(normalizedSku) ?? 0) + 1
+      );
+    }
+
+    const results: ProductPreparationResult[] = [];
+    let defaultLocation:
+      | FinanceInventoryLocationPersistenceRecord
+      | undefined;
+
+    const addResult = (
+      option: FlattenedProductOption,
+      result: Pick<
+        ProductPreparationResult,
+        'status' | 'review_reason' | 'matched_item'
+      >
+    ) => {
+      results.push({
+        product_id: option.product_id,
+        product_name: option.product_name,
+        ...(option.variant_id
+          ? { variant_id: option.variant_id }
+          : {}),
+        ...(option.variant_name
+          ? { variant_name: option.variant_name }
+          : {}),
+        sku: option.sku,
+        ...result,
+      });
+    };
+
+    for (const option of options) {
+      const key = `${option.product_id}:${variantKey(
+        option.variant_id
+      )}`;
+      const inheritedProductMapping = option.variant_id
+        ? mappingKeys.has(
+            `${option.product_id}:__product__`
+          )
+        : false;
+      if (mappingKeys.has(key) || inheritedProductMapping) {
+        addResult(option, { status: 'already_mapped' });
+        continue;
+      }
+
+      if (!option.sku) {
+        addResult(option, {
+          status: 'needs_review',
+          review_reason: 'missing_sku',
+        });
+        continue;
+      }
+
+      if (
+        (skuCounts.get(option.sku.toLowerCase()) ?? 0) > 1
+      ) {
+        addResult(option, {
+          status: 'needs_review',
+          review_reason: 'duplicate_source_sku',
+        });
+        continue;
+      }
+
+      const sourceKey = `${option.product_id}:${variantKey(
+        option.variant_id
+      )}`;
+      let item =
+        await this.itemRepository.findBySourceKey(
+          sourceKey
+        );
+      if (
+        item &&
+        (!item.is_active ||
+          item.item_type !== 'merchandise' ||
+          !item.track_quantity)
+      ) {
+        addResult(option, {
+          status: 'needs_review',
+          review_reason: 'source_item_unavailable',
+          matched_item: {
+            id: String(item._id),
+            name: item.name,
+          },
+        });
+        continue;
+      }
+
+      if (!item) {
+        const matchingSku =
+          await this.itemRepository.findBySku(option.sku);
+        if (matchingSku) {
+          addResult(option, {
+            status: 'needs_review',
+            review_reason: 'existing_inventory_sku',
+            matched_item: {
+              id: String(matchingSku._id),
+              name: matchingSku.name,
+            },
+          });
+          continue;
+        }
+
+        const itemName = option.variant_name
+          ? `${option.product_name} — ${option.variant_name}`
+          : option.product_name;
+        try {
+          item =
+            await this.itemRepository.ensureInventoryItemFromProduct(
+              {
+                source_key: sourceKey,
+                sku: option.sku,
+                name: itemName,
+                item_type: 'merchandise',
+                unit: 'pcs',
+                track_quantity: true,
+                track_value: true,
+              }
+            );
+        } catch (error: unknown) {
+          if (!isDuplicateKeyError(error)) throw error;
+          const conflictingSku =
+            await this.itemRepository.findBySku(option.sku);
+          if (!conflictingSku) throw error;
+          addResult(option, {
+            status: 'needs_review',
+            review_reason: 'existing_inventory_sku',
+            matched_item: {
+              id: String(conflictingSku._id),
+              name: conflictingSku.name,
+            },
+          });
+          continue;
+        }
+      }
+
+      defaultLocation ??=
+        await this.locationRepository.ensureDefaultLocation();
+      await this.saveMapping({
+        product_id: option.product_id,
+        ...(option.variant_id
+          ? { variant_id: option.variant_id }
+          : {}),
+        inventory_item_id: String(item._id),
+        mapping_method: 'auto_product_setup',
+      });
+      addResult(option, { status: 'prepared' });
+    }
+
+    const summary = {
+      prepared: results.filter(
+        (result) => result.status === 'prepared'
+      ).length,
+      already_mapped: results.filter(
+        (result) => result.status === 'already_mapped'
+      ).length,
+      needs_review: results.filter(
+        (result) => result.status === 'needs_review'
+      ).length,
+    };
+
+    return FinanceInventorySetupActionResponseSchema.parse({
+      action: 'prepare_from_products',
+      summary,
+      results,
+    });
   }
 
   private getSelectedProduct(

@@ -30,6 +30,7 @@ export type UpsertFinanceInventoryMappingRecord = {
   product_id: string;
   variant_id?: string;
   inventory_item_id: string;
+  mapping_method?: 'manual_setup' | 'auto_product_setup';
 };
 
 export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceInventoryMapping> {
@@ -130,7 +131,7 @@ export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceIn
     const variantKey = data.variant_id ?? '__product__';
     const set: Record<string, unknown> = {
       inventory_item: inventoryItemId,
-      mapping_method: 'manual_setup',
+      mapping_method: data.mapping_method ?? 'manual_setup',
       is_active: true,
       ...(data.variant_id
         ? { variant_id: data.variant_id }

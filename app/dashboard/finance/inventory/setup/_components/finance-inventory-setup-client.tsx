@@ -48,6 +48,7 @@ import {
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,
   type FinanceInventorySetupActionInputDTO,
+  type FinanceInventorySetupActionResponseDTO,
   type FinanceInventorySetupQueryDTO,
   type FinanceInventorySetupResponseDTO,
 } from '@/modules/finance/client';
@@ -171,6 +172,10 @@ export function FinanceInventorySetupClient({
   const [successMessage, setSuccessMessage] = useState<
     string | null
   >(null);
+  const [batchResult, setBatchResult] = useState<Extract<
+    FinanceInventorySetupActionResponseDTO,
+    { action: 'prepare_from_products' }
+  > | null>(null);
 
   const selectedProduct = setup.product_options.find(
     (product) => product.key === selectedProductKey
@@ -298,8 +303,14 @@ export function FinanceInventorySetupClient({
   const refreshSetup = useCallback(
     async (
       nextQuery: FinanceInventorySetupQueryDTO,
-      options?: { showLoading?: boolean }
+      options?: {
+        showLoading?: boolean;
+        preserveBatchResult?: boolean;
+      }
     ): Promise<boolean> => {
+      if (options?.preserveBatchResult !== true) {
+        setBatchResult(null);
+      }
       if (options?.showLoading !== false)
         setIsLoading(true);
       setErrorMessage(null);
@@ -423,6 +434,60 @@ export function FinanceInventorySetupClient({
     actionHandlerRef.current = performAction;
   }, [performAction]);
 
+  const prepareProductsFromCurrentPage = async () => {
+    setIsSaving(true);
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setBatchResult(null);
+
+    try {
+      const response = await fetch(
+        '/api/v1/dashboard/finance/inventory/setup',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'prepare_from_products',
+            page: query.page,
+            limit: query.limit,
+            ...(query.search
+              ? { search: query.search }
+              : {}),
+          }),
+        }
+      );
+      const payload: unknown = await response.json();
+      const parsed =
+        FinanceInventorySetupActionResponseSchema.safeParse(
+          getResponseData(payload)
+        );
+
+      if (
+        !response.ok ||
+        !parsed.success ||
+        parsed.data.action !== 'prepare_from_products'
+      ) {
+        setErrorMessage(
+          getResponseError(payload) ??
+            'Persiapan stok dari Produk gagal. Coba lagi.'
+        );
+        return;
+      }
+
+      setBatchResult(parsed.data);
+      await refreshSetup(
+        { ...query, item_search: undefined },
+        { showLoading: false, preserveBatchResult: true }
+      );
+    } catch {
+      setErrorMessage(
+        'Persiapan stok dari Produk gagal. Periksa koneksi lalu coba lagi.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const submitProductSearch = (
     event: FormEvent<HTMLFormElement>
   ) => {
@@ -468,6 +533,20 @@ export function FinanceInventorySetupClient({
   ) {
     selectableItems.unshift(selectedMappedItem);
   }
+
+  const unmappedProductCount = setup.product_options.filter(
+    (product) => !product.mapped_inventory_item
+  ).length;
+
+  const reviewReasonLabels: Record<string, string> = {
+    missing_sku: 'SKU belum tersedia',
+    duplicate_source_sku:
+      'SKU dipakai beberapa produk di halaman ini',
+    existing_inventory_sku:
+      'SKU sudah ada; perlu konfirmasi sebelum digabung',
+    source_item_unavailable:
+      'Item stok yang pernah dibuat tidak aktif atau tidak sesuai',
+  };
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -517,6 +596,96 @@ export function FinanceInventorySetupClient({
           <AlertTitle>Tersimpan</AlertTitle>
           <AlertDescription>
             {successMessage}
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      <Card className="border-primary/20 bg-primary/5">
+        <CardHeader className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="grid gap-1">
+            <CardTitle className="text-base">
+              Siapkan stok dari Produk
+            </CardTitle>
+            <CardDescription>
+              Buat item stok dan mapping otomatis untuk
+              produk yang memiliki SKU unik dan belum
+              terhubung. Jumlah stok tidak akan berubah;
+              aksi ini hanya memproses produk di halaman
+              aktif.
+            </CardDescription>
+          </div>
+          <Button
+            type="button"
+            disabled={
+              isLoading ||
+              isSaving ||
+              unmappedProductCount === 0
+            }
+            onClick={() =>
+              void prepareProductsFromCurrentPage()
+            }
+            className="shrink-0"
+          >
+            {isSaving ? (
+              <Spinner data-icon="inline-start" />
+            ) : null}
+            Siapkan {unmappedProductCount} produk
+          </Button>
+        </CardHeader>
+      </Card>
+
+      {batchResult ? (
+        <Alert aria-live="polite">
+          <AlertTitle>Hasil persiapan stok</AlertTitle>
+          <AlertDescription>
+            <p>
+              {batchResult.summary.prepared} disiapkan,{' '}
+              {batchResult.summary.already_mapped} sudah
+              terhubung, dan{' '}
+              {batchResult.summary.needs_review} perlu
+              ditinjau.
+            </p>
+            {batchResult.summary.needs_review > 0 ? (
+              <ul className="mt-3 grid gap-2">
+                {batchResult.results
+                  .filter(
+                    (result) =>
+                      result.status === 'needs_review'
+                  )
+                  .slice(0, 8)
+                  .map((result) => (
+                    <li
+                      key={`${result.product_id}:${result.variant_id ?? '__product__'}`}
+                      className="flex flex-wrap items-center gap-x-2"
+                    >
+                      <span className="font-medium">
+                        {result.product_name}
+                        {result.variant_name
+                          ? ` — ${result.variant_name}`
+                          : ''}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {result.sku
+                          ? `SKU ${result.sku} · `
+                          : ''}
+                        {reviewReasonLabels[
+                          result.review_reason ?? ''
+                        ] ?? 'Perlu diperiksa'}
+                        {result.matched_item
+                          ? ` · kandidat: ${result.matched_item.name}`
+                          : ''}
+                      </span>
+                    </li>
+                  ))}
+              </ul>
+            ) : null}
+            {batchResult.summary.needs_review > 8 ? (
+              <p className="mt-2">
+                {batchResult.summary.needs_review - 8}{' '}
+                produk lainnya juga perlu ditinjau pada
+                daftar di bawah.
+              </p>
+            ) : null}
           </AlertDescription>
         </Alert>
       ) : null}

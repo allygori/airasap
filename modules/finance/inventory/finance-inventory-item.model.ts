@@ -14,6 +14,7 @@ import {
 export type TFinanceInventoryItem = Document & {
   organization: Types.ObjectId;
   sku: string;
+  source_key?: string;
   name: string;
   item_type: FinanceInventoryItemType;
   unit: string;
@@ -38,6 +39,9 @@ const FinanceInventoryItemSchema =
         select: false,
       },
       sku: { type: String, required: true, trim: true },
+      // Stable source identity keeps catalog setup retry-safe without a flag
+      // on the Products document.
+      source_key: { type: String, trim: true },
       name: { type: String, required: true, trim: true },
       item_type: {
         type: String,
@@ -64,6 +68,15 @@ const FinanceInventoryItemSchema =
 FinanceInventoryItemSchema.index(
   { organization: 1, sku: 1 },
   { unique: true }
+);
+FinanceInventoryItemSchema.index(
+  { organization: 1, source_key: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      source_key: { $type: 'string' },
+    },
+  }
 );
 FinanceInventoryItemSchema.plugin(multiTenancyPlugin);
 

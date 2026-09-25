@@ -25,4 +25,18 @@ describe('Finance inventory collection ownership', () => {
         .collectionName
     ).toBe('finance_inventory_reservations');
   });
+
+  it('uses a tenant-scoped unique source identity only for auto-prepared items', () => {
+    expect(
+      FinanceInventoryItemModel.schema.indexes()
+    ).toContainEqual([
+      { organization: 1, source_key: 1 },
+      expect.objectContaining({
+        unique: true,
+        partialFilterExpression: {
+          source_key: { $type: 'string' },
+        },
+      }),
+    ]);
+  });
 });
