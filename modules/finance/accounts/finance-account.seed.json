@@ -279,6 +279,19 @@
       "description": "Pajak yang masih harus disetorkan."
     },
     {
+      "code": "2400",
+      "name": "Utang PayLater/Kartu Kredit",
+      "type": "liability",
+      "subtype": "credit_payable",
+      "parent_code": "2000",
+      "normal_balance": "credit",
+      "is_system": false,
+      "is_postable": true,
+      "is_active": true,
+      "display_order": 240,
+      "description": "Kewajiban kepada penyedia BNPL/PayLater atau kartu kredit atas pembelian yang belum dilunasi."
+    },
+    {
       "code": "3000",
       "name": "Ekuitas",
       "type": "equity",

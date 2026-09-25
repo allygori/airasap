@@ -57,6 +57,7 @@ describe('FinanceAccountService default CoA', () => {
       await service.ensureDefaultAccounts();
     const cash = records.get('1110');
     const cashGroup = records.get('1100');
+    const creditPayable = records.get('2400');
 
     expect(firstResult.organization_id).toBe(
       organizationId
@@ -67,6 +68,12 @@ describe('FinanceAccountService default CoA', () => {
     expect(String(cash?.parent_account)).toBe(
       String(cashGroup?._id)
     );
+    expect(creditPayable).toMatchObject({
+      name: 'Utang PayLater/Kartu Kredit',
+      type: 'liability',
+      subtype: 'credit_payable',
+      is_postable: true,
+    });
 
     const accountCount = records.size;
     const secondResult =

@@ -32,6 +32,9 @@ Products, Reports, and their importers must remain unchanged.
    Marketplace Balance accounts. Payable purchases resolve the active
    `accounts_payable` account, using code `2100` only as a compatibility
    fallback while the account taxonomy is shared.
+   The separate `credit_payable` account is currently available for opening
+   balances and settlement; selecting it for a new purchase is not part of
+   this change, so credit purchases still post to Accounts Payable.
 5. Supplier name and invoice/reference are transactional snapshots. A
    supplier master, tax calculation, partial settlement, and goods-receipt
    workflow are deferred until their dedicated phases are designed.

@@ -16,6 +16,9 @@ const cashId = new Types.ObjectId(
 const payableId = new Types.ObjectId(
   '507f1f77bcf86cd799439012'
 );
+const creditPayableId = new Types.ObjectId(
+  '507f1f77bcf86cd799439018'
+);
 const receivableId = new Types.ObjectId(
   '507f1f77bcf86cd799439013'
 );
@@ -55,6 +58,12 @@ const accounts = [
     'liability',
     'accounts_payable',
     '2100'
+  ),
+  makeAccount(
+    creditPayableId,
+    'liability',
+    'credit_payable',
+    '2400'
   ),
   makeAccount(
     receivableId,
@@ -248,6 +257,39 @@ describe('FinanceOpeningBalanceService', () => {
       owner_capital_total: 900_000,
       retained_earnings_balance: 100_000,
     });
+  });
+
+  it('accepts a PayLater/credit-card opening payable in the draft', async () => {
+    const service = makeService();
+
+    const result = await service.saveDraft({
+      ...input,
+      payable_lines: [
+        ...input.payable_lines,
+        {
+          account_id: String(creditPayableId),
+          amount: 300_000,
+          counterparty: 'Bank Digital',
+          reference: 'PayLater',
+        },
+      ],
+      owner_capital_amount: 700_000,
+    });
+
+    expect(result.draft?.payable_lines).toHaveLength(2);
+    expect(result.summary.payable_total).toBe(500_000);
+  });
+
+  it('exposes the PayLater account separately in onboarding options', async () => {
+    const result = await makeService().getSetup();
+
+    expect(result.options.credit_payable_accounts).toEqual([
+      expect.objectContaining({
+        id: String(creditPayableId),
+        code: '2400',
+        subtype: 'credit_payable',
+      }),
+    ]);
   });
 
   it('keeps zero-quantity inventory rows in the draft without treating them as duplicate stock', async () => {

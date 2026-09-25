@@ -30,6 +30,7 @@ import {
 
 type FinanceSubledgerAccountPort = Pick<
   FinanceAccountRepository,
+  | 'list'
   | 'findSelectableById'
   | 'findSelectableBySubtype'
   | 'findSelectableByCode'
@@ -201,14 +202,21 @@ export class FinanceSubledgerService {
   ): Promise<FinanceSubledgerListResponseDTO> {
     const query =
       FinanceSubledgerListQuerySchema.parse(input);
-    const balanceAccount = await this.resolveBalanceAccount(
-      query.balance_type,
-      session
+    const balanceAccounts =
+      await this.resolveBalanceAccounts(
+        query.balance_type,
+        session
+      );
+    const balanceAccountsById = new Map(
+      balanceAccounts.map((account) => [
+        String(account._id),
+        account,
+      ])
     );
     const sourceRows =
       await this.repository.listSourceBalances(
         query,
-        [String(balanceAccount._id)],
+        [...balanceAccountsById.keys()],
         session
       );
     const totals =
@@ -236,7 +244,11 @@ export class FinanceSubledgerService {
         const settledAmount = settled?.settled_amount ?? 0;
         const outstandingAmount =
           row.original_amount - settledAmount;
-        if (outstandingAmount <= 0) return null;
+        const balanceAccount = balanceAccountsById.get(
+          String(row.account_id)
+        );
+        if (outstandingAmount <= 0 || !balanceAccount)
+          return null;
         return {
           source_key: sourceKey,
           source_journal_entry_id: String(
@@ -256,11 +268,7 @@ export class FinanceSubledgerService {
             row.transaction_date.toISOString(),
           due_date: null,
           overdue_status: 'not_configured',
-          account: mapAccount({
-            _id: row.account_id,
-            code: balanceAccount.code,
-            name: balanceAccount.name,
-          }),
+          account: mapAccount(balanceAccount),
           original_amount: row.original_amount,
           settled_amount: settledAmount,
           outstanding_amount: outstandingAmount,
@@ -315,15 +323,19 @@ export class FinanceSubledgerService {
       }
     }
 
-    const balanceAccount = await this.resolveBalanceAccount(
-      data.balance_type,
-      session
+    const balanceAccounts =
+      await this.resolveBalanceAccounts(
+        data.balance_type,
+        session
+      );
+    const balanceAccountIds = balanceAccounts.map(
+      (account) => String(account._id)
     );
     const openingItem = data.source_item_id
       ? await this.repository.findOpeningBalanceSubledgerItem?.(
           data.source_item_id,
           data.balance_type,
-          [String(balanceAccount._id)],
+          balanceAccountIds,
           session
         )
       : null;
@@ -332,7 +344,7 @@ export class FinanceSubledgerService {
       : await this.repository.findSourceJournal(
           data.source_journal_entry_id,
           data.balance_type,
-          [String(balanceAccount._id)],
+          balanceAccountIds,
           session
         );
     if (
@@ -343,6 +355,29 @@ export class FinanceSubledgerService {
     ) {
       throw new FinanceDomainError(
         'Saldo Finance tidak ditemukan atau belum berstatus posted.',
+        'FINANCE_SUBLEDGER_SOURCE_NOT_FOUND'
+      );
+    }
+
+    const balanceAccount = openingItem
+      ? balanceAccounts.find(
+          (account) =>
+            String(account._id) ===
+            String(openingItem.account_id)
+        )
+      : source
+        ? balanceAccounts.find(
+            (account) =>
+              getSourceAmount(
+                source,
+                String(account._id),
+                data.balance_type
+              ) > 0
+          )
+        : undefined;
+    if (!balanceAccount) {
+      throw new FinanceDomainError(
+        'Akun pada saldo Finance tidak ditemukan atau tidak dapat diselesaikan.',
         'FINANCE_SUBLEDGER_SOURCE_NOT_FOUND'
       );
     }
@@ -489,42 +524,52 @@ export class FinanceSubledgerService {
     );
   }
 
-  private async resolveBalanceAccount(
+  private async resolveBalanceAccounts(
     balanceType: FinanceSubledgerListQueryDTO['balance_type'],
     session?: ClientSession
   ) {
-    const account =
-      balanceType === 'receivable'
-        ? ((await this.accountRepository.findSelectableBySubtype(
-            'marketplace_receivable',
-            session
-          )) ??
-          (await this.accountRepository.findSelectableByCode(
-            '1210',
-            session
-          )))
-        : ((await this.accountRepository.findSelectableBySubtype(
-            'accounts_payable',
-            session
-          )) ??
-          (await this.accountRepository.findSelectableByCode(
-            '2100',
-            session
-          )));
-    if (
-      !account ||
-      (balanceType === 'receivable'
-        ? account.type !== 'asset'
-        : account.type !== 'liability')
-    ) {
+    if (balanceType === 'receivable') {
+      const account =
+        (await this.accountRepository.findSelectableBySubtype(
+          'marketplace_receivable',
+          session
+        )) ??
+        (await this.accountRepository.findSelectableByCode(
+          '1210',
+          session
+        ));
+      if (!account || account.type !== 'asset') {
+        throw new FinanceDomainError(
+          'Akun Piutang Marketplace aktif dan postable belum tersedia.',
+          'FINANCE_SUBLEDGER_ACCOUNT_MISSING'
+        );
+      }
+      return [account];
+    }
+
+    const accounts = (
+      await this.accountRepository.list(
+        {
+          type: 'liability',
+          is_active: true,
+          is_postable: true,
+          limit: 500,
+        },
+        session
+      )
+    ).filter(
+      (account) =>
+        account.subtype === 'accounts_payable' ||
+        account.code === '2100' ||
+        account.subtype === 'credit_payable'
+    );
+    if (accounts.length === 0) {
       throw new FinanceDomainError(
-        balanceType === 'receivable'
-          ? 'Akun Piutang Marketplace aktif dan postable belum tersedia.'
-          : 'Akun Utang Usaha aktif dan postable belum tersedia.',
+        'Akun Utang Usaha atau PayLater/Kartu Kredit aktif dan postable belum tersedia.',
         'FINANCE_SUBLEDGER_ACCOUNT_MISSING'
       );
     }
-    return account;
+    return accounts;
   }
 
   private async resolvePaymentAccount(

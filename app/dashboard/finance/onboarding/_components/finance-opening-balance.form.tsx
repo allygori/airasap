@@ -259,6 +259,7 @@ const emptySetup = {
   options: {
     cash_bank_accounts: [],
     liability_accounts: [],
+    credit_payable_accounts: [],
     receivable_accounts: [],
     equity_accounts: [],
     retained_earnings_accounts: [],
@@ -1007,8 +1008,23 @@ export const FinanceOpeningBalanceForm = withForm({
                     accounts={
                       setup.options.liability_accounts
                     }
+                    counterpartyLabel="Nama supplier / pihak"
                     addLabel="Tambah utang"
                     emptyLabel="Akun utang belum tersedia di Chart of Accounts."
+                    isDisabled={isBusy}
+                  />
+
+                  <OpeningSubledgerSection
+                    form={form}
+                    fieldName="payable_lines"
+                    title="Utang PayLater/Kartu Kredit (opsional)"
+                    description="Masukkan saldo yang masih terutang kepada penyedia PayLater atau kartu kredit pada tanggal saldo awal. Satu baris per penyedia."
+                    accounts={
+                      setup.options.credit_payable_accounts
+                    }
+                    counterpartyLabel="Nama bank / penyedia"
+                    addLabel="Tambah saldo PayLater"
+                    emptyLabel="Akun PayLater/Kartu Kredit belum tersedia di Chart of Accounts."
                     isDisabled={isBusy}
                   />
 
@@ -1022,6 +1038,7 @@ export const FinanceOpeningBalanceForm = withForm({
                     accounts={
                       setup.options.receivable_accounts
                     }
+                    counterpartyLabel="Nama pelanggan / pihak"
                     addLabel="Tambah piutang"
                     emptyLabel="Akun piutang belum tersedia di Chart of Accounts."
                     isDisabled={isBusy}
@@ -1244,6 +1261,7 @@ function OpeningSubledgerSection({
   title,
   description,
   accounts,
+  counterpartyLabel,
   addLabel,
   emptyLabel,
   isDisabled,
@@ -1255,6 +1273,7 @@ function OpeningSubledgerSection({
   title: string;
   description: string;
   accounts: FinanceOpeningBalanceSetupResponseDTO['options']['liability_accounts'];
+  counterpartyLabel: string;
   addLabel: string;
   emptyLabel: string;
   isDisabled: boolean;
@@ -1273,93 +1292,104 @@ function OpeningSubledgerSection({
           mode="array"
           children={(arrayField) => (
             <div className="grid min-w-0 gap-4">
-              {arrayField.state.value.map((line, index) => (
-                <div
-                  key={line.line_key}
-                  className="bg-muted/20 grid min-w-0 gap-4 rounded-xl border p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium">
-                      {title.startsWith('Utang')
-                        ? 'Utang'
-                        : 'Piutang'}{' '}
-                      {index + 1}
-                    </p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      disabled={isDisabled}
-                      onClick={() =>
-                        arrayField.removeValue(index)
-                      }
-                    >
-                      Hapus
-                    </Button>
+              {arrayField.state.value.map((line, index) => {
+                if (
+                  !accounts.some(
+                    (account) =>
+                      account.id === line.account_id
+                  )
+                ) {
+                  return null;
+                }
+
+                return (
+                  <div
+                    key={line.line_key}
+                    className="bg-muted/20 grid min-w-0 gap-4 rounded-xl border p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">
+                        {title.startsWith('Utang')
+                          ? 'Utang'
+                          : 'Piutang'}{' '}
+                        {index + 1}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={isDisabled}
+                        onClick={() =>
+                          arrayField.removeValue(index)
+                        }
+                      >
+                        Hapus
+                      </Button>
+                    </div>
+                    <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                      <form.AppField
+                        name={
+                          `${fieldName}[${index}].account_id` as const
+                        }
+                        children={(field) => (
+                          <field.SelectField
+                            label="Akun"
+                            placeholder="Pilih akun"
+                            className="min-w-0"
+                            disabled={isDisabled}
+                            items={accounts.map(
+                              (account) => ({
+                                value: account.id,
+                                label: `${account.code} — ${account.name}`,
+                              })
+                            )}
+                          />
+                        )}
+                      />
+                      <form.AppField
+                        name={
+                          `${fieldName}[${index}].amount` as const
+                        }
+                        children={(field) => (
+                          <field.MoneyField
+                            label="Jumlah"
+                            inputMode="numeric"
+                            min={0}
+                            className="min-w-0"
+                            disabled={isDisabled}
+                          />
+                        )}
+                      />
+                      <form.AppField
+                        name={
+                          `${fieldName}[${index}].counterparty` as const
+                        }
+                        children={(field) => (
+                          <field.TextField
+                            label={counterpartyLabel}
+                            maxLength={160}
+                            className="min-w-0"
+                            disabled={isDisabled}
+                          />
+                        )}
+                      />
+                      <form.AppField
+                        name={
+                          `${fieldName}[${index}].reference` as const
+                        }
+                        children={(field) => (
+                          <field.TextField
+                            label="Referensi (opsional)"
+                            maxLength={160}
+                            className="min-w-0"
+                            disabled={isDisabled}
+                          />
+                        )}
+                      />
+                    </FieldGroup>
                   </div>
-                  <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <form.AppField
-                      name={
-                        `${fieldName}[${index}].account_id` as const
-                      }
-                      children={(field) => (
-                        <field.SelectField
-                          label="Akun"
-                          placeholder="Pilih akun"
-                          className="min-w-0"
-                          disabled={isDisabled}
-                          items={accounts.map(
-                            (account) => ({
-                              value: account.id,
-                              label: `${account.code} — ${account.name}`,
-                            })
-                          )}
-                        />
-                      )}
-                    />
-                    <form.AppField
-                      name={
-                        `${fieldName}[${index}].amount` as const
-                      }
-                      children={(field) => (
-                        <field.MoneyField
-                          label="Jumlah"
-                          inputMode="numeric"
-                          min={0}
-                          className="min-w-0"
-                          disabled={isDisabled}
-                        />
-                      )}
-                    />
-                    <form.AppField
-                      name={
-                        `${fieldName}[${index}].counterparty` as const
-                      }
-                      children={(field) => (
-                        <field.TextField
-                          label="Nama supplier / pihak"
-                          maxLength={160}
-                          className="min-w-0"
-                          disabled={isDisabled}
-                        />
-                      )}
-                    />
-                    <form.AppField
-                      name={
-                        `${fieldName}[${index}].reference` as const
-                      }
-                      children={(field) => (
-                        <field.TextField
-                          label="Referensi (opsional)"
-                          maxLength={160}
-                          className="min-w-0"
-                          disabled={isDisabled}
-                        />
-                      )}
-                    />
-                  </FieldGroup>
-                </div>
-              ))}
+                );
+              })}
               <Button
                 type="button"
                 variant="outline"

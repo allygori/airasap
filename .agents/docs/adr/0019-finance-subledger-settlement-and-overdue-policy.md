@@ -17,8 +17,10 @@ necessarily its contractual due date.
 ## Decision
 
 1. Derive open receivable balances from posted `order` journals using the
-   Marketplace Receivable account. Derive open payable balances from posted
-   `purchase` and `expense` journals using the Accounts Payable account.
+   Marketplace Receivable account. Derive payable balances from posted
+   `purchase` and `expense` journals using their payable account, and from
+   opening-balance subledger items using Accounts Payable or
+   PayLater/credit-card payable accounts.
 2. Store each settlement in `finance_settlements`, linked to the source
    journal entry. Settlement amount must be positive and cannot exceed the
    current outstanding amount.
@@ -27,7 +29,8 @@ necessarily its contractual due date.
    the open-balance list.
 4. Post a new balanced journal for each settlement:
    - receivable: debit selected Cash/Bank and credit Marketplace Receivable;
-   - payable: debit Accounts Payable and credit selected Cash/Bank.
+   - payable: debit the same payable account as the source and credit selected
+     Cash/Bank.
 5. Do not edit or reverse the source journal as part of ordinary settlement.
    Idempotency protects both the settlement source record and its journal.
 6. Keep overdue status `not_configured` while a source or user-entered due date

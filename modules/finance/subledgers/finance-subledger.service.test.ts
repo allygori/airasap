@@ -13,6 +13,7 @@ import { FinanceSubledgerService } from './finance-subledger.service';
 const organizationId = '507f1f77bcf86cd799439010';
 const receivableAccountId = new Types.ObjectId();
 const payableAccountId = new Types.ObjectId();
+const creditPayableAccountId = new Types.ObjectId();
 const paymentAccountId = new Types.ObjectId();
 const sourceJournalId = new Types.ObjectId();
 const settlementId = new Types.ObjectId();
@@ -52,6 +53,13 @@ const payableAccount = makeAccount(
   'Utang Usaha',
   'liability',
   'accounts_payable'
+);
+const creditPayableAccount = makeAccount(
+  creditPayableAccountId,
+  '2400',
+  'Utang PayLater/Kartu Kredit',
+  'liability',
+  'credit_payable'
 );
 const paymentAccount = makeAccount(
   paymentAccountId,
@@ -178,6 +186,10 @@ const makeDependencies = () => {
     },
   };
   const accountRepository = {
+    list: async () => [
+      payableAccount,
+      creditPayableAccount,
+    ],
     findSelectableById: async (id: string) =>
       id === String(paymentAccountId)
         ? paymentAccount
@@ -235,6 +247,41 @@ describe('FinanceSubledgerService', () => {
       outstanding_amount: 400000,
       settlement_status: 'partial',
       overdue_status: 'not_configured',
+    });
+  });
+
+  it('shows the actual PayLater account for a payable balance', async () => {
+    const dependencies = makeDependencies();
+    dependencies.repository.listSourceBalances =
+      async () => [
+        {
+          source_journal_entry: sourceJournalId,
+          source_type: 'purchase',
+          source_id: 'PURCHASE-001',
+          description: 'Purchase merchandise',
+          transaction_date: new Date(
+            '2026-09-22T00:00:00.000Z'
+          ),
+          currency: 'IDR',
+          account_id: creditPayableAccountId,
+          original_amount: 500000,
+        },
+      ];
+    const service = new FinanceSubledgerService(
+      { organizationId },
+      dependencies
+    );
+
+    const result = await service.listBalances({
+      balance_type: 'payable',
+      page: 1,
+      limit: 25,
+    });
+
+    expect(result.balances[0]?.account).toEqual({
+      id: String(creditPayableAccountId),
+      code: '2400',
+      name: 'Utang PayLater/Kartu Kredit',
     });
   });
 
@@ -306,6 +353,54 @@ describe('FinanceSubledgerService', () => {
         lines: [
           expect.objectContaining({
             account_id: String(payableAccountId),
+            debit: 200000,
+            credit: 0,
+          }),
+          expect.objectContaining({
+            account_id: String(paymentAccountId),
+            debit: 0,
+            credit: 200000,
+          }),
+        ],
+      }),
+      undefined
+    );
+  });
+
+  it('settles a PayLater balance against its own liability account', async () => {
+    const dependencies = makeDependencies();
+    dependencies.repository.findSourceJournal =
+      async () => ({
+        ...sourceJournal('payable'),
+        lines: [
+          {
+            account_id: creditPayableAccountId,
+            debit: 0,
+            credit: 500000,
+          },
+        ],
+      });
+    const service = new FinanceSubledgerService(
+      { organizationId },
+      dependencies
+    );
+
+    await service.settle({
+      balance_type: 'payable',
+      source_journal_entry_id: String(sourceJournalId),
+      amount: 200000,
+      settlement_date: '2026-09-23T00:00:00.000Z',
+      payment_account_id: String(paymentAccountId),
+      idempotency_key: 'settlement-key-credit-payable',
+    });
+
+    expect(
+      dependencies.journalService.postOperational
+    ).toHaveBeenCalledWith(
+      expect.objectContaining({
+        lines: [
+          expect.objectContaining({
+            account_id: String(creditPayableAccountId),
             debit: 200000,
             credit: 0,
           }),

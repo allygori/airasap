@@ -278,6 +278,9 @@ export const FinanceOpeningBalanceSetupResponseSchema =
       liability_accounts: z.array(
         FinanceOpeningBalanceAccountOptionSchema
       ),
+      credit_payable_accounts: z.array(
+        FinanceOpeningBalanceAccountOptionSchema
+      ),
       receivable_accounts: z.array(
         FinanceOpeningBalanceAccountOptionSchema
       ),

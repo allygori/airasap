@@ -35,6 +35,8 @@ Products, and Reports modules remain outside this decision.
    - inventory per Finance item and location, including quantity and unit
      cost;
    - supplier payable opening items with a supplier or reference label;
+   - optional PayLater/credit-card payable opening items with one line per
+     provider, recorded separately from supplier payables;
    - Modal Pemilik as an explicit user input;
    - Saldo Laba/retained earnings as a system-calculated balancing equity
      amount.
@@ -82,8 +84,9 @@ Products, and Reports modules remain outside this decision.
   position without filling an accounting questionnaire.
 - Inventory is not reduced to an untraceable total: quantity and unit cost can
   support later stock and cost-of-goods workflows.
-- Payables and receivables can participate in the existing Finance subledger
-  only when their opening source item is retained and exposed clearly.
+- Supplier and PayLater/credit-card payables, plus receivables, can participate
+  in the Finance subledger when their opening source item is retained and
+  exposed clearly. Opening PayLater balances use the Finance account `2400`.
 - The system-generated equity balancing amount keeps the opening journal
   balanced without asking a non-accountant to calculate retained earnings.
 - Optional assets, liabilities, tax balances, and owner withdrawals can be

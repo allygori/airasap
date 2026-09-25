@@ -450,6 +450,10 @@ export class FinanceOpeningBalanceService {
           options.cashBankAccounts.map(toAccountOption),
         liability_accounts:
           options.liabilityAccounts.map(toAccountOption),
+        credit_payable_accounts:
+          options.creditPayableAccounts.map(
+            toAccountOption
+          ),
         receivable_accounts:
           options.receivableAccounts.map(toAccountOption),
         equity_accounts:
@@ -1387,6 +1391,11 @@ export class FinanceOpeningBalanceService {
       payableControlAccount?.type === 'liability'
         ? [payableControlAccount]
         : [];
+    const creditPayableAccounts = accountResult.filter(
+      (account) =>
+        account.type === 'liability' &&
+        account.subtype === 'credit_payable'
+    );
     const receivableAccounts =
       receivableControlAccount?.type === 'asset'
         ? [receivableControlAccount]
@@ -1406,6 +1415,7 @@ export class FinanceOpeningBalanceService {
     return {
       cashBankAccounts,
       liabilityAccounts,
+      creditPayableAccounts,
       receivableAccounts,
       equityAccounts,
       retainedEarningsAccounts,
@@ -1486,7 +1496,8 @@ export class FinanceOpeningBalanceService {
         (account) =>
           account.type === 'liability' &&
           (account.subtype === 'accounts_payable' ||
-            account.code === '2100'),
+            account.code === '2100' ||
+            account.subtype === 'credit_payable'),
         'Akun hutang yang dipilih tidak valid.'
       );
     }
