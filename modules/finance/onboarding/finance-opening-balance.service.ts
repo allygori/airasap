@@ -125,6 +125,18 @@ const toDateOnly = (value: Date) =>
 const parseDateOnly = (value: string) =>
   new Date(`${value}T00:00:00.000Z`);
 
+const getFinanceBusinessDate = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const part = (type: 'year' | 'month' | 'day') =>
+    parts.find((item) => item.type === type)?.value ?? '';
+  return `${part('year')}-${part('month')}-${part('day')}`;
+};
+
 const isDuplicateKeyError = (error: unknown) => {
   if (!error || typeof error !== 'object') return false;
   if (!('code' in error)) return false;
@@ -467,13 +479,8 @@ export class FinanceOpeningBalanceService {
     const data =
       FinanceOpeningBalanceDraftInputSchema.parse(input);
     const cutOffDate = parseDateOnly(data.cut_off_date);
-    const today = new Date();
-    const todayDate = new Date(
-      Date.UTC(
-        today.getUTCFullYear(),
-        today.getUTCMonth(),
-        today.getUTCDate()
-      )
+    const todayDate = parseDateOnly(
+      getFinanceBusinessDate()
     );
     if (
       Number.isNaN(cutOffDate.getTime()) ||
@@ -747,7 +754,7 @@ export class FinanceOpeningBalanceService {
     }
 
     let journalEntryId: string | null = null;
-    let movementIds: Types.ObjectId[] = [];
+    const movementIds: Types.ObjectId[] = [];
     let status: 'posted' | 'skipped' = 'skipped';
     let payableCount = 0;
     let receivableCount = 0;
@@ -977,7 +984,7 @@ export class FinanceOpeningBalanceService {
     const cutOffDate = parseDateOnly(data.cut_off_date);
     if (
       Number.isNaN(cutOffDate.getTime()) ||
-      cutOffDate > new Date()
+      cutOffDate > parseDateOnly(getFinanceBusinessDate())
     ) {
       throw new FinanceDomainError(
         'Tanggal cut-off tidak valid atau berada di masa depan.',

@@ -220,6 +220,46 @@ describe('FinanceOpeningBalanceService', () => {
     });
   });
 
+  it('accepts the current Jakarta business date before UTC midnight', async () => {
+    jest.useFakeTimers();
+    jest.setSystemTime(
+      new Date('2026-09-23T20:00:00.000Z')
+    );
+
+    try {
+      const draft = {
+        ...makeDraft(),
+        cut_off_date: new Date('2026-09-24T00:00:00.000Z'),
+        mode: 'zero' as const,
+        cash_bank_lines: [],
+        inventory_lines: [],
+        payable_lines: [],
+        owner_capital_amount: 0,
+      };
+      const service = makeService(draft);
+
+      await expect(
+        service.saveDraft({
+          description: 'Saldo awal Finance',
+          mode: 'zero',
+          cut_off_date: '2026-09-24',
+          cash_bank_lines: [],
+          inventory_lines: [],
+          payable_lines: [],
+          receivable_lines: [],
+          owner_capital_amount: 0,
+        })
+      ).resolves.toBeDefined();
+      await expect(
+        service.preview()
+      ).resolves.toMatchObject({
+        cut_off_date: '2026-09-24',
+      });
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
   it('rejects an inventory line for an unknown location', async () => {
     const service = makeService();
 
@@ -323,27 +363,30 @@ describe('FinanceOpeningBalanceService', () => {
       '507f1f77bcf86cd799439019'
     );
     const postOperational = jest.fn(
-      async (_input: unknown) => ({
-        journal_entry: {
-          id: String(journalId),
-          entry_number: 'FIN-OPENING-1',
-          transaction_date: '2026-09-20T00:00:00.000Z',
-          posting_date: '2026-09-20T00:00:00.000Z',
-          period: '2026-09',
-          currency: 'IDR',
-          description: 'Saldo awal Finance',
-          source_type: 'opening_balance',
-          source_id: String(draft._id),
-          source_event: 'opening_balance_posted',
-          idempotency_key: 'opening-test',
-          status: 'posted' as const,
-          posted_at: '2026-09-20T00:00:00.000Z',
-          posted_by: null,
-          reversal_of: null,
-          lines: [],
-        },
-        replayed: false,
-      })
+      async (input: unknown) => {
+        void input;
+        return {
+          journal_entry: {
+            id: String(journalId),
+            entry_number: 'FIN-OPENING-1',
+            transaction_date: '2026-09-20T00:00:00.000Z',
+            posting_date: '2026-09-20T00:00:00.000Z',
+            period: '2026-09',
+            currency: 'IDR',
+            description: 'Saldo awal Finance',
+            source_type: 'opening_balance',
+            source_id: String(draft._id),
+            source_event: 'opening_balance_posted',
+            idempotency_key: 'opening-test',
+            status: 'posted' as const,
+            posted_at: '2026-09-20T00:00:00.000Z',
+            posted_by: null,
+            reversal_of: null,
+            lines: [],
+          },
+          replayed: false,
+        };
+      }
     );
     const createMany = jest
       .fn()

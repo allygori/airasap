@@ -4,6 +4,7 @@ export { FinanceEntitlementService } from './finance-entitlement.service';
 export { FinanceMarketplaceReleaseService } from './marketplace-releases/finance-marketplace-release.service';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';
+export { FinanceBankAccountOnboardingService } from './onboarding/finance-bank-account-onboarding.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
@@ -53,6 +54,10 @@ export {
   FinanceOpeningBalanceStatusSchema,
 } from './onboarding/finance-opening-balance.schema';
 export {
+  FinanceBankAccountCreateInputSchema,
+  FinanceBankAccountCreateResponseSchema,
+} from './onboarding/finance-bank-account.schema';
+export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
   FINANCE_ACCOUNT_ROLE_VALUES,
@@ -101,6 +106,10 @@ export type {
   FinanceOpeningBalanceFinalizeInputDTO,
   FinanceOpeningBalanceFinalizeResponseDTO,
 } from './onboarding/finance-opening-balance.dto';
+export type {
+  FinanceBankAccountCreateInputDTO,
+  FinanceBankAccountCreateResponseDTO,
+} from './onboarding/finance-bank-account.dto';
 export type {
   FinanceSalesOrderSourceDTO,
   FinanceSalesProjectionDTO,

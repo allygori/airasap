@@ -30,6 +30,18 @@ export type FinanceAccountSeedRecord = {
   description?: string;
 };
 
+export type FinanceBankAccountRecord = {
+  code: string;
+  name: string;
+  parent_account: Types.ObjectId;
+  display_order: number;
+  account_metadata?: {
+    institution?: string;
+    account_last4?: string;
+    account_holder?: string;
+  };
+};
+
 export type FinanceAccountPersistenceRecord = {
   _id: Types.ObjectId;
   organization: Types.ObjectId;
@@ -166,6 +178,29 @@ export class FinanceAccountRepository {
       if (!isDuplicateKeyError(error)) throw error;
       return this.findByCode(record.code, session);
     }
+  }
+
+  async createBankAccount(
+    record: FinanceBankAccountRecord,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    const [created] = await FinanceAccountModel.create(
+      [
+        {
+          organization: this.organizationId,
+          ...record,
+          type: 'asset',
+          subtype: 'bank',
+          normal_balance: 'debit',
+          is_system: false,
+          is_postable: true,
+          is_active: true,
+        },
+      ],
+      session ? { session } : undefined
+    );
+
+    return this.findById(String(created._id), session);
   }
 
   async list(

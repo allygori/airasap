@@ -23,7 +23,9 @@ Products, and Reports modules remain outside this decision.
 
 1. Require a Finance cut-off date before activation. The date identifies the
    point at which the opening position is measured; it is not, by itself, a
-   historical reconstruction or period-locking feature.
+   historical reconstruction or period-locking feature. Default it to the
+   current Asia/Jakarta business date; allow past dates with a clear warning,
+   and reject future dates consistently on the client and server.
 2. Keep the first onboarding scope to permanent accounts only: assets,
    liabilities, and equity. Do not accept revenue, expense, or tax balances as
    opening-balance inputs.
@@ -36,6 +38,9 @@ Products, and Reports modules remain outside this decision.
    - Modal Pemilik as an explicit user input;
    - Saldo Laba/retained earnings as a system-calculated balancing equity
      amount.
+   Users may add multiple bank accounts during onboarding. Each account is
+   created in the Finance CoA and can store institution, account holder, and
+   last four digits only; do not request a full bank account number.
 4. Treat opening receivables as optional. If entered, each item should carry a
    counterparty or reference so it can be displayed and settled. An aggregate
    item may be used only when clearly labelled as a summary and must not be
@@ -55,6 +60,10 @@ Products, and Reports modules remain outside this decision.
    opening journal.
 8. Opening-balance finalization does not mass-post historical Orders. Sales
    posting remains gated by active Finance and the Finance-aware import flow.
+   The onboarding warning must explain that historical orders are not posted
+   automatically and that the opening snapshot should not double-count those
+   transactions. Historical-order backfill is deferred and is not an
+   onboarding step.
 9. Do not add currency or accounting-timezone configuration to this first
    onboarding scope. Do not add bank-statement import, advanced tax setup, or
    reporting as hidden prerequisites.

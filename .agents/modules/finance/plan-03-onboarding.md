@@ -96,9 +96,21 @@ Implementation status:
   validation are implemented under `modules/finance/onboarding`.
 - The draft endpoint is `GET/PUT
   /api/v1/dashboard/finance/onboarding/opening-balance`.
-- The onboarding UI now supports cut-off date, explicit entered/zero mode,
-  cash and bank balances, detailed inventory lines, payable/receivable draft
-  lines, and owner capital input.
+- The guided onboarding UI uses five steps: opening date/mode, cash and bank,
+  inventory, liabilities/equity, and final review. It supports saving and
+  resuming a draft; the stock step can be left empty.
+- The cut-off date defaults to the current Asia/Jakarta business date. Past
+  dates are allowed with a warning that historical orders are not posted
+  automatically and the opening position must not double-count them. Future
+  dates are rejected by both draft validation and preview.
+- Users can add multiple bank accounts during onboarding. Each is a Finance
+  CoA account with optional institution, account holder, and last four digits;
+  a full account number is never requested. Balances remain separate per
+  postable account.
+- The opening form supports entered/zero mode, cash and bank balances,
+  detailed inventory lines, payable/receivable draft lines, and owner capital
+  input.
+- Historical-order backfill is not part of onboarding or this implementation.
 - Finance seeds its own default CoA into `finance_accounts` when the owner
   starts onboarding. The seed is idempotent and does not read or migrate old
   Accounting data.

@@ -14,7 +14,7 @@ import type {
   FinanceState,
   FinanceReadinessDTO,
 } from '@/modules/finance/client';
-import FinanceOpeningBalanceForm from './finance-opening-balance-form';
+import FinanceOpeningBalanceClient from './finance-opening-balance.client';
 
 type FinanceOnboardingData = {
   finance: Pick<
@@ -103,33 +103,6 @@ export default function FinanceOnboarding({
         </div>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-3">
-        <StepCard
-          number="01"
-          title="Akses"
-          description="Konfirmasi owner organisasi"
-          state={
-            data.readiness.owner_access ? 'done' : 'current'
-          }
-        />
-        <StepCard
-          number="02"
-          title="Konfigurasi"
-          description="COA dan preferensi akuntansi"
-          state={
-            status === 'in_progress'
-              ? 'current'
-              : 'upcoming'
-          }
-        />
-        <StepCard
-          number="03"
-          title="Aktif"
-          description="Mulai gunakan transaksi Finance"
-          state={status === 'active' ? 'done' : 'upcoming'}
-        />
-      </div>
-
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
         <Card className="overflow-hidden">
           <CardHeader className="border-b">
@@ -202,7 +175,7 @@ export default function FinanceOnboarding({
 
       {status === 'in_progress' &&
         data.readiness.owner_access && (
-          <FinanceOpeningBalanceForm enabled />
+          <FinanceOpeningBalanceClient enabled />
         )}
 
       {data.readiness.blockers.length > 0 && (
@@ -234,46 +207,6 @@ export default function FinanceOnboarding({
           </CardContent>
         </Card>
       )}
-    </div>
-  );
-}
-
-function StepCard({
-  number,
-  title,
-  description,
-  state,
-}: {
-  number: string;
-  title: string;
-  description: string;
-  state: 'done' | 'current' | 'upcoming';
-}) {
-  const className =
-    state === 'done'
-      ? 'border-success/40 bg-success/5'
-      : state === 'current'
-        ? 'border-primary/40 bg-primary/5'
-        : 'border-border bg-card';
-
-  return (
-    <div className={`rounded-2xl border p-4 ${className}`}>
-      <div className="flex items-start justify-between gap-3">
-        <span className="font-mono text-xs font-semibold">
-          {number}
-        </span>
-        <span className="text-muted-foreground text-[0.65rem] font-bold tracking-[0.18em] uppercase">
-          {state === 'done'
-            ? 'Selesai'
-            : state === 'current'
-              ? 'Berjalan'
-              : 'Berikutnya'}
-        </span>
-      </div>
-      <p className="mt-5 font-semibold">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm">
-        {description}
-      </p>
     </div>
   );
 }

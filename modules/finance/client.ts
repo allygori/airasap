@@ -9,10 +9,15 @@ export {
   FinanceInventorySetupResponseSchema,
 } from './inventory/finance-inventory.schema';
 export {
+  FinanceOpeningBalanceDraftInputSchema,
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
   FinanceOpeningBalanceSetupResponseSchema,
 } from './onboarding/finance-opening-balance.schema';
+export {
+  FinanceBankAccountCreateInputSchema,
+  FinanceBankAccountCreateResponseSchema,
+} from './onboarding/finance-bank-account.schema';
 export {
   FinancePurchaseInputSchema,
   FinancePurchaseResponseSchema,
@@ -67,6 +72,10 @@ export type {
   FinanceOpeningBalancePreviewDTO,
   FinanceOpeningBalanceSetupResponseDTO,
 } from './onboarding/finance-opening-balance.dto';
+export type {
+  FinanceBankAccountCreateInputDTO,
+  FinanceBankAccountCreateResponseDTO,
+} from './onboarding/finance-bank-account.dto';
 export type {
   FinancePurchaseListResponseDTO,
   FinancePurchaseSummaryDTO,
