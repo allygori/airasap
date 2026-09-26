@@ -9,6 +9,19 @@ export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
 export { FinancePeriodService } from './periods/finance-period.service';
+export {
+  FINANCE_CALENDAR_TIMEZONE_OPTIONS,
+  FINANCE_DEFAULT_CALENDAR_TIMEZONE,
+} from './calendar/finance-calendar.constants';
+export {
+  FinanceCalendarTimezoneSchema,
+  FinanceCalendarTimezoneValueSchema,
+} from './calendar/finance-calendar.schema';
+export {
+  getFinanceCalendarDate,
+  getFinancePeriodBounds,
+  getFinancePeriodKey,
+} from './calendar/finance-calendar';
 export { FinanceSalesProjectionService } from './sales/finance-sales.service';
 export { FinanceSalesPostingRulesService } from './sales/finance-sales-rules.service';
 export { FinanceSalesWorkflowService } from './sales/finance-sales-workflow.service';
@@ -46,6 +59,7 @@ export {
 } from './onboarding/finance-onboarding.schema';
 export {
   FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceDraftSchema,
   FinanceOpeningBalanceSetupResponseSchema,
   FinanceOpeningBalancePreviewSchema,
@@ -95,6 +109,7 @@ export type {
 } from './onboarding/finance-onboarding.dto';
 export type {
   FinanceOpeningBalanceDraftInputDTO,
+  FinanceOpeningBalanceSaveInputDTO,
   FinanceOpeningBalanceDraftDTO,
   FinanceOpeningBalanceSetupResponseDTO,
   FinanceOpeningBalanceSummaryDTO,

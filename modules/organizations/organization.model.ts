@@ -4,6 +4,7 @@ import {
   ORGANIZATION_ACCOUNTING_STATUS_VALUES,
   ORGANIZATION_FINANCE_STATUS_VALUES,
 } from './organization.schema';
+import { TIMEZONE_VALUES } from '@/constant/timezone';
 
 // export type TOrganization = Document & {
 //   name?: string;
@@ -90,6 +91,11 @@ const OrganizationSchema = new Schema<TOrganization>(
       onboarding_version: {
         type: Number,
         default: 1,
+      },
+      calendar_timezone: {
+        type: String,
+        enum: TIMEZONE_VALUES,
+        default: 'Asia/Jakarta',
       },
       started_at: {
         type: Date,

@@ -1,6 +1,7 @@
 import {
   FinanceOpeningBalanceCompleteDraftInputSchema,
   FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
 } from './finance-opening-balance.schema';
 
 const accountId = '507f1f77bcf86cd799439011';
@@ -87,5 +88,32 @@ describe('FinanceOpeningBalanceDraftInputSchema', () => {
         )
       ).toBe(true);
     }
+  });
+});
+
+describe('FinanceOpeningBalanceSaveInputSchema', () => {
+  const draft = {
+    cut_off_date: '2026-09-20',
+    mode: 'entered' as const,
+    cash_bank_lines: [],
+    inventory_lines: [],
+    payable_lines: [],
+    receivable_lines: [],
+  };
+
+  it('requires an explicit calendar timezone when saving a draft', () => {
+    expect(
+      FinanceOpeningBalanceSaveInputSchema.safeParse(draft)
+        .success
+    ).toBe(false);
+  });
+
+  it('accepts an explicitly selected Indonesia timezone', () => {
+    expect(
+      FinanceOpeningBalanceSaveInputSchema.parse({
+        ...draft,
+        calendar_timezone: 'Asia/Makassar',
+      }).calendar_timezone
+    ).toBe('Asia/Makassar');
   });
 });

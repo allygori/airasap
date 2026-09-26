@@ -131,6 +131,7 @@ const makeDraft =
 
 const input = {
   cut_off_date: '2026-09-20',
+  calendar_timezone: 'Asia/Jakarta' as const,
   mode: 'entered' as const,
   description: 'Saldo awal Finance',
   cash_bank_lines: [
@@ -171,9 +172,15 @@ const makeService = (
     {
       lifecycle: {
         assertOwner: jest.fn(async () => true),
+        setCalendarTimezone: jest.fn(async () => ({
+          status: 'in_progress' as const,
+          onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta' as const,
+        })),
         getState: jest.fn(async () => ({
           status: 'in_progress' as const,
           onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta' as const,
         })),
       },
       draftRepository: {
@@ -227,6 +234,7 @@ describe('FinanceOpeningBalanceService', () => {
 
     const incompleteDraft = {
       cut_off_date: '2026-09-18',
+      calendar_timezone: 'Asia/Jakarta',
       mode: 'entered',
       cash_bank_lines: [],
       inventory_lines: [],
@@ -348,6 +356,7 @@ describe('FinanceOpeningBalanceService', () => {
       await expect(
         service.saveDraft({
           description: 'Saldo awal Finance',
+          calendar_timezone: 'Asia/Jakarta',
           mode: 'zero',
           cut_off_date: '2026-09-24',
           cash_bank_lines: [],
@@ -408,6 +417,7 @@ describe('FinanceOpeningBalanceService', () => {
       return {
         status: 'active' as const,
         onboarding_version: 1,
+        calendar_timezone: 'Asia/Jakarta' as const,
       };
     });
     const service = new FinanceOpeningBalanceService(
@@ -415,9 +425,15 @@ describe('FinanceOpeningBalanceService', () => {
       {
         lifecycle: {
           assertOwner: jest.fn(async () => true),
+          setCalendarTimezone: jest.fn(async () => ({
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
+          })),
           getState: jest.fn(async () => ({
             status,
             onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
           activate,
         },
@@ -509,15 +525,22 @@ describe('FinanceOpeningBalanceService', () => {
       {
         lifecycle: {
           assertOwner: jest.fn(async () => true),
+          setCalendarTimezone: jest.fn(async () => ({
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
+          })),
           getState: jest.fn(async () => ({
             status,
             onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
           activate: jest.fn(async () => {
             status = 'active';
             return {
               status: 'active' as const,
               onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta' as const,
             };
           }),
         },
@@ -586,15 +609,22 @@ describe('FinanceOpeningBalanceService', () => {
     const activate = jest.fn(async () => ({
       status: 'active' as const,
       onboarding_version: 1,
+      calendar_timezone: 'Asia/Jakarta' as const,
     }));
     const service = new FinanceOpeningBalanceService(
       { organizationId },
       {
         lifecycle: {
           assertOwner: jest.fn(async () => true),
+          setCalendarTimezone: jest.fn(async () => ({
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
+          })),
           getState: jest.fn(async () => ({
             status: 'in_progress' as const,
             onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
           activate,
         },

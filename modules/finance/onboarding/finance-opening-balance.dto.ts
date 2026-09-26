@@ -1,6 +1,7 @@
 import {
   FinanceOpeningBalanceAccountOptionSchema,
   FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceDraftSchema,
   FinanceOpeningBalanceInventoryItemOptionSchema,
   FinanceOpeningBalanceLocationOptionSchema,
@@ -23,6 +24,10 @@ export type FinanceOpeningBalanceStatusDTO = ReturnType<
 
 export type FinanceOpeningBalanceDraftInputDTO = ReturnType<
   typeof FinanceOpeningBalanceDraftInputSchema.parse
+>;
+
+export type FinanceOpeningBalanceSaveInputDTO = ReturnType<
+  typeof FinanceOpeningBalanceSaveInputSchema.parse
 >;
 
 export type FinanceOpeningBalanceDraftDTO = ReturnType<

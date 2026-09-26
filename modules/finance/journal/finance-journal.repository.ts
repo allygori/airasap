@@ -84,6 +84,14 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
     } as QueryFilter<TFinanceJournalEntry>;
   }
 
+  async hasAnyEntries(
+    session?: ClientSession
+  ): Promise<boolean> {
+    const query = this.model.exists(this.getTenantFilter());
+    if (session) query.session(session);
+    return Boolean(await query.exec());
+  }
+
   async findByIdempotencyKey(
     idempotencyKey: string,
     session?: ClientSession

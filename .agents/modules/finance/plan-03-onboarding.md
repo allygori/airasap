@@ -56,15 +56,14 @@ Acceptance criteria:
 
 ### Phase 3.2 — Required setup and opening balance draft [CURRENT / IMPLEMENTED]
 
-Define the smallest setup that produces a meaningful opening position. Currency
-and accounting timezone are not required in the first Finance release. The
-current product does not need them to establish the initial ledger, and adding
-them here would make onboarding look more complete without solving an actual
-seller problem.
+Define the smallest setup that produces a meaningful opening position.
+Currency remains out of scope. Finance calendar timezone is collected as a
+calendar setting under Plan 08.1; it is not an opening-balance amount.
 
 Required setup:
 
 - a Finance cut-off date;
+- a Finance calendar timezone (see Plan 08.1);
 - a usable Finance-owned Chart of Accounts template;
 - confirmation that Finance should be activated after validation;
 - an explicit opening-balance choice: enter balances now or start at zero.
@@ -177,17 +176,19 @@ historical period-locking feature until that control is implemented.
 - historical reconstruction;
 - bank statement import;
 - advanced tax setup;
-- currency and timezone configuration;
+- currency configuration;
+- separate timezone settings UI (the onboarding step remains the setting point
+  for the current release);
 - migration of legacy Accounting accounts, opening balances, or journals;
 - replacing existing organization/store setup.
 
-## Finance calendar timezone follow-up [TARGET — PLAN 08]
+## Finance calendar timezone [CURRENT — PLAN 08.1]
 
-The current Finance onboarding does not collect a calendar timezone and
-currently defaults date-only behavior to Asia/Jakarta. Plan 08 requires a
-user-selected Finance calendar timezone to be stored under
-`organizations.finance.calendar_timezone` before report periods and monthly
-journal periods are calculated. Do not reuse the legacy
-`organizations.accounting.calendar_timezone` field. Whether the setting is
-selected during onboarding or Finance settings, its default, and the policy for
-changing it after journal posting remain open in Plan 08.
+The opening-balance onboarding's first step collects the Finance calendar
+timezone and defaults to `Asia/Jakarta` (WIB). The selected value is stored at
+`organizations.finance.calendar_timezone`; it is not copied from or written to
+the legacy `organizations.accounting.calendar_timezone` field. Monthly journal
+period keys and close-period UTC boundaries are calculated from this Finance
+timezone. A changed value is rejected after a Finance journal exists; the
+current UI collects this setting before Finance activation and does not provide
+a post-activation settings page.

@@ -1,6 +1,6 @@
 # ADR 0020 — Finance Opening Balance Onboarding Scope
 
-Status: [CURRENT]
+Status: [CURRENT — timezone portion superseded by ADR 0027]
 
 ## Context
 
@@ -66,9 +66,10 @@ Products, and Reports modules remain outside this decision.
    automatically and that the opening snapshot should not double-count those
    transactions. Historical-order backfill is deferred and is not an
    onboarding step.
-9. Do not add currency or accounting-timezone configuration to this first
-   onboarding scope. Do not add bank-statement import, advanced tax setup, or
-   reporting as hidden prerequisites.
+9. Currency configuration remains out of scope. The original exclusion of
+   accounting-timezone configuration is superseded by ADR 0027, which adds a
+   Finance-owned calendar timezone to onboarding. Do not add bank-statement
+   import, advanced tax setup, or reporting as hidden prerequisites.
 10. Opening-balance account selection uses the Finance-owned Chart of Accounts
     and default template described in ADR 0021.
 11. [CURRENT] Opening-balance finalization supports standalone MongoDB. It

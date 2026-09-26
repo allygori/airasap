@@ -43,13 +43,8 @@ type FinanceAccountRepositoryPort = Pick<
 
 type FinancePeriodServicePort = Pick<
   FinancePeriodService,
-  'ensureOpen'
+  'ensureOpen' | 'getPeriodKey'
 >;
-
-const getPeriodKey = (date: Date) =>
-  `${date.getUTCFullYear()}-${String(
-    date.getUTCMonth() + 1
-  ).padStart(2, '0')}`;
 
 const getFingerprint = (
   data: FinanceOperationalPostingDTO
@@ -172,7 +167,10 @@ export class FinanceJournalService {
     }
 
     const effectiveDate = data.effective_date ?? new Date();
-    const period = getPeriodKey(effectiveDate);
+    const period = await this.periodService.getPeriodKey(
+      effectiveDate,
+      session
+    );
     const idempotencyKey =
       data.idempotency_key ??
       `journal-reversal:${String(original._id)}:${period}`;
@@ -256,8 +254,12 @@ export class FinanceJournalService {
       );
     }
 
+    const period = await this.periodService.getPeriodKey(
+      data.transaction_date,
+      session
+    );
     await this.periodService.ensureOpen(
-      getPeriodKey(data.transaction_date),
+      period,
       data.transaction_date,
       session
     );
@@ -305,7 +307,7 @@ export class FinanceJournalService {
       entry_number: `FIN-${new Types.ObjectId().toHexString()}`,
       transaction_date: data.transaction_date,
       posting_date: postingDate,
-      period: getPeriodKey(data.transaction_date),
+      period,
       currency: data.currency,
       description: data.description,
       source_type: data.source_type,

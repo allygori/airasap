@@ -43,7 +43,12 @@ import {
 } from '@/components/ui/stepper';
 import { Spinner } from '@/components/ui/spinner';
 import {
+  FINANCE_CALENDAR_TIMEZONE_OPTIONS,
+  FINANCE_DEFAULT_CALENDAR_TIMEZONE,
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
+  FinanceCalendarTimezoneValueSchema,
+  getFinanceCalendarDate,
+  type FinanceCalendarTimezone,
   type FinanceOpeningBalancePreviewDTO,
   type FinanceOpeningBalanceSetupResponseDTO,
 } from '@/modules/finance/client';
@@ -76,6 +81,7 @@ const OpeningSubledgerLineFormSchema = z.object({
 export const FinanceOpeningBalanceFormValuesSchema = z
   .object({
     cut_off_date: z.string().date(),
+    calendar_timezone: FinanceCalendarTimezoneValueSchema,
     mode: z.enum(['entered', 'zero']),
     description: z.string().max(240),
     cash_bank_lines: z.array(
@@ -151,23 +157,18 @@ export const getFinanceOpeningBalanceSteps = (
 ): StepDefinition[] =>
   mode === 'zero' ? [allSteps[0], allSteps[4]] : allSteps;
 
-export const getTodayDateInputValue = () => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const part = (type: 'year' | 'month' | 'day') =>
-    parts.find((item) => item.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
-};
+export const getTodayDateInputValue = (
+  timeZone: FinanceCalendarTimezone = FINANCE_DEFAULT_CALENDAR_TIMEZONE
+) => getFinanceCalendarDate(new Date(), timeZone);
 
-const getCutOffDateValue = (value?: string | null) => {
+const getCutOffDateValue = (
+  value: string | null | undefined,
+  timeZone: FinanceCalendarTimezone
+) => {
   const parsed = z.string().date().safeParse(value);
   return parsed.success
     ? parsed.data
-    : getTodayDateInputValue();
+    : getTodayDateInputValue(timeZone);
 };
 
 export const createFinanceOpeningBalanceFormValues = (
@@ -201,7 +202,11 @@ export const createFinanceOpeningBalanceFormValues = (
   }
 
   return {
-    cut_off_date: getCutOffDateValue(draft?.cut_off_date),
+    cut_off_date: getCutOffDateValue(
+      draft?.cut_off_date,
+      setup.calendar_timezone
+    ),
+    calendar_timezone: setup.calendar_timezone,
     mode: draft?.mode ?? 'entered',
     description: draft?.description ?? 'Saldo awal Finance',
     cash_bank_lines: cashBankLines,
@@ -243,6 +248,7 @@ export const createFinanceOpeningBalanceFormValues = (
 export const createEmptyFinanceOpeningBalanceFormValues =
   (): FinanceOpeningBalanceFormValues => ({
     cut_off_date: getTodayDateInputValue(),
+    calendar_timezone: FINANCE_DEFAULT_CALENDAR_TIMEZONE,
     mode: 'entered',
     description: 'Saldo awal Finance',
     cash_bank_lines: [],
@@ -255,6 +261,7 @@ export const createEmptyFinanceOpeningBalanceFormValues =
 
 const emptySetup = {
   finance_status: 'in_progress',
+  calendar_timezone: FINANCE_DEFAULT_CALENDAR_TIMEZONE,
   draft: null,
   options: {
     cash_bank_accounts: [],
@@ -557,7 +564,7 @@ export const FinanceOpeningBalanceForm = withForm({
             <CardContent className="grid min-w-0 gap-7 p-5 sm:p-8">
               {step === 'start' ? (
                 <div className="grid min-w-0 gap-6">
-                  <div className="grid min-w-0 gap-5 md:grid-cols-[14rem_minmax(0,1fr)]">
+                  <div className="grid min-w-0 gap-5 md:grid-cols-[14rem_minmax(14rem,1fr)]">
                     <form.AppField
                       name="cut_off_date"
                       children={(field) => (
@@ -576,6 +583,25 @@ export const FinanceOpeningBalanceForm = withForm({
                       )}
                     />
                     <form.AppField
+                      name="calendar_timezone"
+                      children={(field) => (
+                        <field.SelectField
+                          label="Zona waktu kalender Finance"
+                          description="Menentukan bulan untuk periode dan laporan Finance."
+                          placeholder="Pilih zona waktu"
+                          items={FINANCE_CALENDAR_TIMEZONE_OPTIONS.map(
+                            (option) => ({
+                              label: option.label,
+                              value: option.value,
+                            })
+                          )}
+                          className="min-w-0"
+                        />
+                      )}
+                    />
+                  </div>
+                  <div className="grid min-w-0 gap-5">
+                    <form.AppField
                       name="description"
                       children={(field) => (
                         <field.TextField
@@ -590,7 +616,9 @@ export const FinanceOpeningBalanceForm = withForm({
 
                   {values.cut_off_date &&
                   values.cut_off_date <
-                    getTodayDateInputValue() ? (
+                    getTodayDateInputValue(
+                      values.calendar_timezone
+                    ) ? (
                     <Alert className="border-warning/40 bg-warning/5">
                       <HugeiconsIcon
                         icon={InformationCircleIcon}

@@ -1,6 +1,6 @@
 # Finance Plan 08 — Reports and Period Closing
 
-Status: [TARGET / DEFERRED UNTIL CORE FINANCE IS VERIFIED]
+Status: [IN PROGRESS — PHASE 8.1 FOUNDATION IMPLEMENTED; PHASE 8.2 NEXT]
 
 ## Start gate
 
@@ -33,11 +33,11 @@ or incomplete source data and must not present provisional results as complete.
   postings into a closed period. A missing period is implicitly open. The
   current close operation does not run a report-based readiness checklist or
   define a period-reopen workflow.
-- Journal `period` is currently derived from the UTC year/month of
-  `transaction_date`, while Finance onboarding defaults its date to the
-  Asia/Jakarta business date. Reporting must resolve this boundary contract
-  before grouping monthly or yearly results; the intended behavior is not
-  established by this plan yet.
+- Journal `period` and Finance period bounds use the organization's Finance
+  calendar timezone. The timezone is selected in the opening-balance onboarding
+  and stored under `organizations.finance.calendar_timezone`; legacy
+  `organizations.accounting.calendar_timezone` is not used. The default is
+  `Asia/Jakarta` (WIB), and a change is rejected after a Finance journal exists.
 - A completed-order sales journal can be posted while its HPP remains
   `deferred`. The deferred status/reason is shown in Finance Sales, but there
   is no Finance financial report yet to warn that resulting profit/margin is
@@ -60,7 +60,7 @@ Finance data.
 
 ## Phases
 
-### Phase 8.1 — Reporting foundation
+### Phase 8.1 — Reporting foundation [CURRENT — CALENDAR FOUNDATION IMPLEMENTED]
 
 Define report periods, filters, account grouping, dimensions, authoritative
 source data, and visible completeness warnings before implementing statement
@@ -69,14 +69,14 @@ totals.
 Target data rules:
 
 - Finance accounting periods and default report periods are monthly
-  (`YYYY-MM`). The month boundaries must use the timezone selected for this
+  (`YYYY-MM`). The month boundaries use the timezone selected for this
   organization's Finance calendar, not the server's local timezone.
-- Persist the selected calendar timezone on the organization under
-  `organizations.finance.calendar_timezone`. Do not read or write the legacy
-  `organizations.accounting.calendar_timezone` field. The setting must be
-  available before Finance assigns journal periods; changing it after posting
-  requires an explicit calendar-change policy rather than silently shifting
-  historical periods.
+- The selected calendar timezone is persisted under
+  `organizations.finance.calendar_timezone`; Finance never reads or writes the
+  legacy `organizations.accounting.calendar_timezone` field. Onboarding
+  defaults to `Asia/Jakarta` and saves the selection before finalization. A
+  timezone change is rejected if any Finance journal exists; the current UI
+  does not offer a post-activation settings screen.
 - Laba Rugi, Neraca, and Neraca Saldo derive from Finance posted journal lines.
   Source projections may provide labels and operational status, but must not
   silently replace the posted-ledger amount.
@@ -105,19 +105,19 @@ Target data rules:
 
 Acceptance criteria:
 
-- monthly report/close boundaries and period keys use the organization's
-  Finance calendar timezone and have tested month-end behavior;
-- the timezone value is organization-scoped and independent from legacy
-  Accounting settings;
-- draft and blocked transactions do not affect posted financial statements;
-- a posted/reversed journal is included according to its effective ledger
-  effect, not merely its source transaction's displayed status;
-- filters do not cross organization boundaries;
-- report totals can be traced to posted journals;
-- report queries are date-bounded and do not rely on the 5,000-line ledger UI
-  cap for complete totals.
-- reports visibly distinguish complete figures from results affected by
-  deferred HPP, blocked source events, or unresolved reconstruction balances.
+- [x] monthly Finance journal period keys and close-period UTC boundaries use
+  the organization's Finance calendar timezone, with month-boundary tests;
+- [x] the timezone is organization-scoped and independent from legacy
+  Accounting settings, with an Asia/Jakarta default;
+- [x] onboarding persists the selected timezone and rejects a change after the
+  first Finance journal exists;
+- [x] month-end period bounds are deterministic and independent of the server's
+  local timezone.
+
+The posted-ledger, traceability, tenant-filtering, and completeness rules above
+remain binding report contracts. Their implementation is verified with the
+statement and operational reports in Phases 8.2 and 8.3, not by this calendar
+foundation.
 
 ### Phase 8.2 — Core financial statements
 
@@ -135,6 +135,14 @@ period behavior, and behavior before the selected history start date remain
 open. The report must not claim historical coverage before the available
 opening position/source history.
 
+Acceptance criteria:
+
+- draft and blocked transactions do not affect posted financial statements;
+- reversed original journals are excluded while their posted reversals remain
+  traceable and contribute the correcting effect;
+- filters are organization-scoped, totals trace to posted journal lines, and
+  queries are date-bounded rather than based on the 5,000-line ledger UI cap.
+
 ### Phase 8.3 — Operational and tax reports
 
 Implement:
@@ -149,6 +157,15 @@ Implement:
 The existing operational Reports remain separate and are not replaced. Finance
 operational reports must reconcile their accounting amounts to posted journals
 where the value is presented as an accounting result.
+
+Acceptance criteria:
+
+- deferred HPP is shown as incomplete/provisional, not as zero cost;
+- marketplace balances remain distinct from bank cash until an explicit
+  Finance transfer is posted;
+- inventory valuation is based on posted Finance movements at the selected
+  as-of date and can be reconciled to the inventory control account;
+- unresolved reconstruction balances are shown only if Plan 09 records exist.
 
 ### Phase 8.4 — Closing books
 
@@ -199,9 +216,6 @@ behavior, and scheduler recovery/notification policy remain open decisions.
 
 ## Open questions
 
-- Where should the user choose the Finance calendar timezone (onboarding or
-  Finance settings), what default should apply, and how can it change after
-  journals exist?
 - Should cash flow use the direct or indirect method, and are marketplace
   wallet balances cash equivalents or a separately presented balance?
 - Should deferred HPP, blocked releases, and unacknowledged reconstruction

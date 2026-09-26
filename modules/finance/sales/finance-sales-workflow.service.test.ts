@@ -45,6 +45,7 @@ const lifecycle = (status: 'active' | 'not_started') =>
     getState: async () => ({
       status,
       onboarding_version: 1,
+      calendar_timezone: 'Asia/Jakarta',
     }),
   }) satisfies Pick<FinanceLifecycleService, 'getState'>;
 

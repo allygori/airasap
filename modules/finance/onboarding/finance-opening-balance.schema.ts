@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import {
+  FinanceCalendarTimezoneSchema,
+  FinanceCalendarTimezoneValueSchema,
+} from '../calendar/finance-calendar.schema';
+import {
   FINANCE_OPENING_BALANCE_MAX_AMOUNT,
   FINANCE_OPENING_BALANCE_MODE_VALUES,
   FINANCE_OPENING_BALANCE_STATUS_VALUES,
@@ -114,6 +118,11 @@ const FinanceOpeningBalanceDraftInputBaseSchema = z
 
 export const FinanceOpeningBalanceDraftInputSchema =
   FinanceOpeningBalanceDraftInputBaseSchema;
+
+export const FinanceOpeningBalanceSaveInputSchema =
+  FinanceOpeningBalanceDraftInputBaseSchema.extend({
+    calendar_timezone: FinanceCalendarTimezoneValueSchema,
+  }).strict();
 
 export const FinanceOpeningBalanceCompleteDraftInputSchema =
   FinanceOpeningBalanceDraftInputBaseSchema.superRefine(
@@ -270,6 +279,7 @@ export const FinanceOpeningBalanceSetupResponseSchema =
       'blocked',
       'active',
     ]),
+    calendar_timezone: FinanceCalendarTimezoneSchema,
     draft: FinanceOpeningBalanceDraftSchema.nullable(),
     options: z.object({
       cash_bank_accounts: z.array(

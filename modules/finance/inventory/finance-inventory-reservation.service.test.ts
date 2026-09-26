@@ -81,6 +81,7 @@ const makeService = (options?: {
         getState: async () => ({
           status: options?.financeStatus ?? 'active',
           onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta',
         }),
       } satisfies Pick<FinanceLifecycleService, 'getState'>,
       mappingRepository: {

@@ -75,6 +75,7 @@ const makeService = (overrides?: {
         getState: async () => ({
           status: 'active',
           onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta',
         }),
         assertOwner: async () => true,
         ...overrides?.lifecycle,
@@ -537,6 +538,7 @@ describe('FinanceInventorySetupService', () => {
         getState: async () => ({
           status: 'in_progress',
           onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta',
         }),
         assertOwner: async () => {
           throw new FinanceDomainError(

@@ -9,7 +9,7 @@ import { db } from '@/lib/db/connection';
 import {
   FinanceDomainError,
   assertFinancePremium,
-  FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceService,
 } from '@/modules/finance';
 
@@ -20,7 +20,8 @@ const getErrorStatus = (code: string) => {
   if (
     code === 'FINANCE_ONBOARDING_NOT_IN_PROGRESS' ||
     code === 'FINANCE_ONBOARDING_ALREADY_COMPLETED' ||
-    code === 'FINANCE_OPENING_BALANCE_SAVE_CONFLICT'
+    code === 'FINANCE_OPENING_BALANCE_SAVE_CONFLICT' ||
+    code === 'FINANCE_CALENDAR_TIMEZONE_LOCKED'
   ) {
     return 409;
   }
@@ -67,7 +68,7 @@ export async function GET() {
 }
 
 export const PUT = withValidation(
-  { body: FinanceOpeningBalanceDraftInputSchema },
+  { body: FinanceOpeningBalanceSaveInputSchema },
   async (_request, { validatedBody }) => {
     try {
       const tenantContext = await getTenantContext();

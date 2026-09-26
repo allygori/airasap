@@ -78,6 +78,7 @@ const makeService = (options?: {
         getState: async () => ({
           status: options?.status ?? 'in_progress',
           onboarding_version: 1,
+          calendar_timezone: 'Asia/Jakarta',
         }),
       },
     }

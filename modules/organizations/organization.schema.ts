@@ -1,4 +1,5 @@
 import z from 'zod';
+import { TIMEZONE_VALUES } from '@/constant/timezone';
 
 export const ORGANIZATION_ACCOUNTING_STATUS_VALUES = [
   'not_started',
@@ -65,6 +66,9 @@ export const OrganizationFinanceSchema = z.object({
     .int()
     .positive()
     .default(1),
+  calendar_timezone: z
+    .enum(TIMEZONE_VALUES)
+    .default('Asia/Jakarta'),
   started_at: z.date().optional(),
   blocked_reason: z.string().min(1).optional(),
   cut_off_date: z.date().optional(),

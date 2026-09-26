@@ -5,6 +5,7 @@ import type {
   FinanceJournalPersistenceRecord,
 } from './finance-journal.repository';
 import type { FinanceAccountPersistenceRecord } from '../accounts/finance-account.repository';
+import { getFinancePeriodKey } from '../calendar/finance-calendar';
 
 const organizationId = '507f1f77bcf86cd799439010';
 const accountOneId = '507f1f77bcf86cd799439011';
@@ -88,6 +89,9 @@ describe('FinanceJournalService', () => {
           ),
         },
         periodService: {
+          getPeriodKey: jest.fn(async (date: Date) =>
+            getFinancePeriodKey(date, 'Asia/Jakarta')
+          ),
           ensureOpen: jest.fn(async () => null),
         },
       }
@@ -142,6 +146,9 @@ describe('FinanceJournalService', () => {
           ]),
         },
         periodService: {
+          getPeriodKey: jest.fn(async (date: Date) =>
+            getFinancePeriodKey(date, 'Asia/Jakarta')
+          ),
           ensureOpen: jest.fn(async () => null),
         },
       }
@@ -174,6 +181,9 @@ describe('FinanceJournalService', () => {
           findSelectableByIds: jest.fn(async () => []),
         },
         periodService: {
+          getPeriodKey: jest.fn(async (date: Date) =>
+            getFinancePeriodKey(date, 'Asia/Jakarta')
+          ),
           ensureOpen: jest.fn(async () => null),
         },
       }

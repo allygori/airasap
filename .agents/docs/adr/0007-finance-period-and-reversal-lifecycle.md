@@ -13,6 +13,8 @@ period collection and service belong to the legacy module.
 
 - Finance owns `finance_accounting_periods` with `open` and `closed` states.
 - A period is implicitly open until an explicit close materializes its record.
+- Period keys and closed-period date boundaries use the organization's Finance
+  calendar timezone as recorded by ADR 0027.
 - Closing a period is an owner-only Finance action.
 - Reversal creates a new balanced journal with debit and credit swapped,
   references the original through `reversal_of`, and then changes only the

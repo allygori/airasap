@@ -13,9 +13,10 @@ export const TIMEZONES = {
   },
 } as const;
 
-export const TIMEZONE_VALUES = Object.values(TIMEZONES).map(
-  (tz) => tz.value
-);
+export const TIMEZONE_VALUES = [
+  TIMEZONES.WIB.value,
+  TIMEZONES.WITA.value,
+  TIMEZONES.WIT.value,
+] as const;
 
-export type TimeZone =
-  (typeof TIMEZONES)[keyof typeof TIMEZONES]['value'];
+export type TimeZone = (typeof TIMEZONE_VALUES)[number];

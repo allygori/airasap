@@ -43,6 +43,8 @@ export const normalizeFinanceState = (
 ): FinanceState => ({
   status: finance?.status ?? 'not_started',
   onboarding_version: finance?.onboarding_version ?? 1,
+  calendar_timezone:
+    finance?.calendar_timezone ?? 'Asia/Jakarta',
   ...(finance?.started_at
     ? { started_at: finance.started_at }
     : {}),

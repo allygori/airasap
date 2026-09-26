@@ -14,14 +14,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   FinanceBankAccountCreateInputSchema,
   FinanceBankAccountCreateResponseSchema,
-  FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
   FinanceOpeningBalanceSetupResponseSchema,
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,
   type FinanceBankAccountCreateInputDTO,
-  type FinanceOpeningBalanceDraftInputDTO,
+  type FinanceOpeningBalanceSaveInputDTO,
   type FinanceOpeningBalancePreviewDTO,
   type FinanceOpeningBalanceSetupResponseDTO,
 } from '@/modules/finance/client';
@@ -153,9 +153,10 @@ export default function FinanceOpeningBalanceClient({
 
     setIsSaving(true);
     try {
-      const payload: FinanceOpeningBalanceDraftInputDTO =
-        FinanceOpeningBalanceDraftInputSchema.parse({
+      const payload: FinanceOpeningBalanceSaveInputDTO =
+        FinanceOpeningBalanceSaveInputSchema.parse({
           cut_off_date: values.cut_off_date,
+          calendar_timezone: values.calendar_timezone,
           mode: values.mode,
           description:
             values.description.trim() ||

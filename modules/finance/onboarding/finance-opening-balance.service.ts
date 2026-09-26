@@ -1,5 +1,6 @@
 import { Types, type ClientSession } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
+import { getFinanceCalendarDate } from '../calendar/finance-calendar';
 import {
   assertFinanceTenant,
   type FinanceTenantContext,
@@ -24,6 +25,7 @@ import {
 import { FinanceLifecycleService } from '../finance-lifecycle.service';
 import type {
   FinanceOpeningBalanceDraftInputDTO,
+  FinanceOpeningBalanceSaveInputDTO,
   FinanceOpeningBalanceFinalizeResponseDTO,
   FinanceOpeningBalancePreviewDTO,
   FinanceOpeningBalanceSetupResponseDTO,
@@ -31,6 +33,7 @@ import type {
 import {
   FinanceOpeningBalanceCompleteDraftInputSchema,
   FinanceOpeningBalanceDraftInputSchema,
+  FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceFinalizeInputSchema,
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
@@ -75,7 +78,7 @@ type FinanceOpeningBalanceDraftRepositoryPort = Pick<
 
 type FinanceOpeningBalanceLifecyclePort = Pick<
   FinanceLifecycleService,
-  'getState' | 'assertOwner'
+  'getState' | 'assertOwner' | 'setCalendarTimezone'
 > &
   Partial<Pick<FinanceLifecycleService, 'activate'>>;
 
@@ -125,18 +128,6 @@ const toDateOnly = (value: Date) =>
 
 const parseDateOnly = (value: string) =>
   new Date(`${value}T00:00:00.000Z`);
-
-const getFinanceBusinessDate = (date = new Date()) => {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(date);
-  const part = (type: 'year' | 'month' | 'day') =>
-    parts.find((item) => item.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
-};
 
 const isDuplicateKeyError = (error: unknown) => {
   if (!error || typeof error !== 'object') return false;
@@ -444,6 +435,7 @@ export class FinanceOpeningBalanceService {
 
     return FinanceOpeningBalanceSetupResponseSchema.parse({
       finance_status: state.status,
+      calendar_timezone: state.calendar_timezone,
       draft: draftDTO,
       options: {
         cash_bank_accounts:
@@ -480,7 +472,7 @@ export class FinanceOpeningBalanceService {
   }
 
   async saveDraft(
-    input: FinanceOpeningBalanceDraftInputDTO | unknown,
+    input: FinanceOpeningBalanceSaveInputDTO | unknown,
     session?: ClientSession
   ): Promise<FinanceOpeningBalanceSetupResponseDTO> {
     await this.lifecycle.assertOwner();
@@ -498,11 +490,16 @@ export class FinanceOpeningBalanceService {
       );
     }
 
+    const saveInput =
+      FinanceOpeningBalanceSaveInputSchema.parse(input);
+    const { calendar_timezone, ...draftInput } = saveInput;
     const data =
-      FinanceOpeningBalanceDraftInputSchema.parse(input);
+      FinanceOpeningBalanceDraftInputSchema.parse(
+        draftInput
+      );
     const cutOffDate = parseDateOnly(data.cut_off_date);
     const todayDate = parseDateOnly(
-      getFinanceBusinessDate()
+      getFinanceCalendarDate(new Date(), calendar_timezone)
     );
     if (
       Number.isNaN(cutOffDate.getTime()) ||
@@ -519,6 +516,10 @@ export class FinanceOpeningBalanceService {
       session
     );
     await this.validateInventory(data, session);
+    await this.lifecycle.setCalendarTimezone(
+      calendar_timezone,
+      session
+    );
 
     const record: CreateFinanceOpeningBalanceDraftRecord = {
       onboarding_version: state.onboarding_version,
@@ -1008,9 +1009,17 @@ export class FinanceOpeningBalanceService {
     }
 
     const cutOffDate = parseDateOnly(data.cut_off_date);
+    const financeState =
+      await this.lifecycle.getState(session);
+    const todayDate = parseDateOnly(
+      getFinanceCalendarDate(
+        new Date(),
+        financeState.calendar_timezone
+      )
+    );
     if (
       Number.isNaN(cutOffDate.getTime()) ||
-      cutOffDate > parseDateOnly(getFinanceBusinessDate())
+      cutOffDate > todayDate
     ) {
       throw new FinanceDomainError(
         'Tanggal cut-off tidak valid atau berada di masa depan.',

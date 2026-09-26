@@ -5,6 +5,7 @@ describe('normalizeFinanceState', () => {
     expect(normalizeFinanceState()).toEqual({
       status: 'not_started',
       onboarding_version: 1,
+      calendar_timezone: 'Asia/Jakarta',
     });
   });
 
@@ -15,11 +16,13 @@ describe('normalizeFinanceState', () => {
       normalizeFinanceState({
         status: 'in_progress',
         onboarding_version: 2,
+        calendar_timezone: 'Asia/Jakarta',
         started_at: startedAt,
       })
     ).toEqual({
       status: 'in_progress',
       onboarding_version: 2,
+      calendar_timezone: 'Asia/Jakarta',
       started_at: startedAt,
     });
   });

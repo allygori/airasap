@@ -21,6 +21,7 @@ describe('FinanceLifecycleService readiness', () => {
       finance: {
         status: 'not_started',
         onboarding_version: 1,
+        calendar_timezone: 'Asia/Jakarta',
       },
       readiness: {
         status: 'not_started',
@@ -128,5 +129,79 @@ describe('FinanceLifecycleService readiness', () => {
     await service.start();
 
     expect(calls).toEqual(['seed', 'start']);
+  });
+
+  it('saves the organization calendar timezone before any journal exists', async () => {
+    const updateFinanceCalendarTimezone = jest.fn(
+      async (
+        calendar_timezone:
+          | 'Asia/Jakarta'
+          | 'Asia/Makassar'
+          | 'Asia/Jayapura'
+      ) => ({
+        finance: {
+          status: 'in_progress' as const,
+          onboarding_version: 1,
+          calendar_timezone,
+        },
+      })
+    );
+    const service = new FinanceLifecycleService(
+      { organizationId, userId: 'user-1' },
+      {
+        organizationRepository: {
+          findFinanceState: jest.fn(async () => ({
+            finance: {
+              status: 'in_progress' as const,
+              onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta' as const,
+            },
+          })),
+          startFinance: jest.fn(async () => null),
+          updateFinanceCalendarTimezone,
+        },
+        ownerAccessChecker: jest.fn(async () => true),
+        postedJournalChecker: jest.fn(async () => false),
+      }
+    );
+
+    const state =
+      await service.setCalendarTimezone('Asia/Makassar');
+
+    expect(state.calendar_timezone).toBe('Asia/Makassar');
+    expect(
+      updateFinanceCalendarTimezone
+    ).toHaveBeenCalledWith('Asia/Makassar', undefined);
+  });
+
+  it('locks the calendar timezone after the first journal exists', async () => {
+    const updateFinanceCalendarTimezone = jest.fn();
+    const service = new FinanceLifecycleService(
+      { organizationId, userId: 'user-1' },
+      {
+        organizationRepository: {
+          findFinanceState: jest.fn(async () => ({
+            finance: {
+              status: 'in_progress' as const,
+              onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta' as const,
+            },
+          })),
+          startFinance: jest.fn(async () => null),
+          updateFinanceCalendarTimezone,
+        },
+        ownerAccessChecker: jest.fn(async () => true),
+        postedJournalChecker: jest.fn(async () => true),
+      }
+    );
+
+    await expect(
+      service.setCalendarTimezone('Asia/Makassar')
+    ).rejects.toMatchObject({
+      code: 'FINANCE_CALENDAR_TIMEZONE_LOCKED',
+    });
+    expect(
+      updateFinanceCalendarTimezone
+    ).not.toHaveBeenCalled();
   });
 });

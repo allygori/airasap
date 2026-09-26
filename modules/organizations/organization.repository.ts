@@ -93,6 +93,30 @@ export class OrganizationRepository extends BaseRepository<TOrganization> {
     return query.lean();
   }
 
+  async updateFinanceCalendarTimezone(
+    calendarTimezone: string,
+    session?: ClientSession
+  ) {
+    const query = this.model.findOneAndUpdate(
+      {
+        _id: this.tenantContext.organizationId,
+        'finance.status': 'in_progress',
+      },
+      {
+        $set: {
+          'finance.calendar_timezone': calendarTimezone,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query.lean();
+  }
+
   async activateFinance(
     data: {
       onboarding_version: number;

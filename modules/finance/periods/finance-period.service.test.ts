@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { FinancePeriodService } from './finance-period.service';
 import type { FinancePeriodPersistenceRecord } from './finance-period.repository';
+import type { TimeZone } from '@/constant/timezone';
 
 const organizationId = '507f1f77bcf86cd799439010';
 const actorId = '507f1f77bcf86cd799439011';
@@ -11,15 +12,23 @@ const makePeriod = (
   _id: new Types.ObjectId('507f1f77bcf86cd799439099'),
   organization: new Types.ObjectId(organizationId),
   period_key: '2026-09',
-  start_date: new Date('2026-09-01T00:00:00.000Z'),
-  end_date: new Date('2026-09-30T23:59:59.999Z'),
+  start_date: new Date('2026-08-31T17:00:00.000Z'),
+  end_date: new Date('2026-09-30T16:59:59.999Z'),
   status,
   ...(status === 'closed'
     ? {
-        closed_at: new Date('2026-09-30T23:59:59.999Z'),
+        closed_at: new Date('2026-09-30T16:59:59.999Z'),
         closed_by: new Types.ObjectId(actorId),
       }
     : {}),
+});
+
+const makeOrganizationRepository = (
+  calendarTimezone: TimeZone = 'Asia/Jakarta'
+) => ({
+  findFinanceState: jest.fn(async () => ({
+    finance: { calendar_timezone: calendarTimezone },
+  })),
 });
 
 describe('FinancePeriodService', () => {
@@ -32,7 +41,8 @@ describe('FinancePeriodService', () => {
         ),
         createPeriod: jest.fn(),
         closePeriod: jest.fn(),
-      }
+      },
+      makeOrganizationRepository()
     );
 
     await expect(
@@ -52,7 +62,8 @@ describe('FinancePeriodService', () => {
         findByPeriodKey: jest.fn(async () => null),
         createPeriod: jest.fn(),
         closePeriod: jest.fn(),
-      }
+      },
+      makeOrganizationRepository()
     );
 
     await expect(
@@ -72,7 +83,8 @@ describe('FinancePeriodService', () => {
         findByPeriodKey: jest.fn(async () => null),
         createPeriod,
         closePeriod: jest.fn(),
-      }
+      },
+      makeOrganizationRepository()
     );
 
     const result = await service.close(
@@ -84,10 +96,30 @@ describe('FinancePeriodService', () => {
     expect(createPeriod).toHaveBeenCalledWith(
       expect.objectContaining({
         period_key: '2026-09',
+        start_date: new Date('2026-08-31T17:00:00.000Z'),
+        end_date: new Date('2026-09-30T16:59:59.999Z'),
         status: 'closed',
         closed_by: actorId,
       }),
       undefined
     );
+  });
+
+  it('derives the month key in the organization timezone', async () => {
+    const service = new FinancePeriodService(
+      { organizationId },
+      {
+        findByPeriodKey: jest.fn(async () => null),
+        createPeriod: jest.fn(),
+        closePeriod: jest.fn(),
+      },
+      makeOrganizationRepository('Asia/Jakarta')
+    );
+
+    await expect(
+      service.getPeriodKey(
+        new Date('2026-09-30T17:00:00.000Z')
+      )
+    ).resolves.toBe('2026-10');
   });
 });

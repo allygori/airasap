@@ -3,8 +3,16 @@ import { Types } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
 import {
   assertFinanceTenant,
+  normalizeFinanceState,
+  type FinanceState,
   type FinanceTenantContext,
 } from '../finance.types';
+import { OrganizationRepository } from '@/modules/organizations/organization.repository';
+import {
+  getFinancePeriodBounds,
+  getFinancePeriodKey,
+} from '../calendar/finance-calendar';
+import type { TimeZone } from '@/constant/timezone';
 import type {
   FinanceClosePeriodDTO,
   FinancePeriodResponseDTO,
@@ -24,25 +32,41 @@ type FinancePeriodRepositoryPort = Pick<
   'findByPeriodKey' | 'createPeriod' | 'closePeriod'
 >;
 
-const getPeriodBounds = (periodKey: string) => {
-  const [year, month] = periodKey.split('-').map(Number);
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(
-    Date.UTC(year, month, 0, 23, 59, 59, 999)
-  );
-  return { startDate, endDate };
+type FinancePeriodOrganization = {
+  finance?: Partial<FinanceState> | null;
+} | null;
+
+type FinanceOrganizationRepositoryPort = {
+  findFinanceState: (
+    session?: ClientSession
+  ) => Promise<FinancePeriodOrganization>;
 };
 
 export class FinancePeriodService {
   private readonly repository: FinancePeriodRepositoryPort;
+  private readonly organizationRepository: FinanceOrganizationRepositoryPort;
 
   constructor(
     context: FinanceTenantContext,
-    repository?: FinancePeriodRepositoryPort
+    repository?: FinancePeriodRepositoryPort,
+    organizationRepository?: FinanceOrganizationRepositoryPort
   ) {
     assertFinanceTenant(context);
     this.repository =
       repository ?? new FinancePeriodRepository(context);
+    this.organizationRepository =
+      organizationRepository ??
+      new OrganizationRepository(context);
+  }
+
+  async getPeriodKey(
+    date: Date,
+    session?: ClientSession
+  ): Promise<string> {
+    return getFinancePeriodKey(
+      date,
+      await this.getCalendarTimezone(session)
+    );
   }
 
   async ensureOpen(
@@ -123,8 +147,9 @@ export class FinancePeriodService {
       return mapFinancePeriod(closed);
     }
 
-    const { startDate, endDate } = getPeriodBounds(
-      data.period_key
+    const { startDate, endDate } = getFinancePeriodBounds(
+      data.period_key,
+      await this.getCalendarTimezone(session)
     );
     try {
       const created = await this.repository.createPeriod(
@@ -159,6 +184,25 @@ export class FinancePeriodService {
       );
     }
     return closedBy;
+  }
+
+  private async getCalendarTimezone(
+    session?: ClientSession
+  ): Promise<TimeZone> {
+    const organization: FinancePeriodOrganization =
+      await this.organizationRepository.findFinanceState(
+        session
+      );
+
+    if (!organization) {
+      throw new FinanceDomainError(
+        'Organization tidak ditemukan.',
+        'FINANCE_ORGANIZATION_NOT_FOUND'
+      );
+    }
+
+    return normalizeFinanceState(organization.finance)
+      .calendar_timezone;
   }
 
   private isDuplicateKeyError(error: unknown) {
