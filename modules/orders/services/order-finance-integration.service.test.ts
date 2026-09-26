@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import type {
   FinanceInventoryReservationSyncResult,
   FinanceMarketplaceReleaseService,
+  FinanceMarketplaceReleaseResponseDTO,
   FinanceSalesWorkflowResultDTO,
 } from '@/modules/finance';
 import { OrderFinanceIntegrationService } from './order-finance-integration.service';
@@ -129,6 +130,74 @@ describe('OrderFinanceIntegrationService', () => {
     expect(result).toMatchObject({
       status: 'synced',
       source_order_id: 'ORDER-1',
+    });
+  });
+
+  it('normalizes signed marketplace fees only for Finance posting', async () => {
+    const storedFee = {
+      admin_fee: -9828,
+      processing_fee: -1250,
+      gox_fee: -3276,
+      tax_pph22: -10,
+    };
+    let receivedInput: unknown;
+    const releaseResult: FinanceMarketplaceReleaseResponseDTO =
+      {
+        id: 'release-1',
+        status: 'blocked',
+        source_order_id: 'ORDER-1',
+        journal_entry_id: null,
+        reason: 'Pajak ditunda.',
+        expected_gross_amount: null,
+        fee_amount: null,
+        refund_amount: 0,
+        released_amount: 0,
+        reconciliation_difference: null,
+      };
+    const service = new OrderFinanceIntegrationService(
+      { organizationId },
+      {
+        orderRepository: {
+          findById: async () => ({
+            ...order('selesai'),
+            settlement_reference: 'SETTLEMENT-1',
+            released_funds_at: '2026-09-01T00:00:00.000Z',
+            released_funds: 0,
+            fee: storedFee,
+          }),
+        },
+        marketplaceReleaseService: {
+          recordFromOrder: async (input) => {
+            receivedInput = input;
+            return releaseResult;
+          },
+        } satisfies Pick<
+          FinanceMarketplaceReleaseService,
+          'recordFromOrder'
+        >,
+      }
+    );
+
+    const sourceFileId = new Types.ObjectId();
+    await service.recordMarketplaceRelease(
+      String(orderDocumentId),
+      sourceFileId
+    );
+
+    expect(receivedInput).toMatchObject({
+      source_file_id: sourceFileId.toHexString(),
+      fee: {
+        admin_fee: 9828,
+        processing_fee: 1250,
+        gox_fee: 3276,
+        tax_pph22: 10,
+      },
+    });
+    expect(storedFee).toEqual({
+      admin_fee: -9828,
+      processing_fee: -1250,
+      gox_fee: -3276,
+      tax_pph22: -10,
     });
   });
 });

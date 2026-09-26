@@ -293,10 +293,10 @@ export function FinanceSalesTransactions({
                         ) : null}
                         {transaction.journal_entry_id ? (
                           <Link
-                            href={`/dashboard/finance/accounting/general-journal/${transaction.journal_entry_id}`}
+                            href={`/dashboard/finance/accounting/general-journal?search=${encodeURIComponent(transaction.source_order_id)}`}
                             className="text-primary px-2 py-1.5 text-xs font-medium underline-offset-4 hover:underline"
                           >
-                            Journal
+                            Jurnal terkait
                           </Link>
                         ) : null}
                       </div>

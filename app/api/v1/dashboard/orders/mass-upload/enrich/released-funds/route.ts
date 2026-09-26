@@ -112,7 +112,7 @@ export const POST = withValidation({}, async (request) => {
     const result =
       await orderService.enrichWithReleasedFunds(
         buffer,
-        fileDoc._id
+        fileDoc._id.toString()
       );
 
     return apiSuccess(

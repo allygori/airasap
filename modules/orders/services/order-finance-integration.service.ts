@@ -73,6 +73,10 @@ type FinanceInventoryReservationPort = Pick<
 const toObjectIdString = (
   value: unknown
 ): string | undefined => {
+  if (value instanceof Types.ObjectId) {
+    return value.toHexString();
+  }
+
   if (
     value &&
     typeof value === 'object' &&
@@ -86,6 +90,53 @@ const toObjectIdString = (
   const id = String(value);
   return Types.ObjectId.isValid(id) ? id : undefined;
 };
+
+const toAbsoluteFeeAmount = (amount: number | undefined) =>
+  amount === undefined ? undefined : Math.abs(amount);
+
+// Shopee stores marketplace deductions as negative amounts. Finance journal
+// lines represent fee expenses as positive debit magnitudes, so normalize a
+// copy at this integration boundary and leave the stored Orders values intact.
+const toFinanceMarketplaceReleaseFee = (
+  fee:
+    | FinanceMarketplaceReleaseSourceInputDTO['fee']
+    | undefined
+): FinanceMarketplaceReleaseSourceInputDTO['fee'] => ({
+  admin_fee: toAbsoluteFeeAmount(fee?.admin_fee),
+  processing_fee: toAbsoluteFeeAmount(fee?.processing_fee),
+  affiliate_fee: toAbsoluteFeeAmount(fee?.affiliate_fee),
+  gox_fee: toAbsoluteFeeAmount(fee?.gox_fee),
+  service_fee: toAbsoluteFeeAmount(fee?.service_fee),
+  shipping_saver_program_fee: toAbsoluteFeeAmount(
+    fee?.shipping_saver_program_fee
+  ),
+  transaction_fee: toAbsoluteFeeAmount(
+    fee?.transaction_fee
+  ),
+  campaign_fee: toAbsoluteFeeAmount(fee?.campaign_fee),
+  other_fee: toAbsoluteFeeAmount(fee?.other_fee),
+  premium_fee: toAbsoluteFeeAmount(fee?.premium_fee),
+  fbs_fee: toAbsoluteFeeAmount(fee?.fbs_fee),
+  tax_pph22: toAbsoluteFeeAmount(fee?.tax_pph22),
+  import_duty_vat_income_tax: toAbsoluteFeeAmount(
+    fee?.import_duty_vat_income_tax
+  ),
+  auto_top_up_fee_from_income: toAbsoluteFeeAmount(
+    fee?.auto_top_up_fee_from_income
+  ),
+  return_shipping_fee: toAbsoluteFeeAmount(
+    fee?.return_shipping_fee
+  ),
+  return_to_sender_shipping_fee: toAbsoluteFeeAmount(
+    fee?.return_to_sender_shipping_fee
+  ),
+  shipping_fee_refund: toAbsoluteFeeAmount(
+    fee?.shipping_fee_refund
+  ),
+  refund_to_buyer: toAbsoluteFeeAmount(
+    fee?.refund_to_buyer
+  ),
+});
 
 const toProjectionInput = (
   context: FinanceTenantContext,
@@ -210,7 +261,7 @@ export class OrderFinanceIntegrationService {
 
   async recordMarketplaceRelease(
     orderId: string,
-    sourceFileId?: string
+    sourceFileId?: string | Types.ObjectId
   ): Promise<FinanceMarketplaceReleaseResponseDTO> {
     const order =
       await this.orderRepository.findById(orderId);
@@ -231,6 +282,8 @@ export class OrderFinanceIntegrationService {
       };
     const sourceOrderId = source.order_id ?? '';
     const platform = source.platform;
+    const normalizedSourceFileId =
+      toObjectIdString(sourceFileId);
     if (!platform) {
       throw new FinanceDomainError(
         'Platform order tidak tersedia untuk pencatatan released funds.',
@@ -259,16 +312,15 @@ export class OrderFinanceIntegrationService {
       ...(source.released_funds !== undefined
         ? { released_amount: source.released_funds }
         : {}),
-      ...(sourceFileId &&
-      Types.ObjectId.isValid(sourceFileId)
-        ? { source_file_id: sourceFileId }
+      ...(normalizedSourceFileId
+        ? { source_file_id: normalizedSourceFileId }
         : {}),
       has_returns:
         source.marketplace_return_detected === true ||
         (source.items ?? []).some(
           (item) => (item.returned_quantity ?? 0) > 0
         ),
-      fee: source.fee ?? {},
+      fee: toFinanceMarketplaceReleaseFee(source.fee),
     };
 
     return this.marketplaceReleaseService.recordFromOrder(
