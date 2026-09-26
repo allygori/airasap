@@ -72,10 +72,10 @@ workflow operasional.
 | 5 | Organization-wide inventory, simple mapping, channel stock, and cost of sales | 7 |
 | 6 | Cash and bank | 3 |
 | 7 | Purchases, expenses, receivables, and payables | 4 |
-| 8 | Reports and period closing | 4 |
+| 8 | Reports and period closing | 5 |
 | 9 | Historical reconstruction | 4 |
 
-Estimate: about 35–37 phases. The phase count is directional and may change
+Estimate: about 36–38 phases. The phase count is directional and may change
 after each plan's discovery phase.
 
 ## Reuse policy

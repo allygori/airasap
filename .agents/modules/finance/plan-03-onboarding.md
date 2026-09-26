@@ -180,3 +180,14 @@ historical period-locking feature until that control is implemented.
 - currency and timezone configuration;
 - migration of legacy Accounting accounts, opening balances, or journals;
 - replacing existing organization/store setup.
+
+## Finance calendar timezone follow-up [TARGET — PLAN 08]
+
+The current Finance onboarding does not collect a calendar timezone and
+currently defaults date-only behavior to Asia/Jakarta. Plan 08 requires a
+user-selected Finance calendar timezone to be stored under
+`organizations.finance.calendar_timezone` before report periods and monthly
+journal periods are calculated. Do not reuse the legacy
+`organizations.accounting.calendar_timezone` field. Whether the setting is
+selected during onboarding or Finance settings, its default, and the policy for
+changing it after journal posting remain open in Plan 08.
