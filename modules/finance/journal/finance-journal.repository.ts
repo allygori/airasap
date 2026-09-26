@@ -15,6 +15,8 @@ type FinanceJournalListFilter = {
   page: number;
   limit: number;
   period?: string;
+  period_to?: string;
+  account_id?: string;
   status?: 'posted' | 'reversed';
   source_type?: string;
   search?: string;
@@ -116,7 +118,18 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
   }> {
     const queryFilter: QueryFilter<TFinanceJournalEntry> = {
       ...this.getTenantFilter(),
-      ...(filter.period ? { period: filter.period } : {}),
+      ...(filter.period
+        ? { period: filter.period }
+        : filter.period_to
+          ? { period: { $lte: filter.period_to } }
+          : {}),
+      ...(filter.account_id
+        ? {
+            'lines.account_id': new Types.ObjectId(
+              filter.account_id
+            ),
+          }
+        : {}),
       ...(filter.status ? { status: filter.status } : {}),
       ...(filter.source_type
         ? { source_type: filter.source_type }

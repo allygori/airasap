@@ -89,6 +89,52 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
       .exec();
   }
 
+  async aggregateDeferredCogs(
+    startDate: Date,
+    endDate: Date
+  ): Promise<
+    Array<{
+      _id: string;
+      transaction_count: number;
+      related_sales_amount: number;
+    }>
+  > {
+    return this.model
+      .aggregate<{
+        _id: string;
+        transaction_count: number;
+        related_sales_amount: number;
+      }>([
+        {
+          $match: {
+            ...this.getTenantFilter(),
+            status: 'posted',
+            inventory_cogs_status: 'deferred',
+            transaction_date: {
+              $gte: startDate,
+              $lte: endDate,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              $ifNull: [
+                '$inventory_cogs_deferred_reason',
+                'Alasan HPP tertunda belum dicatat.',
+              ],
+            },
+            transaction_count: { $sum: 1 },
+            related_sales_amount: {
+              $sum: { $ifNull: ['$sales_amount', 0] },
+            },
+          },
+        },
+        { $sort: { transaction_count: -1, _id: 1 } },
+      ])
+      .exec();
+  }
+
   async list(
     filter: FinanceSalesTransactionListQueryDTO,
     session?: ClientSession

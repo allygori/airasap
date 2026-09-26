@@ -211,6 +211,12 @@ FinanceSalesTransactionSchema.index({
 });
 FinanceSalesTransactionSchema.index({
   organization: 1,
+  status: 1,
+  inventory_cogs_status: 1,
+  transaction_date: 1,
+});
+FinanceSalesTransactionSchema.index({
+  organization: 1,
   source_order_id: 1,
 });
 

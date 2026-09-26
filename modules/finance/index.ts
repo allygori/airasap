@@ -44,6 +44,15 @@ export { FinancePurchaseReadService } from './purchases/finance-purchase-read.se
 export { FinanceExpenseService } from './expenses/finance-expense.service';
 export { FinanceExpenseReadService } from './expenses/finance-expense-read.service';
 export { FinanceSubledgerService } from './subledgers/finance-subledger.service';
+export { FinanceFinancialStatementsReadService } from './reports/finance-financial-statements-read.service';
+export {
+  FinanceBalanceSheetReportSchema,
+  FinanceFinancialStatementReportSchema,
+  FinanceProfitLossReportSchema,
+  FinanceStatementPeriodSchema,
+  FinanceStatementQuerySchema,
+  FinanceTrialBalanceReportSchema,
+} from './reports/finance-statement.schema';
 export {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   FINANCE_CASH_BANK_SUBTYPE_VALUES,
@@ -343,3 +352,12 @@ export type {
   FinancePeriodKeyDTO,
   FinancePeriodResponseDTO,
 } from './periods/finance-period.dto';
+export type {
+  FinanceBalanceSheetReport,
+  FinanceFinancialStatementReport,
+  FinanceProfitLossReport,
+  FinanceStatementAccountAmount,
+  FinanceStatementPeriod,
+  FinanceStatementQuery,
+  FinanceTrialBalanceReport,
+} from './reports/finance-financial-statements.dto';

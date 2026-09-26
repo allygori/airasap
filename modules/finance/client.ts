@@ -46,6 +46,14 @@ export {
   FinanceOfflineSaleResponseSchema,
 } from './sales/finance-offline-sale.schema';
 export { FinanceSettlementResponseSchema } from './subledgers/finance-subledger.schema';
+export {
+  FinanceBalanceSheetReportSchema,
+  FinanceFinancialStatementReportSchema,
+  FinanceProfitLossReportSchema,
+  FinanceStatementPeriodSchema,
+  FinanceStatementQuerySchema,
+  FinanceTrialBalanceReportSchema,
+} from './reports/finance-statement.schema';
 
 export type { FinanceState } from './finance.types';
 export type { FinanceCalendarTimezone } from './calendar/finance-calendar.schema';
@@ -111,3 +119,12 @@ export type {
   FinanceSubledgerListResponseDTO,
   FinanceSubledgerTypeDTO,
 } from './subledgers/finance-subledger.dto';
+export type {
+  FinanceBalanceSheetReport,
+  FinanceFinancialStatementReport,
+  FinanceProfitLossReport,
+  FinanceStatementAccountAmount,
+  FinanceStatementPeriod,
+  FinanceStatementQuery,
+  FinanceTrialBalanceReport,
+} from './reports/finance-financial-statements.dto';

@@ -171,6 +171,17 @@ FinanceJournalEntrySchema.index({
   period: 1,
   transaction_date: 1,
 });
+FinanceJournalEntrySchema.index({
+  organization: 1,
+  status: 1,
+  transaction_date: 1,
+});
+FinanceJournalEntrySchema.index({
+  organization: 1,
+  status: 1,
+  'lines.account_id': 1,
+  period: 1,
+});
 FinanceJournalEntrySchema.index(
   { organization: 1, idempotency_key: 1 },
   {

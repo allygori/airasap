@@ -111,6 +111,14 @@ export const FinanceJournalListQuerySchema = z
       .string()
       .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
       .optional(),
+    period_to: z
+      .string()
+      .regex(/^\d{4}-(0[1-9]|1[0-2])$/)
+      .optional(),
+    account_id: z
+      .string()
+      .regex(/^[0-9a-fA-F]{24}$/)
+      .optional(),
     status: FinanceJournalStatusSchema.optional(),
     source_type: z.string().trim().max(80).optional(),
     search: z.string().trim().max(80).optional(),

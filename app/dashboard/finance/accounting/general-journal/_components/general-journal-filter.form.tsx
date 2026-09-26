@@ -13,6 +13,8 @@ import { buildFinanceFilterHref } from '@/app/dashboard/finance/_lib/finance-fil
 type JournalFilterValues = {
   search: string;
   period: string;
+  period_to: string;
+  account_id: string;
   status: string;
 };
 
@@ -26,6 +28,8 @@ const JournalFilterFields = withForm({
   defaultValues: {
     search: '',
     period: '',
+    period_to: '',
+    account_id: '',
     status: 'all',
   } as JournalFilterValues,
   render: function Render({ form }) {

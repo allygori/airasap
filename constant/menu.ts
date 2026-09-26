@@ -437,6 +437,10 @@ export const financeNav = [
     icon: ChartPieIcon,
     items: [
       {
+        title: 'Neraca Saldo',
+        url: '/dashboard/finance/reports/trial-balance',
+      },
+      {
         title: 'Laba Rugi',
         url: '/dashboard/finance/reports/profit-and-loss',
       },

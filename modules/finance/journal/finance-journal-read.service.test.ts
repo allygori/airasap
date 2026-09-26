@@ -143,6 +143,40 @@ describe('FinanceJournalReadService', () => {
     ]);
   });
 
+  it('passes report drill-down account and cumulative period filters to the repository', async () => {
+    const repository = {
+      list: jest.fn(async () => ({
+        records: [],
+        total: 0,
+      })),
+      findEntryById: jest.fn(),
+      findLedgerLines: jest.fn(),
+    };
+    const service = new FinanceJournalReadService(
+      { organizationId },
+      {
+        journalRepository: repository,
+        accountRepository: { findByIds: jest.fn() },
+      }
+    );
+
+    await service.list({
+      page: 1,
+      limit: 25,
+      period_to: '2026-09',
+      account_id: debitAccountId,
+      status: 'posted',
+    });
+
+    expect(repository.list).toHaveBeenCalledWith({
+      page: 1,
+      limit: 25,
+      period_to: '2026-09',
+      account_id: debitAccountId,
+      status: 'posted',
+    });
+  });
+
   it('calculates a normal-balance running balance for ledger rows', async () => {
     const account = makeAccount(debitAccountId, '1100');
     const row: FinanceLedgerPersistenceRow = {

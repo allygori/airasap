@@ -1,6 +1,6 @@
 # Finance Plan 08 — Reports and Period Closing
 
-Status: [IN PROGRESS — PHASE 8.1 FOUNDATION IMPLEMENTED; PHASE 8.2 NEXT]
+Status: [IN PROGRESS — PHASE 8.1 IMPLEMENTED; PHASE 8.2 CORE STATEMENTS IMPLEMENTED, CASH FLOW POLICY PENDING]
 
 ## Start gate
 
@@ -21,8 +21,10 @@ or incomplete source data and must not present provisional results as complete.
 
 ## Current baseline [CURRENT]
 
-- Finance has a journal list/detail and bounded account-ledger read surface, but
-  no Finance financial-statement or reporting page/API yet.
+- Finance has server-rendered pages for Neraca Saldo, Laba Rugi, and Neraca,
+  backed by organization-scoped posted-journal aggregations. These are read
+  pages, not a new reporting API contract. Arus Kas remains pending the policy
+  decision below.
 - Posted journals are the general-ledger source of truth. Reversals create new
   journal entries; draft/blocked source work does not become a posted financial
   statement amount.
@@ -135,13 +137,38 @@ period behavior, and behavior before the selected history start date remain
 open. The report must not claim historical coverage before the available
 opening position/source history.
 
+Current implementation notes:
+
+- Neraca Saldo shows cumulative account balances through the selected month;
+  Laba Rugi shows activity within that month; Neraca shows cumulative balances
+  through month-end in the organization's Finance timezone.
+- Debit-normal contra-revenue balances (such as discounts/returns) reduce
+  reported revenue. Balance-sheet equity includes cumulative unclosed
+  profit/loss because this phase does not create closing journals.
+- The pages are rendered on the server and read the Finance module directly;
+  no database access is performed by the client component.
+- Each account amount links to the organization-scoped General Journal with
+  the corresponding month/account filters. Deferred HPP is shown as an
+  explicit warning with affected transaction count, related sales amount,
+  and recorded reasons; no HPP value is fabricated.
+- The Finance start date is shown as a history-coverage notice. It is not
+  treated as proof that source history before that date is complete.
+
 Acceptance criteria:
 
-- draft and blocked transactions do not affect posted financial statements;
-- reversed original journals are excluded while their posted reversals remain
-  traceable and contribute the correcting effect;
-- filters are organization-scoped, totals trace to posted journal lines, and
-  queries are date-bounded rather than based on the 5,000-line ledger UI cap.
+- [x] Neraca Saldo, Laba Rugi, and Neraca use date-bounded, organization-scoped
+  aggregations over posted Finance journal lines rather than the 5,000-line
+  ledger UI cap;
+- [x] reversed original journals are excluded while separately posted
+  reversals remain traceable and contribute the correcting effect;
+- [x] account rows drill down to matching posted journal entries, which link
+  to journal details and their source events;
+- [x] deferred HPP is identified as incomplete/provisional and does not get
+  reported as zero cost;
+- [ ] implement Arus Kas after the cash-flow method and marketplace-balance
+  presentation policy are confirmed;
+- [ ] decide comparative-period behavior and how to present periods before the
+  available opening position/source history.
 
 ### Phase 8.3 — Operational and tax reports
 
