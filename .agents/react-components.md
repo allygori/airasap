@@ -127,9 +127,8 @@ change into unrelated routes.
 
 ## Tables and collections
 
-There are multiple existing table systems. For new work, first determine
-whether the feature belongs to `components/data-table/` or
-`components/dashboard/collection/`. Do not add a third abstraction for a single
+There are existing table systems. For new work, first determine
+whether the feature belongs to `components/data-table/`. Do not add a third abstraction for a single
 screen. Keep sorting, filtering, pagination, and selection state consistent
 with the API query contract.
 

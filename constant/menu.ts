@@ -391,6 +391,10 @@ export const financeNav = [
         url: '/dashboard/finance/inventory/product-and-stock-list',
       },
       {
+        title: 'Riwayat Mutasi Stok',
+        url: '/dashboard/finance/inventory/movements',
+      },
+      {
         title: 'Setup & Mapping Inventory',
         url: '/dashboard/finance/inventory/setup',
       },

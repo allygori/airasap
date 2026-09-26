@@ -13,6 +13,7 @@ import {
 import type {
   FinanceInventoryAdjustmentDirectionDTO,
   FinanceInventoryAdjustmentReasonDTO,
+  FinanceInventoryMovementListQueryDTO,
 } from './finance-inventory.dto';
 import {
   FinanceInventoryMovementModel,
@@ -62,9 +63,73 @@ export type CreatePostedFinanceInventoryMovementRecord =
     journal_entry?: Types.ObjectId;
   };
 
+export type FinanceInventoryMovementListPersistenceResult =
+  {
+    records: FinanceInventoryMovementPersistenceRecord[];
+    total: number;
+  };
+
+const escapeRegex = (value: string) =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceInventoryMovement> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryMovementModel, context);
+  }
+
+  // Stock is shared by the organization. The active store is only a UI
+  // selection and must not hide organization-wide inventory movements.
+  protected override getTenantFields() {
+    return {
+      organization: this.tenantContext.organizationId,
+    };
+  }
+
+  async listMovements(
+    filter: FinanceInventoryMovementListQueryDTO
+  ): Promise<FinanceInventoryMovementListPersistenceResult> {
+    const queryFilter: QueryFilter<TFinanceInventoryMovement> =
+      {
+        ...this.getTenantFilter(),
+        ...(filter.movement_type !== 'all'
+          ? { movement_type: filter.movement_type }
+          : {}),
+        ...(filter.status !== 'all'
+          ? { status: filter.status }
+          : {}),
+      };
+
+    if (filter.search) {
+      const search = new RegExp(
+        escapeRegex(filter.search),
+        'i'
+      );
+      queryFilter.$or = [
+        { reference: search },
+        { source_id: search },
+        { notes: search },
+      ];
+    }
+
+    const recordsQuery = this.model
+      .find(queryFilter)
+      .select(
+        '_id organization inventory_item location movement_type adjustment_direction adjustment_reason quantity unit_cost total_cost occurred_at source_type source_id reference notes status journal_entry'
+      )
+      .sort({ occurred_at: -1, _id: -1 })
+      .skip((filter.page - 1) * filter.limit)
+      .limit(filter.limit);
+    const countQuery =
+      this.model.countDocuments(queryFilter);
+
+    const [records, total] = await Promise.all([
+      recordsQuery
+        .lean<FinanceInventoryMovementPersistenceRecord[]>()
+        .exec(),
+      countQuery.exec(),
+    ]);
+
+    return { records, total };
   }
 
   async findByIdempotencyKey(

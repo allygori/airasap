@@ -56,6 +56,24 @@ export class FinanceInventoryLocationRepository extends BaseRepository<TFinanceI
       .exec();
   }
 
+  async findByIds(
+    ids: string[]
+  ): Promise<FinanceInventoryLocationPersistenceRecord[]> {
+    const objectIds = ids
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (objectIds.length === 0) return [];
+
+    return this.model
+      .find({
+        ...this.getTenantFilter(),
+        _id: { $in: objectIds },
+      })
+      .select('_id organization code name is_active')
+      .lean<FinanceInventoryLocationPersistenceRecord[]>()
+      .exec();
+  }
+
   async ensureDefaultLocation(): Promise<FinanceInventoryLocationPersistenceRecord> {
     const location = await this.model
       .findOneAndUpdate(

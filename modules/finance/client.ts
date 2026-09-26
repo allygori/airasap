@@ -4,6 +4,8 @@ export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-c
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
   FinanceInventoryItemTypeSchema,
+  FinanceInventoryMovementListQuerySchema,
+  FinanceInventoryMovementListResponseSchema,
   FinanceInventoryAdjustmentResponseSchema,
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,
@@ -57,6 +59,8 @@ export type {
   FinanceExpenseSummaryDTO,
 } from './expenses/finance-expense.dto';
 export type {
+  FinanceInventoryMovementListQueryDTO,
+  FinanceInventoryMovementListResponseDTO,
   FinanceInventoryAdjustmentItemOptionDTO,
   FinanceInventoryAdjustmentLocationOptionDTO,
   FinanceInventorySetupActionInputDTO,

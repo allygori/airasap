@@ -31,6 +31,7 @@ export type TFinanceInventoryMovement = Document & {
   total_cost?: number | null;
   occurred_at: Date;
   source_type?: string;
+  /** Polymorphic source reference: Mongo ID, external ID, or workflow key. */
   source_id?: string;
   offset_account?: Types.ObjectId;
   idempotency_key?: string;
@@ -79,6 +80,8 @@ const FinanceInventoryMovementSchema =
       total_cost: { type: Number, min: 0, default: null },
       occurred_at: { type: Date, required: true },
       source_type: { type: String },
+      // This is not a Mongo reference: source IDs may be external identifiers
+      // or workflow/idempotency keys, depending on source_type.
       source_id: { type: String },
       offset_account: { type: Schema.Types.ObjectId },
       idempotency_key: { type: String },
@@ -108,6 +111,11 @@ FinanceInventoryMovementSchema.index({
   organization: 1,
   location: 1,
   occurred_at: 1,
+});
+FinanceInventoryMovementSchema.index({
+  organization: 1,
+  occurred_at: -1,
+  _id: -1,
 });
 FinanceInventoryMovementSchema.index(
   { organization: 1, idempotency_key: 1 },

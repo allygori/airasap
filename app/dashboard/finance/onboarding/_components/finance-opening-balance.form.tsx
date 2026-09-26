@@ -1023,7 +1023,7 @@ export const FinanceOpeningBalanceForm = withForm({
                       setup.options.credit_payable_accounts
                     }
                     counterpartyLabel="Nama bank / penyedia"
-                    addLabel="Tambah saldo PayLater"
+                    addLabel="Tambah utang PayLater"
                     emptyLabel="Akun PayLater/Kartu Kredit belum tersedia di Chart of Accounts."
                     isDisabled={isBusy}
                   />

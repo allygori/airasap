@@ -16,6 +16,7 @@ export { FinanceSalesTransactionReadService } from './sales/finance-sales-transa
 export { FinanceSalesTransactionRepository } from './sales/finance-sales-transaction.repository';
 export { FinanceOfflineSaleService } from './sales/finance-offline-sale.service';
 export { FinanceInventoryStockReadService } from './inventory/finance-inventory-stock-read.service';
+export { FinanceInventoryMovementReadService } from './inventory/finance-inventory-movement-read.service';
 export { FinanceInventoryAdjustmentService } from './inventory/finance-inventory-adjustment.service';
 export { FinanceInventorySetupService } from './inventory/finance-inventory-setup.service';
 export { FinanceInventoryCogsService } from './inventory/finance-inventory-cogs.service';
@@ -155,6 +156,8 @@ export type {
   FinanceInventoryMovementTypeDTO,
   FinanceInventoryStockQueryDTO,
   FinanceInventoryStockResponseDTO,
+  FinanceInventoryMovementListQueryDTO,
+  FinanceInventoryMovementListResponseDTO,
   FinanceInventoryStockStatusDTO,
   FinanceInventoryAdjustmentDTO,
   FinanceInventoryAdjustmentDirectionDTO,
@@ -221,6 +224,8 @@ export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryStockQuerySchema,
   FinanceInventoryStockResponseSchema,
+  FinanceInventoryMovementListQuerySchema,
+  FinanceInventoryMovementListResponseSchema,
   FinanceInventoryAdjustmentSchema,
   FinanceInventoryAdjustmentResponseSchema,
   FinanceInventorySetupQuerySchema,

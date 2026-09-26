@@ -47,6 +47,67 @@ export const FinanceInventoryStockQuerySchema = z.object({
   location_id: ObjectIdStringSchema.optional(),
 });
 
+export const FinanceInventoryMovementListQuerySchema =
+  z.object({
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce
+      .number()
+      .int()
+      .positive()
+      .max(100)
+      .default(25),
+    search: z.string().trim().max(100).optional(),
+    movement_type: z
+      .union([
+        FinanceInventoryMovementTypeSchema,
+        z.literal('all'),
+      ])
+      .default('all'),
+    status: z
+      .union([
+        FinanceInventoryMovementStatusSchema,
+        z.literal('all'),
+      ])
+      .default('posted'),
+  });
+
+export const FinanceInventoryMovementListItemSchema =
+  z.object({
+    id: ObjectIdStringSchema,
+    inventory_item_id: ObjectIdStringSchema,
+    sku: z.string().nullable(),
+    item_name: z.string().nullable(),
+    unit: z.string().nullable(),
+    location_id: ObjectIdStringSchema,
+    location_name: z.string().nullable(),
+    movement_type: FinanceInventoryMovementTypeSchema,
+    adjustment_direction:
+      FinanceInventoryAdjustmentDirectionSchema.nullable(),
+    adjustment_reason:
+      FinanceInventoryAdjustmentReasonSchema.nullable(),
+    status: FinanceInventoryMovementStatusSchema,
+    quantity: z.number().nonnegative(),
+    unit_cost: z.number().nonnegative().nullable(),
+    total_cost: z.number().nonnegative().nullable(),
+    occurred_at: z.string().datetime(),
+    source_type: z.string().nullable(),
+    source_id: z.string().nullable(),
+    reference: z.string().nullable(),
+    notes: z.string().nullable(),
+    journal_entry_id: ObjectIdStringSchema.nullable(),
+  });
+
+export const FinanceInventoryMovementListResponseSchema =
+  z.object({
+    items: z.array(FinanceInventoryMovementListItemSchema),
+    pagination: z.object({
+      page: z.number().int().positive(),
+      limit: z.number().int().positive(),
+      total: z.number().int().nonnegative(),
+      total_pages: z.number().int().nonnegative(),
+    }),
+  });
+
 export const FinanceInventoryItemSourceSchema = z.object({
   id: ObjectIdStringSchema,
   sku: z.string().min(1),

@@ -174,6 +174,26 @@ export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInven
       .exec();
   }
 
+  async findByIds(
+    ids: string[]
+  ): Promise<FinanceInventoryItemPersistenceRecord[]> {
+    const objectIds = ids
+      .filter((id) => Types.ObjectId.isValid(id))
+      .map((id) => new Types.ObjectId(id));
+    if (objectIds.length === 0) return [];
+
+    return this.model
+      .find({
+        ...this.getTenantFilter(),
+        _id: { $in: objectIds },
+      })
+      .select(
+        '_id organization sku source_key name item_type unit track_quantity track_value inventory_account cogs_account is_active'
+      )
+      .lean<FinanceInventoryItemPersistenceRecord[]>()
+      .exec();
+  }
+
   async createInventoryItem(
     data: CreateFinanceInventoryItemRecord
   ): Promise<FinanceInventoryItemPersistenceRecord> {

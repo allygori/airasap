@@ -6,6 +6,8 @@ import {
   FinanceInventoryStockMovementSourceSchema,
   FinanceInventoryStockQuerySchema,
   FinanceInventoryStockResponseSchema,
+  FinanceInventoryMovementListQuerySchema,
+  FinanceInventoryMovementListResponseSchema,
   FinanceInventoryStockStatusSchema,
   FinanceInventoryItemTypeSchema,
   FinanceInventoryAdjustmentSchema,
@@ -52,6 +54,16 @@ export type FinanceInventoryBalanceDTO = ReturnType<
 export type FinanceInventoryStockResponseDTO = ReturnType<
   typeof FinanceInventoryStockResponseSchema.parse
 >;
+
+export type FinanceInventoryMovementListQueryDTO =
+  ReturnType<
+    typeof FinanceInventoryMovementListQuerySchema.parse
+  >;
+
+export type FinanceInventoryMovementListResponseDTO =
+  ReturnType<
+    typeof FinanceInventoryMovementListResponseSchema.parse
+  >;
 
 export type FinanceInventoryAdjustmentDTO = ReturnType<
   typeof FinanceInventoryAdjustmentSchema.parse
