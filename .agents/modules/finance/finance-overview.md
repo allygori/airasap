@@ -73,8 +73,9 @@ workflow operasional.
 | 6 | Cash and bank | 3 |
 | 7 | Purchases, expenses, receivables, and payables | 4 |
 | 8 | Reports and period closing | 4 |
+| 9 | Historical reconstruction | 4 |
 
-Estimate: about 31–33 phases. The phase count is directional and may change
+Estimate: about 35–37 phases. The phase count is directional and may change
 after each plan's discovery phase.
 
 ## Reuse policy
@@ -106,9 +107,10 @@ Do not copy old accounting side effects into the new importer without review.
 
 - Should Finance activation state reuse the old organization accounting state or
   use a new Finance-owned state?
-- Which order statuses create Finance events?
 - Is order posting automatic, manual, or configurable per organization?
-- Should existing eligible orders be backfilled after Finance activation?
+- Does a later phase need a dedicated order-history selection flow beyond the
+  existing Orders import/enrichment path? Plan 09 does not add a duplicate
+  order-entry or journal-entry workflow.
 - Which order-status events and platform APIs are available for the inventory
   reservation and channel stock-sync phases in Plan 05?
 - What minimum AR/AP workflow is needed for the target UMKM users?
