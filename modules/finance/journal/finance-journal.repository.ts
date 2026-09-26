@@ -75,6 +75,15 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
     super(FinanceJournalEntryModel, context);
   }
 
+  // Aggregation pipelines do not cast tenant IDs like Mongoose queries do.
+  protected override getTenantFilter(): QueryFilter<TFinanceJournalEntry> {
+    return {
+      organization: new Types.ObjectId(
+        this.tenantContext.organizationId
+      ),
+    } as QueryFilter<TFinanceJournalEntry>;
+  }
+
   async findByIdempotencyKey(
     idempotencyKey: string,
     session?: ClientSession

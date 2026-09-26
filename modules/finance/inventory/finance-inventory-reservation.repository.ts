@@ -1,4 +1,8 @@
-import { Types, type ClientSession } from 'mongoose';
+import {
+  Types,
+  type ClientSession,
+  type QueryFilter,
+} from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import type { FinanceInventoryReservationStatus } from './finance-inventory.constants';
@@ -42,6 +46,15 @@ export type FinanceInventoryReservationIssueCountRecord = {
 export class FinanceInventoryReservationRepository extends BaseRepository<TFinanceInventoryReservation> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryReservationModel, context);
+  }
+
+  // Aggregation pipelines need the persisted ObjectId type explicitly.
+  protected override getTenantFilter(): QueryFilter<TFinanceInventoryReservation> {
+    return {
+      organization: new Types.ObjectId(
+        this.tenantContext.organizationId
+      ),
+    } as QueryFilter<TFinanceInventoryReservation>;
   }
 
   findBySourceLine(

@@ -79,10 +79,12 @@ export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceI
 
   // Stock is shared by the organization. The active store is only a UI
   // selection and must not hide organization-wide inventory movements.
-  protected override getTenantFields() {
+  protected override getTenantFilter(): QueryFilter<TFinanceInventoryMovement> {
     return {
-      organization: this.tenantContext.organizationId,
-    };
+      organization: new Types.ObjectId(
+        this.tenantContext.organizationId
+      ),
+    } as QueryFilter<TFinanceInventoryMovement>;
   }
 
   async listMovements(

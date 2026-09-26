@@ -1,6 +1,7 @@
 import {
   Types,
   type ClientSession,
+  type QueryFilter,
   type UpdateQuery,
 } from 'mongoose';
 import { BaseRepository } from '@/modules/base.repository';
@@ -36,6 +37,15 @@ export type UpsertFinanceInventoryMappingRecord = {
 export class FinanceInventoryMappingRepository extends BaseRepository<TFinanceInventoryMapping> {
   constructor(context: FinanceTenantContext) {
     super(FinanceInventoryMappingModel, context);
+  }
+
+  // Aggregation pipelines need the persisted ObjectId type explicitly.
+  protected override getTenantFilter(): QueryFilter<TFinanceInventoryMapping> {
+    return {
+      organization: new Types.ObjectId(
+        this.tenantContext.organizationId
+      ),
+    } as QueryFilter<TFinanceInventoryMapping>;
   }
 
   async countActiveByInventoryItemIds(

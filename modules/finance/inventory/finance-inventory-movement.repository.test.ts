@@ -1,8 +1,9 @@
+import { Types } from 'mongoose';
 import { FinanceInventoryMovementRepository } from './finance-inventory-movement.repository';
 
 class TestFinanceInventoryMovementRepository extends FinanceInventoryMovementRepository {
   getScopedTenantFields() {
-    return this.getTenantFields();
+    return this.getTenantFilter();
   }
 }
 
@@ -15,7 +16,9 @@ describe('FinanceInventoryMovementRepository', () => {
       });
 
     expect(repository.getScopedTenantFields()).toEqual({
-      organization: '507f1f77bcf86cd799439010',
+      organization: new Types.ObjectId(
+        '507f1f77bcf86cd799439010'
+      ),
     });
   });
 });
