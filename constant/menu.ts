@@ -476,6 +476,10 @@ export const financeNav = [
         url: '/dashboard/finance/accounting/chart-of-accounts',
       },
       {
+        title: 'Widgets',
+        url: '/dashboard/finance/accounting/widgets',
+      },
+      {
         title: 'Jurnal Umum',
         url: '/dashboard/finance/accounting/general-journal',
       },
