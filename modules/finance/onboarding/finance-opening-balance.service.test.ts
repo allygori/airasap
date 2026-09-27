@@ -465,6 +465,119 @@ describe('FinanceOpeningBalanceService', () => {
     expect(activate).toHaveBeenCalledTimes(1);
   });
 
+  it('activates Finance when entered opening balances are all zero without creating an empty journal', async () => {
+    jest
+      .useFakeTimers()
+      .setSystemTime(new Date('2026-09-20T12:00:00.000Z'));
+    let status: 'in_progress' | 'active' = 'in_progress';
+    const draft = {
+      ...makeDraft(),
+      cash_bank_lines: [{ account_id: cashId, amount: 0 }],
+      inventory_lines: [],
+      payable_lines: [],
+      receivable_lines: [],
+      owner_capital_amount: 0,
+    };
+    const journalService = {
+      postOperational: jest.fn(),
+    };
+    const movementRepository = {
+      findByIdempotencyKey: jest.fn(),
+      createPosted: jest.fn(),
+    };
+    const subledgerItemRepository = {
+      createMany: jest.fn(),
+    };
+    const markFinalized = jest.fn(async () => {
+      draft.status = 'skipped';
+      return draft;
+    });
+    const activate = jest.fn(async () => {
+      status = 'active';
+      return {
+        status: 'active' as const,
+        onboarding_version: 1,
+        calendar_timezone: 'Asia/Jakarta' as const,
+      };
+    });
+    const service = new FinanceOpeningBalanceService(
+      { organizationId },
+      {
+        lifecycle: {
+          assertOwner: jest.fn(async () => true),
+          setCalendarTimezone: jest.fn(async () => ({
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
+          })),
+          getState: jest.fn(async () => ({
+            status,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
+          })),
+          activate,
+        },
+        draftRepository: {
+          findCurrent: jest.fn(async () => draft),
+          createDraft: jest.fn(async () => draft),
+          updateDraft: jest.fn(async () => draft),
+          beginFinalization: jest.fn(async () => {
+            draft.status = 'finalizing';
+            return draft;
+          }),
+          markFinalized,
+        },
+        accountRepository: {
+          list: jest.fn(async () => accounts),
+          findSelectableByIds: jest.fn(
+            async () => accounts
+          ),
+        },
+        itemRepository: {
+          listActive: jest.fn(async () => ({
+            records: [],
+            total: 0,
+          })),
+          findActiveById: jest.fn(async () => null),
+        },
+        locationRepository: {
+          listActive: jest.fn(async () => []),
+          findActiveById: jest.fn(async () => null),
+        },
+        journalService,
+        movementRepository,
+        subledgerItemRepository,
+      }
+    );
+
+    let result: Awaited<
+      ReturnType<typeof service.finalize>
+    >;
+    try {
+      result = await service.finalize({ confirmed: true });
+    } finally {
+      jest.useRealTimers();
+    }
+
+    expect(result).toMatchObject({
+      status: 'skipped',
+      finance_status: 'active',
+      journal_entry_id: null,
+      replayed: false,
+    });
+    expect(markFinalized).toHaveBeenCalledTimes(1);
+    expect(
+      journalService.postOperational
+    ).not.toHaveBeenCalled();
+    expect(
+      movementRepository.createPosted
+    ).not.toHaveBeenCalled();
+    expect(
+      subledgerItemRepository.createMany
+    ).not.toHaveBeenCalled();
+    expect(activate).toHaveBeenCalledTimes(1);
+  });
+
   it('resumes a frozen draft after a subledger write fails without duplicating the journal', async () => {
     let status: 'in_progress' | 'active' = 'in_progress';
     const draft = {

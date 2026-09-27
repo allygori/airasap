@@ -1542,8 +1542,9 @@ function OpeningBalancePreview({
             <Alert>
               <HugeiconsIcon icon={InformationCircleIcon} />
               <AlertDescription>
-                Mulai dari nol tidak membuat jurnal atau
-                pergerakan persediaan.
+                {preview.mode === 'zero'
+                  ? 'Mulai dari nol tidak membuat jurnal atau pergerakan persediaan.'
+                  : 'Semua saldo awal yang dimasukkan bernilai nol. Finance akan diaktifkan tanpa membuat jurnal saldo awal atau pergerakan persediaan. Rekening yang telah disiapkan tetap tersedia.'}
               </AlertDescription>
             </Alert>
           )}

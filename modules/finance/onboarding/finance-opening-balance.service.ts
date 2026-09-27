@@ -786,132 +786,127 @@ export class FinanceOpeningBalanceService {
 
     if (draft.mode === 'entered') {
       const plan = await this.buildPlan(draft, session);
-      if (plan.lines.length === 0) {
-        throw new FinanceDomainError(
-          'Semua saldo masih nol. Pilih “Mulai dari nol” atau masukkan saldo yang benar.',
-          'FINANCE_OPENING_BALANCE_EMPTY'
-        );
-      }
-
-      const data = toDraftInput(draft);
-      const journalLines: FinanceOperationalPostingDTO['lines'] =
-        plan.lines.map((line) => ({
-          account_id: line.account_id,
-          debit: line.debit,
-          credit: line.credit,
-          description: line.description,
-        }));
-      const posting =
-        await this.journalService.postOperational(
-          {
-            transaction_date: draft.cut_off_date,
-            posting_date: draft.cut_off_date,
-            currency: 'IDR',
-            description: data.description,
-            source_type:
-              FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
-            source_id: String(draft._id),
-            source_event: 'opening_balance_posted',
-            idempotency_key: `finance-opening-balance:${this.context.organizationId}:${draft.onboarding_version}:${toDateOnly(draft.cut_off_date)}`,
-            lines: journalLines,
-          },
-          session
-        );
-      journalEntryId = posting.journal_entry.id;
-      status = 'posted';
-
-      for (const movement of plan.movements) {
-        const idempotencyKey = `finance-opening-balance:${this.context.organizationId}:${draft.onboarding_version}:${toDateOnly(draft.cut_off_date)}:inventory:${movement.line_index}`;
-        let created =
-          await this.movementRepository.findByIdempotencyKey(
-            idempotencyKey,
+      if (plan.lines.length > 0) {
+        const data = toDraftInput(draft);
+        const journalLines: FinanceOperationalPostingDTO['lines'] =
+          plan.lines.map((line) => ({
+            account_id: line.account_id,
+            debit: line.debit,
+            credit: line.credit,
+            description: line.description,
+          }));
+        const posting =
+          await this.journalService.postOperational(
+            {
+              transaction_date: draft.cut_off_date,
+              posting_date: draft.cut_off_date,
+              currency: 'IDR',
+              description: data.description,
+              source_type:
+                FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
+              source_id: String(draft._id),
+              source_event: 'opening_balance_posted',
+              idempotency_key: `finance-opening-balance:${this.context.organizationId}:${draft.onboarding_version}:${toDateOnly(draft.cut_off_date)}`,
+              lines: journalLines,
+            },
             session
           );
-        if (!created) {
-          try {
-            created =
-              await this.movementRepository.createPosted(
-                {
-                  inventory_item: movement.item._id,
-                  location: movement.location._id,
-                  movement_type: 'opening_balance',
-                  quantity: movement.quantity,
-                  unit_cost: movement.unit_cost,
-                  total_cost: movement.total_cost,
-                  occurred_at: draft.cut_off_date,
-                  source_type:
-                    FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
-                  source_id: String(draft._id),
-                  idempotency_key: idempotencyKey,
-                  reference: data.description,
-                  notes: `Saldo awal ${movement.item.sku}`,
-                  journal_entry: new Types.ObjectId(
-                    journalEntryId
-                  ),
-                },
-                session
-              );
-          } catch (error: unknown) {
-            if (!isDuplicateKeyError(error)) throw error;
-            created =
-              await this.movementRepository.findByIdempotencyKey(
-                idempotencyKey,
-                session
-              );
-            if (!created) throw error;
-          }
-        }
-        if (
-          created.status !== 'posted' ||
-          String(created.inventory_item) !==
-            String(movement.item._id) ||
-          String(created.location) !==
-            String(movement.location._id) ||
-          String(created.journal_entry) !==
-            journalEntryId ||
-          created.quantity !== movement.quantity ||
-          created.total_cost !== movement.total_cost
-        ) {
-          throw new FinanceDomainError(
-            'Movement saldo awal berbeda dari draft yang sedang difinalisasi.',
-            'FINANCE_OPENING_BALANCE_FINALIZATION_FAILED'
-          );
-        }
-        movementIds.push(created._id);
-      }
+        journalEntryId = posting.journal_entry.id;
+        status = 'posted';
 
-      const openingItems: CreateFinanceOpeningBalanceSubledgerItem[] =
-        plan.subledger_items.map((item) => ({
-          opening_balance_draft: draft._id,
-          journal_entry: new Types.ObjectId(
-            journalEntryId!
-          ),
-          balance_type: item.balance_type,
-          account_id: item.account_id,
-          source_id: item.source_id,
-          source_label: item.source_label,
-          description: item.source_label,
-          transaction_date: draft.cut_off_date,
-          currency: 'IDR',
-          amount: item.amount,
-          ...(item.counterparty
-            ? { counterparty: item.counterparty }
-            : {}),
-          ...(item.reference
-            ? { reference: item.reference }
-            : {}),
-          status: 'posted',
-        }));
-      await this.subledgerItemRepository.createMany(
-        openingItems,
-        session
-      );
-      payableCount = openingItems.filter(
-        (item) => item.balance_type === 'payable'
-      ).length;
-      receivableCount = openingItems.filter(
-        (item) => item.balance_type === 'receivable'
-      ).length;
+        for (const movement of plan.movements) {
+          const idempotencyKey = `finance-opening-balance:${this.context.organizationId}:${draft.onboarding_version}:${toDateOnly(draft.cut_off_date)}:inventory:${movement.line_index}`;
+          let created =
+            await this.movementRepository.findByIdempotencyKey(
+              idempotencyKey,
+              session
+            );
+          if (!created) {
+            try {
+              created =
+                await this.movementRepository.createPosted(
+                  {
+                    inventory_item: movement.item._id,
+                    location: movement.location._id,
+                    movement_type: 'opening_balance',
+                    quantity: movement.quantity,
+                    unit_cost: movement.unit_cost,
+                    total_cost: movement.total_cost,
+                    occurred_at: draft.cut_off_date,
+                    source_type:
+                      FINANCE_OPENING_BALANCE_JOURNAL_SOURCE,
+                    source_id: String(draft._id),
+                    idempotency_key: idempotencyKey,
+                    reference: data.description,
+                    notes: `Saldo awal ${movement.item.sku}`,
+                    journal_entry: new Types.ObjectId(
+                      journalEntryId
+                    ),
+                  },
+                  session
+                );
+            } catch (error: unknown) {
+              if (!isDuplicateKeyError(error)) throw error;
+              created =
+                await this.movementRepository.findByIdempotencyKey(
+                  idempotencyKey,
+                  session
+                );
+              if (!created) throw error;
+            }
+          }
+          if (
+            created.status !== 'posted' ||
+            String(created.inventory_item) !==
+              String(movement.item._id) ||
+            String(created.location) !==
+              String(movement.location._id) ||
+            String(created.journal_entry) !==
+              journalEntryId ||
+            created.quantity !== movement.quantity ||
+            created.total_cost !== movement.total_cost
+          ) {
+            throw new FinanceDomainError(
+              'Movement saldo awal berbeda dari draft yang sedang difinalisasi.',
+              'FINANCE_OPENING_BALANCE_FINALIZATION_FAILED'
+            );
+          }
+          movementIds.push(created._id);
+        }
+
+        const openingItems: CreateFinanceOpeningBalanceSubledgerItem[] =
+          plan.subledger_items.map((item) => ({
+            opening_balance_draft: draft._id,
+            journal_entry: new Types.ObjectId(
+              journalEntryId!
+            ),
+            balance_type: item.balance_type,
+            account_id: item.account_id,
+            source_id: item.source_id,
+            source_label: item.source_label,
+            description: item.source_label,
+            transaction_date: draft.cut_off_date,
+            currency: 'IDR',
+            amount: item.amount,
+            ...(item.counterparty
+              ? { counterparty: item.counterparty }
+              : {}),
+            ...(item.reference
+              ? { reference: item.reference }
+              : {}),
+            status: 'posted',
+          }));
+        await this.subledgerItemRepository.createMany(
+          openingItems,
+          session
+        );
+        payableCount = openingItems.filter(
+          (item) => item.balance_type === 'payable'
+        ).length;
+        receivableCount = openingItems.filter(
+          (item) => item.balance_type === 'receivable'
+        ).length;
+      }
     }
 
     const completedAt = new Date();
@@ -1313,9 +1308,9 @@ export class FinanceOpeningBalanceService {
       .sort((left, right) =>
         left.account_code.localeCompare(right.account_code)
       );
-    if (lines.length === 0) {
+    if (lines.length === 0 && movements.length > 0) {
       throw new FinanceDomainError(
-        'Semua saldo masih nol. Pilih “Mulai dari nol” atau masukkan saldo yang benar.',
+        'Stok awal memiliki jumlah tetapi belum memiliki nilai perolehan. Masukkan harga per unit atau kosongkan jumlah stok.',
         'FINANCE_OPENING_BALANCE_EMPTY'
       );
     }
