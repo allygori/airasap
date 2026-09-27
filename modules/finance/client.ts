@@ -48,6 +48,8 @@ export {
 export { FinanceSettlementResponseSchema } from './subledgers/finance-subledger.schema';
 export {
   FinanceBalanceSheetReportSchema,
+  FinanceCashFlowReportSchema,
+  FinanceCashFlowSectionSchema,
   FinanceFinancialStatementReportSchema,
   FinanceProfitLossReportSchema,
   FinanceStatementPeriodSchema,
@@ -121,6 +123,7 @@ export type {
 } from './subledgers/finance-subledger.dto';
 export type {
   FinanceBalanceSheetReport,
+  FinanceCashFlowReport,
   FinanceFinancialStatementReport,
   FinanceProfitLossReport,
   FinanceStatementAccountAmount,

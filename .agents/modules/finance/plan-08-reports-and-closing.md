@@ -22,9 +22,9 @@ or incomplete source data and must not present provisional results as complete.
 ## Current baseline [CURRENT]
 
 - Finance has server-rendered pages for Neraca Saldo, Laba Rugi, and Neraca,
-  backed by organization-scoped posted-journal aggregations. These are read
-  pages, not a new reporting API contract. Arus Kas remains pending the policy
-  decision below.
+  backed by organization-scoped posted-journal aggregations. Arus Kas now uses
+  the same report route and posted-journal source; reports remain server-rendered
+  pages, not a new reporting API contract.
 - Posted journals are the general-ledger source of truth. Reversals create new
   journal entries; draft/blocked source work does not become a posted financial
   statement amount.
@@ -92,10 +92,13 @@ Target data rules:
   stock margin affected by deferred HPP must be marked incomplete/provisional
   and expose the affected transaction count, related sales value, and reasons;
   do not invent an HPP amount.
-- Separate cash/bank from marketplace balances. Released funds remain in the
-  marketplace balance until a separately recorded transfer; do not show them
-  as bank receipts. Whether marketplace balances are included in a cash-flow
-  statement is a policy decision, not an assumption.
+- Arus Kas uses the direct method and counts only accounts with the Finance
+  `cash` or `bank` subtype as cash. Marketplace balances are shown separately;
+  a posted transfer from marketplace balance to Cash/Bank is an operating
+  inflow, while a marketplace release that has not been transferred is not a
+  bank receipt. Transfers between Cash/Bank accounts have no net cash effect.
+  E-wallet balances are outside the cash scope; related Cash/Bank movements are
+  shown in a separate outside-scope section so the report can reconcile.
 - Inventory valuation is based on posted Finance inventory movements at the
   report's as-of date and must be reconcilable to the Finance inventory
   control-account balance. Missing or deferred costing must be surfaced.
@@ -131,11 +134,10 @@ Implement the first versions of:
 - Neraca;
 - Arus Kas.
 
-All statements must drill down to journal detail and source events. The exact
-cash-flow method, treatment/presentation of marketplace balances, comparative
-period behavior, and behavior before the selected history start date remain
-open. The report must not claim historical coverage before the available
-opening position/source history.
+All statements must drill down to journal detail and source events. Comparative
+period behavior and behavior before the selected history start date remain
+deferred to Phase 8.6. The report must not claim historical coverage before the
+available opening position/source history.
 
 Current implementation notes:
 
@@ -156,19 +158,25 @@ Current implementation notes:
 
 Acceptance criteria:
 
-- [x] Neraca Saldo, Laba Rugi, and Neraca use date-bounded, organization-scoped
-  aggregations over posted Finance journal lines rather than the 5,000-line
-  ledger UI cap;
+- [x] Neraca Saldo, Laba Rugi, Neraca, and Arus Kas use
+  organization-scoped, date-bounded posted-journal reads rather than the
+  5,000-line ledger UI cap;
 - [x] reversed original journals are excluded while separately posted
   reversals remain traceable and contribute the correcting effect;
 - [x] account rows drill down to matching posted journal entries, which link
   to journal details and their source events;
 - [x] deferred HPP is identified as incomplete/provisional and does not get
   reported as zero cost;
-- [ ] implement Arus Kas after the cash-flow method and marketplace-balance
-  presentation policy are confirmed;
-- [ ] decide comparative-period behavior and how to present periods before the
-  available opening position/source history.
+- [x] Arus Kas uses the direct method and separates operating, investing,
+  financing, opening-balance, outside-scope, and unclassified movements;
+- [x] Cash/Bank-only balances reconcile to posted journals; marketplace
+  balances are presented separately and their transfer to bank is operating
+  inflow;
+- [x] Arus Kas lines and marketplace account balances drill down to posted
+  journal entries through General Journal filters;
+- Comparative-period behavior and treatment of periods before available
+  opening/source history are deferred to Phase 8.6 and are not blockers for the
+  first statement pages.
 
 ### Phase 8.3 — Operational and tax reports
 
@@ -241,14 +249,42 @@ Target behavior:
 The cadence (monthly, annual, or both), fiscal-year boundary, approval/override
 behavior, and scheduler recovery/notification policy remain open decisions.
 
+### Phase 8.6 — Comparative periods and historical coverage [TARGET — DOCUMENTATION FIRST]
+
+This phase tracks decisions for extending reports beyond one selected month.
+The initial work is documentation and product-policy review only; do not infer
+comparative behavior or historical coverage rules from the current report
+pages. Any later UI or calculation changes should be planned after these
+decisions are reviewed.
+
+Decisions to document:
+
+- whether statements need a comparison, and whether it compares the previous
+  month, the same month in the prior year, or another explicitly chosen period;
+- which report types support comparison and how differences are presented;
+- how the report distinguishes a genuine zero balance/activity from a period
+  before Finance's opening position or before source history is known to be
+  complete;
+- how the organization's Finance start date, opening-balance date, and any
+  later historical reconstruction affect the visible coverage notice;
+- how the selected Finance calendar timezone affects comparison boundaries.
+
+Acceptance criteria for the documentation/review stage:
+
+- [ ] approved comparison behavior and report scope are recorded;
+- [ ] approved historical-coverage states and user-facing wording are recorded;
+- [ ] decisions explicitly avoid claiming complete history where the source
+  data is incomplete or unknown;
+- [ ] any implementation required by those decisions is separately scoped
+  before code changes begin.
+
 ## Open questions
 
-- Should cash flow use the direct or indirect method, and are marketplace
-  wallet balances cash equivalents or a separately presented balance?
 - Should deferred HPP, blocked releases, and unacknowledged reconstruction
   suspense block closing, or appear as warnings requiring explicit owner
   acknowledgement?
-- Is comparative reporting required for the first release?
+- Comparative-period and historical-coverage questions are tracked in Phase
+  8.6; they are not a prerequisite for the initial statement pages.
 - Which tax reports are needed after Plan 07.4 resumes, and for which supported
   tax scenarios?
 - Can a closed period be reopened, who may do it, and should corrections use a
@@ -256,8 +292,6 @@ behavior, and scheduler recovery/notification policy remain open decisions.
 - Should scheduled closing journals run monthly, annually, or both? What
   fiscal-year boundary, review/override step, and failed-run notification are
   required?
-- How should reports label periods before the organization's opening balance
-  or before complete source history is available?
 
 ## Not in scope
 

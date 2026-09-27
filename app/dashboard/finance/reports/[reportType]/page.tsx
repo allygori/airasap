@@ -1,10 +1,5 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@/components/ui/alert';
 import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
@@ -35,13 +30,15 @@ type ReportPageProps = {
 type FinancialReportMethod =
   | 'trialBalance'
   | 'profitAndLoss'
-  | 'balanceSheet';
+  | 'balanceSheet'
+  | 'cashFlow';
 
 const reportMethods: Record<string, FinancialReportMethod> =
   {
     'trial-balance': 'trialBalance',
     'profit-and-loss': 'profitAndLoss',
     'balance-sheet': 'balanceSheet',
+    'cash-flow': 'cashFlow',
   };
 
 type PageData =
@@ -66,18 +63,6 @@ export default async function FinanceReportPage({
     return <UnavailableState />;
   }
 
-  if (reportType === 'cash-flow') {
-    const access = await loadFinanceAccess(tenantContext);
-    if (access !== 'ready') {
-      return access === 'unavailable' ? (
-        <UnavailableState />
-      ) : (
-        <NotReadyState />
-      );
-    }
-    return <CashFlowPolicyPending />;
-  }
-
   const method = reportMethods[reportType];
   if (!method) notFound();
 
@@ -100,30 +85,6 @@ export default async function FinanceReportPage({
   return (
     <FinanceFinancialStatementClient report={data.report} />
   );
-}
-
-async function loadFinanceAccess(
-  context: FinanceTenantContext
-): Promise<'ready' | 'unavailable' | 'not_ready'> {
-  try {
-    await db.connect();
-    await assertFinanceModuleActive(context);
-    return 'ready';
-  } catch (error: unknown) {
-    if (
-      error instanceof FinanceDomainError &&
-      error.code === 'FINANCE_ORGANIZATION_NOT_FOUND'
-    ) {
-      return 'unavailable';
-    }
-    if (
-      error instanceof FinanceDomainError &&
-      error.code === 'FINANCE_NOT_ACTIVE'
-    ) {
-      return 'not_ready';
-    }
-    throw error;
-  }
 }
 
 const getParam = (value: string | string[] | undefined) =>
@@ -203,42 +164,6 @@ function NotReadyState() {
           </Link>
         </CardContent>
       </Card>
-    </main>
-  );
-}
-
-function CashFlowPolicyPending() {
-  return (
-    <main className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <div className="flex flex-col gap-3">
-        <p className="text-primary text-xs font-semibold tracking-[0.18em] uppercase">
-          Finance / Laporan Keuangan
-        </p>
-        <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">
-          Arus Kas
-        </h1>
-      </div>
-      <Alert>
-        <AlertTitle>
-          Laporan ini sedang disiapkan
-        </AlertTitle>
-        <AlertDescription>
-          Sebelum menyajikan Arus Kas, perlu dipastikan
-          apakah laporan menggunakan metode langsung dan
-          hanya memasukkan perpindahan Kas/Bank, sementara
-          saldo marketplace tetap ditampilkan terpisah
-          sampai ditransfer.
-        </AlertDescription>
-      </Alert>
-      <Link
-        href="/dashboard/finance/reports/profit-and-loss"
-        className={buttonVariants({
-          variant: 'outline',
-          size: 'sm',
-        })}
-      >
-        Buka Laba Rugi
-      </Link>
     </main>
   );
 }

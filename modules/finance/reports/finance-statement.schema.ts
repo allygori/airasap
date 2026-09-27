@@ -149,11 +149,66 @@ export const FinanceBalanceSheetReportSchema = z
   })
   .strict();
 
+export const FinanceCashFlowSectionSchema = z.enum([
+  'operating',
+  'investing',
+  'financing',
+  'outside_scope',
+  'unclassified',
+  'opening_balance',
+]);
+
+export const FinanceCashFlowReportSchema = z
+  .object({
+    report_type: z.literal('cash_flow'),
+    period: FinanceStatementPeriodSchema,
+    lines: z.array(
+      z
+        .object({
+          section: FinanceCashFlowSectionSchema,
+          label: z.string().min(1),
+          source_type: z.string().min(1),
+          amount: z.number().int(),
+          journal_count: z.number().int().positive(),
+        })
+        .strict()
+    ),
+    marketplace_balances: z.array(
+      z
+        .object({
+          account_id: z.string().regex(/^[0-9a-fA-F]{24}$/),
+          code: z.string().min(1),
+          name: z.string().min(1),
+          balance: z.number().int(),
+        })
+        .strict()
+    ),
+    totals: z
+      .object({
+        opening_cash_balance: z.number().int(),
+        opening_balance_adjustment: z.number().int(),
+        operating_net: z.number().int(),
+        investing_net: z.number().int(),
+        financing_net: z.number().int(),
+        net_cash_change: z.number().int(),
+        outside_scope_net: z.number().int(),
+        unclassified_net: z.number().int(),
+        other_cash_movement_net: z.number().int(),
+        closing_cash_balance: z.number().int(),
+        reconciliation_difference: z.number().int(),
+        marketplace_balance_total: z.number().int(),
+      })
+      .strict(),
+    cash_account_count: z.number().int().nonnegative(),
+  })
+  .strict();
+
 export const FinanceFinancialStatementReportSchema =
   z.discriminatedUnion('report_type', [
     FinanceTrialBalanceReportSchema,
     FinanceProfitLossReportSchema,
     FinanceBalanceSheetReportSchema,
+    FinanceCashFlowReportSchema,
   ]);
 
 export type FinanceStatementQuery = z.infer<
@@ -173,6 +228,9 @@ export type FinanceProfitLossReport = z.infer<
 >;
 export type FinanceBalanceSheetReport = z.infer<
   typeof FinanceBalanceSheetReportSchema
+>;
+export type FinanceCashFlowReport = z.infer<
+  typeof FinanceCashFlowReportSchema
 >;
 export type FinanceFinancialStatementReport = z.infer<
   typeof FinanceFinancialStatementReportSchema

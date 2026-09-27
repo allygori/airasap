@@ -15,6 +15,7 @@ type JournalFilterValues = {
   period: string;
   period_to: string;
   account_id: string;
+  source_type: string;
   status: string;
 };
 
@@ -30,6 +31,7 @@ const JournalFilterFields = withForm({
     period: '',
     period_to: '',
     account_id: '',
+    source_type: '',
     status: 'all',
   } as JournalFilterValues,
   render: function Render({ form }) {
@@ -40,7 +42,7 @@ const JournalFilterFields = withForm({
           event.stopPropagation();
           void form.handleSubmit();
         }}
-        className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(13rem,1fr)_10rem_auto_auto] xl:items-end"
+        className="grid min-w-0 gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(13rem,1fr)_10rem_11rem_auto_auto] xl:items-end"
       >
         <FieldGroup className="contents">
           <form.AppField
@@ -61,6 +63,17 @@ const JournalFilterFields = withForm({
               <field.TextField
                 label="Periode"
                 type="month"
+                className="min-w-0"
+              />
+            )}
+          />
+          <form.AppField
+            name="source_type"
+            children={(field) => (
+              <field.TextField
+                label="Tipe sumber"
+                placeholder="mis. purchase"
+                maxLength={80}
                 className="min-w-0"
               />
             )}

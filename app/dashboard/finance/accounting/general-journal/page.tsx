@@ -51,6 +51,7 @@ export default async function GeneralJournalPage({
       period: getParam(params.period),
       period_to: getParam(params.period_to),
       account_id: getParam(params.account_id),
+      source_type: getParam(params.source_type),
       status: getParam(params.status),
       search: getParam(params.search),
     });

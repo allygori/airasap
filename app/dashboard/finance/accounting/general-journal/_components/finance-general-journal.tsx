@@ -87,12 +87,13 @@ export function FinanceGeneralJournal({
             </CardDescription>
           </div>
           <GeneralJournalFilterForm
-            key={`${query.search ?? ''}:${query.period ?? ''}:${query.period_to ?? ''}:${query.account_id ?? ''}:${query.status ?? ''}`}
+            key={`${query.search ?? ''}:${query.period ?? ''}:${query.period_to ?? ''}:${query.account_id ?? ''}:${query.source_type ?? ''}:${query.status ?? ''}`}
             initialValues={{
               search: query.search ?? '',
               period: query.period ?? '',
               period_to: query.period_to ?? '',
               account_id: query.account_id ?? '',
+              source_type: query.source_type ?? '',
               status: query.status ?? 'all',
             }}
           />
@@ -197,6 +198,8 @@ function Pagination({
       params.set('period_to', query.period_to);
     if (query.account_id)
       params.set('account_id', query.account_id);
+    if (query.source_type)
+      params.set('source_type', query.source_type);
     if (query.status) params.set('status', query.status);
     if (query.search) params.set('search', query.search);
     return `?${params.toString()}`;

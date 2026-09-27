@@ -47,6 +47,8 @@ export { FinanceSubledgerService } from './subledgers/finance-subledger.service'
 export { FinanceFinancialStatementsReadService } from './reports/finance-financial-statements-read.service';
 export {
   FinanceBalanceSheetReportSchema,
+  FinanceCashFlowReportSchema,
+  FinanceCashFlowSectionSchema,
   FinanceFinancialStatementReportSchema,
   FinanceProfitLossReportSchema,
   FinanceStatementPeriodSchema,
@@ -354,6 +356,7 @@ export type {
 } from './periods/finance-period.dto';
 export type {
   FinanceBalanceSheetReport,
+  FinanceCashFlowReport,
   FinanceFinancialStatementReport,
   FinanceProfitLossReport,
   FinanceStatementAccountAmount,

@@ -1,5 +1,6 @@
 export type {
   FinanceBalanceSheetReport,
+  FinanceCashFlowReport,
   FinanceFinancialStatementReport,
   FinanceProfitLossReport,
   FinanceStatementAccountAmount,

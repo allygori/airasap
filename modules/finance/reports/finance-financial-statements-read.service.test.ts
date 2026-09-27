@@ -2,7 +2,9 @@ import { Types } from 'mongoose';
 import type { FinanceSalesTransactionRepository } from '../sales/finance-sales-transaction.repository';
 import type {
   FinanceFinancialStatementsRepository,
+  FinanceCashFlowJournalRecord,
   FinanceStatementAccountRecord,
+  FinanceStatementDateRange,
 } from './finance-financial-statements.repository';
 import { FinanceFinancialStatementsReadService } from './finance-financial-statements-read.service';
 
@@ -14,6 +16,7 @@ const accounts: FinanceStatementAccountRecord[] = [
     code: '1100',
     name: 'Kas dan Bank',
     type: 'asset',
+    subtype: 'bank',
     normal_balance: 'debit',
     is_postable: true,
     display_order: 1,
@@ -65,6 +68,77 @@ const accounts: FinanceStatementAccountRecord[] = [
   },
 ];
 
+const cashAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd799439007'),
+  code: '1110',
+  name: 'Kas Kecil',
+  type: 'asset' as const,
+  subtype: 'cash',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 7,
+};
+const marketplaceAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd799439008'),
+  code: '1130',
+  name: 'Saldo Marketplace',
+  type: 'asset' as const,
+  subtype: 'marketplace_balance',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 8,
+};
+const eWalletAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd799439009'),
+  code: '1140',
+  name: 'E-wallet',
+  type: 'asset' as const,
+  subtype: 'e_wallet',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 9,
+};
+const inventoryAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd79943900a'),
+  code: '1210',
+  name: 'Persediaan',
+  type: 'asset' as const,
+  subtype: 'merchandise_inventory',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 10,
+};
+const expenseAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd79943900b'),
+  code: '6100',
+  name: 'Beban operasional',
+  type: 'expense' as const,
+  subtype: 'operating_expenses',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 11,
+};
+const unknownAssetAccount = {
+  _id: new Types.ObjectId('507f1f77bcf86cd79943900c'),
+  code: '1290',
+  name: 'Aset lainnya',
+  type: 'asset' as const,
+  subtype: 'other_current_assets',
+  normal_balance: 'debit' as const,
+  is_postable: true,
+  display_order: 12,
+};
+
+const cashFlowAccounts: FinanceStatementAccountRecord[] = [
+  ...accounts,
+  cashAccount,
+  marketplaceAccount,
+  eWalletAccount,
+  inventoryAccount,
+  expenseAccount,
+  unknownAssetAccount,
+];
+
 const totals = [
   { account: 0, debit_total: 100_000, credit_total: 0 },
   { account: 1, debit_total: 0, credit_total: 30_000 },
@@ -78,7 +152,16 @@ const totals = [
   credit_total: row.credit_total,
 }));
 
-const makeService = () => {
+const makeService = (
+  statementRepositoryOverrides: Partial<
+    Pick<
+      FinanceFinancialStatementsRepository,
+      | 'listAccounts'
+      | 'aggregatePostedLineTotals'
+      | 'streamCashFlowJournals'
+    >
+  > = {}
+) => {
   const organizationRepository = {
     findFinanceState: async () => ({
       finance: {
@@ -91,10 +174,14 @@ const makeService = () => {
   };
   const statementRepository: Pick<
     FinanceFinancialStatementsRepository,
-    'listAccounts' | 'aggregatePostedLineTotals'
+    | 'listAccounts'
+    | 'aggregatePostedLineTotals'
+    | 'streamCashFlowJournals'
   > = {
     listAccounts: async () => accounts,
     aggregatePostedLineTotals: async () => totals,
+    async *streamCashFlowJournals() {},
+    ...statementRepositoryOverrides,
   };
   const salesRepository: Pick<
     FinanceSalesTransactionRepository,
@@ -189,4 +276,179 @@ describe('FinanceFinancialStatementsReadService', () => {
       makeService().trialBalance({ period: '2026-13' })
     ).rejects.toThrow();
   });
+
+  it('builds direct cash flow, separates marketplace balance, and reconciles non-cash-scope movements', async () => {
+    const periodStart = new Date(
+      '2026-08-31T17:00:00.000Z'
+    );
+    const cashIds = [
+      String(accounts[0]._id),
+      String(cashAccount._id),
+    ];
+    const marketplaceId = String(marketplaceAccount._id);
+    const records: FinanceCashFlowJournalRecord[] = [
+      makeCashFlowJournal(
+        'opening_balance',
+        'opening_balance_posted',
+        [
+          [accounts[0]._id, 500, 0],
+          [accounts[2]._id, 0, 500],
+        ]
+      ),
+      makeCashFlowJournal(
+        'offline_sale',
+        'offline_sale_posted',
+        [
+          [accounts[0]._id, 200, 0],
+          [accounts[3]._id, 0, 200],
+        ]
+      ),
+      makeCashFlowJournal('purchase', 'purchase_posted', [
+        [inventoryAccount._id, 100, 0],
+        [accounts[0]._id, 0, 100],
+      ]),
+      makeCashFlowJournal('expense', 'expense_posted', [
+        [expenseAccount._id, 25, 0],
+        [accounts[0]._id, 0, 25],
+      ]),
+      makeCashFlowJournal(
+        'cash_bank_transfer',
+        'cash_bank_transfer_posted',
+        [
+          [cashAccount._id, 50, 0],
+          [accounts[0]._id, 0, 50],
+        ]
+      ),
+      makeCashFlowJournal(
+        'cash_bank_transfer',
+        'cash_bank_transfer_posted',
+        [
+          [accounts[0]._id, 300, 0],
+          [marketplaceAccount._id, 0, 300],
+        ]
+      ),
+      makeCashFlowJournal(
+        'cash_bank_transfer',
+        'cash_bank_transfer_posted',
+        [
+          [eWalletAccount._id, 40, 0],
+          [accounts[0]._id, 0, 40],
+        ]
+      ),
+      makeCashFlowJournal(
+        'cash_bank_transfer',
+        'cash_bank_transfer_posted',
+        [
+          [marketplaceAccount._id, 15, 0],
+          [accounts[0]._id, 0, 15],
+        ]
+      ),
+      makeCashFlowJournal(
+        'manual_journal',
+        'journal_posted',
+        [
+          [accounts[0]._id, 10, 0],
+          [unknownAssetAccount._id, 0, 10],
+        ]
+      ),
+    ];
+    const service = makeService({
+      listAccounts: async () => cashFlowAccounts,
+      aggregatePostedLineTotals: async (
+        range: FinanceStatementDateRange
+      ) => {
+        const accountIds = range.account_ids ?? [];
+        if (accountIds.includes(marketplaceId)) {
+          return [
+            {
+              _id: marketplaceAccount._id,
+              debit_total: 700,
+              credit_total: 0,
+            },
+          ];
+        }
+        if (accountIds.some((id) => cashIds.includes(id))) {
+          const opening = range.end_date < periodStart;
+          return [
+            {
+              _id: accounts[0]._id,
+              debit_total: opening ? 1_000 : 1_830,
+              credit_total: 0,
+            },
+          ];
+        }
+        return totals;
+      },
+      async *streamCashFlowJournals() {
+        yield* records;
+      },
+    });
+
+    const report = await service.cashFlow({
+      period: '2026-09',
+    });
+
+    expect(report.totals).toMatchObject({
+      opening_cash_balance: 1_000,
+      opening_balance_adjustment: 500,
+      operating_net: 375,
+      investing_net: 0,
+      financing_net: 0,
+      net_cash_change: 375,
+      outside_scope_net: -55,
+      unclassified_net: 10,
+      other_cash_movement_net: -45,
+      closing_cash_balance: 1_830,
+      reconciliation_difference: 0,
+      marketplace_balance_total: 700,
+    });
+    expect(report.cash_account_count).toBe(2);
+    expect(report.lines).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'Payout saldo marketplace',
+          amount: 300,
+          section: 'operating',
+        }),
+        expect.objectContaining({
+          label: 'Perpindahan Kas/Bank dengan e-wallet',
+          amount: -40,
+          section: 'outside_scope',
+        }),
+        expect.objectContaining({
+          label: 'Transfer ke saldo marketplace',
+          amount: -15,
+          section: 'outside_scope',
+        }),
+        expect.objectContaining({
+          section: 'opening_balance',
+          amount: 500,
+        }),
+      ])
+    );
+    expect(report.lines).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          amount: 0,
+          source_type: 'cash_bank_transfer',
+        }),
+      ])
+    );
+  });
 });
+
+function makeCashFlowJournal(
+  source_type: string,
+  source_event: string,
+  lines: Array<[Types.ObjectId, number, number]>
+): FinanceCashFlowJournalRecord {
+  return {
+    source_type,
+    source_event,
+    lines: lines.map(([account_id, debit, credit]) => ({
+      account_id,
+      debit,
+      credit,
+    })),
+  };
+}
