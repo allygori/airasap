@@ -28,9 +28,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { NavOrganization } from '@/components/dashboard/nav-organization';
 // import { NavMain } from '@/components/dashboard/nav-main';
-// import { NavSecondary } from '@/components/dashboard/nav-secondary';
+import { NavSecondary } from '@/components/dashboard/nav-secondary';
 import { NavUser } from '@/components/dashboard/nav-user';
 import {
   mainNav,
@@ -101,11 +100,12 @@ export function AppSidebar({
         <NavStore items={mainNav} />
         {financeAvailable &&
           (financeNav || []).length > 0 && (
-            <NavOrganization items={financeNav} />
+            <NavSecondary
+              title="Finance"
+              items={financeNav}
+            />
           )}
-        {(organizationNav || []).length > 0 && (
-          <NavOrganization items={organizationNav} />
-        )}
+
         {/* <NavSecondary items={secondaryNav} className="mt-auto" /> */}
       </SidebarContent>
       <SidebarFooter>
