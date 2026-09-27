@@ -28,17 +28,17 @@ import '@/modules/sessions/session.model';
 import '@/modules/verifications/verifications.model';
 import '@/modules/files/file.model';
 import '@/modules/stores/store.model';
-import '@/modules/stores/channels/store-channel.model';
+// import '@/modules/stores/channels/store-channel.model';
 import '@/modules/products/product.model';
 // import '@/modules/product-costs/product-cost.model';
 import '@/modules/orders/order.model';
 import '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
 import '@/modules/finance/accounts/finance-account.model';
-import '@/modules/inventory/items/inventory-item.model';
-import '@/modules/inventory/mappings/inventory-item-mapping.model';
-import '@/modules/inventory/locations/inventory-location.model';
-import '@/modules/inventory/movements/inventory-movement.model';
-import '@/modules/expenses/expenses/expense.model';
+// import '@/modules/inventory/items/inventory-item.model';
+// import '@/modules/inventory/mappings/inventory-item-mapping.model';
+// import '@/modules/inventory/locations/inventory-location.model';
+// import '@/modules/inventory/movements/inventory-movement.model';
+// import '@/modules/expenses/expenses/expense.model';
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
