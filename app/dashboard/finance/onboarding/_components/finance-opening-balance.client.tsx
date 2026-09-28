@@ -24,6 +24,7 @@ import {
   type FinanceOpeningBalanceSaveInputDTO,
   type FinanceOpeningBalancePreviewDTO,
   type FinanceOpeningBalanceSetupResponseDTO,
+  type FinanceOpeningBalanceFinalizeResponseDTO,
 } from '@/modules/finance/client';
 import {
   createEmptyFinanceOpeningBalanceFormValues,
@@ -37,6 +38,9 @@ import {
 
 type FinanceOpeningBalanceClientProps = {
   enabled: boolean;
+  onFinalized: (
+    result: FinanceOpeningBalanceFinalizeResponseDTO
+  ) => void;
 };
 
 type SubmitIntent = 'continue' | 'preview';
@@ -55,6 +59,7 @@ const isResumableDraft = (
 
 export default function FinanceOpeningBalanceClient({
   enabled,
+  onFinalized,
 }: FinanceOpeningBalanceClientProps) {
   const router = useRouter();
   const submitIntentRef = useRef<SubmitIntent>('continue');
@@ -612,6 +617,8 @@ export default function FinanceOpeningBalanceClient({
   };
 
   const finalizeOpeningBalance = async () => {
+    let completedResult: FinanceOpeningBalanceFinalizeResponseDTO | null =
+      null;
     setIsFinalizing(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -637,6 +644,7 @@ export default function FinanceOpeningBalanceClient({
       }
 
       setFinalized(true);
+      completedResult = parsed;
       setSuccessMessage(
         parsed.status === 'skipped'
           ? 'Finance aktif tanpa saldo awal.'
@@ -648,6 +656,8 @@ export default function FinanceOpeningBalanceClient({
     } finally {
       setIsFinalizing(false);
     }
+
+    if (completedResult) onFinalized(completedResult);
   };
 
   const handleModeChange = (

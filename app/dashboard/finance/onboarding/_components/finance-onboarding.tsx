@@ -27,10 +27,12 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import type {
+  FinanceOpeningBalanceFinalizeResponseDTO,
   FinanceState,
   FinanceReadinessDTO,
 } from '@/modules/finance/client';
 import FinanceOpeningBalanceClient from './finance-opening-balance.client';
+import { FinanceOnboardingSuccess } from './finance-onboarding-success';
 
 type FinanceOnboardingData = {
   finance: Pick<
@@ -48,11 +50,21 @@ export default function FinanceOnboarding({
   data: initialData,
 }: FinanceOnboardingProps) {
   const [data, setData] = useState(initialData);
+  const [completionResult, setCompletionResult] =
+    useState<FinanceOpeningBalanceFinalizeResponseDTO | null>(
+      null
+    );
   const [isStarting, setIsStarting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<
     string | null
   >(null);
   const status = data.readiness.status;
+
+  if (completionResult) {
+    return (
+      <FinanceOnboardingSuccess result={completionResult} />
+    );
+  }
 
   const startOnboarding = async () => {
     setIsStarting(true);
@@ -98,6 +110,10 @@ export default function FinanceOnboarding({
         onStart={startOnboarding}
       />
     );
+  }
+
+  if (data.finance.status === 'active') {
+    return <FinanceOnboardingSuccess />;
   }
 
   return (
@@ -202,7 +218,10 @@ export default function FinanceOnboarding({
 
       {status === 'in_progress' &&
         data.readiness.owner_access && (
-          <FinanceOpeningBalanceClient enabled />
+          <FinanceOpeningBalanceClient
+            enabled
+            onFinalized={setCompletionResult}
+          />
         )}
 
       {data.readiness.blockers.length > 0 && (
