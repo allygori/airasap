@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
@@ -10,11 +9,10 @@ import {
   type FinanceJournalListResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
-import { buttonVariants } from '@/components/ui/button';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -64,7 +62,12 @@ export default async function GeneralJournalPage({
     if (data.status === 'unavailable') {
       return <UnavailableState />;
     }
-    return <NotReadyState />;
+    return (
+      <FinanceNotReadyState
+        title="Tinjau jurnal umum"
+        description="Selesaikan setup Finance untuk melihat catatan transaksi keuangan yang sudah diposting."
+      />
+    );
   }
 
   return (
@@ -127,32 +130,6 @@ function UnavailableState() {
         <CardContent className="text-muted-foreground">
           Organisasi aktif belum tersedia untuk membuka
           Finance.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function NotReadyState() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum aktif</CardTitle>
-          <CardDescription>
-            General Journal akan tersedia setelah onboarding
-            Finance selesai.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href="/dashboard/finance/onboarding"
-            className={buttonVariants({
-              variant: 'outline',
-            })}
-          >
-            Buka onboarding
-          </Link>
         </CardContent>
       </Card>
     </div>

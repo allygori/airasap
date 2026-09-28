@@ -11,6 +11,7 @@ import {
 } from '@/modules/finance';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import {
   Card,
   CardContent,
@@ -36,7 +37,12 @@ export default async function FinanceExpenseDetailPage({
     if (data.status === 'unavailable')
       return <UnavailableState />;
     if (data.status === 'not_ready')
-      return <NotReadyState />;
+      return (
+        <FinanceNotReadyState
+          title="Tinjau detail pengeluaran"
+          description="Aktifkan Finance untuk membuka informasi transaksi pengeluaran dan jurnal yang terkait."
+        />
+      );
     notFound();
   }
 
@@ -249,26 +255,6 @@ function UnavailableState() {
         <CardContent className="text-muted-foreground">
           Organisasi aktif belum tersedia untuk membuka
           Finance.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function NotReadyState() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum aktif</CardTitle>
-        </CardHeader>
-        <CardContent className="text-muted-foreground">
-          <Link
-            href="/dashboard/finance/onboarding"
-            className="text-primary underline-offset-4 hover:underline"
-          >
-            Buka onboarding
-          </Link>
         </CardContent>
       </Card>
     </div>

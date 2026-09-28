@@ -9,6 +9,7 @@ import {
   type FinancePurchaseDetailResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -39,8 +40,15 @@ export default async function FinancePurchaseDetailPage({
   if (data.status !== 'ready') {
     if (data.status === 'unavailable')
       return <UnavailableState />;
-    if (data.status === 'not_ready')
-      return <NotReadyState />;
+    if (data.status === 'not_ready') {
+      return (
+        <FinanceNotReadyState
+          title="Tinjau detail pembelian"
+          description="Aktifkan Finance melalui onboarding untuk melihat detail purchase, mutasi stok, dan jurnal terkait."
+          actionLabel="Lanjutkan onboarding"
+        />
+      );
+    }
     notFound();
   }
 
@@ -261,22 +269,6 @@ function UnavailableState() {
         <CardContent className="text-muted-foreground">
           Organisasi aktif belum tersedia untuk membuka
           Finance.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function NotReadyState() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum aktif</CardTitle>
-        </CardHeader>
-        <CardContent className="text-muted-foreground">
-          Purchase tersedia setelah onboarding Finance
-          selesai.
         </CardContent>
       </Card>
     </div>

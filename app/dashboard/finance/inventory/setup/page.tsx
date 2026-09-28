@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
-import { buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -18,6 +16,7 @@ import {
   type FinanceInventorySetupResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import { FinanceInventorySetupClient } from './_components/finance-inventory-setup-client';
 
 type FinanceInventorySetupPageProps = {
@@ -63,7 +62,13 @@ export default async function FinanceInventorySetupPage({
     if (result.status === 'owner_required') {
       return <OwnerRequiredState />;
     }
-    return <FinanceNotReadyState />;
+    return (
+      <FinanceNotReadyState
+        title="Siapkan saldo persediaan"
+        description="Aktifkan Finance melalui onboarding untuk mengelola item, lokasi, dan saldo stok di sini."
+        actionLabel="Lanjutkan onboarding"
+      />
+    );
   }
 
   return (
@@ -123,33 +128,6 @@ function SetupUnavailableState() {
         <CardContent className="text-muted-foreground">
           Organisasi aktif belum tersedia untuk membuka
           Finance.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function FinanceNotReadyState() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum dimulai</CardTitle>
-          <CardDescription>
-            Mulai onboarding Finance terlebih dahulu. Setup
-            inventory tidak akan mengubah Orders atau
-            Products.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href="/dashboard/finance/onboarding"
-            className={buttonVariants({
-              variant: 'outline',
-            })}
-          >
-            Buka onboarding
-          </Link>
         </CardContent>
       </Card>
     </div>

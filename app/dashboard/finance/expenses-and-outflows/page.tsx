@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
@@ -11,11 +10,10 @@ import {
   type FinanceTenantContext,
 } from '@/modules/finance';
 import { FinanceAccountRepository } from '@/modules/finance/accounts/finance-account.repository';
-import { buttonVariants } from '@/components/ui/button';
+import { FinanceNotReadyState } from '../_components/finance-not-ready-state';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -55,7 +53,10 @@ export default async function FinanceExpensesAndOutflowsPage() {
     return data.status === 'unavailable' ? (
       <UnavailableState />
     ) : (
-      <NotReadyState />
+      <FinanceNotReadyState
+        title="Catat pengeluaran usaha"
+        description="Selesaikan setup Finance untuk mencatat pengeluaran, pembayaran, dan arus kas keluar usaha."
+      />
     );
   }
 
@@ -153,32 +154,6 @@ function UnavailableState() {
         <CardContent className="text-muted-foreground">
           Organisasi aktif belum tersedia untuk membuka
           Finance.
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-function NotReadyState() {
-  return (
-    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum aktif</CardTitle>
-          <CardDescription>
-            Expense dan outflow tersedia setelah onboarding
-            Finance selesai.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href="/dashboard/finance/onboarding"
-            className={buttonVariants({
-              variant: 'outline',
-            })}
-          >
-            Buka onboarding
-          </Link>
         </CardContent>
       </Card>
     </div>

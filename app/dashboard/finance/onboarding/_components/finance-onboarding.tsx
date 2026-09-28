@@ -1,6 +1,20 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  ArrowRight02Icon,
+  BankIcon,
+  Calendar03Icon,
+  Chart03Icon,
+  InformationCircleIcon,
+  Package02Icon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@/components/icons/hugeicons-icon';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -10,6 +24,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Spinner } from '@/components/ui/spinner';
 import type {
   FinanceState,
   FinanceReadinessDTO,
@@ -72,6 +88,17 @@ export default function FinanceOnboarding({
       setIsStarting(false);
     }
   };
+
+  if (data.finance.status === 'not_started') {
+    return (
+      <FinanceOnboardingWelcome
+        readiness={data.readiness}
+        isStarting={isStarting}
+        errorMessage={errorMessage}
+        onStart={startOnboarding}
+      />
+    );
+  }
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -208,6 +235,230 @@ export default function FinanceOnboarding({
         </Card>
       )}
     </div>
+  );
+}
+
+type FinanceOnboardingWelcomeProps = {
+  readiness: FinanceReadinessDTO;
+  isStarting: boolean;
+  errorMessage: string | null;
+  onStart: () => Promise<void>;
+};
+
+function FinanceOnboardingWelcome({
+  readiness,
+  isStarting,
+  errorMessage,
+  onStart,
+}: FinanceOnboardingWelcomeProps) {
+  const setupSteps = [
+    {
+      icon: Calendar03Icon,
+      title: 'Tentukan tanggal mulai',
+      description:
+        'Pilih tanggal yang menggambarkan saldo awal usaha.',
+    },
+    {
+      icon: BankIcon,
+      title: 'Masukkan yang relevan',
+      description:
+        'Siapkan rekening, stok, dan saldo lain yang ingin dicatat.',
+    },
+    {
+      icon: Chart03Icon,
+      title: 'Tinjau sebelum aktif',
+      description:
+        'Periksa rangkuman terlebih dahulu sebelum mengonfirmasi.',
+    },
+  ];
+
+  return (
+    <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:gap-8 md:p-8">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 md:gap-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm font-medium">
+            Finance <span aria-hidden="true">/</span> Mulai
+          </p>
+          <Badge variant="secondary">Fitur opsional</Badge>
+        </div>
+
+        <section className="bg-card grid overflow-hidden rounded-3xl border shadow-sm lg:grid-cols-[minmax(0,1.08fr)_minmax(19rem,0.92fr)]">
+          <div className="flex min-w-0 flex-col items-start justify-center gap-6 p-6 sm:p-8 lg:p-10 xl:p-12">
+            <div className="flex flex-col items-start gap-4">
+              <span className="bg-primary/10 text-primary inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold tracking-wide uppercase">
+                <span
+                  aria-hidden="true"
+                  className="bg-primary size-1.5 rounded-full"
+                />
+                Pencatatan keuangan untuk toko
+              </span>
+              <h1 className="max-w-2xl text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
+                Mulai rapikan keuangan usaha Anda.
+              </h1>
+              <p className="text-muted-foreground max-w-xl text-base leading-7 sm:text-lg">
+                Siapkan akun, saldo awal, dan persediaan
+                dalam satu alur yang mudah ditinjau. Finance
+                bersifat opsional—Orders, Products, dan
+                Reports tetap berjalan seperti biasa.
+              </p>
+            </div>
+
+            <div className="flex w-full flex-col items-start gap-3">
+              {readiness.can_start ? (
+                <Button
+                  type="button"
+                  size="lg"
+                  onClick={onStart}
+                  disabled={isStarting}
+                >
+                  {isStarting ? (
+                    <>
+                      <Spinner data-icon="inline-start" />
+                      Menyiapkan Finance…
+                    </>
+                  ) : (
+                    <>
+                      Mulai setup Finance
+                      <span
+                        data-icon="inline-end"
+                        aria-hidden="true"
+                      >
+                        <HugeiconsIcon
+                          icon={ArrowRight02Icon}
+                        />
+                      </span>
+                    </>
+                  )}
+                </Button>
+              ) : null}
+              <p className="text-muted-foreground text-sm leading-6">
+                Tidak harus selesai sekaligus. Progres setup
+                akan tersimpan sebagai draft untuk
+                dilanjutkan nanti.
+              </p>
+            </div>
+
+            {errorMessage ? (
+              <Alert variant="destructive">
+                <AlertTitle>
+                  Finance belum dapat dimulai
+                </AlertTitle>
+                <AlertDescription>
+                  {errorMessage}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {readiness.blockers.length > 0 ? (
+              <Alert>
+                <HugeiconsIcon
+                  icon={InformationCircleIcon}
+                />
+                <AlertTitle>
+                  Akses perlu diperiksa
+                </AlertTitle>
+                <AlertDescription>
+                  <ul className="grid gap-1">
+                    {readiness.blockers.map((blocker) => (
+                      <li key={blocker.code}>
+                        {blocker.message}
+                      </li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
+
+          <div className="bg-muted/30 flex min-w-0 flex-col justify-center gap-5 border-t p-5 sm:p-8 lg:border-t-0 lg:border-l lg:p-10">
+            <div className="flex items-start justify-between gap-4">
+              <div className="grid gap-1">
+                <p className="text-muted-foreground text-xs font-semibold tracking-[0.16em] uppercase">
+                  Sebelum mulai mencatat
+                </p>
+                <h2 className="text-xl font-semibold tracking-tight">
+                  Setup singkat, kontrol tetap di tangan
+                  Anda.
+                </h2>
+              </div>
+              <StatusBadge status={readiness.status} />
+            </div>
+
+            <Card size="sm">
+              <CardHeader>
+                <CardTitle>Gambaran setup</CardTitle>
+                <CardDescription>
+                  Finance baru aktif setelah Anda meninjau
+                  dan mengonfirmasi.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="grid gap-4">
+                {setupSteps.map((step, index) => (
+                  <div key={step.title}>
+                    {index > 0 ? (
+                      <Separator className="mb-4" />
+                    ) : null}
+                    <div className="flex items-start gap-3">
+                      <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-xl">
+                        <HugeiconsIcon
+                          icon={step.icon}
+                          size={18}
+                        />
+                      </span>
+                      <div className="grid min-w-0 gap-1">
+                        <p className="text-sm font-medium">
+                          {step.title}
+                        </p>
+                        <p className="text-muted-foreground text-sm leading-5">
+                          {step.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <WelcomeNote
+                icon={Package02Icon}
+                title="Isi seperlunya"
+                description="Bagian yang tidak relevan bisa dilewati atau bernilai nol."
+              />
+              <WelcomeNote
+                icon={Chart03Icon}
+                title="Order lama tetap aman"
+                description="Memulai Finance tidak otomatis memposting order lama."
+              />
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function WelcomeNote({
+  icon,
+  title,
+  description,
+}: {
+  icon: typeof Package02Icon;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Card size="sm">
+      <CardHeader className="grid-cols-[auto_1fr] gap-3">
+        <span className="bg-primary/10 text-primary grid size-8 shrink-0 place-items-center rounded-lg">
+          <HugeiconsIcon icon={icon} size={16} />
+        </span>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription className="col-start-2 text-xs leading-5">
+          {description}
+        </CardDescription>
+      </CardHeader>
+    </Card>
   );
 }
 

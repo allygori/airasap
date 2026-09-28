@@ -1,9 +1,7 @@
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { buttonVariants } from '@/components/ui/button';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -78,7 +76,10 @@ export default async function FinanceReportPage({
     return data.status === 'unavailable' ? (
       <UnavailableState />
     ) : (
-      <NotReadyState />
+      <FinanceNotReadyState
+        title="Laporan keuangan menunggu setup"
+        description="Selesaikan onboarding Finance sebelum membuka laporan keuangan organisasi Anda."
+      />
     );
   }
 
@@ -137,32 +138,6 @@ function UnavailableState() {
             Finance.
           </CardDescription>
         </CardHeader>
-      </Card>
-    </main>
-  );
-}
-
-function NotReadyState() {
-  return (
-    <main className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <CardTitle>Finance belum aktif</CardTitle>
-          <CardDescription>
-            Laporan tersedia setelah onboarding Finance
-            selesai.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            href="/dashboard/finance/onboarding"
-            className={buttonVariants({
-              variant: 'outline',
-            })}
-          >
-            Buka onboarding
-          </Link>
-        </CardContent>
       </Card>
     </main>
   );

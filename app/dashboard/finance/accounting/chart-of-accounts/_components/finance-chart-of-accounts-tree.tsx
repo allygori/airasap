@@ -7,7 +7,6 @@ import {
   useState,
 } from 'react';
 import { useStore } from '@tanstack/react-form';
-import Link from 'next/link';
 import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import {
@@ -48,6 +47,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Spinner } from '@/components/ui/spinner';
 import { ChartOfAccountsTreeFilter } from './chart-of-accounts-tree-filter.form';
 import { FinanceAccountEditClient } from './finance-account-edit.client';
+import { FinanceNotReadyState } from '../../../_components/finance-not-ready-state';
 import {
   FinanceAccountListResponseSchema,
   type FinanceAccountDTO,
@@ -722,25 +722,11 @@ export function FinanceChartOfAccountsTree() {
 
   if (isFinanceInactive) {
     return (
-      <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-        <Card className="max-w-2xl">
-          <CardHeader>
-            <CardTitle>Finance belum aktif</CardTitle>
-            <CardDescription>
-              Selesaikan onboarding Finance untuk melihat
-              Chart of Accounts.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Link
-              href="/dashboard/finance/onboarding"
-              className="text-primary text-sm font-medium underline underline-offset-4"
-            >
-              Buka onboarding Finance
-            </Link>
-          </CardContent>
-        </Card>
-      </div>
+      <FinanceNotReadyState
+        title="Bangun struktur akun Finance"
+        description="Selesaikan onboarding Finance untuk menyiapkan Chart of Accounts dan mulai meninjau transaksi keuangan."
+        actionLabel="Lanjutkan onboarding"
+      />
     );
   }
 

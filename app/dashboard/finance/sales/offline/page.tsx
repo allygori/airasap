@@ -1,5 +1,3 @@
-import Link from 'next/link';
-import type { ReactNode } from 'react';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
@@ -9,10 +7,9 @@ import {
   type FinanceOfflineSaleFormOptionsDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
-import { buttonVariants } from '@/components/ui/button';
+import { FinanceNotReadyState } from '../../_components/finance-not-ready-state';
 import {
   Card,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
@@ -34,7 +31,11 @@ export default async function FinanceOfflineSalePage() {
     return state.status === 'unavailable' ? (
       <Unavailable />
     ) : (
-      <NotReady />
+      <FinanceNotReadyState
+        title="Catat penjualan offline"
+        description="Aktifkan Finance melalui onboarding untuk mencatat penjualan langsung dan mengurangi stok dengan jurnal yang sesuai."
+        actionLabel="Lanjutkan onboarding"
+      />
     );
   }
 
@@ -94,31 +95,12 @@ function Unavailable() {
   );
 }
 
-function NotReady() {
-  return (
-    <StateCard
-      title="Finance belum aktif"
-      description="Aktifkan Finance sebelum mencatat penjualan offline."
-      action={
-        <Link
-          href="/dashboard/finance/onboarding"
-          className={buttonVariants({ variant: 'outline' })}
-        >
-          Buka onboarding Finance
-        </Link>
-      }
-    />
-  );
-}
-
 function StateCard({
   title,
   description,
-  action,
 }: {
   title: string;
   description: string;
-  action?: ReactNode;
 }) {
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -127,9 +109,6 @@ function StateCard({
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
         </CardHeader>
-        {action ? (
-          <CardContent>{action}</CardContent>
-        ) : null}
       </Card>
     </div>
   );
