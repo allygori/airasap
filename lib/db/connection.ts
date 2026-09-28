@@ -34,6 +34,7 @@ import '@/modules/products/product.model';
 import '@/modules/orders/order.model';
 import '@/modules/tools/marketing/profit-intelligence/profit-intelligence.model';
 import '@/modules/finance/accounts/finance-account.model';
+import '@/modules/finance/owner-withdrawals/finance-owner-withdrawal.model';
 // import '@/modules/inventory/items/inventory-item.model';
 // import '@/modules/inventory/mappings/inventory-item-mapping.model';
 // import '@/modules/inventory/locations/inventory-location.model';

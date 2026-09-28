@@ -1,6 +1,8 @@
 # Finance Plan 10 — Owner Withdrawals
 
-Status: [TARGET / NOT IMPLEMENTED]
+Status: [CURRENT / Phase 10.1 implemented; manual browser review pending]
+Phase 10.2: [TARGET / NOT IMPLEMENTED]
+Phase 10.3: [FUTURE / NOT IMPLEMENTED]
 
 ## Goal
 
@@ -39,8 +41,8 @@ transaction types it supports.
 - CoA seed `finance-account.seed.json` currently includes the non-postable
   parent `3300 Prive dan Distribusi Pemilik` and postable accounts `3310 Prive
   Pemilik 1` and `3320 Prive Pemilik 2`, both with subtype `owner_drawings`.
-  These are current seed data, not evidence that a withdrawal UI or posting
-  service already exists.
+  Phase 10.1 offers eligible active/postable accounts from this Finance CoA;
+  the seed accounts do not introduce separate owner master data.
 - Supplier relationships, if added later, belong with Finance inventory
   items rather than marketplace listing documents in Products. Supplier
   management is unrelated to this plan and remains out of scope here.
@@ -67,14 +69,14 @@ compensation are not interchangeable with a paid owner withdrawal.
 
 ## Phases
 
-### Phase 10.1 — Minimal owner-withdrawal transaction [TARGET]
+### Phase 10.1 — Minimal owner-withdrawal transaction [CURRENT / IMPLEMENTED]
 
-Add a Finance-owned source transaction and a focused form for recording one
-owner withdrawal at a time. Keep the workflow consistent with Finance's
+Phase 10.1 adds a Finance-owned source transaction and a focused form for
+recording one owner withdrawal at a time. The workflow follows Finance's
 existing draft-then-post transaction pattern and shared composed-form
 conventions.
 
-Target behavior:
+Implemented behavior:
 
 - Capture transaction date, owner-drawings CoA account, Cash/Bank account,
   amount, and optional description/reference.
@@ -95,6 +97,19 @@ Target behavior:
   guards, and existing API/error conventions.
 - Provide a visible journal reference after posting. Do not allow editing or
   deletion after posting.
+- Include a compact, bounded recent-activity list so users can retry a saved
+  draft after an interrupted post and open its journal. This is operational
+  recovery/traceability only; Phase 10.2 still owns date/account filters,
+  period totals, and correction workflows.
+
+Implementation locations:
+
+- Source model/repository/service: `modules/finance/owner-withdrawals/`.
+- UI: `/dashboard/finance/owner-withdrawals`.
+- API: `/api/v1/dashboard/finance/owner-withdrawals` and its
+  `/:withdrawalId/post` action.
+- Source records and journals use stable idempotency keys; posting is
+  retry-safe on standalone MongoDB without a multi-document transaction.
 
 Acceptance criteria:
 

@@ -378,6 +378,10 @@ export const financeNav = [
         title: 'Transfer Kas & Bank',
         url: '/dashboard/finance/cash-and-bank-transfers',
       },
+      {
+        title: 'Penarikan Pemilik',
+        url: '/dashboard/finance/owner-withdrawals',
+      },
     ],
   },
   {

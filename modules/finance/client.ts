@@ -12,6 +12,12 @@ export { FINANCE_CASH_BANK_SUBTYPE_LABELS } from './cash-and-bank/finance-cash-b
 export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-cash-bank-transfer.schema';
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
+  FinanceOwnerWithdrawalInputSchema,
+  FinanceOwnerWithdrawalResponseSchema,
+  FinanceOwnerWithdrawalSummarySchema,
+  FinanceOwnerWithdrawalListResponseSchema,
+} from './owner-withdrawals/finance-owner-withdrawal.schema';
+export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryMovementListQuerySchema,
   FinanceInventoryMovementListResponseSchema,
@@ -79,6 +85,11 @@ export type {
   FinanceExpenseListResponseDTO,
   FinanceExpenseSummaryDTO,
 } from './expenses/finance-expense.dto';
+export type {
+  FinanceOwnerWithdrawalListResponseDTO,
+  FinanceOwnerWithdrawalResponseDTO,
+  FinanceOwnerWithdrawalSummaryDTO,
+} from './owner-withdrawals/finance-owner-withdrawal.dto';
 export type {
   FinanceInventoryMovementListQueryDTO,
   FinanceInventoryMovementListResponseDTO,
