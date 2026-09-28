@@ -12,6 +12,7 @@ const ownerAccountId = new Types.ObjectId();
 const paymentAccountId = new Types.ObjectId();
 const withdrawalId = new Types.ObjectId();
 const journalId = new Types.ObjectId();
+const reversalJournalId = new Types.ObjectId();
 
 const makeAccount = (
   id: Types.ObjectId,
@@ -64,7 +65,7 @@ const makeDependencies = () => {
     null;
   const journalService: Pick<
     FinanceJournalService,
-    'postOperational'
+    'postOperational' | 'reverse'
   > = {
     postOperational: jest.fn(async () => ({
       journal_entry: {
@@ -87,21 +88,71 @@ const makeDependencies = () => {
       },
       replayed: false,
     })),
+    reverse: jest.fn(async () => ({
+      journal_entry: {
+        id: String(reversalJournalId),
+        entry_number: 'FIN-WITHDRAWAL-REVERSAL-1',
+        transaction_date: '2026-09-27T00:00:00.000Z',
+        posting_date: '2026-09-27T00:00:00.000Z',
+        period: '2026-09',
+        currency: 'IDR',
+        description:
+          'Reversal penarikan pemilik: Koreksi nominal',
+        source_type: 'journal_reversal',
+        source_id: String(journalId),
+        source_event: 'reversal',
+        idempotency_key: `finance-owner-withdrawal-reversal:${String(withdrawalId)}`,
+        status: 'posted' as const,
+        posted_at: '2026-09-27T00:00:00.000Z',
+        posted_by: null,
+        reversal_of: String(journalId),
+        lines: [],
+      },
+      replayed: false,
+    })),
   };
   const withdrawalRepository: Pick<
     FinanceOwnerWithdrawalRepository,
     | 'findByIdempotencyKey'
     | 'findWithdrawalById'
+    | 'findByJournalEntry'
     | 'createDraft'
     | 'markPosted'
+    | 'markReversedByJournalEntry'
   > = {
     findByIdempotencyKey: async () => current,
     findWithdrawalById: async () => current,
+    findByJournalEntry: async (id) =>
+      current?.journal_entry &&
+      String(current.journal_entry) === id
+        ? current
+        : null,
     createDraft: async (data) => {
       current = {
         ...data,
         _id: withdrawalId,
         organization: new Types.ObjectId(organizationId),
+      };
+      return current;
+    },
+    markReversedByJournalEntry: async (
+      originalId,
+      reversalId
+    ) => {
+      if (
+        !current ||
+        String(current.journal_entry ?? '') !==
+          originalId ||
+        current.status !== 'posted'
+      ) {
+        return null;
+      }
+      current = {
+        ...current,
+        status: 'reversed',
+        reversal_journal_entry: new Types.ObjectId(
+          reversalId
+        ),
       };
       return current;
     },
@@ -308,6 +359,125 @@ describe('FinanceOwnerWithdrawalService', () => {
       2,
       expect.objectContaining({
         idempotency_key: `finance-owner-withdrawal-journal:${draft.withdrawal_id}`,
+      }),
+      undefined
+    );
+  });
+
+  it('reverses a posted withdrawal with a separate journal and links both records', async () => {
+    const dependencies = makeDependencies();
+    const service = new FinanceOwnerWithdrawalService(
+      { organizationId },
+      dependencies
+    );
+    const draft = await service.createDraft(input);
+    await service.post(draft.withdrawal_id);
+
+    const reversed = await service.reverse(
+      draft.withdrawal_id,
+      {
+        effective_date: '2026-09-27T00:00:00.000Z',
+        reason: 'Koreksi nominal',
+      }
+    );
+
+    expect(reversed).toMatchObject({
+      status: 'reversed',
+      journal_entry_id: String(journalId),
+      reversal_journal_entry_id: String(reversalJournalId),
+    });
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenCalledWith(
+      String(journalId),
+      expect.objectContaining({
+        effective_date: new Date(
+          '2026-09-27T00:00:00.000Z'
+        ),
+        description:
+          'Reversal penarikan pemilik: Koreksi nominal',
+        idempotency_key: `finance-owner-withdrawal-reversal:${draft.withdrawal_id}`,
+      }),
+      undefined
+    );
+    await expect(
+      service.post(draft.withdrawal_id)
+    ).rejects.toMatchObject({
+      code: 'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE',
+    });
+
+    const replay = await service.reverse(
+      draft.withdrawal_id,
+      {
+        effective_date: '2026-09-27T00:00:00.000Z',
+        reason: 'Koreksi nominal',
+      }
+    );
+    expect(replay.replayed).toBe(true);
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenCalledTimes(1);
+  });
+
+  it('recovers source linkage after reversal journal creation succeeds first', async () => {
+    const dependencies = makeDependencies();
+    const service = new FinanceOwnerWithdrawalService(
+      { organizationId },
+      dependencies
+    );
+    const draft = await service.createDraft(input);
+    await service.post(draft.withdrawal_id);
+    const markReversed =
+      dependencies.withdrawalRepository
+        .markReversedByJournalEntry;
+    let attempts = 0;
+    dependencies.withdrawalRepository.markReversedByJournalEntry =
+      async (...args) => {
+        attempts += 1;
+        if (attempts === 1) return null;
+        return markReversed(...args);
+      };
+
+    await expect(
+      service.reverse(draft.withdrawal_id, {
+        effective_date: '2026-09-27T00:00:00.000Z',
+        reason: 'Koreksi nominal',
+      })
+    ).rejects.toMatchObject({
+      code: 'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED',
+    });
+    const recovered = await service.reverse(
+      draft.withdrawal_id,
+      {
+        effective_date: '2026-09-27T00:00:00.000Z',
+        reason: 'Koreksi nominal',
+      }
+    );
+
+    expect(recovered.status).toBe('reversed');
+    expect(recovered.reversal_journal_entry_id).toBe(
+      String(reversalJournalId)
+    );
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenCalledTimes(2);
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenNthCalledWith(
+      1,
+      String(journalId),
+      expect.objectContaining({
+        idempotency_key: `finance-owner-withdrawal-reversal:${draft.withdrawal_id}`,
+      }),
+      undefined
+    );
+    expect(
+      dependencies.journalService.reverse
+    ).toHaveBeenNthCalledWith(
+      2,
+      String(journalId),
+      expect.objectContaining({
+        idempotency_key: `finance-owner-withdrawal-reversal:${draft.withdrawal_id}`,
       }),
       undefined
     );

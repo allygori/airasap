@@ -2,6 +2,8 @@ import {
   FinanceOwnerWithdrawalInputSchema,
   FinanceOwnerWithdrawalListQuerySchema,
   FinanceOwnerWithdrawalListResponseSchema,
+  FinanceOwnerWithdrawalMonthlyTotalSchema,
+  FinanceOwnerWithdrawalReversalInputSchema,
   FinanceOwnerWithdrawalResponseSchema,
   FinanceOwnerWithdrawalStatusSchema,
   FinanceOwnerWithdrawalSummarySchema,
@@ -14,6 +16,11 @@ export type FinanceOwnerWithdrawalInputDTO = ReturnType<
 export type FinanceOwnerWithdrawalStatusDTO = ReturnType<
   typeof FinanceOwnerWithdrawalStatusSchema.parse
 >;
+
+export type FinanceOwnerWithdrawalReversalInputDTO =
+  ReturnType<
+    typeof FinanceOwnerWithdrawalReversalInputSchema.parse
+  >;
 
 export type FinanceOwnerWithdrawalResponseDTO = ReturnType<
   typeof FinanceOwnerWithdrawalResponseSchema.parse
@@ -30,4 +37,9 @@ export type FinanceOwnerWithdrawalListQueryDTO = ReturnType<
 export type FinanceOwnerWithdrawalListResponseDTO =
   ReturnType<
     typeof FinanceOwnerWithdrawalListResponseSchema.parse
+  >;
+
+export type FinanceOwnerWithdrawalMonthlyTotalDTO =
+  ReturnType<
+    typeof FinanceOwnerWithdrawalMonthlyTotalSchema.parse
   >;

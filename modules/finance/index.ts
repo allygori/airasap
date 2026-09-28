@@ -238,11 +238,13 @@ export type {
 } from './expenses/finance-expense.dto';
 export type {
   FinanceOwnerWithdrawalInputDTO,
+  FinanceOwnerWithdrawalReversalInputDTO,
   FinanceOwnerWithdrawalStatusDTO,
   FinanceOwnerWithdrawalResponseDTO,
   FinanceOwnerWithdrawalSummaryDTO,
   FinanceOwnerWithdrawalListQueryDTO,
   FinanceOwnerWithdrawalListResponseDTO,
+  FinanceOwnerWithdrawalMonthlyTotalDTO,
 } from './owner-withdrawals/finance-owner-withdrawal.dto';
 export type {
   FinanceSettlementInputDTO,
@@ -308,6 +310,7 @@ export {
 } from './expenses/finance-expense.schema';
 export {
   FinanceOwnerWithdrawalInputSchema,
+  FinanceOwnerWithdrawalReversalInputSchema,
   FinanceOwnerWithdrawalStatusSchema,
   FinanceOwnerWithdrawalResponseSchema,
   FinanceOwnerWithdrawalSummarySchema,

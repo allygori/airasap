@@ -13,6 +13,7 @@ export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-c
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
   FinanceOwnerWithdrawalInputSchema,
+  FinanceOwnerWithdrawalReversalInputSchema,
   FinanceOwnerWithdrawalResponseSchema,
   FinanceOwnerWithdrawalSummarySchema,
   FinanceOwnerWithdrawalListResponseSchema,
@@ -89,6 +90,7 @@ export type {
   FinanceOwnerWithdrawalListResponseDTO,
   FinanceOwnerWithdrawalResponseDTO,
   FinanceOwnerWithdrawalSummaryDTO,
+  FinanceOwnerWithdrawalMonthlyTotalDTO,
 } from './owner-withdrawals/finance-owner-withdrawal.dto';
 export type {
   FinanceInventoryMovementListQueryDTO,

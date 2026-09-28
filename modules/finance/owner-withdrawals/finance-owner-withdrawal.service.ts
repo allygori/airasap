@@ -6,13 +6,18 @@ import {
   type FinanceTenantContext,
 } from '../finance.types';
 import { FinanceJournalService } from '../journal/finance-journal.service';
-import type { FinanceOperationalPostingDTO } from '../journal/finance-journal.dto';
+import type {
+  FinanceJournalReversalDTO,
+  FinanceOperationalPostingDTO,
+} from '../journal/finance-journal.dto';
 import type {
   FinanceOwnerWithdrawalInputDTO,
+  FinanceOwnerWithdrawalReversalInputDTO,
   FinanceOwnerWithdrawalResponseDTO,
 } from './finance-owner-withdrawal.dto';
 import {
   FinanceOwnerWithdrawalInputSchema,
+  FinanceOwnerWithdrawalReversalInputSchema,
   FinanceOwnerWithdrawalResponseSchema,
 } from './finance-owner-withdrawal.schema';
 import {
@@ -28,15 +33,17 @@ type FinanceOwnerWithdrawalAccountPort = Pick<
 
 type FinanceOwnerWithdrawalJournalPort = Pick<
   FinanceJournalService,
-  'postOperational'
+  'postOperational' | 'reverse'
 >;
 
 type FinanceOwnerWithdrawalRepositoryPort = Pick<
   FinanceOwnerWithdrawalRepository,
   | 'findByIdempotencyKey'
   | 'findWithdrawalById'
+  | 'findByJournalEntry'
   | 'createDraft'
   | 'markPosted'
+  | 'markReversedByJournalEntry'
 >;
 
 const getIdempotencyKey = (
@@ -84,6 +91,9 @@ const toResponse = (
     status: record.status,
     journal_entry_id: record.journal_entry
       ? String(record.journal_entry)
+      : null,
+    reversal_journal_entry_id: record.reversal_journal_entry
+      ? String(record.reversal_journal_entry)
       : null,
     idempotency_key: record.idempotency_key,
     replayed,
@@ -210,6 +220,12 @@ export class FinanceOwnerWithdrawalService {
     if (withdrawal.status === 'posted') {
       return toResponse(withdrawal, true);
     }
+    if (withdrawal.status === 'reversed') {
+      throw new FinanceDomainError(
+        'Penarikan yang sudah dibalik tidak dapat diposting kembali.',
+        'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE'
+      );
+    }
 
     const [ownerAccount, paymentAccount] =
       await Promise.all([
@@ -275,6 +291,134 @@ export class FinanceOwnerWithdrawalService {
     }
 
     return toResponse(posted, journalResult.replayed);
+  }
+
+  async reverse(
+    withdrawalId: string,
+    input: FinanceOwnerWithdrawalReversalInputDTO | unknown,
+    session?: ClientSession
+  ): Promise<FinanceOwnerWithdrawalResponseDTO> {
+    const data =
+      FinanceOwnerWithdrawalReversalInputSchema.parse(
+        input
+      );
+    const withdrawal =
+      await this.withdrawalRepository.findWithdrawalById(
+        withdrawalId,
+        session
+      );
+
+    if (!withdrawal) {
+      throw new FinanceDomainError(
+        'Penarikan pemilik Finance tidak ditemukan.',
+        'FINANCE_OWNER_WITHDRAWAL_NOT_FOUND'
+      );
+    }
+    if (withdrawal.status === 'reversed') {
+      if (withdrawal.reversal_journal_entry) {
+        return toResponse(withdrawal, true);
+      }
+      throw new FinanceDomainError(
+        'Penarikan sudah ditandai reversed tetapi jurnal pembalik tidak ditemukan.',
+        'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
+      );
+    }
+    if (
+      withdrawal.status !== 'posted' ||
+      !withdrawal.journal_entry
+    ) {
+      throw new FinanceDomainError(
+        'Hanya penarikan pemilik yang sudah posted yang dapat dibalik.',
+        'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE'
+      );
+    }
+
+    const reversalResult =
+      await this.journalService.reverse(
+        String(withdrawal.journal_entry),
+        {
+          effective_date: data.effective_date,
+          description: `Reversal penarikan pemilik: ${data.reason}`,
+          idempotency_key: `finance-owner-withdrawal-reversal:${String(withdrawal._id)}`,
+        } satisfies FinanceJournalReversalDTO,
+        session
+      );
+    const reversed = await this.synchronizeJournalReversal(
+      String(withdrawal.journal_entry),
+      reversalResult.journal_entry.id,
+      session
+    );
+
+    if (!reversed) {
+      throw new FinanceDomainError(
+        'Reversal journal berhasil dibuat tetapi sumber penarikan tidak dapat ditemukan.',
+        'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
+      );
+    }
+
+    return {
+      ...reversed,
+      replayed:
+        reversalResult.replayed || reversed.replayed,
+    };
+  }
+
+  async synchronizeJournalReversal(
+    journalEntryId: string,
+    reversalJournalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceOwnerWithdrawalResponseDTO | null> {
+    const source =
+      await this.withdrawalRepository.findByJournalEntry(
+        journalEntryId,
+        session
+      );
+    if (!source) return null;
+
+    if (source.status === 'reversed') {
+      if (
+        String(source.reversal_journal_entry ?? '') ===
+        reversalJournalEntryId
+      ) {
+        return toResponse(source, true);
+      }
+      throw new FinanceDomainError(
+        'Penarikan sudah terhubung dengan jurnal reversal yang berbeda.',
+        'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
+      );
+    }
+    if (source.status !== 'posted') {
+      throw new FinanceDomainError(
+        'Sumber penarikan tidak berada dalam status yang dapat dibalik.',
+        'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE'
+      );
+    }
+
+    const reversed =
+      await this.withdrawalRepository.markReversedByJournalEntry(
+        journalEntryId,
+        reversalJournalEntryId,
+        session
+      );
+    if (reversed) return toResponse(reversed, false);
+
+    const latest =
+      await this.withdrawalRepository.findByJournalEntry(
+        journalEntryId,
+        session
+      );
+    if (
+      latest?.status === 'reversed' &&
+      String(latest.reversal_journal_entry ?? '') ===
+        reversalJournalEntryId
+    ) {
+      return toResponse(latest, true);
+    }
+
+    throw new FinanceDomainError(
+      'Reversal journal berhasil dibuat tetapi penarikan gagal ditandai reversed.',
+      'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
+    );
   }
 
   private async createSource(

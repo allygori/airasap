@@ -31,19 +31,36 @@ type PageData =
   | {
       status: 'ready';
       ownerAccounts: AccountOption[];
+      ownerFilterAccounts: AccountOption[];
       paymentAccounts: AccountOption[];
       withdrawals: FinanceOwnerWithdrawalListResponseDTO;
+      filters: {
+        from_date: string;
+        to_date: string;
+        owner_account_id: string;
+      };
       businessDate: string;
     }
   | { status: 'unavailable' | 'not_ready' };
 
-export default async function OwnerWithdrawalsPage() {
+type OwnerWithdrawalsPageProps = {
+  searchParams?: Promise<
+    Record<string, string | string[] | undefined>
+  >;
+};
+
+export default async function OwnerWithdrawalsPage({
+  searchParams,
+}: OwnerWithdrawalsPageProps) {
   const tenantContext = await getTenantContext();
   if (!tenantContext.organizationId) {
     return <UnavailableState />;
   }
 
-  const data = await loadPageData(tenantContext);
+  const data = await loadPageData(
+    tenantContext,
+    (await searchParams) ?? {}
+  );
   if (data.status !== 'ready') {
     return data.status === 'unavailable' ? (
       <UnavailableState />
@@ -55,15 +72,21 @@ export default async function OwnerWithdrawalsPage() {
   return (
     <FinanceOwnerWithdrawalClient
       ownerAccounts={data.ownerAccounts}
+      ownerFilterAccounts={data.ownerFilterAccounts}
       paymentAccounts={data.paymentAccounts}
       withdrawals={data.withdrawals}
+      filters={data.filters}
       businessDate={data.businessDate}
     />
   );
 }
 
 async function loadPageData(
-  context: FinanceTenantContext
+  context: FinanceTenantContext,
+  searchParams: Record<
+    string,
+    string | string[] | undefined
+  >
 ): Promise<PageData> {
   try {
     await db.connect();
@@ -73,11 +96,10 @@ async function loadPageData(
       context
     );
 
-    const [equityAccounts, paymentAccounts, withdrawals] =
+    const [equityAccounts, paymentAccounts] =
       await Promise.all([
         accountRepository.list({
           type: 'equity',
-          is_active: true,
           is_postable: true,
           limit: 500,
         }),
@@ -85,12 +107,9 @@ async function loadPageData(
           ['cash', 'bank'],
           { limit: 100 }
         ),
-        new FinanceOwnerWithdrawalReadService(context).list(
-          FinanceOwnerWithdrawalListQuerySchema.parse({})
-        ),
       ]);
 
-    const ownerAccounts = equityAccounts
+    const ownerFilterAccounts = equityAccounts
       .filter(
         (account) => account.subtype === 'owner_drawings'
       )
@@ -99,20 +118,79 @@ async function loadPageData(
         code: account.code,
         name: account.name,
       }));
+    const selectableOwnerAccountIds = new Set(
+      equityAccounts
+        .filter(
+          (account) =>
+            account.subtype === 'owner_drawings' &&
+            account.is_active
+        )
+        .map((account) => String(account._id))
+    );
+    const ownerAccounts = ownerFilterAccounts.filter(
+      (account) => selectableOwnerAccountIds.has(account.id)
+    );
+
+    const businessDate = getFinanceCalendarDate(
+      new Date(),
+      finance.calendar_timezone
+    );
+    const defaultRange = getDefaultDateRange(businessDate);
+    const fromDate = getSingleSearchParam(
+      searchParams.from_date
+    );
+    const toDate = getSingleSearchParam(
+      searchParams.to_date
+    );
+    const requestedOwnerAccountId = getSingleSearchParam(
+      searchParams.owner_account_id
+    );
+    const filters = {
+      from_date: fromDate ?? defaultRange.from_date,
+      to_date: toDate ?? defaultRange.to_date,
+      owner_account_id:
+        requestedOwnerAccountId &&
+        ownerFilterAccounts.some(
+          (account) =>
+            account.id === requestedOwnerAccountId
+        )
+          ? requestedOwnerAccountId
+          : '',
+    };
+    const requestedQuery =
+      FinanceOwnerWithdrawalListQuerySchema.safeParse({
+        ...filters,
+        page: getSingleSearchParam(searchParams.page),
+        limit: getSingleSearchParam(searchParams.limit),
+      });
+    const listQuery = requestedQuery.success
+      ? requestedQuery.data
+      : FinanceOwnerWithdrawalListQuerySchema.parse({
+          ...defaultRange,
+        });
+    const activeFilters = {
+      from_date: listQuery.from_date,
+      to_date: listQuery.to_date,
+      owner_account_id: listQuery.owner_account_id ?? '',
+    };
+
+    const withdrawals =
+      await new FinanceOwnerWithdrawalReadService(
+        context
+      ).list(listQuery);
 
     return {
       status: 'ready',
       ownerAccounts,
+      ownerFilterAccounts,
       paymentAccounts: paymentAccounts.map((account) => ({
         id: String(account._id),
         code: account.code,
         name: account.name,
       })),
       withdrawals,
-      businessDate: getFinanceCalendarDate(
-        new Date(),
-        finance.calendar_timezone
-      ),
+      filters: activeFilters,
+      businessDate,
     };
   } catch (error) {
     if (
@@ -129,6 +207,26 @@ async function loadPageData(
     }
     throw error;
   }
+}
+
+function getSingleSearchParam(
+  value: string | string[] | undefined
+) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getDefaultDateRange(today: string) {
+  const [year, month] = today.split('-').map(Number);
+  const fromMonth = new Date(Date.UTC(year, month - 12, 1));
+  const fromYear = fromMonth.getUTCFullYear();
+  const fromMonthNumber = String(
+    fromMonth.getUTCMonth() + 1
+  ).padStart(2, '0');
+
+  return {
+    from_date: `${fromYear}-${fromMonthNumber}-01`,
+    to_date: today,
+  };
 }
 
 function UnavailableState() {

@@ -10,6 +10,7 @@ import { db } from '@/lib/db/connection';
 import {
   assertFinanceModuleActive,
   FinanceDomainError,
+  FinanceOwnerWithdrawalReversalInputSchema,
   FinanceOwnerWithdrawalService,
 } from '@/modules/finance';
 
@@ -18,8 +19,11 @@ const RouteParamsSchema = z
   .strict();
 
 export const POST = withValidation(
-  { params: RouteParamsSchema },
-  async (_request, { validatedParams }) => {
+  {
+    body: FinanceOwnerWithdrawalReversalInputSchema,
+    params: RouteParamsSchema,
+  },
+  async (_request, { validatedBody, validatedParams }) => {
     try {
       const tenantContext = await getTenantContext();
       if (!tenantContext.organizationId) {
@@ -35,7 +39,10 @@ export const POST = withValidation(
       const result =
         await new FinanceOwnerWithdrawalService(
           tenantContext
-        ).post(validatedParams!.withdrawalId);
+        ).reverse(
+          validatedParams!.withdrawalId,
+          validatedBody!
+        );
 
       return apiSuccess(
         result,
@@ -52,24 +59,21 @@ export const POST = withValidation(
             : error.code === 'FINANCE_NOT_ACTIVE'
               ? 403
               : error.code ===
-                    'FINANCE_OWNER_WITHDRAWAL_IDEMPOTENCY_CONFLICT' ||
+                    'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE' ||
                   error.code ===
-                    'FINANCE_OWNER_WITHDRAWAL_FINALIZATION_FAILED' ||
-                  error.code ===
-                    'FINANCE_OWNER_WITHDRAWAL_NOT_REVERSIBLE'
+                    'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
                 ? 409
                 : 422;
-
         return apiError(error.code, error.message, status);
       }
 
       console.error(
-        '[POST /api/v1/dashboard/finance/owner-withdrawals/:withdrawalId/post]',
+        '[POST /api/v1/dashboard/finance/owner-withdrawals/:withdrawalId/reverse]',
         error
       );
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
-        'Gagal mem-posting penarikan pemilik Finance.',
+        'Gagal membalik penarikan pemilik Finance.',
         500
       );
     }

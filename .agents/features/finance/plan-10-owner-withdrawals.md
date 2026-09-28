@@ -1,7 +1,7 @@
 # Finance Plan 10 — Owner Withdrawals
 
-Status: [CURRENT / Phase 10.1 implemented; manual browser review pending]
-Phase 10.2: [TARGET / NOT IMPLEMENTED]
+Status: [CURRENT / Phases 10.1–10.2 implemented; manual browser review pending]
+Phase 10.2: [CURRENT / IMPLEMENTED; manual browser review pending]
 Phase 10.3: [FUTURE / NOT IMPLEMENTED]
 
 ## Goal
@@ -26,8 +26,9 @@ transaction types it supports.
   collection. Products and Reports are not changed by this plan.
 - It is separate from the Expense workflow: a genuine owner drawing must not
   reduce operating profit as an expense.
-- Posted journals remain immutable. Corrections use an existing reversal or a
-  new traceable correcting transaction; never edit a posted journal.
+- Posted journal lines and amounts are never edited. Finance's reversal
+  lifecycle may mark the original journal status as `reversed` and creates a
+  separate posted reversal journal.
 
 ## Confirmed product direction
 
@@ -122,30 +123,46 @@ Acceptance criteria:
 - A closed period rejects posting using the existing Finance lifecycle rule.
 - An interrupted standalone MongoDB posting can be retried safely.
 
-### Phase 10.2 — Withdrawal history and correction [TARGET]
+### Phase 10.2 — Withdrawal history and correction [CURRENT / IMPLEMENTED]
 
 Make recorded withdrawals easy to review and correct without changing posted
-journals.
+journal lines or amounts. Finance's existing reversal lifecycle changes the
+original journal status to `reversed`; the original entry's accounting lines
+remain intact, and the reversal is a separate posted journal.
 
-Target behavior:
+Implemented behavior:
 
-- Provide a list with date, owner-drawings account, amount, payment account,
-  status, and linked journal; support bounded date/account filters.
-- Show simple totals by owner-drawings account and month, clearly identified
-  as recorded withdrawals—not a calculation of legally distributable profit.
-- Reuse Finance's existing reversal/correction workflow where compatible. If
-  a missing link is needed, add only the narrow Finance-owned source linkage;
-  never edit or delete the original posted journal.
-- Keep the original transaction and any reversal/correction traceable to one
-  another.
+- Provide a paginated list with date, owner-drawings account, amount,
+  payment account, status, and journal links. The UI defaults to the current
+  and preceding 11 Finance calendar months; users can select a range up to
+  five years and optionally filter by owner-drawings account.
+- Show monthly debit, credit, and net debit totals grouped by Finance journal
+  period and owner-drawings account. The numbers are posted journal movements,
+  not a calculation of legally distributable profit. Credits may include
+  reversal/correction entries.
+- Allow reversal of a posted withdrawal with an effective date in an open
+  Finance period and a required reason. Use the Finance journal reversal
+  workflow; never edit or delete the original journal lines.
+- Link the Finance-owned withdrawal source to its original and reversal
+  journals. Reversals initiated from the general-journal action also update
+  the linked withdrawal source status and reversal link.
+- Keep draft withdrawals postable; a reversed withdrawal cannot be posted
+  again. To correct its details, reverse it and create a replacement
+  withdrawal if appropriate.
 
 Acceptance criteria:
 
-- A user can trace each listed withdrawal to its source and journal.
-- A correction leaves the original posted journal unchanged and produces a
-  separately traceable ledger effect.
-- Totals agree with the posted owner-drawings journal lines and do not appear
-  as expenses in the Profit and Loss statement.
+- A user can filter and paginate withdrawals and trace each posted source to
+  its original journal and, when reversed, its separate reversal journal.
+- Reversal leaves the original journal lines and amounts intact, marks its
+  lifecycle status as reversed according to the existing Finance workflow,
+  and creates a separately traceable posted journal.
+- Reversal is retry-safe on standalone MongoDB: a retry cannot create another
+  reversal journal, and a source update can recover from a prior journal
+  reversal that succeeded while source finalization failed.
+- Monthly totals match the posted journal debit/credit lines for the selected
+  owner-drawings accounts and date range; they are not expenses in Profit and
+  Loss and are not presented as distributable profit.
 
 ### Phase 10.3 — Broader owner and entity scenarios [FUTURE / DISCOVERY]
 
@@ -167,14 +184,12 @@ implemented or as legal/accounting advice.
 
 ## Open questions
 
-- Does the existing Finance CoA workflow let an organization create additional
-  postable `owner_drawings` accounts, and if so, what should happen when there
-  are more owners than seeded accounts?
 - Should the payment account remain limited to Cash/Bank, or should a later
   phase support other balance accounts when money is actually withdrawn from
   them?
-- What source-level reversal status and linkage should be used with the current
-  Finance reversal workflow?
+- Does the existing Finance CoA workflow let an organization create additional
+  postable `owner_drawings` accounts, and if so, what should happen when there
+  are more owners than seeded accounts? This remains for Phase 10.3 discovery.
 
 ## Not in scope
 

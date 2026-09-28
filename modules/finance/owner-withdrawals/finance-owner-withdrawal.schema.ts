@@ -50,6 +50,8 @@ export const FinanceOwnerWithdrawalResponseSchema =
     reference: z.string().nullable(),
     status: FinanceOwnerWithdrawalStatusSchema,
     journal_entry_id: ObjectIdStringSchema.nullable(),
+    reversal_journal_entry_id:
+      ObjectIdStringSchema.nullable(),
     idempotency_key: z.string().min(1),
     replayed: z.boolean(),
   });
@@ -59,23 +61,92 @@ export const FinanceOwnerWithdrawalSummarySchema =
     replayed: true,
   });
 
+export const FinanceOwnerWithdrawalReversalInputSchema = z
+  .object({
+    effective_date: z.coerce.date(),
+    reason: z.string().trim().min(3).max(300),
+  })
+  .strict();
+
+const FinanceOwnerWithdrawalDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine((value) => {
+    const date = new Date(`${value}T00:00:00.000Z`);
+    return (
+      !Number.isNaN(date.getTime()) &&
+      date.toISOString().slice(0, 10) === value
+    );
+  }, 'Tanggal harus berupa tanggal kalender yang valid.');
+
 export const FinanceOwnerWithdrawalListQuerySchema = z
   .object({
+    page: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(1000)
+      .default(1),
     limit: z.coerce
       .number()
       .int()
       .min(1)
       .max(100)
       .default(25),
+    from_date: FinanceOwnerWithdrawalDateSchema,
+    to_date: FinanceOwnerWithdrawalDateSchema,
+    owner_account_id: ObjectIdStringSchema.optional(),
   })
-  .strict();
+  .strict()
+  .superRefine((query, context) => {
+    const from = new Date(
+      `${query.from_date}T00:00:00.000Z`
+    );
+    const to = new Date(`${query.to_date}T00:00:00.000Z`);
+    const rangeDays =
+      (to.getTime() - from.getTime()) / 86_400_000;
+
+    if (rangeDays < 0) {
+      context.addIssue({
+        code: 'custom',
+        path: ['to_date'],
+        message:
+          'Tanggal akhir tidak boleh sebelum tanggal awal.',
+      });
+    } else if (rangeDays > 1_830) {
+      context.addIssue({
+        code: 'custom',
+        path: ['to_date'],
+        message: 'Rentang riwayat maksimal lima tahun.',
+      });
+    }
+  });
+
+export const FinanceOwnerWithdrawalMonthlyTotalSchema =
+  z.object({
+    period: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+    owner_account: FinanceOwnerWithdrawalAccountSchema,
+    debit_total: z.number().int().nonnegative(),
+    credit_total: z.number().int().nonnegative(),
+    net_debit: z.number().int(),
+  });
 
 export const FinanceOwnerWithdrawalListResponseSchema =
   z.object({
     withdrawals: z.array(
       FinanceOwnerWithdrawalSummarySchema
     ),
-    meta: z.object({
+    monthly_totals: z.array(
+      FinanceOwnerWithdrawalMonthlyTotalSchema
+    ),
+    summary_range: z.object({
+      from_date: FinanceOwnerWithdrawalDateSchema,
+      to_date: FinanceOwnerWithdrawalDateSchema,
+    }),
+    pagination: z.object({
+      page: z.number().int().positive(),
       limit: z.number().int().positive(),
+      total: z.number().int().nonnegative(),
+      total_pages: z.number().int().nonnegative(),
     }),
   });

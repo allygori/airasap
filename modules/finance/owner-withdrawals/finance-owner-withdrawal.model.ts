@@ -20,8 +20,9 @@ export type TFinanceOwnerWithdrawal = Document & {
   transaction_date: Date;
   description: string;
   reference?: string | null;
-  status: 'draft' | 'posted';
+  status: 'draft' | 'posted' | 'reversed';
   journal_entry?: Types.ObjectId | null;
+  reversal_journal_entry?: Types.ObjectId | null;
   idempotency_key: string;
   created_at?: Date;
   updated_at?: Date;
@@ -75,6 +76,10 @@ const FinanceOwnerWithdrawalSchema =
         type: Schema.Types.ObjectId,
         default: null,
       },
+      reversal_journal_entry: {
+        type: Schema.Types.ObjectId,
+        default: null,
+      },
       idempotency_key: { type: String, required: true },
     },
     {
@@ -97,6 +102,11 @@ FinanceOwnerWithdrawalSchema.index({
 FinanceOwnerWithdrawalSchema.index({
   organization: 1,
   status: 1,
+  transaction_date: -1,
+});
+FinanceOwnerWithdrawalSchema.index({
+  organization: 1,
+  owner_account: 1,
   transaction_date: -1,
 });
 

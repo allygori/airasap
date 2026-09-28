@@ -43,6 +43,15 @@ export type FinanceAccountBalancePersistenceRecord = {
   last_transaction_date: Date | null;
 };
 
+export type FinanceOwnerDrawingMonthlyMovementRecord = {
+  _id: {
+    account_id: Types.ObjectId;
+    period: string;
+  };
+  debit_total: number;
+  credit_total: number;
+};
+
 const escapeRegex = (value: string) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -334,6 +343,60 @@ export class FinanceJournalRepository extends BaseRepository<TFinanceJournalEntr
 
     const aggregate =
       this.model.aggregate<FinanceAccountBalancePersistenceRecord>(
+        pipeline
+      );
+    if (session) aggregate.session(session);
+    return aggregate.exec();
+  }
+
+  async aggregatePostedOwnerDrawingMovements(
+    accountIds: string[],
+    fromDate: string,
+    toDate: string,
+    session?: ClientSession
+  ): Promise<FinanceOwnerDrawingMonthlyMovementRecord[]> {
+    const objectIds = accountIds
+      .filter((accountId) =>
+        Types.ObjectId.isValid(accountId)
+      )
+      .map((accountId) => new Types.ObjectId(accountId));
+    if (objectIds.length === 0) return [];
+
+    const from = new Date(`${fromDate}T00:00:00.000Z`);
+    const toExclusive = new Date(`${toDate}T00:00:00.000Z`);
+    toExclusive.setUTCDate(toExclusive.getUTCDate() + 1);
+    const pipeline: PipelineStage[] = [
+      {
+        $match: {
+          ...this.getTenantFilter(),
+          status: 'posted',
+          transaction_date: {
+            $gte: from,
+            $lt: toExclusive,
+          },
+          'lines.account_id': { $in: objectIds },
+        },
+      },
+      { $unwind: '$lines' },
+      {
+        $match: {
+          'lines.account_id': { $in: objectIds },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            account_id: '$lines.account_id',
+            period: '$period',
+          },
+          debit_total: { $sum: '$lines.debit' },
+          credit_total: { $sum: '$lines.credit' },
+        },
+      },
+      { $sort: { '_id.period': 1, '_id.account_id': 1 } },
+    ];
+    const aggregate =
+      this.model.aggregate<FinanceOwnerDrawingMonthlyMovementRecord>(
         pipeline
       );
     if (session) aggregate.session(session);
