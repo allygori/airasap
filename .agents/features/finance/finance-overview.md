@@ -74,9 +74,11 @@ workflow operasional.
 | 7 | Purchases, expenses, receivables, and payables | 4 |
 | 8 | Reports and period closing | 5 |
 | 9 | Historical reconstruction | 4 |
+| 10 | Owner withdrawals | 2 initially; broader scenarios are discovery-only |
 
-Estimate: about 36–38 phases. The phase count is directional and may change
-after each plan's discovery phase.
+Estimate: about 38–40 implementation phases, plus discovery for broader owner
+and legal-entity scenarios in Plan 10. The phase count is directional and may
+change after each plan's discovery phase.
 
 ## Reuse policy
 
@@ -115,6 +117,8 @@ Do not copy old accounting side effects into the new importer without review.
   reservation and channel stock-sync phases in Plan 05?
 - What minimum AR/AP workflow is needed for the target UMKM users?
 - Which reports are required for the first release?
+- Which owner transaction types and legal-entity scenarios should be supported
+  beyond the simple owner-drawing workflow scoped in Plan 10?
 
 These questions must be answered in the relevant plan or ADR before the
 affected implementation starts.
