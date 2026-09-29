@@ -147,8 +147,9 @@ export default function FinanceWidgetsPage() {
         <AlertDescription>
           Jurnal terbentuk dari workflow transaksi Finance.
           Jurnal Umum di sini untuk meninjau; form jurnal
-          manual, setoran modal, dan prive belum tersedia di
-          Finance baru.
+          manual dan setoran modal belum tersedia. Penarikan
+          pemilik serta pinjaman pemilik dicatat melalui
+          transaksi khusus.
         </AlertDescription>
       </Alert>
 

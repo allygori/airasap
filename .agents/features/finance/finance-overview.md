@@ -75,8 +75,9 @@ workflow operasional.
 | 8 | Reports and period closing | 5 |
 | 9 | Historical reconstruction | 4 |
 | 10 | Owner withdrawals | 2 initially; broader scenarios are discovery-only |
+| 11 | Cash loans, repayments, and future amortization | 3 |
 
-Estimate: about 38–40 implementation phases, plus discovery for broader owner
+Estimate: about 41–43 implementation phases, plus discovery for broader owner
 and legal-entity scenarios in Plan 10. The phase count is directional and may
 change after each plan's discovery phase.
 

@@ -292,6 +292,32 @@
       "description": "Kewajiban kepada penyedia BNPL/PayLater atau kartu kredit atas pembelian yang belum dilunasi."
     },
     {
+      "code": "2500",
+      "name": "Utang kepada Pemilik",
+      "type": "liability",
+      "subtype": "owner_loan_payable",
+      "parent_code": "2000",
+      "normal_balance": "credit",
+      "is_system": true,
+      "is_postable": true,
+      "is_active": true,
+      "display_order": 250,
+      "description": "Pinjaman dana dari pemilik kepada usaha yang harus dikembalikan."
+    },
+    {
+      "code": "2600",
+      "name": "Utang Pinjaman Tunai",
+      "type": "liability",
+      "subtype": "cash_loan_payable",
+      "parent_code": "2000",
+      "normal_balance": "credit",
+      "is_system": true,
+      "is_postable": true,
+      "is_active": true,
+      "display_order": 260,
+      "description": "Pinjaman tunai dari bank, penyedia pinjaman digital, atau pemberi pinjaman non-pemilik yang dananya masuk ke rekening usaha. Tidak digunakan untuk PayLater atas pembelian langsung."
+    },
+    {
       "code": "3000",
       "name": "Ekuitas",
       "type": "equity",
@@ -680,6 +706,19 @@
       "is_active": true,
       "display_order": 700,
       "description": "Beban insidental yang tidak cocok dengan kategori operasional lain."
+    },
+    {
+      "code": "7100",
+      "name": "Beban Bunga Pinjaman",
+      "type": "other_expense",
+      "subtype": "loan_interest_expense",
+      "parent_code": null,
+      "normal_balance": "debit",
+      "is_system": true,
+      "is_postable": true,
+      "is_active": true,
+      "display_order": 710,
+      "description": "Beban bunga atas pinjaman tunai usaha; pisahkan dari pembayaran pokok pinjaman."
     }
   ]
 }

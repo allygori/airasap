@@ -19,6 +19,21 @@ export {
   FinanceOwnerWithdrawalListResponseSchema,
 } from './owner-withdrawals/finance-owner-withdrawal.schema';
 export {
+  FinanceCashLoanBalanceSchema,
+  FinanceCashLoanEventTypeSchema,
+  FinanceCashLoanLenderTypeSchema,
+  FinanceCashLoanInputSchema,
+  FinanceCashLoanListQuerySchema,
+  FinanceCashLoanListResponseSchema,
+  FinanceCashLoanReversalInputSchema,
+  FinanceCashLoanResponseSchema,
+  FinanceCashLoanSummarySchema,
+} from './cash-loans/finance-cash-loan.schema';
+export type {
+  FinanceCashLoanEventType,
+  FinanceCashLoanLenderType,
+} from './cash-loans/finance-cash-loan.constants';
+export {
   FinanceInventoryItemTypeSchema,
   FinanceInventoryMovementListQuerySchema,
   FinanceInventoryMovementListResponseSchema,
@@ -92,6 +107,15 @@ export type {
   FinanceOwnerWithdrawalSummaryDTO,
   FinanceOwnerWithdrawalMonthlyTotalDTO,
 } from './owner-withdrawals/finance-owner-withdrawal.dto';
+export type {
+  FinanceCashLoanBalanceDTO,
+  FinanceCashLoanInputDTO,
+  FinanceCashLoanListQueryDTO,
+  FinanceCashLoanListResponseDTO,
+  FinanceCashLoanResponseDTO,
+  FinanceCashLoanReversalInputDTO,
+  FinanceCashLoanSummaryDTO,
+} from './cash-loans/finance-cash-loan.dto';
 export type {
   FinanceInventoryMovementListQueryDTO,
   FinanceInventoryMovementListResponseDTO,

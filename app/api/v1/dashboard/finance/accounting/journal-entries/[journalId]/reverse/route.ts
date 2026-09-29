@@ -14,6 +14,7 @@ import {
   FinanceJournalService,
   FinanceInventoryCogsService,
   FinanceCashBankTransferRepository,
+  FinanceCashLoanService,
   FinanceOwnerWithdrawalService,
   FinanceSalesTransactionRepository,
 } from '@/modules/finance';
@@ -41,6 +42,13 @@ export const POST = withValidation(
 
       await db.connect();
       await assertFinanceModuleActive(tenantContext);
+
+      const cashLoanService = new FinanceCashLoanService(
+        tenantContext
+      );
+      await cashLoanService.assertCanReverseJournal(
+        validatedParams!.journalId
+      );
 
       const reversalResult =
         await new FinanceJournalService(
@@ -78,6 +86,11 @@ export const POST = withValidation(
         reversalResult.journal_entry.id
       );
 
+      await cashLoanService.synchronizeJournalReversal(
+        validatedParams!.journalId,
+        reversalResult.journal_entry.id
+      );
+
       return apiSuccess(
         reversalResult,
         undefined,
@@ -98,7 +111,11 @@ export const POST = withValidation(
                   error.code ===
                     'FINANCE_INVENTORY_COGS_REVERSAL_FAILED' ||
                   error.code ===
-                    'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED'
+                    'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED' ||
+                  error.code ===
+                    'FINANCE_CASH_LOAN_NOT_REVERSIBLE' ||
+                  error.code ===
+                    'FINANCE_CASH_LOAN_REVERSAL_FINALIZATION_FAILED'
                 ? 409
                 : 422;
 

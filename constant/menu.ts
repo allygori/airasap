@@ -382,6 +382,10 @@ export const financeNav = [
         title: 'Penarikan Pemilik',
         url: '/dashboard/finance/owner-withdrawals',
       },
+      {
+        title: 'Pinjaman Tunai',
+        url: '/dashboard/finance/cash-loans',
+      },
     ],
   },
   {

@@ -10,6 +10,7 @@ import type {
 import {
   FinanceAccountRepository,
   type FinanceAccountPersistenceRecord,
+  type FinanceAccountSeedRecord,
 } from './finance-account.repository';
 import {
   FinanceAccountDetailsResponseSchema,
@@ -35,6 +36,27 @@ type FinanceAccountRepositoryPort = Pick<
 type FinanceAccountServiceDependencies = {
   repository?: FinanceAccountRepositoryPort;
 };
+
+type FinanceAccountTemplateRecord = ReturnType<
+  typeof FinanceAccountTemplateRecordSchema.parse
+>;
+
+const toSeedAccountRecord = (
+  record: FinanceAccountTemplateRecord
+): FinanceAccountSeedRecord => ({
+  code: record.code,
+  name: record.name,
+  type: record.type,
+  ...(record.subtype ? { subtype: record.subtype } : {}),
+  normal_balance: record.normal_balance,
+  is_system: record.is_system,
+  is_postable: record.is_postable,
+  is_active: record.is_active,
+  display_order: record.display_order,
+  ...(record.description
+    ? { description: record.description }
+    : {}),
+});
 
 const mapAccount = (
   record: FinanceAccountPersistenceRecord,
@@ -148,13 +170,9 @@ export class FinanceAccountService {
         const parent = record.parent_code
           ? accountsByCode.get(record.parent_code)
           : undefined;
-        const {
-          parent_code: _parentCode,
-          ...accountRecord
-        } = record;
         const account =
           await this.repository.upsertDefaultAccount(
-            accountRecord,
+            toSeedAccountRecord(record),
             parent?._id ?? null,
             session
           );
@@ -187,6 +205,71 @@ export class FinanceAccountService {
       organization_id: this.context.organizationId,
       account_count: accountsByCode.size,
     };
+  }
+
+  async ensureDefaultAccountByCode(
+    code: string,
+    session?: ClientSession
+  ): Promise<void> {
+    const records =
+      FinanceAccountTemplateRecordSchema.array().parse(
+        accountTemplate.accounts
+      );
+    const recordsByCode = new Map(
+      records.map((record) => [record.code, record])
+    );
+    const chain: typeof records = [];
+    const visited = new Set<string>();
+    let current = recordsByCode.get(code);
+
+    while (current) {
+      if (visited.has(current.code)) {
+        throw new FinanceDomainError(
+          'Template Chart of Accounts Finance memiliki hierarki yang tidak valid.',
+          'FINANCE_ACCOUNT_TEMPLATE_INVALID'
+        );
+      }
+      visited.add(current.code);
+      chain.unshift(current);
+      if (!current.parent_code) break;
+      current = recordsByCode.get(current.parent_code);
+      if (!current) {
+        throw new FinanceDomainError(
+          'Template Chart of Accounts Finance memiliki parent akun yang tidak valid.',
+          'FINANCE_ACCOUNT_TEMPLATE_INVALID'
+        );
+      }
+    }
+
+    if (chain.length === 0) {
+      throw new FinanceDomainError(
+        `Akun Finance ${code} tidak ditemukan pada template.`,
+        'FINANCE_ACCOUNT_TEMPLATE_INVALID'
+      );
+    }
+
+    const accountsByCode = new Map<
+      string,
+      FinanceAccountPersistenceRecord
+    >();
+    for (const record of chain) {
+      const parent = record.parent_code
+        ? accountsByCode.get(record.parent_code)
+        : undefined;
+      const account =
+        await this.repository.upsertDefaultAccount(
+          toSeedAccountRecord(record),
+          parent?._id ?? null,
+          session
+        );
+      if (!account) {
+        throw new FinanceDomainError(
+          `Gagal menyiapkan akun Finance ${record.code}.`,
+          'FINANCE_ACCOUNT_SEED_FAILED'
+        );
+      }
+      accountsByCode.set(record.code, account);
+    }
   }
 
   async list(

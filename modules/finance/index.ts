@@ -45,6 +45,8 @@ export { FinanceExpenseService } from './expenses/finance-expense.service';
 export { FinanceExpenseReadService } from './expenses/finance-expense-read.service';
 export { FinanceOwnerWithdrawalService } from './owner-withdrawals/finance-owner-withdrawal.service';
 export { FinanceOwnerWithdrawalReadService } from './owner-withdrawals/finance-owner-withdrawal-read.service';
+export { FinanceCashLoanService } from './cash-loans/finance-cash-loan.service';
+export { FinanceCashLoanReadService } from './cash-loans/finance-cash-loan-read.service';
 export { FinanceSubledgerService } from './subledgers/finance-subledger.service';
 export { FinanceFinancialStatementsReadService } from './reports/finance-financial-statements-read.service';
 export {
@@ -247,6 +249,16 @@ export type {
   FinanceOwnerWithdrawalMonthlyTotalDTO,
 } from './owner-withdrawals/finance-owner-withdrawal.dto';
 export type {
+  FinanceCashLoanBalanceDTO,
+  FinanceCashLoanInputDTO,
+  FinanceCashLoanReversalInputDTO,
+  FinanceCashLoanStatusDTO,
+  FinanceCashLoanResponseDTO,
+  FinanceCashLoanSummaryDTO,
+  FinanceCashLoanListQueryDTO,
+  FinanceCashLoanListResponseDTO,
+} from './cash-loans/finance-cash-loan.dto';
+export type {
   FinanceSettlementInputDTO,
   FinanceSettlementResponseDTO,
   FinanceSettlementStatusDTO,
@@ -317,6 +329,23 @@ export {
   FinanceOwnerWithdrawalListQuerySchema,
   FinanceOwnerWithdrawalListResponseSchema,
 } from './owner-withdrawals/finance-owner-withdrawal.schema';
+export {
+  FinanceCashLoanBalanceSchema,
+  FinanceCashLoanEventTypeSchema,
+  FinanceCashLoanLenderTypeSchema,
+  FinanceCashLoanStatusSchema,
+  FinanceCashLoanInputSchema,
+  FinanceCashLoanReversalInputSchema,
+  FinanceCashLoanResponseSchema,
+  FinanceCashLoanSummarySchema,
+  FinanceCashLoanListQuerySchema,
+  FinanceCashLoanListResponseSchema,
+} from './cash-loans/finance-cash-loan.schema';
+export type {
+  FinanceCashLoanEventType,
+  FinanceCashLoanLenderType,
+  FinanceCashLoanStatus,
+} from './cash-loans/finance-cash-loan.constants';
 export {
   FinanceSettlementInputSchema,
   FinanceSettlementResponseSchema,

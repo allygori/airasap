@@ -118,104 +118,6 @@ export default function FinanceOnboarding({
 
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem] lg:items-end">
-        <div className="max-w-3xl space-y-3">
-          <p className="text-primary text-xs font-bold tracking-[0.2em] uppercase">
-            Finance setup / 01
-          </p>
-          <h1 className="text-4xl font-extrabold tracking-tight">
-            Siapkan ruang kerja Finance
-          </h1>
-          <p className="text-muted-foreground max-w-2xl leading-7">
-            Finance bersifat opsional. Orders, Products, dan
-            Reports tetap berjalan seperti biasa saat setup
-            belum dimulai atau belum selesai.
-          </p>
-        </div>
-        <div className="border-border bg-muted/30 rounded-2xl border p-4">
-          <p className="text-muted-foreground text-xs font-medium uppercase">
-            Versi onboarding
-          </p>
-          <p className="mt-1 font-mono text-2xl font-semibold">
-            v{data.finance.onboarding_version}
-          </p>
-          <p className="text-muted-foreground mt-2 text-xs leading-5">
-            Progress tersimpan di organisasi dan dapat
-            dilanjutkan oleh owner.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(18rem,0.55fr)]">
-        <Card className="overflow-hidden">
-          <CardHeader className="border-b">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle>Status onboarding</CardTitle>
-                <CardDescription className="mt-1">
-                  Status dan aksi tersedia ditentukan oleh
-                  server.
-                </CardDescription>
-              </div>
-              <StatusBadge status={status} />
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-6">
-            <StatusMessage status={status} />
-
-            {data.readiness.can_start && (
-              <Button
-                type="button"
-                onClick={startOnboarding}
-                disabled={isStarting}
-              >
-                {isStarting
-                  ? 'Memulai...'
-                  : 'Mulai onboarding'}
-              </Button>
-            )}
-
-            {data.readiness.can_resume && (
-              <div className="border-info/30 bg-info/5 rounded-xl border p-4 text-sm">
-                Setup Finance sudah dimulai. Lengkapi saldo
-                awal sebelum masuk ke tahap finalisasi dan
-                aktivasi.
-              </div>
-            )}
-
-            {errorMessage && (
-              <p
-                className="text-destructive text-sm"
-                role="alert"
-              >
-                {errorMessage}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Yang perlu diketahui</CardTitle>
-            <CardDescription>
-              Setup Finance tidak mengubah data operasional
-              dasar.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-muted-foreground space-y-3 text-sm leading-6">
-            <p>
-              Order lama tidak otomatis diposting menjadi
-              jurnal hanya karena onboarding dimulai.
-            </p>
-            <p>
-              Posting Finance baru tersedia setelah modul
-              aktif dan mengikuti aturan mapping yang
-              disepakati.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {status === 'in_progress' &&
         data.readiness.owner_access && (
           <FinanceOpeningBalanceClient
@@ -229,8 +131,8 @@ export default function FinanceOnboarding({
           <CardHeader>
             <CardTitle>Perlu perhatian</CardTitle>
             <CardDescription>
-              Selesaikan blocker berikut untuk melanjutkan
-              onboarding.
+              Tinjau hal-hal berikut sebelum melanjutkan
+              pengaturan.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -312,7 +214,7 @@ function FinanceOnboardingWelcome({
                 Pencatatan keuangan untuk toko
               </span>
               <h1 className="max-w-2xl text-4xl leading-[1.08] font-semibold tracking-tight text-balance sm:text-5xl">
-                Mulai rapikan keuangan usaha Anda.
+                Mulai Rapikan Keuangan Usaha Anda.
               </h1>
               <p className="text-muted-foreground max-w-xl text-base leading-7 sm:text-lg">
                 Siapkan akun, saldo awal, dan persediaan
@@ -502,35 +404,13 @@ function StatusBadge({
   );
 }
 
-function StatusMessage({
-  status,
-}: {
-  status: FinanceReadinessDTO['status'];
-}) {
-  const message = {
-    not_started:
-      'Finance belum dimulai. Memulai onboarding hanya mengubah status Finance menjadi in progress.',
-    in_progress:
-      'Finance sedang disiapkan. Progress tersimpan dan dapat dilanjutkan tanpa mengulang langkah awal.',
-    blocked:
-      'Finance belum dapat dilanjutkan sampai blocker dari server diselesaikan.',
-    active: 'Finance sudah aktif untuk organisasi ini.',
-  }[status];
-
-  return (
-    <p className="text-muted-foreground leading-7">
-      {message}
-    </p>
-  );
-}
-
 function getStatusLabel(
   status: FinanceReadinessDTO['status']
 ) {
   return {
     not_started: 'Belum dimulai',
     in_progress: 'Sedang disiapkan',
-    blocked: 'Terblokir',
+    blocked: 'Perlu perhatian',
     active: 'Aktif',
   }[status];
 }

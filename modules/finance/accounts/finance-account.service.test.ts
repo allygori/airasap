@@ -58,6 +58,9 @@ describe('FinanceAccountService default CoA', () => {
     const cash = records.get('1110');
     const cashGroup = records.get('1100');
     const creditPayable = records.get('2400');
+    const ownerLoanPayable = records.get('2500');
+    const cashLoanPayable = records.get('2600');
+    const loanInterestExpense = records.get('7100');
 
     expect(firstResult.organization_id).toBe(
       organizationId
@@ -74,6 +77,28 @@ describe('FinanceAccountService default CoA', () => {
       subtype: 'credit_payable',
       is_postable: true,
     });
+    expect(ownerLoanPayable).toMatchObject({
+      name: 'Utang kepada Pemilik',
+      type: 'liability',
+      subtype: 'owner_loan_payable',
+      is_system: true,
+      is_postable: true,
+    });
+    expect(cashLoanPayable).toMatchObject({
+      name: 'Utang Pinjaman Tunai',
+      type: 'liability',
+      subtype: 'cash_loan_payable',
+      parent_account: records.get('2000')?._id,
+      is_system: true,
+      is_postable: true,
+    });
+    expect(loanInterestExpense).toMatchObject({
+      name: 'Beban Bunga Pinjaman',
+      type: 'other_expense',
+      subtype: 'loan_interest_expense',
+      is_system: true,
+      is_postable: true,
+    });
 
     const accountCount = records.size;
     const secondResult =
@@ -84,6 +109,56 @@ describe('FinanceAccountService default CoA', () => {
     expect(upsertDefaultAccount).toHaveBeenCalledTimes(
       accountCount * 2
     );
+  });
+
+  it('can ensure one default account and only its parent chain', async () => {
+    const records = new Map<
+      string,
+      FinanceAccountPersistenceRecord
+    >();
+    const upsertDefaultAccount = jest.fn(
+      async (
+        account: FinanceAccountSeedRecord,
+        parentAccount: Types.ObjectId | null
+      ) => {
+        const existing = records.get(account.code);
+        if (existing) return existing;
+        const created: FinanceAccountPersistenceRecord = {
+          ...account,
+          _id: new Types.ObjectId(),
+          organization: new Types.ObjectId(organizationId),
+          parent_account: parentAccount,
+        };
+        records.set(account.code, created);
+        return created;
+      }
+    );
+    const service = new FinanceAccountService(
+      { organizationId },
+      {
+        repository: {
+          list: async () => [],
+          findById: async () => null,
+          updateAccountDetails: async () => null,
+          findSelectableById: async () => null,
+          findByCode: async (code) =>
+            records.get(code) ?? null,
+          upsertDefaultAccount,
+        },
+      }
+    );
+
+    await service.ensureDefaultAccountByCode('2500');
+
+    expect([...records.keys()].sort()).toEqual([
+      '2000',
+      '2500',
+    ]);
+    expect(records.get('2500')).toMatchObject({
+      subtype: 'owner_loan_payable',
+      parent_account: records.get('2000')?._id,
+    });
+    expect(upsertDefaultAccount).toHaveBeenCalledTimes(2);
   });
 
   it('updates details for an organization-owned non-system account', async () => {

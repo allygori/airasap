@@ -459,37 +459,40 @@ export const FinanceOpeningBalanceForm = withForm({
 
     return (
       <section className="grid min-w-0 gap-6">
-        <header className="bg-foreground text-background relative overflow-hidden rounded-3xl px-6 py-7 shadow-xl sm:px-8 sm:py-9">
-          <div className="bg-primary/25 absolute -top-28 right-12 size-72 rounded-full blur-3xl" />
-          <div className="bg-secondary/20 absolute -bottom-36 left-1/3 size-80 rounded-full blur-3xl" />
-          <div className="relative flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-2xl">
+        <header className="bg-card relative overflow-hidden rounded-2xl border p-6 shadow-sm sm:p-8">
+          <div
+            aria-hidden="true"
+            className="bg-primary/10 pointer-events-none absolute -top-24 -right-20 size-64 rounded-full blur-3xl"
+          />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-2xl space-y-3">
               <Badge variant="secondary">
-                Setup Finance
+                Finance / Pengaturan awal
               </Badge>
-              <h2 className="mt-4 max-w-xl text-3xl font-semibold tracking-tight sm:text-4xl">
-                Mulai dari kondisi bisnis yang Anda ketahui.
-              </h2>
-              <p className="text-background/65 mt-3 max-w-xl text-sm leading-6 sm:text-base">
-                Isi yang relevan, lewati yang belum siap,
-                lalu periksa jurnal sebelum Finance
-                diaktifkan.
+              <h1 className="max-w-xl text-3xl font-semibold tracking-tight text-balance sm:text-4xl">
+                Catat saldo awal usaha
+              </h1>
+              <p className="text-muted-foreground max-w-xl text-sm leading-6 sm:text-base">
+                Masukkan saldo kas dan bank, persediaan,
+                piutang, serta kewajiban pada tanggal mulai.
+                Bagian yang belum siap dapat dilewati;
+                jurnal ditinjau sebelum Finance diaktifkan.
               </p>
             </div>
-            <div className="border-background/15 bg-background/10 w-full rounded-2xl border p-4 lg:max-w-56">
-              <p className="text-background/60 text-xs font-medium tracking-[0.16em] uppercase">
-                Langkah sekarang
+            <div className="bg-muted/30 w-full rounded-xl border p-4 lg:max-w-56">
+              <p className="text-muted-foreground text-xs font-medium tracking-[0.16em] uppercase">
+                Langkah saat ini
               </p>
               <p className="mt-2 text-2xl font-semibold">
                 {String(currentStepIndex + 1).padStart(
                   2,
                   '0'
                 )}{' '}
-                <span className="text-background/50 text-base font-normal">
+                <span className="text-muted-foreground text-base font-normal">
                   / {String(steps.length).padStart(2, '0')}
                 </span>
               </p>
-              <p className="text-background/65 mt-1 text-sm">
+              <p className="text-muted-foreground mt-1 text-sm">
                 {activeStep.title}
               </p>
             </div>
