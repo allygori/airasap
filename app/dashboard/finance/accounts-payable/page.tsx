@@ -16,6 +16,7 @@ export default async function AccountsPayablePage() {
         balanceType={data.balanceType}
         balances={data.balances}
         paymentAccounts={data.paymentAccounts}
+        cashLoanBalances={data.cashLoanBalances}
       />
     );
   }

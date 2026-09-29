@@ -58,7 +58,7 @@ export function NavStore({
           ) : (
             <Collapsible
               key={item.title}
-              defaultOpen={true}
+              // defaultOpen={true}
               className="group/collapsible"
               render={<SidebarMenuItem key={idx} />}
             >

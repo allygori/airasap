@@ -35,14 +35,14 @@ type RemoteDataConfig = {
   url?: string;
   resultsKey?: string; // e.g. "data" or "categories"
   valueKey?: string; // e.g. "_id" or "id"
-  labelKey?: string; // e.g. "name" or "title"
+  labelKey?: string | string[]; // e.g. "name" or ["sku", "name"]
   searchParam?: string; // e.g. "search" or "q"
   limit?: number;
 };
 
 type SelectFieldProps = Omit<
   ComponentProps<typeof Combobox>,
-  'value' | 'onValueChange'
+  'value' | 'onValueChange' | 'itemToStringValue'
 > & {
   label?: string;
   description?: string;
@@ -111,31 +111,48 @@ export function SelectField({
         }
 
         const response = await fetch(url.toString());
-        const result = await response.json();
-
+        const result: unknown = await response.json();
         const rawData = remote.resultsKey
-          ? result[remote.resultsKey]
+          ? getValueAtPath(result, remote.resultsKey)
           : result;
-        const dataArray = Array.isArray(rawData)
-          ? rawData
-          : rawData?.data || [];
+        const dataArray = getResponseArray(rawData);
+        const labelKeys = Array.isArray(remote.labelKey)
+          ? remote.labelKey
+          : [remote.labelKey || 'label'];
+        const valueKey = remote.valueKey || 'value';
 
         const mappedItems: SelectValueType[] =
-          dataArray.map((item: Record<string, unknown>) => {
-            const labelKey = remote?.labelKey || 'label';
-            const valueKey = remote?.valueKey || 'value';
+          dataArray.flatMap((value) => {
+            if (!isRecord(value)) return [];
 
-            return {
-              label: String(
-                item[labelKey] ||
-                  item['name'] ||
-                  item['title'] ||
-                  'Unknown'
-              ),
-              value: (item[valueKey] ||
-                item['_id'] ||
-                item['id']) as SelectValueType['value'],
-            };
+            const label = labelKeys
+              .map((key) => value[key])
+              .filter(
+                (part): part is string | number =>
+                  typeof part === 'string' ||
+                  typeof part === 'number'
+              )
+              .map(String)
+              .filter(Boolean)
+              .join(' — ');
+            const itemValue =
+              value[valueKey] ??
+              value['_id'] ??
+              value['id'];
+
+            return [
+              {
+                label:
+                  label ||
+                  String(
+                    value['name'] ||
+                      value['title'] ||
+                      'Unknown'
+                  ),
+                value: (itemValue ??
+                  null) as SelectValueType['value'],
+              },
+            ];
           });
 
         setFetchedItems(mappedItems);
@@ -189,6 +206,11 @@ export function SelectField({
       )}
       <Combobox
         items={allItems}
+        itemToStringValue={(item) =>
+          isRecord(item) && typeof item.label === 'string'
+            ? item.label
+            : ''
+        }
         value={selectedItem}
         onValueChange={(item: unknown) => {
           const typedItem = item as SelectValueType | null;
@@ -237,4 +259,32 @@ export function SelectField({
       <FieldInfo field={field} />
     </Field>
   );
+}
+
+function isRecord(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    !Array.isArray(value)
+  );
+}
+
+function getValueAtPath(value: unknown, path: string) {
+  return path
+    .split('.')
+    .reduce<unknown>(
+      (current, key) =>
+        isRecord(current) ? current[key] : undefined,
+      value
+    );
+}
+
+function getResponseArray(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (!isRecord(value)) return [];
+  if (Array.isArray(value.data)) return value.data;
+  if (Array.isArray(value.items)) return value.items;
+  return [];
 }

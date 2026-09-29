@@ -20,6 +20,7 @@ import {
 import {
   FinanceSettlementResponseSchema,
   type FinanceSettlementResponseDTO,
+  type FinanceCashLoanBalanceDTO,
   type FinanceSubledgerBalanceDTO,
   type FinanceSubledgerListResponseDTO,
   type FinanceSubledgerTypeDTO,
@@ -48,12 +49,14 @@ type FinanceSubledgerPageProps = {
   balanceType: FinanceSubledgerTypeDTO;
   balances: FinanceSubledgerListResponseDTO;
   paymentAccounts: FinanceSubledgerPaymentAccountOption[];
+  cashLoanBalances?: FinanceCashLoanBalanceDTO[];
 };
 
 export function FinanceSubledgerPage({
   balanceType,
   balances,
   paymentAccounts,
+  cashLoanBalances = [],
 }: FinanceSubledgerPageProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +72,9 @@ export function FinanceSubledgerPage({
   const actionLabel = isReceivable
     ? 'Catat penerimaan'
     : 'Catat pembayaran';
+  const openCashLoanBalances = cashLoanBalances.filter(
+    (balance) => balance.outstanding_amount > 0
+  );
 
   const submit = async (
     values: FinanceSubledgerSettlementFormValues
@@ -178,9 +184,12 @@ export function FinanceSubledgerPage({
             Lihat saldo{' '}
             {isReceivable
               ? 'yang masih harus diterima dari marketplace'
-              : 'yang masih harus dibayar kepada supplier atau vendor'}
-            . Settlement parsial maupun penuh membuat
-            journal baru dan tidak mengubah journal asal.
+              : 'utang usaha yang masih harus dibayar kepada supplier atau vendor'}
+            . Settlement membuat journal baru dan tidak
+            mengubah journal asal.
+            {!isReceivable
+              ? ' Sisa pokok Pinjaman Tunai, jika ada, ditampilkan terpisah dengan alur pembayaran tersendiri.'
+              : null}
           </p>
         </div>
         <Link
@@ -195,19 +204,42 @@ export function FinanceSubledgerPage({
         </Link>
       </div>
 
+      {!isReceivable && openCashLoanBalances.length > 0 ? (
+        <CashLoanBalanceCard
+          balances={openCashLoanBalances}
+        />
+      ) : null}
+
       {balances.balances.length === 0 ? (
         <Card>
           <CardHeader>
-            <CardTitle>Tidak ada saldo terbuka</CardTitle>
+            <CardTitle>
+              {isReceivable
+                ? 'Tidak ada saldo terbuka'
+                : 'Tidak ada utang usaha terbuka'}
+            </CardTitle>
             <CardDescription>
-              Saldo akan muncul setelah transaksi Finance
-              posted dan belum diselesaikan.
+              {isReceivable
+                ? 'Saldo akan muncul setelah transaksi Finance posted dan belum diselesaikan.'
+                : 'Saldo akan muncul setelah pembelian atau transaksi utang usaha diposting.'}
             </CardDescription>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm leading-6">
-            Journal dari order selesai menjadi piutang
-            marketplace. Hutang dari pembelian, expense, dan
-            opening balance juga tampil sesuai sumbernya.
+            {isReceivable ? (
+              'Journal dari order selesai menjadi piutang marketplace.'
+            ) : (
+              <>
+                Pinjaman tunai ditampilkan terpisah dari
+                utang usaha.{' '}
+                <Link
+                  href="/dashboard/finance/cash-loans"
+                  className="text-primary font-medium underline-offset-4 hover:underline"
+                >
+                  Buka Pinjaman Tunai
+                </Link>
+                .
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -266,6 +298,67 @@ export function FinanceSubledgerPage({
         </div>
       )}
     </div>
+  );
+}
+
+function CashLoanBalanceCard({
+  balances,
+}: {
+  balances: FinanceCashLoanBalanceDTO[];
+}) {
+  const totalOutstanding = balances.reduce(
+    (total, balance) => total + balance.outstanding_amount,
+    0
+  );
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div className="grid gap-1">
+          <CardTitle>Pinjaman tunai</CardTitle>
+          <CardDescription>
+            Sisa pokok pinjaman yang belum dibayar.
+            Pembayaran dicatat melalui alur Pinjaman Tunai.
+          </CardDescription>
+        </div>
+        <Link
+          href="/dashboard/finance/cash-loans"
+          className="text-primary shrink-0 text-sm font-medium underline-offset-4 hover:underline"
+        >
+          Kelola pinjaman →
+        </Link>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <div className="bg-muted/40 flex flex-wrap items-center justify-between gap-3 rounded-lg px-4 py-3">
+          <span className="text-muted-foreground text-sm">
+            Total sisa pokok
+          </span>
+          <span className="font-mono text-lg font-semibold">
+            {formatMoney(totalOutstanding)}
+          </span>
+        </div>
+        <div className="divide-y rounded-lg border">
+          {balances.map((balance) => (
+            <div
+              key={balance.lender.key}
+              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">
+                  {balance.lender.name}
+                </p>
+                <p className="text-muted-foreground text-xs">
+                  {getLenderTypeLabel(balance.lender.type)}
+                </p>
+              </div>
+              <span className="font-mono text-sm font-semibold">
+                {formatMoney(balance.outstanding_amount)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -332,6 +425,21 @@ const formatDate = (value: string) =>
   new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'medium',
   }).format(new Date(value));
+
+function getLenderTypeLabel(
+  type: FinanceCashLoanBalanceDTO['lender']['type']
+) {
+  switch (type) {
+    case 'owner':
+      return 'Pemilik';
+    case 'bank':
+      return 'Bank';
+    case 'digital_lender':
+      return 'Pemberi pinjaman digital';
+    default:
+      return 'Pemberi pinjaman lainnya';
+  }
+}
 
 function getSuccessMessage(
   settlement: FinanceSettlementResponseDTO,

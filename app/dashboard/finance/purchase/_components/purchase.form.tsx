@@ -361,6 +361,14 @@ export const PurchaseForm = withForm({
                         label="Item inventory"
                         placeholder="Pilih item"
                         className="min-w-0"
+                        remote={{
+                          url: '/api/v1/dashboard/finance/inventory/stock',
+                          resultsKey: 'data.items',
+                          valueKey: 'item_id',
+                          labelKey: ['sku', 'name'],
+                          searchParam: 'search',
+                          limit: 100,
+                        }}
                         items={items.map((item) => ({
                           label: `${item.sku} — ${item.name}`,
                           value: item.id,

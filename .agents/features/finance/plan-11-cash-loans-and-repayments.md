@@ -66,6 +66,9 @@ those capabilities later.
 - Phase 11.1 records principal only. It preserves immutable posted journals,
   Finance access checks, tenant scoping, closed-period rules, and
   standalone-MongoDB-safe idempotency/retry behavior.
+- `/dashboard/finance/accounts-payable` also surfaces outstanding cash-loan
+  principal by lender in a separate section. It is not mixed into supplier or
+  vendor settlements; repayments continue through `/dashboard/finance/cash-loans`.
 
 ## Accounting behavior
 

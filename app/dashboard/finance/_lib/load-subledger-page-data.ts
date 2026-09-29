@@ -6,6 +6,8 @@ import {
   FinanceDomainError,
   FinanceSubledgerListQuerySchema,
   FinanceSubledgerService,
+  FinanceCashLoanReadService,
+  type FinanceCashLoanBalanceDTO,
   type FinanceSubledgerListResponseDTO,
   type FinanceSubledgerTypeDTO,
   type FinanceTenantContext,
@@ -24,6 +26,7 @@ export type FinanceSubledgerPageData =
       balanceType: FinanceSubledgerTypeDTO;
       balances: FinanceSubledgerListResponseDTO;
       paymentAccounts: FinanceSubledgerPaymentAccountOption[];
+      cashLoanBalances: FinanceCashLoanBalanceDTO[];
     }
   | { status: 'unavailable' | 'not_ready' };
 
@@ -48,22 +51,32 @@ async function loadSubledgerPageData(
     const accountRepository = new FinanceAccountRepository(
       context
     );
-    const [balances, paymentAccounts] = await Promise.all([
-      new FinanceSubledgerService(context).listBalances(
-        FinanceSubledgerListQuerySchema.parse({
-          balance_type: balanceType,
-        })
-      ),
-      accountRepository.listPostableBySubtypes(
-        [...FINANCE_CASH_BANK_SUBTYPE_VALUES],
-        { limit: 100 }
-      ),
-    ]);
+    const cashLoanBalancesPromise =
+      balanceType === 'payable'
+        ? new FinanceCashLoanReadService(context).list({
+            page: 1,
+            limit: 1,
+          })
+        : Promise.resolve(null);
+    const [balances, paymentAccounts, cashLoanSummary] =
+      await Promise.all([
+        new FinanceSubledgerService(context).listBalances(
+          FinanceSubledgerListQuerySchema.parse({
+            balance_type: balanceType,
+          })
+        ),
+        accountRepository.listPostableBySubtypes(
+          [...FINANCE_CASH_BANK_SUBTYPE_VALUES],
+          { limit: 100 }
+        ),
+        cashLoanBalancesPromise,
+      ]);
 
     return {
       status: 'ready',
       balanceType,
       balances,
+      cashLoanBalances: cashLoanSummary?.balances ?? [],
       paymentAccounts: paymentAccounts.map((account) => ({
         id: String(account._id),
         code: account.code,
