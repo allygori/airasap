@@ -5,7 +5,7 @@
 ## Status and scope
 
 - **[CURRENT]** The active dashboard REST API is under `app/api/v1/dashboard/`. Route handlers commonly use `withValidation()`, `getTenantContext()`, a module operation, and `apiSuccess()` / `apiError()`.
-- **[CURRENT]** The application uses MongoDB/Mongoose. Business modules own their repositories and models; `modules/base.repository.ts` is the current domain repository base. `lib/db/base.repository.ts` is legacy and must not be used for new modules.
+- **[CURRENT]** The application uses MongoDB/Mongoose. Business modules own their repositories and models, and share the repository base in `modules/base.repository.ts` where its behavior fits.
 - **[TARGET]** Keep HTTP handling at the route edge, business decisions in the owning module, and persistence details behind repositories or deliberate query contracts.
 
 This guide covers API and server-side data-access conventions. Authentication policy and role design belong to [Identity and Access Control](../architecture/identity-and-access-control.md); domain ownership belongs to [Module Boundaries](../architecture/module-boundaries.md).

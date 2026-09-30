@@ -7,7 +7,7 @@
 1. Record the requested outcome and what behavior must remain unchanged.
 2. Check the working tree and preserve unrelated or user-owned changes. Do not stage, reset, or overwrite changes that are not part of the request.
 3. Inspect active source, routes/imports, tests, configuration, and runtime callers before deciding that code is unused or duplicated.
-4. Classify the target as `[CURRENT]`, `[LEGACY]`, or `[DEPRECATED]`. Historical notes, prototypes, and trash are not evidence that code is active or a pattern to copy.
+4. Classify the target as `[CURRENT]`, `[LEGACY]`, or `[DEPRECATED]`. Completely exclude every directory named `.trash` from inspection, search, changes, and implementation examples. Historical notes and prototypes are not evidence that code is active or a pattern to copy.
 5. Read the relevant module-boundary and convention guides. Do not infer architecture from folder names alone.
 
 ## 2. Describe the problem before moving code

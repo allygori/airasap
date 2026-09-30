@@ -85,7 +85,7 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - Do not bypass tenant scoping, authorization, soft-delete rules, or accounting lifecycle guards.
 - Never trust client-provided tenant headers as an authorization mechanism.
 - A client-side feature flag is never an authorization mechanism.
-- Do not add new code under `.trash`, `*.trash`, prototype-only folders, or `lib/auth-original`.
+- Ignore every directory named `.trash`: do not inspect, search, read, modify, or use its contents as code examples. Do not add code under `*.trash` or prototype-only folders.
 - Do not copy old `/api/products` documentation; the active dashboard API is versioned under `/api/v1/dashboard/...`.
 - Do not create a second database connection, auth configuration, response envelope, table system, or form system without documenting the decision.
 - Do not use `any` in new code. Use a precise type or `unknown` with narrowing.
@@ -105,7 +105,8 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - `components/data-table/` and `components/dashboard/collection/` — existing table implementations; do not add another system without a decision.
 - `modules/` — business domains and their services, repositories, schemas, models, and tests.
 - `lib/` — infrastructure and cross-cutting helpers: database, auth, API, query parsing, file handling, dates, formatting, SKU, and XLSX utilities.
-- `constant/`, `hooks/`, `types/` — small shared declarations only; do not place domain workflows here.
+- `constant/` — canonical home for exported reusable/static constants, option lists, and lookup values, grouped by domain or concern; do not place business workflows here. Keep function-local `const` values with the code that uses them.
+- `hooks/`, `types/` — small shared declarations only; do not place domain workflows here.
 - `public/` — static assets.
 - `.data/`, `.upload/` — local/imported data; treat as sensitive and never commit new personal data or log its contents.
 - `.trash/`, `*.trash/`, `.memory/`, `.todos/`, `.artifacts/` — historical, temporary, or planning material; not implementation examples.
@@ -122,7 +123,7 @@ before adding or changing persisted fields.
 - Auth HTTP integration is `app/api/auth/[...all]/route.ts`.
 - `lib/api/tenant-context.ts` resolves the current session, organization, store, and user context.
 - `lib/db/connection.ts` owns the cached Mongoose connection and model registration.
-- `modules/base.repository.ts` is the current domain repository base. `lib/db/base.repository.ts` is legacy and must not be used for new modules.
+- `modules/base.repository.ts` is the shared repository base used by current business modules.
 - Application models commonly use `organization` and optional `store` fields. Better Auth models use `organizationId`; do not mix these conventions without an explicit mapping.
 - Queries and mutations must include the tenant context and must not allow a caller to override it.
 - Accounting operations may require a Mongoose `ClientSession` and lifecycle guards; preserve both when composing services.

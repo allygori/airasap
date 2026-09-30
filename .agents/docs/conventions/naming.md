@@ -29,6 +29,10 @@
 - Name tests after the file or behavior they cover, then append `.test.ts` or `.test.tsx`: for example, `order.service.test.ts` and `product.service.test.ts`. Keep a test beside the related module code when following the current module-local pattern.
 - **[CURRENT]** Orders also contains generic or differently named support files such as `services/utils.ts` and `services/product-matching.ts`. **[TARGET]** For new files, prefer a specific domain name; include a role suffix when it clarifies the file's responsibility. Do not copy a generic `utils.ts` name for business rules.
 - Use lower-case kebab-case for documentation files. ADR numbering and the `.agents/ADR/` directory follow the ADR-specific naming convention when that guide is in place.
+- Put exported reusable/static value declarations, option lists, and lookup values under the root `constant/` directory, grouped by domain or concern (for example, `constant/order/shopee/`, `constant/finance/`, or `constant/files/`). Keep function-local `const` values, schemas, models, and behavior beside the owning code; `constant/` is not a home for workflows or constructed runtime objects.
+- When a value list defines a domain type, keep the derived type alongside that value list so both have one canonical definition.
+- Keep implementation-coupled configuration beside its owner when it contains behavior or framework-specific assets—for example, XLSX field maps that include parser functions or page-specific image data. Do not move such code into `constant/` solely because it uses `const`.
+- When centralizing an existing constant, keep its old import path as a re-export while callers or compatibility-sensitive code may still rely on it. Maintain one definition of the value; do not copy the constant into both the canonical file and the compatibility path.
 
 ## TypeScript symbols
 
