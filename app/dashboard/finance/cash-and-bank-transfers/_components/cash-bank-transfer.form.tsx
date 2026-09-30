@@ -2,6 +2,7 @@
 'use client';
 
 import { useStore } from '@tanstack/react-form';
+import { formatIDR } from '@/lib/number/money';
 import { withForm } from '@/components/form/form.hook';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -229,11 +230,7 @@ function BalanceHint({
         {label}
       </p>
       <p className="mt-1 font-mono text-sm font-semibold break-words">
-        {new Intl.NumberFormat('id-ID', {
-          style: 'currency',
-          currency: 'IDR',
-          maximumFractionDigits: 0,
-        }).format(account.current_balance)}
+        {formatIDR(account.current_balance)}
       </p>
       <p className="text-muted-foreground mt-1 text-xs">
         {FINANCE_CASH_BANK_SUBTYPE_LABELS[account.subtype]}

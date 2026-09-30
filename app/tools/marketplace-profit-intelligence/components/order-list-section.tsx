@@ -18,7 +18,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import type { ProfitOrder } from './types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils/ui';

@@ -2,6 +2,7 @@
 'use client';
 
 import { withForm } from '@/components/form/form.hook';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import {
   Alert,
   AlertDescription,
@@ -385,11 +386,3 @@ export const CashLoanForm = withForm({
     );
   },
 });
-
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-}

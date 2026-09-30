@@ -1,3 +1,6 @@
+export { formatCurrency } from './format-currency';
+export { formatIDR } from './format-idr';
+
 export const parseMoney = (val: unknown): number => {
   if (val === undefined || val === null || val === '')
     return 0;

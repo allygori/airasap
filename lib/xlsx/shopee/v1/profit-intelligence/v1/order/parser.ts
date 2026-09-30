@@ -1,7 +1,7 @@
 import { ParsedOrderCompleted } from './types';
 import { getColIdx } from '../utils';
 import { dateParser } from '@/lib/utils/parser';
-import { parseMoney } from '@/lib/utils/number/money';
+import { parseMoney } from '@/lib/number/money';
 
 const HEADER_DETECTION_KEY = 'No. Pesanan';
 

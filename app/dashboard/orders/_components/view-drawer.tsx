@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils/ui';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import { formatDate } from '@/lib/date/format';
 
 type MediaType = {

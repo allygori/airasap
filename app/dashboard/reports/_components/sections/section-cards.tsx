@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { formatIDR } from '@/lib/formatter';
-import { round } from '@/lib/utils/number';
+import { formatIDR } from '@/lib/number/money';
+import { round } from '@/lib/number';
 import FinancialDisplay from '@/components/shared/general/financial-display';
 
 type SectionCardsProps = {

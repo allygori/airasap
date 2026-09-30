@@ -1,5 +1,6 @@
 'use client';
 
+import { formatNumber, formatPercent } from '@/lib/number';
 import { useMemo, useRef, useState } from 'react';
 import {
   Area,
@@ -39,7 +40,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatIDR } from '@/lib/number/money';
 import { OverviewReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
@@ -955,16 +956,5 @@ const MiniMetric = ({
     </p>
   </div>
 );
-
-const formatPercent = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  }).format(value || 0);
-
-const formatNumber = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 1,
-  }).format(value || 0);
 
 export default ReportsOverviewPage;

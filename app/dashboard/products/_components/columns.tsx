@@ -17,7 +17,7 @@ import { CollectionRowActions } from '@/components/dashboard/collection/row-acti
 import { ViewDrawer } from '@/app/dashboard/products/_components/view-drawer';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 
 type CategoryType = {
   name: string;

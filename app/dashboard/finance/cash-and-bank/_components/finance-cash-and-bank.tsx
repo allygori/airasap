@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { formatMediumDate as formatDate } from '@/lib/date';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   type FinanceCashBankAccountDTO,
@@ -228,10 +229,3 @@ function SummaryCard({
 
 const ButtonLinkClass =
   'border-primary/30 text-primary hover:bg-primary/5 rounded-lg border px-3 py-2 text-sm font-medium transition-colors';
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);

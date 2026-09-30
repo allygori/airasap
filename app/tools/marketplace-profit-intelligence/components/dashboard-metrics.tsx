@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import type { ProfitReportData } from './types';
 
 type DashboardMetricsProps = {

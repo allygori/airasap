@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { formatNumber } from '@/lib/number';
+import { formatCurrency as formatMoney } from '@/lib/number/money';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -171,17 +173,17 @@ export function FinanceStockView({
                     <TableCell className="text-right font-mono text-xs">
                       {item.quantity_on_hand === null
                         ? 'Tidak dilacak'
-                        : `${formatNumber(item.quantity_on_hand)} ${item.unit}`}
+                        : `${formatNumber(item.quantity_on_hand, 2)} ${item.unit}`}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {item.reserved_quantity === null
                         ? 'Tidak dilacak'
-                        : `${formatNumber(item.reserved_quantity)} ${item.unit}`}
+                        : `${formatNumber(item.reserved_quantity, 2)} ${item.unit}`}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {item.sellable_quantity === null
                         ? 'Tidak dilacak'
-                        : `${formatNumber(item.sellable_quantity)} ${item.unit}`}
+                        : `${formatNumber(item.sellable_quantity, 2)} ${item.unit}`}
                     </TableCell>
                     <TableCell className="text-right font-mono text-xs">
                       {item.value_on_hand === null
@@ -231,7 +233,6 @@ export function FinanceStockView({
     </div>
   );
 }
-
 function StockStatusBadge({
   status,
 }: {
@@ -279,7 +280,9 @@ function SummaryCard({
           {label}
         </p>
         <p className="text-2xl font-semibold tracking-tight">
-          {money ? formatMoney(value) : formatNumber(value)}
+          {money
+            ? formatMoney(value)
+            : formatNumber(value, 2)}
         </p>
       </CardContent>
     </Card>
@@ -343,15 +346,3 @@ function Pagination({
     </div>
   );
 }
-
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 2,
-  }).format(value);
-
-const formatMoney = (value: number, currency = 'IDR') =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);

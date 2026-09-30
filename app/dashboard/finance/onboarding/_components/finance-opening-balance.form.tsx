@@ -2,6 +2,7 @@
 'use client';
 
 import { useStore } from '@tanstack/react-form';
+import { formatNumber } from '@/lib/number';
 import type { ComponentProps } from 'react';
 import {
   ArrowLeft02Icon,
@@ -1814,5 +1815,5 @@ function numberValue(value: string) {
 }
 
 function formatMoney(value: number) {
-  return `Rp ${new Intl.NumberFormat('id-ID').format(value)}`;
+  return `Rp ${formatNumber(value, 3)}`;
 }

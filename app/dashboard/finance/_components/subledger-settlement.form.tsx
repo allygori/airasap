@@ -9,6 +9,7 @@ import {
   AlertDescription,
 } from '@/components/ui/alert';
 import { FieldGroup } from '@/components/ui/field';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import type { FinanceSubledgerBalanceDTO } from '@/modules/finance/client';
 import type { FinanceSubledgerPaymentAccountOption } from '../_lib/load-subledger-page-data';
 import type { FinanceSubledgerSettlementFormValues } from './finance-subledger-settlement-form.schema';
@@ -195,11 +196,3 @@ export const SubledgerSettlementForm = withForm({
     );
   },
 });
-
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
-}

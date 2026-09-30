@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { formatMediumDate as formatDate } from '@/lib/date';
+import { formatCurrency as formatMoney } from '@/lib/number/money';
+import { formatNumber } from '@/lib/number';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -263,16 +265,9 @@ function SummaryCard({
         <p className="text-2xl font-semibold tracking-tight">
           {money
             ? formatMoney(value)
-            : new Intl.NumberFormat('id-ID').format(value)}
+            : formatNumber(value, 3)}
         </p>
       </CardContent>
     </Card>
   );
 }
-
-const formatMoney = (value: number, currency = 'IDR') =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);

@@ -1,6 +1,7 @@
 'use client';
 
 import { formatUtcMediumDate as formatDate } from '@/lib/date';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -167,12 +168,4 @@ function readErrorMessage(payload: unknown) {
   return parsed.success
     ? parsed.data.error.message
     : 'Terjadi kesalahan saat membalik penarikan pemilik.';
-}
-
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(amount);
 }

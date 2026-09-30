@@ -1,4 +1,6 @@
 import Link from 'next/link';
+import { formatIDR as formatMoney } from '@/lib/number/money';
+import { formatNumber } from '@/lib/number';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -286,7 +288,9 @@ function SummaryCard({
           {label}
         </p>
         <p className="text-2xl font-semibold tracking-tight">
-          {money ? formatMoney(value) : formatNumber(value)}
+          {money
+            ? formatMoney(value)
+            : formatNumber(value, 2)}
         </p>
       </CardContent>
     </Card>
@@ -351,7 +355,7 @@ function formatQuantity(
     (movement.movement_type === 'adjustment' &&
       movement.adjustment_direction === 'decrease');
   const sign = inbound ? '+' : outbound ? '−' : '';
-  return `${sign}${formatNumber(movement.quantity)}${movement.unit ? ` ${movement.unit}` : ''}`;
+  return `${sign}${formatNumber(movement.quantity, 2)}${movement.unit ? ` ${movement.unit}` : ''}`;
 }
 
 function Pagination({
@@ -381,7 +385,7 @@ function Pagination({
     <div className="flex items-center justify-between gap-3">
       <p className="text-muted-foreground text-xs">
         Menampilkan {data.items.length} dari{' '}
-        {formatNumber(data.pagination.total)} mutasi pada
+        {formatNumber(data.pagination.total, 2)} mutasi pada
         halaman ini.
       </p>
       <div className="flex gap-2">
@@ -413,18 +417,6 @@ function Pagination({
     </div>
   );
 }
-
-const formatNumber = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 2,
-  }).format(value);
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat('id-ID', {

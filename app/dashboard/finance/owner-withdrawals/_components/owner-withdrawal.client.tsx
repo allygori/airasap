@@ -1,6 +1,7 @@
 'use client';
 
 import { formatUtcMediumDate as formatDate } from '@/lib/date';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -749,14 +750,6 @@ function getErrorMessage(payload: unknown) {
   return parsed.success
     ? parsed.data.error.message
     : 'Terjadi kesalahan saat memproses penarikan.';
-}
-
-function formatMoney(amount: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(amount);
 }
 
 function formatDateOnly(date: string) {

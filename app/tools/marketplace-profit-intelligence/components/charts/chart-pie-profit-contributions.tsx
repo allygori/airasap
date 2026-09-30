@@ -17,7 +17,7 @@ import {
   type ChartConfig,
 } from '@/components/ui/chart';
 import { ProfitProduct } from '../types';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import { formatDate } from '@/lib/date';
 import { PieChartIcon } from 'lucide-react';
 

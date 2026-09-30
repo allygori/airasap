@@ -1,5 +1,6 @@
 'use client';
 
+import { formatNumber, formatPercent } from '@/lib/number';
 import { useMemo, useRef, useState } from 'react';
 import {
   Bar,
@@ -38,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatIDR } from '@/lib/number/money';
 import { formatDate } from '@/lib/date';
 import { CustomerReportResponseDTO } from '@/modules/reports/report.dto';
 import {
@@ -591,16 +592,5 @@ const getCustomerInsights = (customers: CustomerRow[]) => ({
       b.period_net_sales - a.period_net_sales
   )[0],
 });
-
-const formatPercent = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  }).format(value || 0);
-
-const formatNumber = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 1,
-  }).format(value || 0);
 
 export default CustomersReportPage;

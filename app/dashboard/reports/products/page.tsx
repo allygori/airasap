@@ -1,5 +1,6 @@
 'use client';
 
+import { formatNumber, formatPercent } from '@/lib/number';
 import { useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
@@ -34,7 +35,7 @@ import {
 } from '@/components/ui/table';
 import FinancialDisplay from '@/components/shared/general/financial-display';
 import { useAppForm } from '@/components/form/form.hook';
-import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatIDR } from '@/lib/number/money';
 import { formatDate } from '@/lib/date';
 import { ProductAnalyticsResponseDTO } from '@/modules/reports/report.dto';
 import {
@@ -44,17 +45,6 @@ import {
 
 type ProductRow =
   ProductAnalyticsResponseDTO['products'][number];
-
-const formatPercent = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  }).format(value || 0);
-
-const formatNumber = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 1,
-  }).format(value || 0);
 
 const classificationVariant = (
   classification: ProductRow['classification']

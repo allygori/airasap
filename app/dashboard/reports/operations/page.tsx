@@ -1,5 +1,6 @@
 'use client';
 
+import { formatNumber, formatPercent } from '@/lib/number';
 import { useMemo, useRef, useState } from 'react';
 import {
   Bar,
@@ -37,7 +38,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatIDR } from '@/lib/number/money';
 import { OperationReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
@@ -493,16 +494,5 @@ const RatioRow = ({
     </div>
   </div>
 );
-
-const formatPercent = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  }).format(value || 0);
-
-const formatNumber = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    maximumFractionDigits: 1,
-  }).format(value || 0);
 
 export default OperationsReportPage;

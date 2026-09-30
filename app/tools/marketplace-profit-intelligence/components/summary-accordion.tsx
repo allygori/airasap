@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import type { SummaryItem } from './types';
 
 type SummaryAccordionProps = {

@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { OrderRowActions } from './order-row-actions';
 import type { OrderResponseDTO } from '@/modules/orders/order.dto';
-import { formatIDR } from '@/lib/formatter';
+import { formatIDR } from '@/lib/number/money';
 import { cn } from '@/lib/utils/ui';
 import { formatDate } from '@/lib/date/format';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';

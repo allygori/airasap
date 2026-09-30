@@ -2,6 +2,7 @@
 'use client';
 
 import { useStore } from '@tanstack/react-form';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import { z } from 'zod';
 import { withForm } from '@/components/form/form.hook';
 import { Badge } from '@/components/ui/badge';
@@ -526,10 +527,3 @@ function createPurchaseLine(
     unit_cost: '',
   };
 }
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { formatMediumDate as formatDate } from '@/lib/date';
+import { formatCurrency as formatMoney } from '@/lib/number/money';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
@@ -352,10 +353,3 @@ function UnavailableState() {
     </div>
   );
 }
-
-const formatMoney = (value: number, currency: string) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);

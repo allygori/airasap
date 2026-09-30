@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import { cn } from '@/lib/utils/ui';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
@@ -63,15 +64,6 @@ const REPORT_NAV = [
     key: 'cash_flow',
   },
 ] as const;
-
-const moneyFormatter = new Intl.NumberFormat('id-ID', {
-  style: 'currency',
-  currency: 'IDR',
-  maximumFractionDigits: 0,
-});
-
-const formatMoney = (amount: number) =>
-  moneyFormatter.format(amount);
 
 const statementTitle = (
   report: FinanceFinancialStatementReport

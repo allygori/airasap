@@ -104,7 +104,7 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - `components/form/` — shared TanStack React Form primitives.
 - `components/data-table/` and `components/dashboard/collection/` — existing table implementations; do not add another system without a decision.
 - `modules/` — business domains and their services, repositories, schemas, models, and tests.
-- `lib/` — infrastructure and cross-cutting helpers: database, auth, API, query parsing, file handling, dates, formatting, SKU, and XLSX utilities.
+- `lib/` — infrastructure and cross-cutting helpers: database, auth, API, query parsing, file handling, dates, formatting, SKU, and XLSX utilities. Group cohesive shared concerns at the `lib/` root, such as `lib/date/` and `lib/number/`. Reserve `lib/utils/` for generic or transitional helpers, and do not add new concern-specific shared utilities there. Remove it if it becomes empty.
 - `constant/` — canonical home for exported reusable/static constants, option lists, and lookup values, grouped by domain or concern; do not place business workflows here. Keep function-local `const` values with the code that uses them.
 - `hooks/`, `types/` — small shared declarations only; do not place domain workflows here.
 - `public/` — static assets.

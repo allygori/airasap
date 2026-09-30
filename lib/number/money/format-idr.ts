@@ -1,7 +1,11 @@
+import { getCurrencyFormatter } from './currency-formatter';
+
 type Options = {
   showSymbol?: boolean;
   fallback?: number;
 };
+
+const formatter = getCurrencyFormatter('IDR');
 
 export const formatIDR = (
   num: number,
@@ -9,12 +13,6 @@ export const formatIDR = (
     showSymbol: true,
   }
 ) => {
-  const formatter = new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  });
-
   if (options.showSymbol === false) {
     const filtered = formatter
       .formatToParts(num)

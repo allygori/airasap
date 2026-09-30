@@ -2,6 +2,7 @@
 'use client';
 
 import { useStore } from '@tanstack/react-form';
+import { formatIDR } from '@/lib/number/money';
 import Link from 'next/link';
 import { withForm } from '@/components/form/form.hook';
 import {
@@ -324,9 +325,5 @@ function createOfflineSaleLine(
 }
 
 function formatRupiah(value: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(Number.isFinite(value) ? value : 0);
+  return formatIDR(Number.isFinite(value) ? value : 0);
 }

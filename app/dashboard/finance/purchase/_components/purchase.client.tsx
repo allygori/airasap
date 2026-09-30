@@ -1,6 +1,7 @@
 'use client';
 
 import { formatMediumDate as formatDate } from '@/lib/date';
+import { formatIDR as formatMoney } from '@/lib/number/money';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -446,13 +447,6 @@ function StatusBadge({
     </Badge>
   );
 }
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    maximumFractionDigits: 0,
-  }).format(value);
 
 function getErrorMessage(payload: unknown) {
   const parsed = ErrorResponseSchema.safeParse(payload);

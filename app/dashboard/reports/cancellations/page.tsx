@@ -1,5 +1,9 @@
 'use client';
 
+import {
+  formatNumber as formatLocalizedNumber,
+  formatPercent,
+} from '@/lib/number';
 import { useRef, useState } from 'react';
 import {
   Area,
@@ -36,7 +40,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatIDR } from '@/lib/number/money';
 import {
   CancellationReportResponseDTO,
   CreateReportDTO,
@@ -529,11 +533,6 @@ const Confidence = ({
   </div>
 );
 const formatNumber = (value?: number) =>
-  new Intl.NumberFormat('id-ID').format(value || 0);
-const formatPercent = (value?: number) =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'percent',
-    maximumFractionDigits: 1,
-  }).format(value || 0);
+  formatLocalizedNumber(value, 3);
 
 export default CancellationReportPage;

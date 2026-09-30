@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { formatMediumDate as formatDate } from '@/lib/date';
+import { formatCurrency as formatMoney } from '@/lib/number/money';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {
@@ -249,10 +250,3 @@ function TraceItem({
     </div>
   );
 }
-
-const formatMoney = (value: number, currency = 'IDR') =>
-  new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
