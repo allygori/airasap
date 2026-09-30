@@ -1,5 +1,5 @@
 import { Types, type PipelineStage } from 'mongoose';
-import { getReportDateRange } from '@/lib/utils/date/report-range';
+import { getReportDateRange } from '@/lib/date/report-range';
 import type { TimeZone } from '@/constant/timezone';
 
 type Args = {

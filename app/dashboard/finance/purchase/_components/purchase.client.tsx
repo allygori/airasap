@@ -1,5 +1,6 @@
 'use client';
 
+import { formatMediumDate as formatDate } from '@/lib/date';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -452,11 +453,6 @@ const formatMoney = (value: number) =>
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(value);
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-  }).format(new Date(value));
 
 function getErrorMessage(payload: unknown) {
   const parsed = ErrorResponseSchema.safeParse(payload);

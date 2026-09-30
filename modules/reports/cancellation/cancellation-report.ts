@@ -1,7 +1,7 @@
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 import { type TimeZone } from '@/constant/timezone';
-import { getReportDateRange } from '@/lib/utils/date/report-range';
+import { getReportDateRange } from '@/lib/date/report-range';
 import { AggregateBuilder } from '@/modules/reports/@shared/aggregate/builder';
 import { differenceInCalendarDays } from 'date-fns';
 import { Types, type PipelineStage } from 'mongoose';

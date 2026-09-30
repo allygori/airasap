@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { formatMediumDate as formatDate } from '@/lib/date';
 import {
   FINANCE_CASH_BANK_SUBTYPE_LABELS,
   type FinanceCashBankAccountDTO,
@@ -234,8 +235,3 @@ const formatMoney = (value: number) =>
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(value);
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-  }).format(new Date(value));

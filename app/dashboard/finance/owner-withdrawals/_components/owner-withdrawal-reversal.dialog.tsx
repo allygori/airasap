@@ -1,5 +1,6 @@
 'use client';
 
+import { formatUtcMediumDate as formatDate } from '@/lib/date';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -174,11 +175,4 @@ function formatMoney(amount: number) {
     currency: 'IDR',
     maximumFractionDigits: 0,
   }).format(amount);
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeZone: 'UTC',
-  }).format(new Date(date));
 }

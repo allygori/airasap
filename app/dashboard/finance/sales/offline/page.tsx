@@ -1,9 +1,11 @@
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
+  FINANCE_DEFAULT_CALENDAR_TIMEZONE,
   assertFinanceModuleActive,
   FinanceDomainError,
   FinanceOfflineSaleService,
+  getFinanceCalendarDate,
   type FinanceOfflineSaleFormOptionsDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
@@ -42,21 +44,12 @@ export default async function FinanceOfflineSalePage() {
   return (
     <FinanceOfflineSaleClient
       options={state.options}
-      initialDate={getBusinessDate()}
+      initialDate={getFinanceCalendarDate(
+        new Date(),
+        FINANCE_DEFAULT_CALENDAR_TIMEZONE
+      )}
     />
   );
-}
-
-function getBusinessDate() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const part = (type: 'year' | 'month' | 'day') =>
-    parts.find((item) => item.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
 }
 
 async function loadOptions(

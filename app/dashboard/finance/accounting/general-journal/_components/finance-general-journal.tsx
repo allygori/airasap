@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { formatMediumDate as formatDate } from '@/lib/date';
 import { Badge } from '@/components/ui/badge';
 import {
   Card,
@@ -268,11 +269,6 @@ function SummaryCard({
     </Card>
   );
 }
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-  }).format(new Date(value));
 
 const formatMoney = (value: number, currency = 'IDR') =>
   new Intl.NumberFormat('id-ID', {

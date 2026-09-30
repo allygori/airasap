@@ -7,11 +7,7 @@ import {
   type FinanceTenantContext,
 } from './finance.types';
 
-export const FINANCE_PREMIUM_ORGANIZATION_PLANS = [
-  'pro',
-  'plus',
-  'enterprise',
-] as const;
+export { FINANCE_PREMIUM_ORGANIZATION_PLANS } from '@/constant/finance/entitlement';
 
 type FinanceEntitlementOrganization = {
   plan?: string | null;

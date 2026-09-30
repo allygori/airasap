@@ -35,6 +35,7 @@ import {
 import FinancialDisplay from '@/components/shared/general/financial-display';
 import { useAppForm } from '@/components/form/form.hook';
 import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatDate } from '@/lib/date';
 import { ProductAnalyticsResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
@@ -466,11 +467,11 @@ const ProductsReportPage = () => {
               </div>
               <Badge variant="outline">
                 Previous:{' '}
-                {formatShortDate(
+                {formatDate(
                   comparison.previous_period.start_date
                 )}{' '}
                 -{' '}
-                {formatShortDate(
+                {formatDate(
                   comparison.previous_period.end_date
                 )}
               </Badge>
@@ -1206,12 +1207,5 @@ const getQualityVariant = (score: number) => {
   if (score >= 0.5) return 'warning' as const;
   return 'destructive' as const;
 };
-
-const formatShortDate = (date: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date));
 
 export default ProductsReportPage;

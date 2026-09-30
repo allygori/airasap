@@ -32,7 +32,7 @@ import {
 import { useState } from 'react';
 import { cn } from '@/lib/utils/ui';
 import { formatIDR } from '@/lib/formatter';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 
 type MediaType = {
   url: string;

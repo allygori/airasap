@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/chart';
 import { ProfitOrder } from '../types';
 import { getDatesBetween } from '@/lib/date';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 
 const chartConfig = {
   orders: {

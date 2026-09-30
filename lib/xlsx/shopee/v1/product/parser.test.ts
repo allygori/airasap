@@ -3,7 +3,7 @@ import path from 'path';
 import reader from './reader';
 import parser from './parser';
 
-// How to run: pnpm test:watch -- lib/xlsx/shopee/product/parser.test.ts
+// How to run: pnpm test:watch -- lib/xlsx/shopee/v1/product/parser.test.ts
 describe('Shopee Mass Update Sales Info Parse Excel', () => {
   const excelPath = path.join(
     process.cwd(),

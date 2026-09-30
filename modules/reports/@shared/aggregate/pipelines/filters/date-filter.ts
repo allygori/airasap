@@ -1,4 +1,4 @@
-import { fnsFormatDate } from '@/lib/formatter/date';
+import { fnsFormatDate } from '@/lib/date/format';
 import {
   endOfDay,
   parse,

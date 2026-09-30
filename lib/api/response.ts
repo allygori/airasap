@@ -49,15 +49,4 @@ export function apiError(
   );
 }
 
-/**
- * Common error codes
- */
-export const ErrorCodes = {
-  BAD_REQUEST: 'BAD_REQUEST',
-  VALIDATION_ERROR: 'VALIDATION_ERROR',
-  NOT_FOUND: 'NOT_FOUND',
-  UNAUTHORIZED: 'UNAUTHORIZED',
-  FORBIDDEN: 'FORBIDDEN',
-  CONFLICT: 'CONFLICT',
-  INTERNAL_ERROR: 'INTERNAL_ERROR',
-} as const;
+export { ErrorCodes } from '@/constant/api/error-codes';

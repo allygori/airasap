@@ -39,6 +39,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatDate } from '@/lib/date';
 import { CustomerReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
@@ -399,7 +400,7 @@ const CustomersReportPage = () => {
                           </span>
                           <span className="text-muted-foreground truncate text-xs">
                             First order:{' '}
-                            {formatShortDate(
+                            {formatDate(
                               customer.first_order_at
                             )}
                           </span>
@@ -601,12 +602,5 @@ const formatNumber = (value?: number) =>
   new Intl.NumberFormat('id-ID', {
     maximumFractionDigits: 1,
   }).format(value || 0);
-
-const formatShortDate = (date: string | Date) =>
-  new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date));
 
 export default CustomersReportPage;

@@ -23,8 +23,7 @@ import {
 } from '@/components/ui/chart';
 // import { ProfitOrder } from '@/modules/reports/report.dto';
 import { SalesReportResponseDTO } from '@/modules/reports/report.dto';
-import { getDatesBetween } from '@/lib/date';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 
 const chartConfigs = [
   {

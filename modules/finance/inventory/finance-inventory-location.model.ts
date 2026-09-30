@@ -5,16 +5,14 @@ import {
   Schema,
   Types,
 } from 'mongoose';
+import {
+  FINANCE_INVENTORY_LOCATION_TYPE_VALUES,
+  type FinanceInventoryLocationType,
+} from '@/constant/finance/inventory';
 import { multiTenancyPlugin } from '@/lib/db/plugins/multi-tenancy';
 
-export const FINANCE_INVENTORY_LOCATION_TYPE_VALUES = [
-  'warehouse',
-  'store_room',
-  'other',
-] as const;
-
-export type FinanceInventoryLocationType =
-  (typeof FINANCE_INVENTORY_LOCATION_TYPE_VALUES)[number];
+export { FINANCE_INVENTORY_LOCATION_TYPE_VALUES } from '@/constant/finance/inventory';
+export type { FinanceInventoryLocationType } from '@/constant/finance/inventory';
 
 export type TFinanceInventoryLocation = Document & {
   organization: Types.ObjectId;

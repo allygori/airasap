@@ -4,7 +4,6 @@ import incomeParser, {
 import sellerFeeParser from './worksheets/seller-fee';
 import type { ParsedOrder, ParsedOrderItem } from './types';
 // import type { Order, OrderItem } from './types';
-// import { saveJson } from '@/lib/file/save-json';
 
 // type ParsedOrder = ParsedIncomeRow &
 //   Partial<ParsedSellerFeeRow> & {
@@ -117,10 +116,6 @@ export default function parse(buffer: ArrayBuffer): {
   // }
 
   // console.log([...ordersMap.values()]);
-
-  // saveJson('.data/json-logs/debug-released-funds-v2.json', [
-  //   ...ordersMap.values(),
-  // ]);
 
   return {
     version: VERSION,

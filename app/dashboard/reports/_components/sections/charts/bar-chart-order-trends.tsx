@@ -22,8 +22,7 @@ import {
 } from '@/components/ui/chart';
 // import { ProfitOrder } from '@/modules/reports/report.dto';
 import { SalesReportResponseDTO } from '@/modules/reports/report.dto';
-import { getDatesBetween } from '@/lib/date';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 
 const chartConfig = {
   orders: {
@@ -42,8 +41,6 @@ const chartConfig = {
 type Order = SalesReportResponseDTO['daily_reports'][0];
 
 type BarChartOrderTrendsProps = {
-  // start: Date | string;
-  // end: Date | string;
   orders: Order[];
 };
 
@@ -54,73 +51,10 @@ type ChartData = {
 };
 
 export const BarChartOrderTrends = ({
-  // start,
-  // end,
   orders,
 }: BarChartOrderTrendsProps) => {
   const [activeChart, setActiveChart] =
     useState<keyof typeof chartConfig>('confirmed');
-
-  // const orderData = useMemo(() => {
-  //   let grouped: any[] = [];
-
-  //   if (start && end) {
-  //     const _start = new Date(start);
-  //     const _end = new Date(end);
-
-  //     const getDateKey = (date: Date | string) => {
-  //       // 1. Coerce to Date object safely
-  //       const dateObj =
-  //         typeof date === 'string' ? new Date(date) : date;
-
-  //       // 2. Extract local date parts (Avoids UTC shifting bugs)
-  //       const year = dateObj.getFullYear();
-  //       const month = String(
-  //         dateObj.getMonth() + 1
-  //       ).padStart(2, '0');
-  //       const day = String(dateObj.getDate()).padStart(
-  //         2,
-  //         '0'
-  //       );
-
-  //       // 3. Create the stable string key (YYYY-MM-DD)
-  //       return `${year}-${month}-${day}`;
-  //     };
-
-  //     grouped = getDatesBetween(_start, _end).reduce(
-  //       (acc, curr: Date) => {
-  //         const item: ChartData = {
-  //           date: getDateKey(curr),
-  //           createdAt: 0,
-  //           releasedAt: 0,
-  //         };
-
-  //         const _createdAt = orders.filter(
-  //           (o) =>
-  //             o.createdAt &&
-  //             getDateKey(o.createdAt) === item.date
-  //         );
-  //         const _releasedAt = orders.filter(
-  //           (o) =>
-  //             o.releasedAt &&
-  //             getDateKey(o.releasedAt) === item.date
-  //         );
-
-  //         item.createdAt = _createdAt.length ?? 0;
-  //         item.releasedAt = _releasedAt.length ?? 0;
-
-  //         acc.push(item);
-
-  //         return acc;
-  //       },
-  //       [] as ChartData[]
-  //     );
-
-  //     return grouped;
-  //   }
-
-  //   return grouped;
-  // }, [orders]);
 
   const orderData = useMemo(() => {
     // const _orderData = (orders || [])

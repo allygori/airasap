@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/chart';
 import { SalesReportResponseDTO } from '@/modules/reports/report.dto';
 import { useMemo } from 'react';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 
 export const description =
   'A stacked bar chart with a legend';

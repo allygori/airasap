@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { formatMediumDate as formatDate } from '@/lib/date';
 import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
+  FINANCE_DEFAULT_CALENDAR_TIMEZONE,
   assertFinanceModuleActive,
   FinanceDomainError,
+  getFinanceCalendarDate,
   FinanceSalesTransactionReadService,
   type FinanceSalesTransactionDetailResponseDTO,
   type FinanceTenantContext,
@@ -186,7 +189,10 @@ export default async function FinanceSalesDetailPage({
           <CardContent>
             <FinanceSaleFullReturnClient
               journalEntryId={transaction.journal_entry_id}
-              initialDate={getBusinessDate()}
+              initialDate={getFinanceCalendarDate(
+                new Date(),
+                FINANCE_DEFAULT_CALENDAR_TIMEZONE
+              )}
             />
           </CardContent>
         </Card>
@@ -329,18 +335,6 @@ function getStatusVariant(
         : 'info';
 }
 
-function getBusinessDate() {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-  }).formatToParts(new Date());
-  const part = (type: 'year' | 'month' | 'day') =>
-    parts.find((item) => item.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')}`;
-}
-
 function UnavailableState() {
   return (
     <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
@@ -358,11 +352,6 @@ function UnavailableState() {
     </div>
   );
 }
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-  }).format(new Date(value));
 
 const formatMoney = (value: number, currency: string) =>
   new Intl.NumberFormat('id-ID', {

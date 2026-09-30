@@ -53,6 +53,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { formatIDR } from '@/lib/formatter/format-idr';
+import { formatDate } from '@/lib/date';
 import { OrderReportResponseDTO } from '@/modules/reports/report.dto';
 import {
   ReportFormInput,
@@ -403,11 +404,11 @@ const OrderReportPage = () => {
               </div>
               <Badge variant="outline">
                 Previous:{' '}
-                {formatShortDate(
+                {formatDate(
                   comparison.previous_period.start_date
                 )}{' '}
                 -{' '}
-                {formatShortDate(
+                {formatDate(
                   comparison.previous_period.end_date
                 )}
               </Badge>
@@ -497,9 +498,10 @@ const OrderReportPage = () => {
                       minTickGap={16}
                       interval="preserveStartEnd"
                       tickFormatter={(value) =>
-                        formatShortDate(
-                          String(value)
-                        ).replace(/\s\d{4}$/, '')
+                        formatDate(String(value)).replace(
+                          /\s\d{4}$/,
+                          ''
+                        )
                       }
                     />
                     <YAxis hide />
@@ -911,7 +913,7 @@ const OrderReportPage = () => {
                   dailyReports.map((row) => (
                     <TableRow key={row.date}>
                       <TableCell className="min-w-32">
-                        {formatShortDate(row.date)}
+                        {formatDate(row.date)}
                       </TableCell>
                       <TableCell className="text-right">
                         {formatNumber(row.orders)}
@@ -1216,7 +1218,7 @@ const HighlightPanel = ({
                 {row.label}
               </p>
               <p className="text-muted-foreground truncate text-xs">
-                {row.date ? formatShortDate(row.date) : '-'}
+                {row.date ? formatDate(row.date) : '-'}
               </p>
             </div>
             <span className="font-medium">
@@ -1532,12 +1534,5 @@ const formatNumber = (value?: number) =>
   new Intl.NumberFormat('id-ID', {
     maximumFractionDigits: 1,
   }).format(value || 0);
-
-const formatShortDate = (date: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date));
 
 export default OrderReportPage;

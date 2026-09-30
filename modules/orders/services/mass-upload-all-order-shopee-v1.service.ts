@@ -139,29 +139,12 @@ export async function massUploadAllOrderShopeeV1(
         }
       );
 
-    // saveJson('.data/json-logs/all-order-products.json', {
-    //   productNames,
-    //   products,
-    // });
-
     let createdCount = 0;
     let updatedCount = 0;
     const orderResults: MassUploadResponseDTO['order_results'] =
       [];
     for (const [orderId, group] of ordersMap.entries()) {
       const order = group[0] || {};
-
-      // console.log(
-      //   `${order.id} - products`,
-      //   JSON.stringify(products, null, 2)
-      // );
-      // console.log(JSON.stringify(order, null, 2));
-      // console.log(
-      //   `Place at: ${parseToISOStringWithTimezone(
-      //     order.orderCreationTime,
-      //     timezone
-      //   )}`
-      // );
 
       const orderItems = group.map((item) => {
         const productName = (

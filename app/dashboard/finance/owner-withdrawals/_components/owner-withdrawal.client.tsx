@@ -1,5 +1,6 @@
 'use client';
 
+import { formatUtcMediumDate as formatDate } from '@/lib/date';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
@@ -758,18 +759,8 @@ function formatMoney(amount: number) {
   }).format(amount);
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeZone: 'UTC',
-  }).format(new Date(date));
-}
-
 function formatDateOnly(date: string) {
-  return new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-    timeZone: 'UTC',
-  }).format(new Date(`${date}T00:00:00.000Z`));
+  return formatDate(`${date}T00:00:00.000Z`);
 }
 
 function formatPeriod(period: string) {

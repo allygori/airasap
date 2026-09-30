@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
+import { id } from 'date-fns/locale';
 import { HugeiconsIcon } from '@/components/icons/hugeicons-icon';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { FinanceOpeningBalanceFinalizeResponseDTO } from '@/modules/finance/client';
+import { fnsFormatDate } from '@/lib/date';
 
 type FinanceOnboardingSuccessProps = {
   result?: FinanceOpeningBalanceFinalizeResponseDTO;
@@ -107,12 +109,5 @@ function SuccessMetric({
 }
 
 function formatDate(value: string) {
-  const [year, month, day] = value.split('-').map(Number);
-
-  return new Intl.DateTimeFormat('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(Date.UTC(year, month - 1, day));
+  return fnsFormatDate(value, 'd MMMM yyyy', id);
 }

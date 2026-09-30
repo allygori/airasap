@@ -1,11 +1,14 @@
 import z from 'zod';
 import { TIMEZONE_VALUES } from '@/constant/timezone';
+import {
+  ORGANIZATION_ACCOUNTING_STATUS_VALUES,
+  ORGANIZATION_FINANCE_STATUS_VALUES,
+} from '@/constant/organization/status';
 
-export const ORGANIZATION_ACCOUNTING_STATUS_VALUES = [
-  'not_started',
-  'in_progress',
-  'active',
-] as const;
+export {
+  ORGANIZATION_ACCOUNTING_STATUS_VALUES,
+  ORGANIZATION_FINANCE_STATUS_VALUES,
+} from '@/constant/organization/status';
 
 export const OrganizationAccountingStatusSchema = z.enum(
   ORGANIZATION_ACCOUNTING_STATUS_VALUES
@@ -46,13 +49,6 @@ export const OrganizationAccountingSchema = z.object({
   completed_at: z.date().optional(),
   completed_by: z.string().optional(),
 });
-
-export const ORGANIZATION_FINANCE_STATUS_VALUES = [
-  'not_started',
-  'in_progress',
-  'blocked',
-  'active',
-] as const;
 
 export const OrganizationFinanceStatusSchema = z.enum(
   ORGANIZATION_FINANCE_STATUS_VALUES

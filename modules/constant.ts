@@ -37,24 +37,7 @@
 //   },
 // } as const;
 
-export const SHOPEE_PAYMENT_METHODS = [
-  'ShopeePay',
-  'Kartu Kredit/Debit',
-  'SPayLater',
-  'SeaBank Bayar Instan',
-  'QRIS',
-  'Online Payment', // Transfer Bank/Virtual Account
-  'Pembayaran dibebaskan',
-  'Mitra Shopee',
-  'COD', // Cash on Delivery
-  'BRI Direct Debit',
-  'OneKlik',
-  'Cicilan Kartu Kredit',
-  'Agen BRILink',
-  'BNI Agen46',
-  'Alfamart',
-  'Indomaret',
-];
+export { SHOPEE_PAYMENT_METHODS } from '@/constant/order/shopee/payment-methods';
 
 // export const SHOPEE_ORDER_STATUS = {
 //   completed: {

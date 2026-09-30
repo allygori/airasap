@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { X, Plus, CircleCheck, Circle } from 'lucide-react';
 import { useStore } from '@tanstack/react-form';
-import { formatDate } from '@/lib/formatter/date';
+import { formatDate } from '@/lib/date/format';
 import { formatIDR } from '@/lib/formatter';
 import {
   Table,

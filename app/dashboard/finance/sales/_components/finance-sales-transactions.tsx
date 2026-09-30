@@ -1,5 +1,6 @@
 'use client';
 
+import { formatMediumDate as formatDate } from '@/lib/date';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -467,11 +468,6 @@ const getErrorMessage = (payload: unknown) => {
 
   return 'Aksi Finance gagal diproses.';
 };
-
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat('id-ID', {
-    dateStyle: 'medium',
-  }).format(new Date(value));
 
 const formatMoney = (value: number, currency: string) =>
   new Intl.NumberFormat('id-ID', {
