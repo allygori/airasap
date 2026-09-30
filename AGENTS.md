@@ -2,7 +2,7 @@
 
 This file is the repository-wide instruction contract. It describes the
 implemented codebase and mandatory rules for changes. Detailed guidance lives
-in `.agents/*.md`.
+in `.agents/docs/`; use `.agents/docs/README.md` to find the canonical guide for a task.
 
 ## Source of truth and document status
 
@@ -26,17 +26,18 @@ mentions it.
 
 Before changing an area, read the relevant guide:
 
-- React/UI: `.agents/react-components.md`
-- TypeScript/style: `.agents/TYPESCRIPT.md`
-- Domain boundaries: `.agents/module-boundaries.md`
-- API/database/auth/tenant behavior: `.agents/api-and-data-access.md`
-- Database fields and schema naming: `.agents/database-schema.md`
-- Feature flags: `.agents/feature-flags.md`
-- Tests and fixtures: `.agents/testing.md`
-- Legacy and transitional code: `.agents/legacy-code.md`
-- Change workflow: `.agents/workflows.md`
+- React/UI: `.agents/docs/conventions/react-and-ui.md`
+- TypeScript/style: `.agents/docs/conventions/typescript.md`
+- Domain boundaries: `.agents/docs/architecture/module-boundaries.md`
+- API/database/auth/tenant behavior: `.agents/docs/conventions/api-and-data-access.md` and `.agents/docs/architecture/identity-and-access-control.md`
+- Database fields and schema naming: `.agents/docs/conventions/mongodb-and-schema.md`
+- Feature flags: `.agents/docs/architecture/optional-modules-and-flags.md`
+- Tests and fixtures: `.agents/docs/conventions/testing-and-reliability.md`
+- Legacy and transitional code: `.agents/docs/workflows/refactoring-and-legacy-cleanup.md`
+- Change workflow: `.agents/docs/workflows/feature-changes.md`
+- Documentation and durable decisions: `.agents/docs/workflows/documentation-and-adr.md`
 
-The complete documentation map is in `.agents/README.md`.
+The complete documentation map is in `.agents/docs/README.md` and `.agents/README.md`.
 
 ## Current project snapshot
 
@@ -98,7 +99,7 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - `app/` — Next.js pages, layouts, route handlers, route-local `_components`, and route composition.
 - `app/api/v1/dashboard/` — current versioned dashboard REST API.
 - `app/api/auth/[...all]/` — Better Auth catch-all handler.
-- `app/api/profit-intelligence/` — separate legacy/standalone marketplace file-analysis API; see `.agents/legacy-code.md`.
+- `app/api/profit-intelligence/` — separate legacy/standalone marketplace file-analysis API; see `.agents/docs/workflows/refactoring-and-legacy-cleanup.md` before changing it.
 - `components/ui/` — generic UI primitives; no domain logic.
 - `components/form/` — shared TanStack React Form primitives.
 - `components/data-table/` and `components/dashboard/collection/` — existing table implementations; do not add another system without a decision.
@@ -109,9 +110,10 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - `.data/`, `.upload/` — local/imported data; treat as sensitive and never commit new personal data or log its contents.
 - `.trash/`, `*.trash/`, `.memory/`, `.todos/`, `.artifacts/` — historical, temporary, or planning material; not implementation examples.
 
-See `.agents/ARCHITECTURE.md` for the complete route/domain map and request
-flow. See `.agents/module-boundaries.md` before adding or moving a module, and
-`.agents/database-schema.md` before adding or changing persisted fields.
+See `.agents/docs/architecture/overview.md` for the current application shape
+and request flow. See `.agents/docs/architecture/module-boundaries.md` before
+adding or moving a module, and `.agents/docs/conventions/mongodb-and-schema.md`
+before adding or changing persisted fields.
 
 ## Authentication, tenant context, and data access
 
@@ -125,7 +127,8 @@ flow. See `.agents/module-boundaries.md` before adding or moving a module, and
 - Queries and mutations must include the tenant context and must not allow a caller to override it.
 - Accounting operations may require a Mongoose `ClientSession` and lifecycle guards; preserve both when composing services.
 
-Detailed rules are in `.agents/api-and-data-access.md`.
+Detailed rules are in `.agents/docs/conventions/api-and-data-access.md` and
+`.agents/docs/architecture/identity-and-access-control.md`.
 
 ## API and error conventions
 
@@ -155,10 +158,11 @@ spread those shapes into the versioned dashboard API; migrate deliberately.
 - Use `const`; avoid `var` and avoid mutable state unless it is necessary.
 - Use lower-case kebab/dot-suffix filenames, PascalCase component/class names, and camelCase functions/variables/hooks.
 - Use `*.schema.ts` for Zod schemas, `*.service.ts` for business operations, `*.repository.ts` for persistence, and `*.test.ts`/`*.test.tsx` for tests.
-- New MongoDB and API/domain fields use `snake_case` by default. Better Auth-owned fields preserve the library-required `camelCase` contract; see `.agents/database-schema.md`.
+- New MongoDB and API/domain fields use `snake_case` by default. Better Auth-owned fields preserve the library-required `camelCase` contract; see `.agents/docs/conventions/mongodb-and-schema.md`.
 - Use the `@/*` alias for repository-root imports.
 
-See `.agents/react-components.md` and `.agents/TYPESCRIPT.md` for examples.
+See `.agents/docs/conventions/react-and-ui.md` and
+`.agents/docs/conventions/typescript.md` for examples.
 
 ## Verified commands
 

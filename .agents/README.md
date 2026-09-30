@@ -1,50 +1,53 @@
-# AI Documentation Map
+# Agent and Contributor Documentation
 
-This directory contains active, code-oriented guidance for AI Coding
-Assistants. It is not a second source tree and it is not a product roadmap.
+This directory is the navigation point for repository guidance. Read the repository-root `AGENTS.md` first for implementation rules, then use this index to find the relevant detailed guide. Source code and configuration remain authoritative for what is implemented.
 
-## Source-of-truth rules
+## Source of truth
 
-- Repository behavior is determined by current source code, tests, and config.
-- `AGENTS.md` contains mandatory repository-wide instructions.
-- The documents below contain detailed conventions for specific areas.
-- Documents under `.agents/PRD/` are product or implementation references. Read them only when the task concerns that product decision; do not treat them as proof that a feature exists.
-- `.agents/skills/` contains local tool/skill instructions. It is not the application architecture guide.
+When information conflicts, use this order:
 
-Use these status labels in future documentation:
+1. Current source code, tests, `package.json`, `pnpm-lock.yaml`, and configuration.
+2. Repository-root `AGENTS.md` for repository-wide implementation rules.
+3. Active, non-empty guidance under `.agents/docs/`.
+4. Roadmaps, open-question records, feature plans, and historical notes.
 
-- `[CURRENT]` — implemented and currently used.
-- `[TARGET]` — desired future behavior; not necessarily implemented.
-- `[LEGACY]` — existing code retained for compatibility or extraction; do not copy for new work.
-- `[DEPRECATED]` — must not be used for new code.
+Do not treat a future plan as an implemented capability. Do not use `.trash` as a source of architecture or implementation guidance.
 
-## Guides
+## Status labels
 
-| Guide | Read before | Main contents |
-| --- | --- | --- |
-| `ARCHITECTURE.md` | changing routes, infrastructure, or domain placement | current stack, request flow, route map, folder responsibilities |
-| `module-boundaries.md` | adding or moving business logic | module anatomy, dependency direction, cross-module calls |
-| `react-components.md` | creating or refactoring UI | Server/Client Components, component placement, forms, states, styling |
-| `TYPESCRIPT.md` | adding types, schemas, or utilities | type safety, naming, file suffixes, external data boundaries |
-| `database-schema.md` | adding or changing persisted fields | snake_case convention, Better Auth exceptions, schema/index rules |
-| `api-and-data-access.md` | adding API or persistence behavior | validation, auth, tenant isolation, repositories, response/error contracts |
-| `feature-flags.md` | introducing dynamic behavior or rollout | target feature-flag model, evaluation, security, lifecycle, testing |
-| `testing.md` | adding or fixing tests | Jest conventions, fixtures, mocks, known failures, test priorities |
-| `legacy-code.md` | touching old/prototype code | archive list, compatibility rules, migration guidance |
-| `workflows.md` | planning or executing a change | AI change workflow, review checklist, documentation maintenance |
+- **`[CURRENT]`** — verified as implemented and used by the application.
+- **`[TARGET]`** — an agreed direction or recommendation that may not be implemented yet.
+- **`[OPEN]`** — unresolved; document the question and its implications without presenting an answer as decided.
+- **`[LEGACY]`** — existing code kept for compatibility or possible migration; do not copy for new work.
+- **`[DEPRECATED]`** — should not be used for new work.
 
-## Recommended reading by task
+Use these labels on substantive claims where readers could otherwise confuse current behavior with future intent. ADR status (`proposed`, `accepted`, `rejected`, or `superseded`) is separate from implementation status.
 
-- New dashboard feature: `ARCHITECTURE.md`, `module-boundaries.md`, `react-components.md`, `api-and-data-access.md`, `testing.md`.
-- New API endpoint: `ARCHITECTURE.md`, `api-and-data-access.md`, `database-schema.md`, `module-boundaries.md`, `testing.md`.
-- New React component: `react-components.md`, `TYPESCRIPT.md`.
-- New feature flag: `feature-flags.md`, `api-and-data-access.md`, `testing.md`.
-- Legacy migration: `legacy-code.md`, `workflows.md`, then the guide for the target area.
-- Documentation-only change: `workflows.md`; verify that the document describes current code or is clearly labelled `[TARGET]`.
+## Start here
 
-## What does not belong here
+- [Developer documentation index](docs/README.md) — canonical guide map by contributor task.
+- [Architecture overview](docs/architecture/overview.md) — current application shape, request flow, persistence, and agreed target direction.
+- [Documentation outline](docs/OUTLINE.md) — scope and progress record for this documentation set.
 
-Do not add generic framework tutorials, speculative endpoint lists, copied
-library documentation, or PRD content to these guides. Link to the relevant
-official/library documentation when needed and record only the repository-
-specific decision or convention.
+The canonical guides live under `docs/`. Follow the root `AGENTS.md`, inspect current source, and avoid inferring rules from a short compatibility pointer or an empty placeholder.
+
+## Documentation map
+
+The guide structure and status are maintained in the [documentation index](docs/README.md) and [outline](docs/OUTLINE.md). Its main areas are:
+
+- **Architecture** — domain and tenancy, identity and access control, module boundaries, optional modules and feature flags, and inventory/channel concepts.
+- **Conventions** — business logic, naming, API and data access, MongoDB schemas, TypeScript, React/UI, testing, and reliability.
+- **Workflows** — feature changes, refactoring and legacy cleanup, and documentation/ADR updates.
+- **Roadmap and open questions** — future capability direction and unresolved decisions. These are planning references, not current product contracts.
+
+Check the outline for a guide's planned scope. A planned filename is not an active guide until the file exists and has been reviewed.
+
+## ADRs and feature plans
+
+- Durable cross-cutting architecture decisions belong in `.agents/ADR/`, separate from the living guides in `.agents/docs/`. Start at the [ADR index](ADR/README.md) and use its template and workflow.
+- Finance-specific implementation plans and Finance ADRs belong under `.agents/features/finance/`. They are outside the current rewrite scope; do not reorganize or rewrite them as part of the general documentation pass.
+- A guide explains the currently applicable rule. An ADR explains why a durable decision was selected. A roadmap describes possible direction and sequencing. An open-question record preserves what has not been decided.
+
+## Compatibility pointer
+
+`.agents/AGENTS.md` is retained only for tools that look for a repository instruction file in this directory. The repository-root `AGENTS.md` is the canonical instruction contract.
