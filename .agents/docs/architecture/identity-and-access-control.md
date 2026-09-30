@@ -14,9 +14,15 @@ This guide distinguishes authentication, tenant context, authorization, and modu
 
 **[CURRENT]** Better Auth is configured in `lib/auth/auth.ts` and served by `app/api/auth/[...all]/route.ts`. The current configuration enables email/password sign-in, configures Google sign-in, uses the organization and admin plugins, and adds a custom Store/session plugin. `lib/auth/auth-client.ts` configures the client-side Better Auth plugins.
 
+**[CURRENT]** The application has email/password registration and login screens, Google sign-in/sign-up handlers, and a forgot-password request form. Email verification is not required by the current Better Auth configuration. The password recovery form redirects to `/reset-password`, but no matching application page was found; treat the complete recovery flow as unverified.
+
 **[CURRENT]** Organization membership is represented through Better Auth organization support and the `Member` model. The current member schema declares `owner` and `admin` role values. The `Invitation` schema accepts an optional free-form role string, so invitation roles and member roles do not yet express one consistent, fully specified role contract.
 
 **[CURRENT]** The custom Store plugin and `getTenantContext()` work with active organization/store values in the session. `getTenantContext()` resolves the user, active organization, and active Store identifiers for server code. Selecting an active tenant context is not itself proof that the user is authorized for every resource or operation in that context.
+
+**[CURRENT]** The email/password login flow lists Organizations after sign-in. If none are returned it sends the user to onboarding; otherwise it selects the first Organization, asks the custom Store plugin to select its first active Store, refreshes the session, and opens the dashboard. Onboarding creates an Organization through Better Auth, sets it active, creates an initial Store, and updates the session with that Store. These are current application flows, not a finished multi-Organization switcher.
+
+**[CURRENT]** The Better Auth Organization plugin is configured, but the application does not implement user-facing invitation or member-management workflows. The Admin plugin is also configured, but this does not create the application's role/permission matrix. User-facing status and current flow are summarized in [Authentication and Organization Access](../../features/authentication-and-access/README.md).
 
 The `admin()` plugin is part of the Better Auth configuration. Its presence must not be interpreted as a complete application-level permission matrix for Organization and Store workflows. Authorization requirements still need to be explicit at the operation that reads or changes business data.
 
@@ -58,6 +64,8 @@ Keep these decisions `[OPEN]` in the canonical [Open Questions](../open-question
 - [Q-005 — Finance entitlement, activation, and disable behavior](../open-questions.md#q-005--finance-entitlement-activation-and-disable-behavior)
 
 Do not encode a proposed role model into code or describe it as current behavior before that point. Consider an ADR only after the options and consequences are reviewed and a durable decision is made.
+
+The [Authentication and Organization Access feature guide](../../features/authentication-and-access/README.md) tracks which Better Auth workflows are currently wired into the UI and which remain unimplemented. Keep this architecture guide focused on integration boundaries and access policy rather than duplicating its workflow steps.
 
 ## Implementation checks for protected operations
 

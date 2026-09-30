@@ -26,27 +26,29 @@ Use these labels on substantive claims where readers could otherwise confuse cur
 ## Start here
 
 - [Developer documentation index](docs/README.md) — canonical guide map by contributor task.
+- [Feature documentation index](features/README.md) — current product workflows by feature, including authentication and Organization access, Orders, Products, Reports, Files, Stores, and Finance.
 - [Architecture overview](docs/architecture/overview.md) — current application shape, request flow, persistence, and agreed target direction.
-- [Documentation outline](docs/OUTLINE.md) — scope and progress record for this documentation set.
 
 The canonical guides live under `docs/`. Follow the root `AGENTS.md`, inspect current source, and avoid inferring rules from a short compatibility pointer or an empty placeholder.
 
 ## Documentation map
 
-The guide structure and status are maintained in the [documentation index](docs/README.md) and [outline](docs/OUTLINE.md). Its main areas are:
+The detailed guide map is maintained in the [developer documentation index](docs/README.md) and [feature documentation index](features/README.md). Its main areas are:
 
 - **Architecture** — domain and tenancy, identity and access control, module boundaries, optional modules and feature flags, and inventory/channel concepts.
 - **Conventions** — business logic, naming, API and data access, MongoDB schemas, TypeScript, React/UI, testing, and reliability.
 - **Workflows** — feature changes, refactoring and legacy cleanup, and documentation/ADR updates.
 - **Roadmap and open questions** — future capability direction and unresolved decisions. These are planning references, not current product contracts.
+- **Feature guides** — current capability behavior and its boundaries, organized by domain under `.agents/features/`.
 
-Check the outline for a guide's planned scope. A planned filename is not an active guide until the file exists and has been reviewed.
+Use the indexes to find active guides. Use the roadmap and open-question register for future direction and unresolved decisions; neither is an implementation contract.
 
 ## ADRs and feature plans
 
 - Durable cross-cutting architecture decisions belong in `.agents/ADR/`, separate from the living guides in `.agents/docs/`. Start at the [ADR index](ADR/README.md) and use its template and workflow.
-- Finance-specific implementation plans and Finance ADRs belong under `.agents/features/finance/`. They are outside the current rewrite scope; do not reorganize or rewrite them as part of the general documentation pass.
+- Current Finance capability guides, plus any Finance-specific implementation plans or feature ADRs, are grouped under `.agents/features/finance/`. The capability guides added in this pass document verified behavior; separate plan/ADR documents remain unchanged unless deliberately reviewed.
 - A guide explains the currently applicable rule. An ADR explains why a durable decision was selected. A roadmap describes possible direction and sequencing. An open-question record preserves what has not been decided.
+- Feature guides under `.agents/features/` document user-facing/business workflows and cross-module seams. Shared conventions and architecture rules stay under `.agents/docs/`.
 
 ## Compatibility pointer
 

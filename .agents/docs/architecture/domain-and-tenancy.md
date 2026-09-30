@@ -64,6 +64,8 @@ The dashed relationships are target concepts, not claims about current database 
 5. Do not treat a platform name as a channel-account identity. If a workflow needs to distinguish two Shopee accounts in one Store, the data model must carry an account identity explicitly.
 6. Keep product catalog ownership separate from inventory ownership. An Organization-scoped inventory item or mapping does not by itself decide whether canonical product data is shared across Stores.
 
+The current user-facing sign-in, Organization onboarding, and active Organization/Store flows are documented in [Authentication and Organization Access](../../features/authentication-and-access/README.md). Invitation/member management and the multi-Organization switching contract remain unimplemented or open; see [Q-002](../open-questions.md#q-002--organization-and-store-rolepermission-scope) and [Q-003](../open-questions.md#q-003--membership-lifecycle-and-active-tenant-switching).
+
 ## Open questions
 
 The canonical register contains the unresolved domain questions:

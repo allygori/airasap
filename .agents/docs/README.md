@@ -2,6 +2,8 @@
 
 This is the canonical index for repository guidance. Start with the repository-root [`AGENTS.md`](../../AGENTS.md), then open the guide that matches the work. Source code, tests, and configuration define what is implemented; these documents explain verified behavior, agreed direction, and unresolved decisions.
 
+For current feature workflows, use the separate [Feature Documentation index](../features/README.md). This directory remains the home for cross-cutting architecture, conventions, workflows, roadmap, and open questions.
+
 ## Read by task
 
 | If you are… | Read |
@@ -9,7 +11,7 @@ This is the canonical index for repository guidance. Start with the repository-r
 | Learning the application structure or request flow | [Architecture overview](architecture/overview.md) |
 | Adding or moving a domain capability | [Module boundaries](architecture/module-boundaries.md), then [Feature changes](workflows/feature-changes.md) |
 | Changing business rules or orchestration | [Business logic](conventions/business-logic.md) |
-| Changing authentication, tenant context, or access policy | [Identity and access control](architecture/identity-and-access-control.md), [Domain and tenancy](architecture/domain-and-tenancy.md), and [API and data access](conventions/api-and-data-access.md) |
+| Changing authentication, tenant context, or access policy | [Identity and access control](architecture/identity-and-access-control.md), [Domain and tenancy](architecture/domain-and-tenancy.md), [API and data access](conventions/api-and-data-access.md), and [Authentication and Organization Access workflows](../features/authentication-and-access/README.md) |
 | Changing organization modules or rollout flags | [Optional modules and feature flags](architecture/optional-modules-and-flags.md) |
 | Changing Orders, stock, or sales-channel behavior | [Inventory and sales channels](architecture/inventory-and-channels.md), [Module boundaries](architecture/module-boundaries.md), and [Open questions](open-questions.md) |
 | Changing MongoDB documents, indexes, or field names | [MongoDB and schema](conventions/mongodb-and-schema.md) |
@@ -45,12 +47,11 @@ This is the canonical index for repository guidance. Start with the repository-r
 - [Documentation and ADRs](workflows/documentation-and-adr.md)
 - [Roadmap](roadmap.md) — future themes and dependencies, without delivery promises.
 - [Open questions](open-questions.md) — canonical record of undecided product and architecture choices.
-- [Documentation outline](OUTLINE.md) — scope and progress record for this documentation set.
 
 ## Reading status and decisions
 
 Guides label claims as `[CURRENT]`, `[TARGET]`, `[OPEN]`, `[LEGACY]`, or `[DEPRECATED]`. An accepted ADR records a decision, but does not mean the decision is implemented. Check both the ADR and its linked guide for implementation status.
 
-General, durable decisions live in [`.agents/ADR/`](../ADR/README.md). Finance-specific implementation plans and ADRs are outside the current general documentation scope; leave anything under `.agents/features/finance/` unchanged.
+General, durable decisions live in [`.agents/ADR/`](../ADR/README.md). Current feature behavior is documented under `.agents/features/`, including Finance capability guides. Finance-specific implementation plans and feature ADRs may also be grouped under `.agents/features/finance/`; keep those separate planning/decision records unchanged unless revision is in scope.
 
 The short files `conventions/coding.md`, `database.md`, `error-handling.md`, `nextjs.md`, `react.md`, `styling.md`, `testing.md`, and `validation.md` are temporary compatibility pointers to canonical guides. They contain no independent convention; remove them once no repository references depend on them.

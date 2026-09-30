@@ -56,7 +56,7 @@
 ### 6. Marketing and business analysis
 
 - **[TARGET]** Marketing-related capabilities may be explored in the future if they solve an established seller workflow and fit the product's module/dependency model.
-- **[OPEN]** Scope, ownership, data sources, integrations, and whether a Marketing capability should be optional have not been decided. Existing marketplace profit-intelligence code does not establish a general marketing platform.
+- **[OPEN]** Scope, ownership, data sources, integrations, and whether a Marketing capability should be optional have not been decided.
 
 ### 7. Marketplace integrations and stock visibility
 

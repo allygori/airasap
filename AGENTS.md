@@ -128,7 +128,9 @@ before adding or changing persisted fields.
 - Accounting operations may require a Mongoose `ClientSession` and lifecycle guards; preserve both when composing services.
 
 Detailed rules are in `.agents/docs/conventions/api-and-data-access.md` and
-`.agents/docs/architecture/identity-and-access-control.md`.
+`.agents/docs/architecture/identity-and-access-control.md`. Current user-facing
+Better Auth workflows and their implementation status are in
+`.agents/features/authentication-and-access/README.md`.
 
 ## API and error conventions
 
