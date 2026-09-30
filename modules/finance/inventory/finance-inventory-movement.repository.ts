@@ -4,6 +4,7 @@ import {
   type PipelineStage,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -68,9 +69,6 @@ export type FinanceInventoryMovementListPersistenceResult =
     records: FinanceInventoryMovementPersistenceRecord[];
     total: number;
   };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class FinanceInventoryMovementRepository extends BaseRepository<TFinanceInventoryMovement> {
   constructor(context: FinanceTenantContext) {

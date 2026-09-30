@@ -1,4 +1,5 @@
 import { Types, type ClientSession } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import { FinanceDomainError } from '../finance.error';
@@ -117,11 +118,7 @@ export class FinanceOpeningBalanceSubledgerItemRepository extends BaseRepository
       status: 'posted',
     };
     if (search) {
-      const escaped = search.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&'
-      );
-      const pattern = new RegExp(escaped, 'i');
+      const pattern = new RegExp(escapeRegex(search), 'i');
       filter.$or = [
         { source_id: pattern },
         { source_label: pattern },

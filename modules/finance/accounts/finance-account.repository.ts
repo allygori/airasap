@@ -3,6 +3,7 @@ import {
   type ClientSession,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import {
   FinanceAccountModel,
   type TFinanceAccount,
@@ -63,9 +64,6 @@ export type FinanceAccountPersistenceRecord = {
     provider?: string;
   };
 };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const isDuplicateKeyError = (
   error: unknown

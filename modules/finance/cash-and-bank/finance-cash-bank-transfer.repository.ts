@@ -3,6 +3,7 @@ import {
   type ClientSession,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -246,6 +247,3 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
       .exec();
   }
 }
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

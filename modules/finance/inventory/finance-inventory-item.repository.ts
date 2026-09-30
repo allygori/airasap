@@ -3,6 +3,7 @@ import {
   type ClientSession,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -42,9 +43,6 @@ type FinanceInventoryItemListFilter = {
   search?: string;
   item_type?: FinanceInventoryItemTypeDTO;
 };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class FinanceInventoryItemRepository extends BaseRepository<TFinanceInventoryItem> {
   constructor(context: FinanceTenantContext) {

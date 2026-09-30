@@ -3,6 +3,7 @@ import {
   type ClientSession,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
@@ -43,9 +44,6 @@ export type CreateFinancePurchaseRecord = Omit<
   FinancePurchasePersistenceRecord,
   '_id' | 'organization' | 'created_at' | 'updated_at'
 >;
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class FinancePurchaseRepository extends BaseRepository<TFinancePurchase> {
   constructor(context: FinanceTenantContext) {

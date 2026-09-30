@@ -4,6 +4,7 @@ import {
   type PipelineStage,
   type QueryFilter,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import {
   FinanceJournalEntryModel,
@@ -51,9 +52,6 @@ export type FinanceOwnerDrawingMonthlyMovementRecord = {
   debit_total: number;
   credit_total: number;
 };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export type FinanceJournalPersistenceRecord = {
   _id: TFinanceJournalEntry['_id'];

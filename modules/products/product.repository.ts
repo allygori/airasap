@@ -7,6 +7,7 @@
 import { BaseRepository } from '../base.repository';
 import { ProductModel, TProduct } from './product.model';
 import { QueryFilter, Types, UpdateQuery } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { type OrderPlatform } from '@/constant/order-platform';
 
 export type ProductInventorySourceRecord = {
@@ -22,9 +23,6 @@ export type ProductInventorySourceRecord = {
     child_sku?: string | null;
   }>;
 };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class ProductRepository extends BaseRepository<TProduct> {
   constructor(tenantContext: {

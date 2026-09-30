@@ -3,6 +3,7 @@ import {
   type ClientSession,
   type PipelineStage,
 } from 'mongoose';
+import { escapeRegex } from '@/lib/string';
 import { BaseRepository } from '@/modules/base.repository';
 import {
   FinanceJournalEntryModel,
@@ -82,9 +83,6 @@ export type FinanceSettlementTotal = {
   settled_amount: number;
   last_settlement_date: Date | null;
 };
-
-const escapeRegex = (value: string) =>
-  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export class FinanceSubledgerRepository extends BaseRepository<TFinanceSettlement> {
   private readonly organizationId: Types.ObjectId;
