@@ -1,13 +1,11 @@
 import { AggregateBuilder } from '../@shared/aggregate/builder';
 import {
-  // mergeFilters,
+  mergeFilters,
   tenantFilter,
   dateFilter,
   orderStatusFilter,
   platformFilter,
 } from '../@shared/aggregate/pipelines/filters';
-// import { mergeFilters } from './pipelines/filters/_merge';
-import { mergeObject } from '@/lib/utils/object/merge';
 import { ORDER_PLATFORMS } from '@/constant/order-platform';
 import {
   baseMetrics,
@@ -46,7 +44,7 @@ type Args = {
 //   endDate,
 //   tenantContext,
 // }: Args) {
-//   const filters = mergeObject(
+//   const filters = mergeFilters(
 //     [
 //       tenantFilter,
 //       tenantContext.organizationId,
@@ -662,7 +660,7 @@ export const aggregateSalesReport = ({
   tenantContext,
   tz,
 }: Args): PipelineStage[] => {
-  const filters = mergeObject(
+  const filters = mergeFilters(
     [
       tenantFilter,
       tenantContext.organizationId,

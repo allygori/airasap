@@ -29,7 +29,7 @@ type DynamicMergePipeline<
 };
 
 // 4. Fungsi Runtime Deep Merge Dinamis (Maksimal Depth 3, Finite)
-export function mergeObject<
+export function mergeFilters<
   T extends Array<(...args: any[]) => any>,
 >(
   ...funcsWithArgs: {
