@@ -43,7 +43,7 @@ import {
 } from '@/components/ui/empty';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import {
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,

@@ -10,7 +10,7 @@ import {
   ToggleGroupItem,
 } from '@/components/ui/toggle-group';
 import { FieldInfo } from '../partials/field-info';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type ToggleGroupOption = {
   label: string;

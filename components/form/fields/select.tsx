@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/combobox';
 import { useDebounce } from '@/hooks/use-debounce';
 import { Spinner } from '@/components/ui/spinner';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type SelectValueType = {
   label: string;

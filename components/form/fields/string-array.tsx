@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/field';
 import { Textarea } from '@/components/ui/textarea';
 import { FieldInfo } from '../partials/field-info';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type StringArrayFieldProps = ComponentProps<'textarea'> & {
   label?: string;

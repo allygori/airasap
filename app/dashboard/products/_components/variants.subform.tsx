@@ -17,7 +17,7 @@ import {
 import { useAppForm } from '@/components/form/form.hook';
 import { useStore } from '@tanstack/react-form';
 import { useState } from 'react';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 const newCost = () => ({
   effective_from: null,

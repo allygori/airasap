@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useAppForm } from '@/components/form/form.hook';
 import { revalidateLogic } from '@tanstack/react-form';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { Button } from '@/components/ui/button';
 import {
   signIn,

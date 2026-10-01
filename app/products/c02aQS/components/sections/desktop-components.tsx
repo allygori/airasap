@@ -3,7 +3,7 @@
 import { useProductContext } from '../product-context';
 import { variant } from '@/app/products/c02aQS/lib/constants';
 import Image from 'next/image';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ShoppingCart01Icon,

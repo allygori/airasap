@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { formatIDR as formatMoney } from '@/lib/number/money';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 import {

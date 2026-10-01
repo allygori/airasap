@@ -39,7 +39,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 export type DateFieldGranularity =
   | 'date'

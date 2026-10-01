@@ -53,7 +53,7 @@ import {
   type FinanceOpeningBalancePreviewDTO,
   type FinanceOpeningBalanceSetupResponseDTO,
 } from '@/modules/finance/client';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import {
   FinanceBankAccountForm,
   type FinanceBankAccountFormApi,

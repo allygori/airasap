@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Menu as MenuPrimitive } from '@base-ui/react/menu';
 
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ArrowRight01Icon,

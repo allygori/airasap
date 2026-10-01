@@ -1,5 +1,5 @@
 import { ElementType, JSX, ReactNode } from 'react';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type FinancialDisplayProps = {
   value: number;

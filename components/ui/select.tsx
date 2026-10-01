@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { Select as SelectPrimitive } from '@base-ui/react/select';
 
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   UnfoldMoreIcon,

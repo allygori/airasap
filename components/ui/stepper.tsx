@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { HugeiconsIcon } from '@/components/icons/hugeicons-icon';
 import type { IconSvgObject } from '@/types/icon';
 import { CheckmarkCircle02Icon } from '@hugeicons/core-free-icons';

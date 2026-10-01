@@ -54,7 +54,7 @@ import {
   type FinanceAccountDetailsDTO,
   type FinanceAccountType,
 } from '@/modules/finance/client';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import type { IconSvgObject } from '@/types/icon';
 
 type AccountNode = FinanceAccountDTO & {

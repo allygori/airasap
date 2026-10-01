@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/field';
 import { Switch } from '@/components/ui/switch';
 import { FieldInfo } from '../partials/field-info';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type SwitchFieldProps = Omit<
   ComponentProps<typeof Switch>,

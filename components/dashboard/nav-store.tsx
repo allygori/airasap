@@ -21,7 +21,7 @@ import {
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 export function NavStore({
   items,

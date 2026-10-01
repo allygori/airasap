@@ -14,7 +14,7 @@ import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { OrderRowActions } from './order-row-actions';
 import type { OrderResponseDTO } from '@/modules/orders/order.dto';
 import { formatIDR } from '@/lib/number/money';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 import { formatDate } from '@/lib/date/format';
 import { SHOPEE_ORDER_STATUS } from '@/constant/order/shopee/status';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"

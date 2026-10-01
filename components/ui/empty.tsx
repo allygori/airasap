@@ -2,7 +2,7 @@ import {
   cva,
   type VariantProps,
 } from 'class-variance-authority';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 function Empty({
   className,

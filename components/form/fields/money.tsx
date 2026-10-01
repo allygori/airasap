@@ -12,7 +12,7 @@ import {
   InputGroupText,
 } from '@/components/ui/input-group';
 import { FieldInfo } from '../partials/field-info';
-import { cn } from '@/lib/utils/ui';
+import { cn } from '@/lib/ui';
 
 type MoneyFieldProps = Omit<
   ComponentProps<'input'>,
