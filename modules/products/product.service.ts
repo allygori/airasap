@@ -17,7 +17,7 @@ import {
   ORDER_PLATFORMS,
   OrderPlatform,
 } from '@/constant/order-platform';
-import SkuGenerator from '@/lib/sku';
+import SkuGenerator from './sku/sku-generator';
 
 export class ProductService {
   private repository: ProductRepository;
@@ -548,23 +548,15 @@ export class ProductService {
         return matrix;
       };
 
-      const SKUGen = new SkuGenerator({
+      const skuGenerator = new SkuGenerator({
         storeCode: 'KD',
       });
-      // const counter = await this.countProductsByTenant();
-      // const parentSKU = SKUGen.generateParentSKU(
-      //   counter,
-      //   'C1'
-      // );
       let options: string[][] = [];
-      // let productCounter = 0;
-      // let variantCounter = 0;
       for (const [
         productId,
         group,
       ] of productsMap.entries()) {
-        // productCounter = await this.countProductsByTenant();
-        const parentSKU = SKUGen.generateParentSKU();
+        const parentSKU = skuGenerator.generateParentSKU();
 
         const variants = group.map((item) => {
           if (item.variantName) {
@@ -582,15 +574,7 @@ export class ProductService {
           }
 
           const childSKU =
-            SKUGen.generateChildSKU(parentSKU);
-
-          // console.log({
-          //   parentSKU,
-          //   childSKU,
-          //   // variantCounter,
-          // });
-
-          // variantCounter++;
+            skuGenerator.generateChildSKU(parentSKU);
 
           return {
             variant_id: item.variantId,
@@ -625,7 +609,6 @@ export class ProductService {
           parent_sku: hasVariation
             ? parentSKU
             : variants[0].child_sku,
-          // : SKUGen.generateChildSKU(parentSKU),
           has_variation: hasVariation,
           options,
           variants,

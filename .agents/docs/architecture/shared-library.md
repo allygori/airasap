@@ -82,11 +82,9 @@ Public entry point: `@/lib/ui` (`lib/ui/index.ts`).
 | --- | --- | --- |
 | `cn(...inputs)` | Compose conditional class values and merge conflicting Tailwind classes. | Combines `clsx` with `tailwind-merge`; keep this as UI-only class composition, without domain logic. |
 
-## Product SKU generator — `lib/sku/`
+## Product SKU generation
 
-**[CURRENT]** `SkuGenerator` is imported and instantiated by `modules/products/product.service.ts`. Its current placement and use are recorded here so it is not mistaken for an unused helper.
-
-The class accepts a `storeCode`, and exposes `generateParentSKU()` and `generateChildSKU(parentSKU)`. The current implementation generates random uppercase alphanumeric segments; older counter/Base36 logic remains commented in the source and is not the active behavior. This is Products-specific behavior, not a general-purpose sequence or ID generator. Do not infer deterministic sequencing or a cross-domain contract from the class name.
+**[CURRENT]** Product SKU generation is owned by Products and implemented in `modules/products/sku/sku-generator.ts`. It is domain-specific behavior, not a general-purpose shared helper or ID sequencer. See the [Products feature guide](../../features/products/README.md) for the current importer behavior.
 
 ## Spreadsheet imports — `lib/xlsx/`
 

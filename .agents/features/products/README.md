@@ -13,7 +13,7 @@
 
 The dashboard API and service support paginated listing/filtering, lookup, create/update, platform filtering, search, active products, bulk active-state changes, soft delete/restore, and a Shopee product Excel import. Create/update logic derives `final_price` from variant price and discount.
 
-The Shopee product importer groups parsed rows by marketplace product ID, assembles variant records/options, generates internal SKUs, and creates or updates the matching Product record. The current importer is a format-specific batch path; it is not an API connector or a general marketplace adapter system.
+The Shopee product importer groups parsed rows by marketplace product ID, assembles variant records/options, generates internal SKUs through the Product-owned `modules/products/sku/sku-generator.ts`, and creates or updates the matching Product record. The generator currently uses random uppercase alphanumeric segments and receives the temporary hardcoded Store code `KD`. **[TARGET]** Future imports should use the owning Store's code; the current generator move preserves the hardcoded value and existing output format. The importer is a format-specific batch path, not an API connector or a general marketplace adapter system.
 
 ## Order matching and Inventory source boundary
 
@@ -31,6 +31,7 @@ The Shopee product importer groups parsed rows by marketplace product ID, assemb
 
 ## Source entry points
 
+- [Product SKU generator](../../../modules/products/sku/sku-generator.ts)
 - [Product service](../../../modules/products/product.service.ts), [repository](../../../modules/products/product.repository.ts), and [Inventory source service](../../../modules/products/product-inventory-source.service.ts)
 - [Product schema](../../../modules/products/product.schema.ts) and [model](../../../modules/products/product.model.ts)
 - [Products API](../../../app/api/v1/dashboard/products/route.ts) and [Shopee import route](../../../app/api/v1/dashboard/products/mass-upload/route.ts)
