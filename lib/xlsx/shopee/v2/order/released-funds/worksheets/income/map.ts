@@ -1,8 +1,6 @@
-import {
-  stringParser,
-  numberParser,
-  dateParser,
-} from '@/lib/utils/parser';
+import { toTrimmedString } from '@/lib/string';
+import { parseIndonesianNumber } from '@/lib/number';
+import { parseExcelDate } from '@/lib/date';
 
 export type FieldConfig = {
   header: string;
@@ -13,210 +11,210 @@ export type FieldConfig = {
 export const INCOME_FIELD_MAP = {
   number: {
     header: 'No.',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   rowType: {
     header: 'Lihat berdasarkan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderId: {
     header: 'No. Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   noSubmission: {
     header: 'No. Pengajuan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   productId: {
     header: 'ID Produk',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   productName: {
     header: 'Nama Produk',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderCreationDate: {
     header: 'Waktu Pesanan Dibuat',
-    parser: dateParser('yyyy-MM-dd'),
+    parser: parseExcelDate('yyyy-MM-dd'),
   },
   releasedFundDate: {
     header: 'Tanggal Dana Dilepaskan',
-    parser: dateParser('yyyy-MM-dd'),
+    parser: parseExcelDate('yyyy-MM-dd'),
   },
   releasedFundMethod: {
     header: 'Metode Pelepasan Dana',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderType: {
     header: 'Tipe Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   releasedFundsAmount: {
     header: 'Total Penghasilan',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   productPrice: {
     header: 'Harga Produk',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   refundToBuyer: {
     header: 'Jumlah Pengembalian Dana ke Pembeli',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingCostPaidByBuyer: {
     header: 'Ongkir Dibayar Pembeli',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingCostForwardedByShopee: {
     header: 'Ongkos Kirim yang Dibayarkan ke Jasa Kirim',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingCostDiscountFromLogistics: {
     header: 'Potongan Ongkos Kirim dari Jasa Kirim',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   freeShippingFromShopee: {
     header: 'Gratis Ongkir dari Shopee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   returnShippingFee: {
     header: 'Ongkos Kirim Pengembalian Barang',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   returnToSellerFee: {
     header: 'Return to Seller Fee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingFeeRefund: {
     header: 'Pengembalian Biaya Kirim',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   sellerSponsoredVoucher: {
     header: 'Voucher disponsor oleh Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   sellerSponsoredCoinCashback: {
     header: 'Cashback Koin disponsori Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   productDiscountFromShopee: {
     header: 'Diskon Produk dari Shopee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   sellerSponsoredCoFundVoucher: {
     header: 'Voucher co-fund disponsor oleh Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   sellerSponsoredCoFundCoinCashback: {
     header: 'Cashback Koin Co-fund disponsori Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   adminFee: {
     header: 'Biaya Administrasi',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   orderProcessingFee: {
     header: 'Biaya Proses Pesanan',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   GOXFee: {
     header: 'Gratis Ongkir XTRA',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   AMSServiceFee: {
     header: 'AMS Service Fee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   campaignFee: {
     header: 'Biaya Kampanye',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   AMSCommissionFee: {
     header: 'Biaya Komisi AMS',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   autoTopUpFeeFromIncome: {
     header: 'Biaya Isi Saldo Otomatis (dari Penghasilan)',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   otherFee: {
     header: 'Biaya Lainnya',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   transactionFee: {
     header: 'Biaya Transaksi',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   fbsFee: {
     header: 'FBS Fee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   taxPPH22: {
     header: 'PPh 22',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   username: {
     header: 'Username (Pembeli)',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   buyerPayment: {
     header: 'Jumlah Dibayar Pembeli',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   paymentMethod: {
     header: 'Metode pembayaran pembeli',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   paymentMethodDetail: {
     header: 'Rincian Metode Pembayaran',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   installmentPlan: {
     header: 'Rencana Cicilan (jika berlaku)',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   freeShippingPromoFromSeller: {
     header: 'Promo Gratis Ongkir dari Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingService: {
     header: 'Jasa Kirim',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   shippingServiceName: {
     header: 'Nama Kurir',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   voucherCode: {
     header: 'Kode Voucher',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   compensation: {
     header: 'Kompensasi',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   buyerRefund: {
     header: 'Pengembalian Dana ke Pembeli',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   proRatedRedeemedCoinForReturn: {
     header:
       'Pro-rata Koin yang Ditukarkan untuk Pengembalian Barang',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   proRatedShopeeVoucherForReturn: {
     header:
       'Pro-rata Voucher Shopee untuk Pengembalian Barang',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   proRatedBankPaymentPromotionForReturn: {
     header:
       'Pro-rated Bank Payment Channel Promotion for return refund Items',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   proRatedShopeePaymentPromotionForReturn: {
     header:
       'Pro-rated Shopee Payment Channel Promotion  for return refund Items',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
 } satisfies Record<string, FieldConfig>;

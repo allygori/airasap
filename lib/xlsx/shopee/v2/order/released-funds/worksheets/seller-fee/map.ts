@@ -1,8 +1,6 @@
-import {
-  stringParser,
-  numberParser,
-  dateParser,
-} from '@/lib/utils/parser';
+import { toTrimmedString } from '@/lib/string';
+import { parseIndonesianNumber } from '@/lib/number';
+import { parseExcelDate } from '@/lib/date';
 
 export type FieldConfig = {
   header: string;
@@ -13,30 +11,30 @@ export type FieldConfig = {
 export const SELLER_FEE_FIELD_MAP = {
   number: {
     header: 'No.',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   orderId: {
     header: 'No. Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   platformFee: {
     header: 'Biaya Platform',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   GOXFee: {
     header: 'Biaya Gratis Ongkir XTRA',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   serviceFee: {
     header: 'Biaya Layanan',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   promotionFee: {
     header: 'Biaya Promosi',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   otherFee: {
     header: 'Biaya Lainnya',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
 } satisfies Record<string, FieldConfig>;

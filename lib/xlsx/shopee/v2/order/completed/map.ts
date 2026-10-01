@@ -1,10 +1,7 @@
-import {
-  stringParser,
-  numberParser,
-  // dateParser,
-  booleanParser,
-  dateParserToISOString,
-} from '@/lib/utils/parser';
+import { toTrimmedString } from '@/lib/string';
+import { parseIndonesianNumber } from '@/lib/number';
+import { createBooleanParser } from '@/lib/boolean';
+import { parseExcelDateToISOString } from '@/lib/date';
 
 export type FieldConfig = {
   header: string;
@@ -15,215 +12,215 @@ export type FieldConfig = {
 export const COMPLETED_ORDER_FIELD_MAP = {
   orderId: {
     header: 'No. Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderStatus: {
     header: 'Status Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   shippedByAdvanceFulfilment: {
     header: 'Shipped by Advance Fulfilment',
-    parser: booleanParser(
+    parser: createBooleanParser(
       'Y',
       'N'
     ) /* original: shipped_by_advance_fulfilment */,
   },
   cancellationReturnStatus: {
     header: 'Status Pembatalan/ Pengembalian',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   trackingNumber: {
     header: 'No. Resi',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   shippingOption: {
     header: 'Opsi Pengiriman',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   dropOffCounterPickUp: {
     header: 'Antar ke counter/ pick-up',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderMustBeShippedBeforeAvoidLateShipment: {
     header:
       'Pesanan Harus Dikirimkan Sebelum (Menghindari keterlambatan)',
-    parser: dateParserToISOString(
+    parser: parseExcelDateToISOString(
       'yyyy-MM-dd HH:mm'
     ) /* original: order_must_be_shipped_before_avoid_late_shipment */,
   },
   shippingTimeArranged: {
     header: 'Waktu Pengiriman Diatur',
-    parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
+    parser: parseExcelDateToISOString('yyyy-MM-dd HH:mm'),
   },
   orderCreationTime: {
     header: 'Waktu Pesanan Dibuat',
-    parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
+    parser: parseExcelDateToISOString('yyyy-MM-dd HH:mm'),
   },
   paymentTimeCompleted: {
     header: 'Waktu Pembayaran Dilakukan',
-    parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
+    parser: parseExcelDateToISOString('yyyy-MM-dd HH:mm'),
   },
   type: {
     header: 'Tipe Pesanan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   paymentMethod: {
     header: 'Metode Pembayaran',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   parentSku: {
     header: 'SKU Induk',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   productName: {
     header: 'Nama Produk',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   skuReferenceNumber: {
     header: 'Nomor Referensi SKU',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   variationName: {
     header: 'Nama Variasi',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   originalPrice: {
     header: 'Harga Awal',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   priceAfterDiscount: {
     header: 'Harga Setelah Diskon',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   quantity: {
     header: 'Jumlah',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   returnedQuantity: {
     header: 'Returned quantity',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   orderSubtotal: {
     header: 'Subtotal Pesanan',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   totalDiscount: {
     header: 'Total Diskon',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   discountFromSeller: {
     header: 'Diskon Dari Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   discountFromShopee: {
     header: 'Diskon Dari Shopee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   productWeight: {
     header: 'Berat Produk',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   numberOfProductsOrdered: {
     header: 'Jumlah Produk di Pesan',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   totalWeight: {
     header: 'Total Berat',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   voucherBorneBySeller: {
     header: 'Voucher Ditanggung Penjual',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   coinCashback: {
     header: 'Cashback Koin',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   voucherBorneByShopee: {
     header: 'Voucher Ditanggung Shopee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   voucherCode: {
     header: 'Kode Voucher',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   bundleDeal: {
     header: 'Paket Diskon',
-    parser: booleanParser('Y', 'N'),
+    parser: createBooleanParser('Y', 'N'),
   },
   bundleDealDiscountFromShopee: {
     header: 'Paket Diskon (Diskon dari Shopee)',
     parser:
-      numberParser /* original: bundle_deal_discount_from_shopee */,
+      parseIndonesianNumber /* original: bundle_deal_discount_from_shopee */,
   },
   bundleDealDiscountFromSeller: {
     header: 'Paket Diskon (Diskon dari Penjual)',
     parser:
-      numberParser /* original: bundle_deal_discount_from_seller */,
+      parseIndonesianNumber /* original: bundle_deal_discount_from_seller */,
   },
   shopeeCoinOffset: {
     header: 'Potongan Koin Shopee',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   creditCardDiscount: {
     header: 'Diskon Kartu Kredit',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   shippingCostPaidByBuyer: {
     header: 'Ongkos Kirim Dibayar oleh Pembeli',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   estimatedShippingCostDiscount: {
     header: 'Estimasi Potongan Biaya Pengiriman',
     parser:
-      numberParser /* original: estimated_shipping_cost_discount */,
+      parseIndonesianNumber /* original: estimated_shipping_cost_discount */,
   },
   returnShippingFee: {
     header: 'Ongkos Kirim Pengembalian Barang',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   totalPayment: {
     header: 'Total Pembayaran',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   estimatedShippingCost: {
     header: 'Perkiraan Ongkos Kirim',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
   },
   buyerNote: {
     header: 'Catatan dari Pembeli',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   note: {
     header: 'Catatan',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   username: {
     header: 'Username (Pembeli)',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   receiverName: {
     header: 'Nama Penerima',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   phoneNumber: {
     header: 'No. Telepon',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   deliveryAddress: {
     header: 'Alamat Pengiriman',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   cityRegency: {
     header: 'Kota/Kabupaten',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   province: {
     header: 'Provinsi',
-    parser: stringParser,
+    parser: toTrimmedString,
   },
   orderCompletionTime: {
     header: 'Waktu Pesanan Selesai',
-    parser: dateParserToISOString('yyyy-MM-dd HH:mm'),
+    parser: parseExcelDateToISOString('yyyy-MM-dd HH:mm'),
   },
 } satisfies Record<string, FieldConfig>;

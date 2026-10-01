@@ -1,6 +1,6 @@
 import { ParsedOrderCompleted } from './types';
 import { getColIdx } from '../utils';
-import { dateParser } from '@/lib/utils/parser';
+import { parseExcelDate } from '@/lib/date';
 import { parseMoney } from '@/lib/number/money';
 
 const HEADER_DETECTION_KEY = 'No. Pesanan';
@@ -117,7 +117,7 @@ export default function parser(
     const quantity =
       parseInt(String(row[idxQuantity] || '0'), 10) || 0;
 
-    const completedAt = dateParser('yyyy-MM-dd HH:mm')(
+    const completedAt = parseExcelDate('yyyy-MM-dd HH:mm')(
       row[idxCompletedAt]
     );
 
@@ -126,10 +126,10 @@ export default function parser(
         orderId,
         status,
         username: String(row[idxUsername] || '').trim(),
-        createdAt: dateParser('yyyy-MM-dd HH:mm')(
+        createdAt: parseExcelDate('yyyy-MM-dd HH:mm')(
           row[idxCreatedAt]
         ),
-        paidAt: dateParser('yyyy-MM-dd HH:mm')(
+        paidAt: parseExcelDate('yyyy-MM-dd HH:mm')(
           row[idxPaidAt]
         ),
         completedAt,

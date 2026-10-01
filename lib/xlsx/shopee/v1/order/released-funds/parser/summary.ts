@@ -1,8 +1,6 @@
-import {
-  dateParser,
-  numberParser,
-  stringParser,
-} from '@/lib/utils/parser';
+import { parseExcelDate } from '@/lib/date';
+import { parseIndonesianNumber } from '@/lib/number';
+import { toTrimmedString } from '@/lib/string';
 
 type SummaryMetadata = {
   reportTitle: string;
@@ -21,20 +19,21 @@ type SummaryEntry = {
 };
 
 function parseSummaryValue(value: unknown) {
-  if (typeof value === 'number') return numberParser(value);
+  if (typeof value === 'number')
+    return parseIndonesianNumber(value);
   if (value instanceof Date) return value;
 
-  const text = stringParser(value);
+  const text = toTrimmedString(value);
   if (!text) return null;
 
-  const date = dateParser('yyyy-MM-dd HH:mm')(text);
+  const date = parseExcelDate('yyyy-MM-dd HH:mm')(text);
   if (date) return date;
 
   const normalizedNumber = text
     .replace(/\./g, '')
     .replace(/,/g, '.');
   if (/^-?\d+(\.\d+)?$/.test(normalizedNumber)) {
-    return numberParser(text);
+    return parseIndonesianNumber(text);
   }
 
   return text;
@@ -56,12 +55,12 @@ export default function parseSummarySheet(
     const row = summaryRows[i];
     if (!row || row.length === 0) continue;
 
-    const firstCol = stringParser(row[0]);
-    const secondCol = stringParser(row[1]);
+    const firstCol = toTrimmedString(row[0]);
+    const secondCol = toTrimmedString(row[1]);
     const lastValue =
       row.length > 1 ? row[row.length - 1] : undefined;
     const currency =
-      row.some((cell) => stringParser(cell) === 'Rp') ||
+      row.some((cell) => toTrimmedString(cell) === 'Rp') ||
       currentSection
         ? 'Rp'
         : '';
@@ -77,14 +76,16 @@ export default function parseSummarySheet(
     }
 
     if (firstCol.toLowerCase() === 'dari') {
-      metadata.from = dateParser('yyyy-MM-dd HH:mm')(
+      metadata.from = parseExcelDate('yyyy-MM-dd HH:mm')(
         row[1]
       );
       continue;
     }
 
     if (firstCol.toLowerCase() === 'ke') {
-      metadata.to = dateParser('yyyy-MM-dd HH:mm')(row[1]);
+      metadata.to = parseExcelDate('yyyy-MM-dd HH:mm')(
+        row[1]
+      );
       continue;
     }
 

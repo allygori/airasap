@@ -1,7 +1,5 @@
-import {
-  stringParser,
-  numberParser,
-} from '@/lib/utils/parser';
+import { toTrimmedString } from '@/lib/string';
+import { parseIndonesianNumber } from '@/lib/number';
 
 export type FieldConfig = {
   header: string;
@@ -12,72 +10,72 @@ export type FieldConfig = {
 export const PRODUCT_FIELD_MAP = {
   productId: {
     header: 'Kode Produk',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   productName: {
     header: 'Nama Produk',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   variantId: {
     header: 'Kode Variasi',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   variantName: {
     header: 'Nama Variasi',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   parentSKU: {
     header: 'SKU Induk',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   SKU: {
     header: 'SKU',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   price: {
     header: 'Harga',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
     dbField: '',
   },
   GTIN: {
     header: 'GTIN',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   stock: {
     header: 'Stok',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
     dbField: '',
   },
   minimumPurchaseAmount: {
     header: 'Min. Jumlah Pembelian',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
     dbField: '',
   },
   maximumPurchaseAmount: {
     header: 'Maks. Jumlah Pembelian',
-    parser: numberParser,
+    parser: parseIndonesianNumber,
     dbField: '',
   },
   maximumPurchaseAmountAndStartDate: {
     header: 'Maks. Jumlah Pembelian - Tanggal Mulai',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   maximumPurchaseAmountAndTotalDays: {
     header: 'Maks. Jumlah Pembelian - Jumlah Hari',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
   maximumPurchaseAmountAndEndDate: {
     header: 'Maks. Jumlah Pembelian - Tanggal Berakhir',
-    parser: stringParser,
+    parser: toTrimmedString,
     dbField: '',
   },
 } satisfies Record<string, FieldConfig>;
