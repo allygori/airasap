@@ -35,7 +35,7 @@ The canonical guides live under `docs/`. Follow the root `AGENTS.md`, inspect cu
 
 The detailed guide map is maintained in the [developer documentation index](docs/README.md) and [feature documentation index](features/README.md). Its main areas are:
 
-- **Architecture** — domain and tenancy, identity and access control, module boundaries, optional modules and feature flags, and inventory/channel concepts.
+- **Architecture** — domain and tenancy, identity and access control, module boundaries, optional modules and feature flags, inventory/channel concepts, and the shared library catalog.
 - **Conventions** — business logic, naming, API and data access, MongoDB schemas, TypeScript, React/UI, testing, and reliability.
 - **Workflows** — feature changes, refactoring and legacy cleanup, and documentation/ADR updates.
 - **Roadmap and open questions** — future capability direction and unresolved decisions. These are planning references, not current product contracts.

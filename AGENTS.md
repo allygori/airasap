@@ -26,6 +26,7 @@ mentions it.
 
 Before changing an area, read the relevant guide:
 
+- Shared `lib/` helpers: `.agents/docs/architecture/shared-library.md` and `.agents/docs/conventions/typescript.md`
 - React/UI: `.agents/docs/conventions/react-and-ui.md`
 - TypeScript/style: `.agents/docs/conventions/typescript.md`
 - Domain boundaries: `.agents/docs/architecture/module-boundaries.md`

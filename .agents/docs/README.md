@@ -9,6 +9,7 @@ For current feature workflows, use the separate [Feature Documentation index](..
 | If you are… | Read |
 | --- | --- |
 | Learning the application structure or request flow | [Architecture overview](architecture/overview.md) |
+| Finding or reusing an existing shared `lib/` helper | [Shared Library Catalog](architecture/shared-library.md), then the linked source and tests |
 | Adding or moving a domain capability | [Module boundaries](architecture/module-boundaries.md), then [Feature changes](workflows/feature-changes.md) |
 | Changing business rules or orchestration | [Business logic](conventions/business-logic.md) |
 | Changing authentication, tenant context, or access policy | [Identity and access control](architecture/identity-and-access-control.md), [Domain and tenancy](architecture/domain-and-tenancy.md), [API and data access](conventions/api-and-data-access.md), and [Authentication and Organization Access workflows](../features/authentication-and-access/README.md) |
@@ -29,6 +30,7 @@ For current feature workflows, use the separate [Feature Documentation index](..
 - [Module boundaries](architecture/module-boundaries.md) — ownership, dependency direction, and cross-module seams.
 - [Optional modules and flags](architecture/optional-modules-and-flags.md) — Organization-level module availability versus entitlements, authorization, and rollout flags.
 - [Inventory and sales channels](architecture/inventory-and-channels.md) — current Finance inventory behavior and the accepted target stock concepts.
+- [Shared Library Catalog](architecture/shared-library.md) — public helper entry points, behavior, and guidance for avoiding duplicate utilities.
 
 ## Conventions
 

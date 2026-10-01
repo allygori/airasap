@@ -46,6 +46,8 @@
 ## Dependencies and module contracts
 
 - Import another module through its deliberate public surface. Do not use type-only imports as a loophole for reaching into private module internals.
+- **[TARGET]** When a shared `lib/<concern>/` directory provides an `index.ts`, new consumers should import its supported exports through that entry point (for example, `@/lib/file`) rather than importing implementation subpaths such as `@/lib/file/checksum`.
+- Existing subpath imports are not automatically wrong and should not be rewritten as unrelated cleanup. Change them only as part of a scoped migration after confirming the public entry point exports the needed symbol and the import behavior remains compatible.
 - Keep domain types with their owning module. Place a type in shared infrastructure only when it is genuinely technical and independent of a business capability.
 - Avoid circular type imports; if two modules need each other's private types, revisit ownership or define a narrow neutral contract at the correct seam.
 - Do not create duplicate DTO, schema, model, and response types that all claim to represent the same shape without a clear translation boundary. A persistence record, validated input, domain outcome, and API response may differ, but name and map those differences deliberately.
