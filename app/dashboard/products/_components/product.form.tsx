@@ -31,6 +31,8 @@ import { ProductResponseDTO } from '@/modules/products/product.dto';
 type ProductFormProps = {
   title?: string;
   productId?: string;
+  needsReview?: boolean;
+  onSaveAndMarkReviewed?: () => void;
 };
 
 export const ProductForm = withForm({
@@ -46,13 +48,21 @@ export const ProductForm = withForm({
     options: [],
     is_active: false,
     _id: '',
+    needs_review: false,
+    review_issues: [],
     // } as z.input<typeof formSchema>,
   } as ProductResponseDTO,
   props: {
     title: undefined,
     productId: undefined,
+    needsReview: false,
+    onSaveAndMarkReviewed: undefined,
   } as ProductFormProps,
-  render: function Render({ form }) {
+  render: function Render({
+    form,
+    needsReview,
+    onSaveAndMarkReviewed,
+  }) {
     const router = useRouter();
     const [showDiscardDialog, setShowDiscardDialog] =
       useState(false);
@@ -196,10 +206,22 @@ export const ProductForm = withForm({
                     Kembali
                   </Button>
 
-                  <div className="w-full sm:w-4/12">
-                    <form.AppForm>
-                      <form.SubmitButton text="Save Product" />
-                    </form.AppForm>
+                  <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
+                    {needsReview && (
+                      <Button
+                        type="button"
+                        variant="default"
+                        disabled={form.state.isSubmitting}
+                        onClick={onSaveAndMarkReviewed}
+                      >
+                        Simpan dan tandai sudah ditinjau
+                      </Button>
+                    )}
+                    <div className="w-full sm:w-44">
+                      <form.AppForm>
+                        <form.SubmitButton text="Save Product" />
+                      </form.AppForm>
+                    </div>
                   </div>
                 </div>
                 {/* <FieldGroup className="flex flex-col gap-6">

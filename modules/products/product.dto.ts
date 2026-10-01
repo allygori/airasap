@@ -4,6 +4,7 @@ import {
   ProductBaseSchema,
   CreateProductSchema,
   UpdateProductSchema,
+  ProductReviewIssueSchema,
   ProductResponseSchema,
   ProductFilterSchema,
   ProductSearchQuerySchema,
@@ -18,6 +19,7 @@ export {
   ProductBaseSchema,
   CreateProductSchema,
   UpdateProductSchema,
+  ProductReviewIssueSchema,
   ProductResponseSchema,
   ProductFilterSchema,
   ProductSearchQuerySchema,
@@ -36,6 +38,9 @@ export type CreateProductDTO = z.infer<
 >;
 export type UpdateProductDTO = z.infer<
   typeof UpdateProductSchema
+>;
+export type ProductReviewIssueDTO = z.infer<
+  typeof ProductReviewIssueSchema
 >;
 export type ProductResponseDTO = z.infer<
   typeof ProductResponseSchema

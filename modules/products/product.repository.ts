@@ -246,6 +246,30 @@ export class ProductRepository extends BaseRepository<TProduct> {
       .lean();
   }
 
+  async markReviewed(id: string, userId: string) {
+    return this.model
+      .findOneAndUpdate(
+        {
+          _id: id,
+          ...this.getTenantFilter(),
+          deleted_at: null,
+        },
+        {
+          $set: {
+            needs_review: false,
+            review_issues: [],
+            reviewed_at: new Date(),
+            reviewed_by: userId,
+          },
+        },
+        {
+          returnDocument: 'after',
+          runValidators: true,
+        }
+      )
+      .lean();
+  }
+
   /**
    * Soft delete product by setting deleted_at
    */

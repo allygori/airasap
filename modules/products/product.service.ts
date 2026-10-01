@@ -10,14 +10,78 @@ import {
   BulkUpdateStatusDTO,
   ProductFilterDTO,
   MassUploadResponseDTO,
+  ProductReviewIssueDTO,
 } from './product.dto';
 import parseMassProductsExcel from '@/lib/xlsx/shopee/v1/product';
-import { ParsedOrderRow } from '@/lib/xlsx/shopee/v1/product/types';
+import type { ParsedOrderRow } from '@/lib/xlsx/shopee/v1/product/types';
 import {
   ORDER_PLATFORMS,
   OrderPlatform,
 } from '@/constant/order-platform';
 import SkuGenerator from './sku/sku-generator';
+import {
+  appendPreviousName,
+  mergeUniqueCosts,
+  resolveMergedDefaultCost,
+  type ProductImportVariantSnapshot,
+} from './product-import-reconciliation';
+
+function toImportString(value: unknown) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeReviewIssues(
+  issues: readonly {
+    code: 'variant_cost_conflict';
+    candidates: readonly {
+      variant_id: string;
+      name: string;
+      default_cost: number | null;
+      effective_from: Date | string | null;
+    }[];
+  }[]
+): ProductReviewIssueDTO[] {
+  return issues.map((issue) => ({
+    code: issue.code,
+    candidates: issue.candidates.map((candidate) => ({
+      variant_id: candidate.variant_id,
+      name: candidate.name,
+      default_cost: candidate.default_cost,
+      effective_from:
+        candidate.effective_from instanceof Date
+          ? candidate.effective_from.toISOString()
+          : candidate.effective_from,
+    })),
+  }));
+}
+
+function reviewIssueFingerprint(
+  issue: ProductReviewIssueDTO
+) {
+  return JSON.stringify({
+    code: issue.code,
+    candidates: issue.candidates.map((candidate) => [
+      candidate.variant_id,
+      candidate.name,
+      candidate.default_cost,
+      candidate.effective_from,
+    ]),
+  });
+}
+
+function toStoredReviewIssue(issue: ProductReviewIssueDTO) {
+  return {
+    code: issue.code,
+    candidates: issue.candidates.map((candidate) => ({
+      variant_id: candidate.variant_id,
+      name: candidate.name,
+      default_cost: candidate.default_cost,
+      effective_from: candidate.effective_from
+        ? new Date(candidate.effective_from)
+        : null,
+    })),
+  };
+}
 
 export class ProductService {
   private repository: ProductRepository;
@@ -206,14 +270,32 @@ export class ProductService {
       // Hitung finalPrice untuk setiap variant jika ada
       const dataToUpdate = { ...dto };
       if (dataToUpdate.variants) {
+        const existingVariantsById = new Map(
+          (product.variants ?? []).map((variant) => [
+            variant.variant_id,
+            variant,
+          ])
+        );
         dataToUpdate.variants = dataToUpdate.variants.map(
-          (variant) => ({
-            ...variant,
-            default_cost: variant.default_cost || 0,
-            final_price:
-              variant.price -
-              (variant.price * variant.discount) / 100,
-          })
+          (variant) => {
+            const existingVariant =
+              existingVariantsById.get(variant.variant_id);
+
+            return {
+              ...(existingVariant ?? {}),
+              ...variant,
+              ...(existingVariant?.sku
+                ? { sku: existingVariant.sku }
+                : {}),
+              default_cost:
+                variant.default_cost ??
+                existingVariant?.default_cost ??
+                0,
+              final_price:
+                variant.price -
+                (variant.price * variant.discount) / 100,
+            };
+          }
         );
 
         // dataToUpdate.markModified('variants')
@@ -361,6 +443,21 @@ export class ProductService {
         `Gagal memulihkan produk: ${error.message}`
       );
     }
+  }
+
+  async markProductReviewed(id: string, userId: string) {
+    const product = await this.repository.markReviewed(
+      id,
+      userId
+    );
+
+    if (!product) {
+      throw new Error(
+        'Produk tidak ditemukan untuk ditinjau'
+      );
+    }
+
+    return product;
   }
 
   /**
@@ -526,93 +623,211 @@ export class ProductService {
       //     );
       // };
 
-      const addVariantToMatrix = (
-        nameString: string,
-        matrix: any[] = []
-      ) => {
-        const parts = nameString
-          .split(',')
-          .map((v) => v.trim());
-
-        parts.forEach((variant, index) => {
-          // 1. Initialize the nested array for this position if it doesn't exist
-          if (!matrix[index]) {
-            matrix[index] = [];
-          }
-          // 2. Only add the variant if it isn't already in this position's array
-          if (!matrix[index].includes(variant)) {
-            matrix[index].push(variant);
-          }
-        });
-
-        return matrix;
-      };
-
       const skuGenerator = new SkuGenerator({
         storeCode: 'KD',
       });
-      let options: string[][] = [];
       for (const [
         productId,
         group,
       ] of productsMap.entries()) {
-        const parentSKU = skuGenerator.generateParentSKU();
-
-        const variants = group.map((item) => {
-          if (item.variantName) {
-            // options.push(
-            //   // nameToOptionObject(String(item.variantName))
-            //   addVariantToMatrix(
-            //     String(item.variantName),
-            //     options
-            //   )
-            // );
-            options = addVariantToMatrix(
-              String(item.variantName),
-              options
-            );
-          }
-
-          const childSKU =
-            skuGenerator.generateChildSKU(parentSKU);
-
-          return {
-            variant_id: item.variantId,
-            name:
-              item.variantName || item.productName || '-',
-            // key: `${productId}::${item.variantId || '-'}`,
-            price: item.price,
-            // quantity: item.quantity ?? 0,
-            discount: 0,
-            final_price: item.price,
-            // parent_sku: item.parentSKU,
-            parent_sku: parentSKU,
-            // child_sku: item.SKU,
-            child_sku: childSKU,
-            // sku: item.SKU,
-            gtin: item.GTIN,
-            is_default: group.length === 1,
-            costs: [],
-          };
-        });
-        // console.log(options);
         const existingProduct =
           await this.repository.findByProductId(productId);
+        const existingVariants =
+          existingProduct?.variants ?? [];
+        const options: string[][] = [];
+
+        for (const item of group) {
+          const variantName = toImportString(
+            item.variantName
+          );
+          if (!variantName) continue;
+
+          variantName
+            .split(',')
+            .map((value) => value.trim())
+            .forEach((value, index) => {
+              if (!options[index]) options[index] = [];
+              if (!options[index].includes(value)) {
+                options[index].push(value);
+              }
+            });
+        }
 
         const hasVariation = options.length > 0;
+        const existingByVariantId = new Map(
+          existingVariants.map((variant) => [
+            variant.variant_id,
+            variant,
+          ])
+        );
+        const singleSourceVariant =
+          existingVariants.length === 1
+            ? existingVariants[0]
+            : undefined;
+        const isSplitFromSingleVariant =
+          Boolean(singleSourceVariant) && group.length > 1;
+        const isMergeToSingleVariant =
+          !hasVariation &&
+          existingVariants.length > 1 &&
+          group.length === 1;
+        const mergedDefaultCost = isMergeToSingleVariant
+          ? resolveMergedDefaultCost(existingVariants)
+          : undefined;
+        const mergedCosts = isMergeToSingleVariant
+          ? mergeUniqueCosts(existingVariants)
+          : undefined;
+
+        const fileParentSKU = group
+          .map((item) => toImportString(item.parentSKU))
+          .find(Boolean);
+        const parentSKU =
+          toImportString(existingProduct?.parent_sku) ||
+          fileParentSKU ||
+          skuGenerator.generateParentSKU();
+        const productName =
+          toImportString(group[0]?.productName) ||
+          existingProduct?.name ||
+          '';
+
+        const variants = group.map((item) => {
+          const variantId = toImportString(item.variantId);
+          const matchedVariant =
+            existingByVariantId.get(variantId);
+          const existingVariant =
+            matchedVariant ??
+            (group.length === 1 &&
+            existingVariants.length === 1
+              ? singleSourceVariant
+              : undefined);
+          const importedVariantName =
+            toImportString(item.variantName) ||
+            productName ||
+            '-';
+          const importedSKU = toImportString(item.SKU);
+          const childSKU =
+            toImportString(existingVariant?.child_sku) ||
+            importedSKU ||
+            skuGenerator.generateChildSKU(parentSKU);
+          const usesMergedCost = isMergeToSingleVariant;
+          const usesSplitSeed =
+            isSplitFromSingleVariant && !existingVariant;
+          let variantHistory = existingVariant
+            ? appendPreviousName(
+                existingVariant.name_history,
+                matchedVariant?.name,
+                importedVariantName
+              )
+            : usesSplitSeed && singleSourceVariant
+              ? appendPreviousName(
+                  singleSourceVariant.name_history,
+                  singleSourceVariant.name,
+                  importedVariantName
+                )
+              : [];
+
+          if (usesMergedCost) {
+            for (const sourceVariant of existingVariants) {
+              variantHistory = appendPreviousName(
+                variantHistory,
+                sourceVariant.name,
+                importedVariantName
+              );
+              for (const oldName of sourceVariant.name_history ??
+                []) {
+                variantHistory = appendPreviousName(
+                  variantHistory,
+                  oldName,
+                  importedVariantName
+                );
+              }
+            }
+          }
+
+          const costs = usesMergedCost
+            ? (mergedCosts ?? [])
+            : (existingVariant?.costs ??
+              (usesSplitSeed
+                ? (singleSourceVariant?.costs ?? [])
+                : []));
+          const defaultCost = usesMergedCost
+            ? mergedDefaultCost?.defaultCost
+            : (existingVariant?.default_cost ??
+              (usesSplitSeed
+                ? singleSourceVariant?.default_cost
+                : undefined));
+          const price = Number(item.price);
+
+          return {
+            ...(existingVariant ?? {}),
+            variant_id: variantId,
+            name: importedVariantName,
+            name_history: variantHistory,
+            price,
+            discount: 0,
+            final_price: price,
+            child_sku: childSKU,
+            gtin: toImportString(item.GTIN),
+            is_native: existingVariant?.is_native ?? true,
+            is_default: group.length === 1,
+            costs,
+            ...(typeof defaultCost === 'number'
+              ? { default_cost: defaultCost }
+              : {}),
+          };
+        });
+
+        const importedNameHistory = existingProduct
+          ? appendPreviousName(
+              existingProduct.name_history,
+              existingProduct.name,
+              productName
+            )
+          : [];
+        const newReviewIssue =
+          mergedDefaultCost?.reviewIssue;
+        const existingReviewIssues =
+          existingProduct?.review_issues ?? [];
+        const reviewIssues = normalizeReviewIssues(
+          existingReviewIssues
+        );
+
+        if (
+          newReviewIssue &&
+          !reviewIssues.some(
+            (issue) =>
+              reviewIssueFingerprint(issue) ===
+              reviewIssueFingerprint(newReviewIssue)
+          )
+        ) {
+          reviewIssues.push(newReviewIssue);
+        }
+
         const payload = {
           platform: ORDER_PLATFORMS.shopee.value,
           product_id: productId,
-          name: group[0]?.productName || '',
-          // key: productId,
-          // parent_sku: group[0].parentSKU,
+          name: productName,
+          name_history: importedNameHistory,
           parent_sku: hasVariation
             ? parentSKU
-            : variants[0].child_sku,
+            : existingProduct?.parent_sku ||
+              variants[0]?.child_sku ||
+              parentSKU,
           has_variation: hasVariation,
           options,
           variants,
-          is_active: true,
+          is_active: existingProduct?.is_active ?? true,
+          needs_review: Boolean(
+            existingProduct?.needs_review || newReviewIssue
+          ),
+          review_issues: reviewIssues.map(
+            toStoredReviewIssue
+          ),
+          reviewed_at: newReviewIssue
+            ? null
+            : (existingProduct?.reviewed_at ?? null),
+          reviewed_by: newReviewIssue
+            ? null
+            : (existingProduct?.reviewed_by ?? null),
         };
 
         if (existingProduct) {
@@ -625,9 +840,6 @@ export class ProductService {
           await this.repository.create(payload);
           createdCount++;
         }
-
-        options = [];
-        // variantCounter = 0;
       }
 
       return {

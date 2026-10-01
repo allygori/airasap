@@ -13,10 +13,47 @@ export type TProduct = Document &
   ProductBaseDTO & {
     organization: Types.ObjectId;
     store: Types.ObjectId;
+    needs_review?: boolean;
+    review_issues?: Array<{
+      code: 'variant_cost_conflict';
+      candidates: Array<{
+        variant_id: string;
+        name: string;
+        default_cost: number | null;
+        effective_from: Date | null;
+      }>;
+    }>;
+    reviewed_at?: Date | null;
+    reviewed_by?: string | null;
     deleted_at?: Date | null;
     created_at?: Date;
     updated_at?: Date;
   };
+
+const ProductReviewCandidateSchema = new Schema(
+  {
+    variant_id: { type: String, required: true },
+    name: { type: String, required: true },
+    default_cost: { type: Number, default: null },
+    effective_from: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const ProductReviewIssueModelSchema = new Schema(
+  {
+    code: {
+      type: String,
+      enum: ['variant_cost_conflict'],
+      required: true,
+    },
+    candidates: {
+      type: [ProductReviewCandidateSchema],
+      default: [],
+    },
+  },
+  { _id: false }
+);
 
 const ProductSchema = new Schema<TProduct>(
   {
@@ -137,6 +174,13 @@ const ProductSchema = new Schema<TProduct>(
       },
     ],
     is_active: { type: Boolean, default: true },
+    needs_review: { type: Boolean, default: false },
+    review_issues: {
+      type: [ProductReviewIssueModelSchema],
+      default: [],
+    },
+    reviewed_at: { type: Date, required: false },
+    reviewed_by: { type: String, required: false },
 
     // Custom fields
     deleted_at: { type: Date }, // soft delete

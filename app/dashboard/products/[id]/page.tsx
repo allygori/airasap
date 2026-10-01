@@ -1,11 +1,25 @@
 'use client';
 
-import { use, useEffect, useState, useMemo } from 'react';
+import {
+  use,
+  useEffect,
+  useState,
+  useMemo,
+  useRef,
+} from 'react';
 import { ProductForm } from '@/app/dashboard/products/_components/product.form';
 import { toast } from 'sonner';
-import { z } from 'zod';
 import { useAppForm } from '@/components/form/form.hook';
 import { useRouter } from 'next/navigation';
+import { AlertTriangle } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { formatIDR } from '@/lib/number/money';
 // import { formSchema } from '../_components/form.schema';
 import {
   ProductResponseSchema,
@@ -13,8 +27,6 @@ import {
   UpdateProductSchema,
   UpdateProductDTO,
 } from '@/modules/products/product.dto';
-
-type PostData = any; // You can use ZodPostSchema to infer this if preferred
 
 const EditProductPage = ({
   params,
@@ -90,6 +102,7 @@ function EditPostFormWrapper({
   id: string;
 }) {
   const router = useRouter();
+  const markReviewedAfterSave = useRef(false);
 
   const formValues = useMemo(() => {
     return {
@@ -100,6 +113,8 @@ function EditPostFormWrapper({
       product_id: String(initialData.product_id || ''),
       parent_sku: String(initialData.parent_sku || ''),
       options: initialData.options || [],
+      needs_review: initialData.needs_review,
+      review_issues: initialData.review_issues,
       variants: (initialData.variants || []).map(
         (variant: any) => ({
           variant_id: variant.variant_id || '',
@@ -136,6 +151,8 @@ function EditPostFormWrapper({
       // onDynamic: formSchema as any,
     },
     onSubmit: async ({ value }) => {
+      const shouldMarkReviewed =
+        markReviewedAfterSave.current;
       try {
         const payload = {
           platform: value.platform,
@@ -167,9 +184,31 @@ function EditPostFormWrapper({
           );
         }
 
-        toast.success('Product updated successfully', {
-          description: `Product "${value.name}" has been updated.`,
-        });
+        if (shouldMarkReviewed) {
+          const reviewResponse = await fetch(
+            `/api/v1/dashboard/products/${id}/review`,
+            { method: 'POST' }
+          );
+          const reviewResult = await reviewResponse.json();
+
+          if (!reviewResponse.ok) {
+            throw new Error(
+              reviewResult.error?.message ||
+                'Gagal menandai produk sudah ditinjau'
+            );
+          }
+        }
+
+        toast.success(
+          shouldMarkReviewed
+            ? 'HPP berhasil ditinjau'
+            : 'Product updated successfully',
+          {
+            description: shouldMarkReviewed
+              ? `Perubahan produk "${value.name}" disimpan dan status review diselesaikan.`
+              : `Product "${value.name}" has been updated.`,
+          }
+        );
 
         // router.push('/dashboard/products');
         router.back();
@@ -184,6 +223,13 @@ function EditPostFormWrapper({
       }
     },
   });
+
+  const handleSaveAndMarkReviewed = () => {
+    markReviewedAfterSave.current = true;
+    void form.handleSubmit().finally(() => {
+      markReviewedAfterSave.current = false;
+    });
+  };
 
   const productName = form.getFieldValue('name');
 
@@ -201,10 +247,64 @@ function EditPostFormWrapper({
             </span>
           </p>
         </div>
+        {initialData.needs_review && (
+          <Card
+            role="status"
+            className="border-warning/50 bg-warning/5"
+          >
+            <CardHeader>
+              <CardTitle className="text-warning flex items-center gap-2">
+                <AlertTriangle className="size-5" />
+                Perlu ditinjau: konflik HPP saat varian
+                digabung
+              </CardTitle>
+              <CardDescription>
+                HPP aktif diisi 0 karena data varian lama
+                memiliki nilai yang berbeda. Periksa nilai
+                sebelumnya di bawah, lalu pilih HPP yang
+                benar pada form.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-2 text-sm">
+                {(initialData.review_issues ?? []).flatMap(
+                  (issue) =>
+                    issue.candidates.map((candidate) => (
+                      <li
+                        key={`${issue.code}-${candidate.variant_id}`}
+                        className="text-muted-foreground"
+                      >
+                        <span className="text-foreground font-medium">
+                          {candidate.name ||
+                            candidate.variant_id}
+                        </span>
+                        {' — HPP sebelumnya: '}
+                        {candidate.default_cost === null
+                          ? 'belum diatur'
+                          : formatIDR(
+                              candidate.default_cost
+                            )}
+                        {candidate.effective_from && (
+                          <span>
+                            {' · mulai berlaku '}
+                            {new Date(
+                              candidate.effective_from
+                            ).toLocaleDateString('id-ID')}
+                          </span>
+                        )}
+                      </li>
+                    ))
+                )}
+              </ul>
+            </CardContent>
+          </Card>
+        )}
         <ProductForm
           form={form}
           title="Informasi Produk"
           productId={id}
+          needsReview={initialData.needs_review}
+          onSaveAndMarkReviewed={handleSaveAndMarkReviewed}
         />
       </div>
     </div>

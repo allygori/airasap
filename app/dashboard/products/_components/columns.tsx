@@ -7,6 +7,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 // import { BlogPostType, CategoryType, UserType } from "@/components/blog/types"
 import { ViewDrawer } from '@/app/dashboard/products/_components/view-drawer';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
@@ -94,6 +95,17 @@ export const getProductsColumn = (
           <p className="text-sm">
             {`${row.original.parent_sku} - ${row.original.product_id}`}
           </p>
+          {row.original.needs_review && (
+            <Link
+              href={`/dashboard/products/${row.original._id}`}
+              className="mt-1 inline-flex"
+              aria-label={`Tinjau HPP produk ${row.original.name}`}
+            >
+              <Badge variant="warning">
+                Perlu ditinjau
+              </Badge>
+            </Link>
+          )}
         </div>
       ),
       enableHiding: false,

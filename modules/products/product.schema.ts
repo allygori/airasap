@@ -16,6 +16,7 @@ export const VariantSchema = z.object({
   name_history: z.array(z.string()).default([]),
   variant_id: z.string().min(1, 'Variant ID wajib diisi'),
   child_sku: z.string().optional().nullable(), // child_sku
+  sku: z.string().optional().nullable(),
   gtin: z.string().nullable().optional(),
   is_native: z.boolean().default(true),
 
@@ -97,6 +98,21 @@ export const CreateProductSchema = ProductBaseSchema;
 export const UpdateProductSchema =
   ProductBaseSchema.partial();
 
+export const ProductReviewIssueSchema = z.object({
+  code: z.enum(['variant_cost_conflict']),
+  candidates: z.array(
+    z.object({
+      variant_id: z.string(),
+      name: z.string(),
+      default_cost: z.number().nullable(),
+      effective_from: z
+        .string()
+        .datetime({ offset: true })
+        .nullable(),
+    })
+  ),
+});
+
 export const ProductResponseSchema =
   ProductBaseSchema.extend({
     _id: z.string(),
@@ -106,6 +122,17 @@ export const ProductResponseSchema =
     created_at: z.string().optional(),
     updated_at: z.string().optional(),
     deleted_at: z.string().nullable().optional(),
+    needs_review: z.boolean().optional().default(false),
+    review_issues: z
+      .array(ProductReviewIssueSchema)
+      .optional()
+      .default([]),
+    reviewed_at: z
+      .string()
+      .datetime({ offset: true })
+      .nullable()
+      .optional(),
+    reviewed_by: z.string().nullable().optional(),
   });
 
 export const ProductFilterSchema = z.object({
