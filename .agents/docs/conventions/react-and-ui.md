@@ -32,6 +32,14 @@
 - Follow [Naming Conventions](./naming.md): kebab-case file names and PascalCase exported React components, for example `order-summary.tsx` exporting `OrderSummary`.
 - Give component props a precise type and expose only the data and callbacks the component uses. Avoid broad untyped pass-through objects.
 
+## Reuse before creating
+
+- Before implementing a UI component, search `components/` and the relevant route's `_components/` for an existing component with the same responsibility. Inspect its source, exported props, and current callers; do not infer an API from a filename, comment, or old documentation.
+- Reuse an existing component when its behavior and contract fit. Do not create a parallel component under another name just to avoid learning or adapting the established one.
+- Keep one-route or one-workflow UI near that route. Extract presentation to `components/shared/<purpose>/` when it has a stable contract and is reused across routes, or when it has a clear app-level role. Current call-site count alone does not determine ownership.
+- Extract repeated markup only when the instances share meaningful structure and behavior. Keep small or superficially similar markup local instead of introducing a generic abstraction that makes the component harder to understand.
+- When extracting shared UI, choose a purpose-based directory such as `layout/`, `display/`, or `feedback/`. Do not introduce catch-all `general/` or `misc/` directories.
+
 ## Forms
 
 - **[CURRENT]** The project uses TanStack React Form with shared primitives and field components under `components/form/`, composed through `components/form/form.hook.tsx`.
