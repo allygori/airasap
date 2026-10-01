@@ -5,7 +5,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-type CollectionHeaderProps = {
+type DataTableHeaderProps = {
   title: string;
   count?: number;
   showCreateButton?: boolean;
@@ -13,13 +13,13 @@ type CollectionHeaderProps = {
   createText?: string;
 };
 
-export function CollectionHeader({
+export function DataTableHeader({
   title,
   count,
   showCreateButton,
   createUrl,
   createText = 'Create New',
-}: CollectionHeaderProps) {
+}: DataTableHeaderProps) {
   return (
     <div className="flex items-center justify-between px-4 lg:px-6">
       <div className="flex items-center gap-2">

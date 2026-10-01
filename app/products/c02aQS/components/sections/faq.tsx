@@ -1,4 +1,4 @@
-import Container from '@/components/shared/general/container';
+import Container from '@/components/shared/layout/container';
 import {
   Accordion,
   AccordionContent,

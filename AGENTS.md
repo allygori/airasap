@@ -101,9 +101,10 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - `app/api/v1/dashboard/` — current versioned dashboard REST API.
 - `app/api/auth/[...all]/` — Better Auth catch-all handler.
 - `app/api/profit-intelligence/` — separate legacy/standalone marketplace file-analysis API; see `.agents/docs/workflows/refactoring-and-legacy-cleanup.md` before changing it.
-- `components/ui/` — generic UI primitives; no domain logic.
+- `components/ui/` — shadcn/ui primitives built on the repository's Base UI setup; no domain logic.
 - `components/form/` — shared TanStack React Form primitives.
-- `components/data-table/` and `components/dashboard/collection/` — existing table implementations; do not add another system without a decision.
+- `components/data-table/` — the shared TanStack Table system for dashboard lists; do not add another generic table system.
+- `components/shared/` — reusable app-level presentation components grouped by purpose, such as `layout/`, `display/`, and `feedback/`; do not add catch-all `general/` or `misc/` folders.
 - `modules/` — business domains and their services, repositories, schemas, models, and tests.
 - `lib/` — infrastructure and cross-cutting helpers: database, auth, API, query parsing, file handling, dates, formatting, and XLSX utilities. Group cohesive shared concerns at the `lib/` root, such as `lib/boolean/`, `lib/date/`, `lib/number/`, and `lib/string/`. Reserve `lib/utils/` for generic or transitional helpers, and do not add new concern-specific shared utilities there. Remove it if it becomes empty.
 - `constant/` — canonical home for exported reusable/static constants, option lists, and lookup values, grouped by domain or concern; do not place business workflows here. Keep function-local `const` values with the code that uses them.

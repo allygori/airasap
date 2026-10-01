@@ -1,4 +1,4 @@
-import Container from '@/components/shared/general/container';
+import Container from '@/components/shared/layout/container';
 import Images from './components/sections/images';
 import Price from './components/sections/price';
 import TrustSignal from './components/sections/trust-signal';

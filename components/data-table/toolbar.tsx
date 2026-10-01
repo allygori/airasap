@@ -14,9 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CollectionViewOptions } from './view-options';
+import { DataTableViewOptions } from './view-options';
 
-type CollectionToolbarProps<TData> = {
+type DataTableToolbarProps<TData> = {
   table: Table<TData>;
   searchFields?: string[];
   searchOptions?: {
@@ -36,7 +36,7 @@ type CollectionToolbarProps<TData> = {
   ) => void;
 };
 
-export function CollectionToolbar<TData>({
+export function DataTableToolbar<TData>({
   table,
   searchFields,
   searchOptions,
@@ -44,7 +44,7 @@ export function CollectionToolbar<TData>({
   placeholder = 'Search...',
   filters,
   updateQueryParams,
-}: CollectionToolbarProps<TData>) {
+}: DataTableToolbarProps<TData>) {
   // Sync the local search input state to make typing responsive
   const getExternalValue = React.useCallback(() => {
     if (primarySearchField) {
@@ -222,7 +222,7 @@ export function CollectionToolbar<TData>({
         </div>
       </div>
       <div className="flex justify-end">
-        <CollectionViewOptions table={table} />
+        <DataTableViewOptions table={table} />
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { ElementType, JSX, ReactNode } from 'react';
+import { ElementType, ReactNode } from 'react';
 import { cn } from '@/lib/ui';
 
 type FinancialDisplayProps = {

@@ -1,8 +1,8 @@
 type Props = {
   children?: React.ReactNode;
-  className?: String;
+  className?: string;
   classObject?: {
-    padding?: String;
+    padding?: string;
   };
 };
 

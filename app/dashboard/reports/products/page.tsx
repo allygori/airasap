@@ -33,7 +33,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import FinancialDisplay from '@/components/shared/general/financial-display';
+import FinancialDisplay from '@/components/shared/display/financial-display';
 import { useAppForm } from '@/components/form/form.hook';
 import { formatIDR } from '@/lib/number/money';
 import { formatDate } from '@/lib/date';

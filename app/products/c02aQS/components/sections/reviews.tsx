@@ -1,4 +1,4 @@
-import Container from '@/components/shared/general/container';
+import Container from '@/components/shared/layout/container';
 // import { HugeiconsIcon } from "@hugeicons/react";
 import { HugeiconsIcon } from '@/components/icons/hugeicons-icon';
 import { StarIcon } from '@hugeicons/core-free-icons';

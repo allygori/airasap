@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { formatIDR } from '@/lib/number/money';
 import { round } from '@/lib/number';
-import FinancialDisplay from '@/components/shared/general/financial-display';
+import FinancialDisplay from '@/components/shared/display/financial-display';
 
 type SectionCardsProps = {
   revenue?: number;

@@ -34,35 +34,36 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { CollectionPagination } from './pagination';
-import { CollectionToolbar } from './toolbar';
+import { DataTablePagination } from './pagination';
+import { DataTableToolbar } from './toolbar';
 import { Loader2 } from 'lucide-react';
 
-type CollectionTableProps<TData extends { _id: string }> = {
-  table: ReactTable<TData>;
-  data: TData[];
-  setData?: React.Dispatch<React.SetStateAction<TData[]>>;
-  isLoading?: boolean;
-  error?: string | null;
-  searchFields?: string[];
-  searchOptions?: {
-    label: string;
-    value: string;
-  }[];
-  primarySearchField?: string;
-  placeholder?: string;
-  filters?: (args: {
-    pendingFilters: Record<string, string>;
-    setPendingFilters: React.Dispatch<
-      React.SetStateAction<Record<string, string>>
-    >;
-  }) => React.ReactNode;
-  isSortable?: boolean;
-  onRowClick?: (row: TData) => void;
-  updateQueryParams: (
-    updates: Record<string, string | null | undefined>
-  ) => void;
-};
+type DataTableContentProps<TData extends { _id: string }> =
+  {
+    table: ReactTable<TData>;
+    data: TData[];
+    setData?: React.Dispatch<React.SetStateAction<TData[]>>;
+    isLoading?: boolean;
+    error?: string | null;
+    searchFields?: string[];
+    searchOptions?: {
+      label: string;
+      value: string;
+    }[];
+    primarySearchField?: string;
+    placeholder?: string;
+    filters?: (args: {
+      pendingFilters: Record<string, string>;
+      setPendingFilters: React.Dispatch<
+        React.SetStateAction<Record<string, string>>
+      >;
+    }) => React.ReactNode;
+    isSortable?: boolean;
+    onRowClick?: (row: TData) => void;
+    updateQueryParams: (
+      updates: Record<string, string | null | undefined>
+    ) => void;
+  };
 
 function DraggableRow<TData extends { _id: string }>({
   row,
@@ -100,7 +101,7 @@ function DraggableRow<TData extends { _id: string }>({
   );
 }
 
-export function CollectionTable<
+export function DataTableContent<
   TData extends { _id: string },
 >({
   table,
@@ -116,7 +117,7 @@ export function CollectionTable<
   isSortable = false,
   onRowClick,
   updateQueryParams,
-}: CollectionTableProps<TData>) {
+}: DataTableContentProps<TData>) {
   const columnsCount = table.getAllColumns().length;
   const sortableId = React.useId();
   const sensors = useSensors(
@@ -236,7 +237,7 @@ export function CollectionTable<
 
   return (
     <div className="space-y-4">
-      <CollectionToolbar
+      <DataTableToolbar
         table={table}
         searchFields={searchFields}
         searchOptions={searchOptions}
@@ -308,7 +309,7 @@ export function CollectionTable<
           </Table>
         )}
       </div>
-      <CollectionPagination table={table} />
+      <DataTablePagination table={table} />
     </div>
   );
 }

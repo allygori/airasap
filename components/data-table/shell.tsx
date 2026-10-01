@@ -4,6 +4,7 @@ import * as React from 'react';
 import {
   ColumnDef,
   ColumnFiltersState,
+  PaginationState,
   SortingState,
   VisibilityState,
   getCoreRowModel,
@@ -16,8 +17,8 @@ import {
 } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { CollectionHeader } from './header';
-import { CollectionTable } from './table';
+import { DataTableHeader } from './header';
+import { DataTableContent } from './table';
 
 type DataTableShellProps<TData extends { _id: string }> = {
   title: string;
@@ -243,7 +244,11 @@ export function DataTableShell<
   );
 
   const handlePaginationChange = React.useCallback(
-    (updaterOrValue: any) => {
+    (
+      updaterOrValue:
+        | PaginationState
+        | ((old: PaginationState) => PaginationState)
+    ) => {
       const nextState =
         typeof updaterOrValue === 'function'
           ? updaterOrValue({
@@ -289,7 +294,7 @@ export function DataTableShell<
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         <div className="w-full flex-col justify-start gap-6 space-y-4">
-          <CollectionHeader
+          <DataTableHeader
             title={title}
             count={totalCount}
             showCreateButton={showCreateButton}
@@ -297,7 +302,7 @@ export function DataTableShell<
             createText={createText}
           />
           <div className="px-4 lg:px-6">
-            <CollectionTable
+            <DataTableContent
               table={table}
               data={data}
               setData={isSortable ? setData : undefined}

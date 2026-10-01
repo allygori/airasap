@@ -1,31 +1,17 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import {
-  CheckCircle2,
-  Loader2,
-  GripVertical,
-} from 'lucide-react';
+import { GripVertical } from 'lucide-react';
 import { useSortable } from '@dnd-kit/sortable';
 
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 // import { BlogPostType, CategoryType, UserType } from "@/components/blog/types"
-import { CollectionRowActions } from '@/components/dashboard/collection/row-actions';
-// import { ViewDrawer } from '@/components/dashboard/collection/view-drawer';
 import { ViewDrawer } from '@/app/dashboard/products/_components/view-drawer';
 // import { CategoryRowActions } from "../../categories/_components/category-row-actions"
 // import { CategoryViewDrawer } from "../../categories/_components/category-view-drawer"
 import { formatIDR } from '@/lib/number/money';
-
-type CategoryType = {
-  name: string;
-};
-
-type UserType = {
-  name: string;
-};
 
 // Drag handle component for sortable columns
 function DragHandle({ id }: { id: string }) {
@@ -267,15 +253,6 @@ export const getProductsColumn = (
         </div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   cell: ({ row }) => <CollectionRowActions
-    //     row={row}
-    //     editUrl="/dashboard/posts"
-    //     viewUrl="/posts"
-    //     label="Article"
-    //   />,
-    // },
   ];
 
   if (isSortable) {

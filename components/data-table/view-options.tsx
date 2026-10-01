@@ -14,13 +14,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-type CollectionViewOptionsProps<TData> = {
+type DataTableViewOptionsProps<TData> = {
   table: Table<TData>;
 };
 
-export function CollectionViewOptions<TData>({
+export function DataTableViewOptions<TData>({
   table,
-}: CollectionViewOptionsProps<TData>) {
+}: DataTableViewOptionsProps<TData>) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger

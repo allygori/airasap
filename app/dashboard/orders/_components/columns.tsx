@@ -9,7 +9,6 @@ import { useSortable } from '@dnd-kit/sortable';
 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
-// import { ViewDrawer } from '@/components/dashboard/collection/view-drawer';
 import { ViewDrawer } from '@/app/dashboard/orders/_components/view-drawer';
 import { OrderRowActions } from './order-row-actions';
 import type { OrderResponseDTO } from '@/modules/orders/order.dto';

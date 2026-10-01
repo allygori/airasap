@@ -35,7 +35,7 @@ import {
   WalletCards,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import FinancialDisplay from '@/components/shared/general/financial-display';
+import FinancialDisplay from '@/components/shared/display/financial-display';
 import { useAppForm } from '@/components/form/form.hook';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/ui';
-import Container from '@/components/shared/general/container';
+import Container from '@/components/shared/layout/container';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ShoppingCart01Icon,

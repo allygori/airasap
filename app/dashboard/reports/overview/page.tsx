@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
-import FinancialDisplay from '@/components/shared/general/financial-display';
+import FinancialDisplay from '@/components/shared/display/financial-display';
 import { useAppForm } from '@/components/form/form.hook';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';

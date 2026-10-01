@@ -4,10 +4,12 @@
 
 ## Current UI foundations
 
-- **[CURRENT]** The application uses Next.js App Router, React Server Components, Tailwind CSS 4, and shadcn/ui tooling. Shared style tokens and theme variables are defined in `app/globals.css`; `components.json` configures the current component aliases and Hugeicons.
-- **[CURRENT]** Generic UI primitives live in `components/ui/`. Shared TanStack React Form primitives live in `components/form/`.
-- **[CURRENT]** There are two existing TanStack Table screen implementations: `components/data-table/` and `components/dashboard/collection/`. Their presence is current implementation, not a recommendation to create a third system.
+- **[CURRENT]** The application uses Next.js App Router, React Server Components, Tailwind CSS 4, and shadcn/ui tooling. Shared style tokens and theme variables are defined in `app/globals.css`; `components.json` configures the current component aliases, Base UI based style, and Hugeicons.
+- **[CURRENT]** Generic UI primitives live in `components/ui/`; interactive primitives use Base UI. Shared TanStack React Form primitives live in `components/form/`.
+- **[CURRENT]** `components/data-table/` is the reusable TanStack Table screen system for dashboard lists.
+- **[CURRENT]** Cross-route presentation components live in `components/shared/`, grouped by purpose. Current groups include `layout/` and `display/`.
 - **[CURRENT]** `app/` owns routing and page composition. Route-local `_components/` are available for UI that should not become a shared component.
+- **[TARGET]** Use `components/shared/feedback/` for stable feedback patterns that are reused across routes; add components there when a real shared need exists.
 - **[TARGET]** Compose feature screens from the established shared systems. Keep domain workflows in server-side modules and keep client-side code focused on interaction.
 
 ## Server and Client Components
@@ -23,6 +25,9 @@
 
 - Keep route-specific components under that route's `_components/` directory when they are not reused elsewhere.
 - Put generic primitives in `components/ui/`; put shared form primitives in `components/form/`; put cross-route dashboard shell components in the existing dashboard area.
+- Put reusable, app-level presentation components in `components/shared/`, grouped by purpose such as `layout/`, `display/`, or `feedback/`. Do not use catch-all folders such as `general/` or `misc/`.
+- Decide ownership from the component's purpose and contract, not only its current number of call sites. A shared building block can remain in `components/shared/` when it has a clear app-wide role, even if current usage is concentrated in one route group.
+- Keep components tied to one route or workflow near that route. Do not move them into `components/shared/` solely to shorten a file or import path.
 - Place domain behavior with its business module. A visual component may own presentation and local interaction, but it should not become the source of business invariants or data access policy.
 - Follow [Naming Conventions](./naming.md): kebab-case file names and PascalCase exported React components, for example `order-summary.tsx` exporting `OrderSummary`.
 - Give component props a precise type and expose only the data and callbacks the component uses. Avoid broad untyped pass-through objects.
@@ -33,18 +38,19 @@
 - **[TARGET]** Reuse the shared form hook, fields, and submit controls for new feature forms. Do not introduce a second form library or parallel field system without an explicit decision.
 - Keep field-level validation useful for immediate feedback, but validate again on the server with the owning Zod input schema and business rules.
 - Use accessible labels, descriptions, errors, and keyboard interaction. Make pending, success, and failure states visible and prevent accidental duplicate submissions when an operation is still pending.
-- For complex domain editors, compose existing primitives into feature-specific fields; add a new shared field only when more than one workflow has a stable common need.
+- Reuse a field in `components/form/fields/` when its interaction and data contract fit. Add a shared field when no existing field supports the required contract and the new field has a reusable purpose; keep one-off fields near their route.
+- Before changing a shared field, search all consumers and preserve its existing props and behavior. Prefer additive props with safe defaults. If a change is breaking, update every affected consumer in the same change and verify them together.
 
-## Tables and collection screens
+## Tables
 
-- **[CURRENT]** `components/data-table/` and `components/dashboard/collection/` both build on TanStack Table, but expose different composition options.
-- **[TARGET]** Select and reuse the closest existing implementation for a new screen. Do not clone a table or create a third generic table framework for one page.
+- **[CURRENT]** `components/data-table/` is the shared TanStack Table system for dashboard lists.
+- **[TARGET]** Reuse `components/data-table/` for a new dashboard list. Keep domain-specific columns and filters close to their route. Do not clone the table system or create another generic table framework for one page.
 - Keep row/column presentation in the UI and sorting/filter data contracts on the server aligned with the API schemas. Allowlist sortable/filterable fields and bound pagination server-side.
 - Provide understandable loading, error, empty, and populated states. Keep selection and bulk actions explicit about their scope and effect.
-- **[OPEN]** Whether the two existing table systems should eventually converge is a separate architecture decision; do not force a broad migration as part of an unrelated feature.
 
 ## Styling and visual consistency
 
+- When adding or changing shadcn/ui primitives, use the `shadcn` skill when available and preserve this repository's Base UI based setup and `components.json` configuration.
 - Use the existing Tailwind CSS 4 utilities, shared UI primitives, and theme tokens from `app/globals.css`. Do not introduce a parallel design-token file or component styling framework without documenting the decision.
 - Prefer semantic theme values for background, foreground, border, muted, accent, destructive, and status colors. Avoid one-off hard-coded colors where an existing token expresses the intent.
 - Reuse established spacing, typography, radii, and interaction states from the shared primitives. A feature may have its own visual hierarchy, but should still use the common theme vocabulary.
