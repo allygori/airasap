@@ -51,10 +51,18 @@ export default function ProductIndexPage() {
 
       <DataTableShell
         title="Products"
-        endpoint="/api/v1/dashboard/products?sort=updated_at"
+        endpoint="/api/v1/dashboard/products"
         columns={columns}
-        searchFields={['name']}
-        primarySearchField="name"
+        searchOptions={[
+          { label: 'Nama produk', value: 'name' },
+          { label: 'Nama varian', value: 'variant_name' },
+          { label: 'ID produk', value: 'product_id' },
+          { label: 'ID varian', value: 'variant_id' },
+          { label: 'Parent SKU', value: 'parent_sku' },
+          { label: 'Child SKU', value: 'child_sku' },
+        ]}
+        primarySearchField={undefined}
+        defaultSort="-updated_at"
         // showCreateButton={false}
         createUrl="/dashboard/products/create"
         createText="Create Product"

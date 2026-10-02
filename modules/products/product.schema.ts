@@ -136,13 +136,24 @@ export const ProductResponseSchema =
   });
 
 export const ProductFilterSchema = z.object({
-  platform: z.string().optional(),
+  platform: z.enum(ORDER_PLATFORM_VALUES).optional(),
   is_active: z.preprocess((value) => {
     if (value === 'true' || value === true) return true;
     if (value === 'false' || value === false) return false;
     return undefined;
   }, z.boolean().optional()),
-  search: z.string().optional(),
+  search: z.string().trim().max(100).optional(),
+  search_field: z
+    .enum([
+      'name',
+      'variant_name',
+      'product_id',
+      'variant_id',
+      'parent_sku',
+      'child_sku',
+    ])
+    .optional(),
+  sort: z.enum(['updated_at', '-updated_at']).optional(),
   populate: z.string().optional(),
   page: z.preprocess((value) => {
     if (typeof value === 'string' && value.length) {

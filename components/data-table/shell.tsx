@@ -30,6 +30,7 @@ type DataTableShellProps<TData extends { _id: string }> = {
     value: string;
   }[];
   primarySearchField?: string;
+  defaultSort?: string;
   showCreateButton?: boolean;
   createUrl?: string;
   createText?: string;
@@ -53,6 +54,7 @@ export function DataTableShell<
   searchFields,
   searchOptions,
   primarySearchField,
+  defaultSort,
   showCreateButton = true,
   createUrl,
   createText,
@@ -94,8 +96,8 @@ export function DataTableShell<
   }, [searchParams]);
 
   const sort = React.useMemo(() => {
-    return searchParams.get('sort') || '';
-  }, [searchParams]);
+    return searchParams.get('sort') || defaultSort || '';
+  }, [searchParams, defaultSort]);
 
   // Sync sorting state from URL sort param
   const sorting = React.useMemo<SortingState>(() => {
@@ -163,6 +165,9 @@ export function DataTableShell<
       const params = new URLSearchParams(
         searchParams.toString()
       );
+      if (!params.has('sort') && defaultSort) {
+        params.set('sort', defaultSort);
+      }
       if (!params.has('page'))
         params.set('page', String(page));
       if (!params.has('limit') && !params.has('pageSize')) {
@@ -216,7 +221,20 @@ export function DataTableShell<
     searchParams,
     page,
     limit,
+    defaultSort,
   ]);
+
+  React.useEffect(() => {
+    if (!defaultSort || searchParams.has('sort')) return;
+
+    const params = new URLSearchParams(
+      searchParams.toString()
+    );
+    params.set('sort', defaultSort);
+    router.replace(`${pathname}?${params.toString()}`, {
+      scroll: false,
+    });
+  }, [defaultSort, pathname, router, searchParams]);
 
   React.useEffect(() => {
     fetchData();

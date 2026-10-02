@@ -19,12 +19,47 @@ import {
   OrderPlatform,
 } from '@/constant/order-platform';
 import SkuGenerator from './sku/sku-generator';
+import { escapeRegex } from '@/lib/string';
+import type { QueryFilter } from 'mongoose';
+import type { TProduct } from './product.model';
 import {
   appendPreviousName,
   mergeUniqueCosts,
   resolveMergedDefaultCost,
   type ProductImportVariantSnapshot,
 } from './product-import-reconciliation';
+
+function getProductSearchConditions(
+  searchField: ProductFilterDTO['search_field'],
+  searchRegex: RegExp
+): QueryFilter<TProduct>[] {
+  switch (searchField) {
+    case 'name':
+      return [
+        { name: searchRegex },
+        { name_history: searchRegex },
+      ];
+    case 'variant_name':
+      return [
+        { 'variants.name': searchRegex },
+        { 'variants.name_history': searchRegex },
+      ];
+    case 'product_id':
+      return [{ product_id: searchRegex }];
+    case 'variant_id':
+      return [{ 'variants.variant_id': searchRegex }];
+    case 'parent_sku':
+      return [{ parent_sku: searchRegex }];
+    case 'child_sku':
+      return [{ 'variants.child_sku': searchRegex }];
+    default:
+      return [
+        { name: searchRegex },
+        { name_history: searchRegex },
+        { product_id: searchRegex },
+      ];
+  }
+}
 
 function toImportString(value: unknown) {
   return typeof value === 'string' ? value.trim() : '';
@@ -115,7 +150,9 @@ export class ProductService {
     filter: ProductFilterDTO
   ) {
     try {
-      const queryFilter: any = { deleted_at: null };
+      const queryFilter: QueryFilter<TProduct> = {
+        deleted_at: null,
+      };
 
       if (filter.platform) {
         queryFilter.platform = filter.platform;
@@ -126,20 +163,28 @@ export class ProductService {
       }
 
       if (filter.search) {
-        const searchRegex = {
-          $regex: filter.search,
-          $options: 'i',
-        };
-        queryFilter.$or = [
-          { name: searchRegex },
-          { product_id: searchRegex },
-        ];
+        const searchRegex = new RegExp(
+          escapeRegex(filter.search),
+          'i'
+        );
+        queryFilter.$or = getProductSearchConditions(
+          filter.search_field,
+          searchRegex
+        );
       }
+
+      const sort: Record<string, 1 | -1> = filter.sort
+        ? {
+            updated_at:
+              filter.sort === '-updated_at' ? -1 : 1,
+          }
+        : { created_at: -1 };
 
       return await this.repository.findWithPagination(
         filter.page || 1,
         filter.limit || 10,
-        queryFilter
+        queryFilter,
+        sort
       );
     } catch (error: any) {
       throw new Error(

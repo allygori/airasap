@@ -341,7 +341,8 @@ export class ProductRepository extends BaseRepository<TProduct> {
   async findWithPagination(
     page: number = 1,
     limit: number = 10,
-    filter?: QueryFilter<TProduct>
+    filter?: QueryFilter<TProduct>,
+    sort: Record<string, 1 | -1> = { created_at: -1 }
   ) {
     const skip = (page - 1) * limit;
 
@@ -355,7 +356,7 @@ export class ProductRepository extends BaseRepository<TProduct> {
           ...filter,
           ...this.getTenantFilter(),
         })
-        .sort({ created_at: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(limit)
         .lean(),
