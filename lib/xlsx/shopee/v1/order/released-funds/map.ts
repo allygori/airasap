@@ -2,6 +2,18 @@ import { toTrimmedString } from '@/lib/string';
 import { parseIndonesianNumber } from '@/lib/number';
 import { parseExcelDate } from '@/lib/date';
 
+const parseReleasedFundDateTime = parseExcelDate(
+  'yyyy-MM-dd HH:mm'
+);
+const parseReleasedFundDateOnly =
+  parseExcelDate('yyyy-MM-dd');
+
+const parseReleasedFundDate = (
+  value: unknown
+): Date | null =>
+  parseReleasedFundDateTime(value) ??
+  parseReleasedFundDateOnly(value);
+
 export type FieldConfig = {
   header?: string;
   columnIndex?: number;
@@ -35,7 +47,7 @@ export const INCOME_FIELD_MAP = {
   },
   releasedFundDate: {
     header: 'Tanggal Dana Dilepaskan',
-    parser: parseExcelDate('yyyy-MM-dd HH:mm'),
+    parser: parseReleasedFundDate,
   },
   originalProductPrice: {
     header: 'Harga Asli Produk',
