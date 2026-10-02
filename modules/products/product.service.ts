@@ -263,9 +263,19 @@ export class ProductService {
         );
       }
 
-      // Hitung finalPrice untuk setiap variant jika ada
+      const skuGenerator = new SkuGenerator({
+        storeCode: 'KD',
+      });
+      const parentSKU =
+        dto.parent_sku?.trim() ||
+        skuGenerator.generateParentSKU();
+
+      // Preserve entered SKUs and generate missing values for new records.
       const variants = dto.variants?.map((variant) => ({
         ...variant,
+        child_sku:
+          variant.child_sku?.trim() ||
+          skuGenerator.generateChildSKU(parentSKU),
         final_price:
           variant.price -
           (variant.price * variant.discount) / 100,
@@ -273,6 +283,7 @@ export class ProductService {
 
       const newProduct = await this.repository.create({
         ...dto,
+        parent_sku: parentSKU,
         variants,
       });
 

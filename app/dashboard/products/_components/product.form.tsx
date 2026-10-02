@@ -31,6 +31,7 @@ import { ProductResponseDTO } from '@/modules/products/product.dto';
 type ProductFormProps = {
   title?: string;
   productId?: string;
+  mode?: 'create' | 'edit';
   needsReview?: boolean;
   onSaveAndMarkReviewed?: () => void;
 };
@@ -55,21 +56,26 @@ export const ProductForm = withForm({
   props: {
     title: undefined,
     productId: undefined,
+    mode: 'edit',
     needsReview: false,
     onSaveAndMarkReviewed: undefined,
   } as ProductFormProps,
   render: function Render({
     form,
+    mode,
     needsReview,
     onSaveAndMarkReviewed,
   }) {
     const router = useRouter();
     const [showDiscardDialog, setShowDiscardDialog] =
       useState(false);
+    const isCreateMode = mode === 'create';
 
     const handleBackClick = () => {
       if (form.state.isDirty) {
         setShowDiscardDialog(true);
+      } else if (isCreateMode) {
+        router.push('/dashboard/products');
       } else {
         router.back();
       }
@@ -110,6 +116,37 @@ export const ProductForm = withForm({
                         label="Product Name"
                         autoComplete="off"
                         className="col-span-full text-xl font-normal shadow-none focus-visible:bg-transparent focus-visible:ring-0 md:text-lg"
+                        onChange={(event) => {
+                          const previousName =
+                            field.state.value;
+                          const nextName =
+                            event.target.value;
+                          field.handleChange(nextName);
+
+                          const variants =
+                            form.getFieldValue(
+                              'variants'
+                            ) ?? [];
+                          const defaultVariantName =
+                            variants.length === 1
+                              ? form.getFieldValue(
+                                  'variants[0].name'
+                                )
+                              : undefined;
+
+                          if (
+                            isCreateMode &&
+                            variants.length === 1 &&
+                            (!defaultVariantName ||
+                              defaultVariantName ===
+                                previousName)
+                          ) {
+                            form.setFieldValue(
+                              'variants[0].name',
+                              nextName
+                            );
+                          }
+                        }}
                       />
                     )}
                   />
@@ -134,7 +171,7 @@ export const ProductForm = withForm({
                         label="Platform"
                         multiple={false}
                         className="col-span-1"
-                        disabled={true}
+                        disabled={!isCreateMode}
                         items={Object.values(
                           ORDER_PLATFORMS
                         ).map((p) => ({
@@ -151,7 +188,26 @@ export const ProductForm = withForm({
                       <field.TextField
                         type="text"
                         label="Product ID"
-                        disabled={true}
+                        disabled={!isCreateMode}
+                        onChange={(event) => {
+                          const nextProductId =
+                            event.target.value;
+                          field.handleChange(nextProductId);
+
+                          const variants =
+                            form.getFieldValue(
+                              'variants'
+                            ) ?? [];
+                          if (
+                            isCreateMode &&
+                            variants.length === 1
+                          ) {
+                            form.setFieldValue(
+                              'variants[0].variant_id',
+                              nextProductId
+                            );
+                          }
+                        }}
                       />
                     )}
                   />
@@ -162,7 +218,7 @@ export const ProductForm = withForm({
                       <field.TextField
                         type="text"
                         label="Parent SKU"
-                        disabled={true}
+                        disabled={!isCreateMode}
                       />
                     )}
                   />
@@ -192,7 +248,10 @@ export const ProductForm = withForm({
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <VariantsSubForm form={form} />
+                <VariantsSubForm
+                  form={form}
+                  allowIdentityEditing={isCreateMode}
+                />
               </CardContent>
               <CardFooter>
                 <div className="bg-background/95 mt-6 flex w-full flex-col items-stretch justify-end gap-3 overflow-hidden rounded-b-lg border-t p-4 shadow-lg backdrop-blur-xs sm:flex-row sm:items-center sm:gap-6">
@@ -219,7 +278,13 @@ export const ProductForm = withForm({
                     )}
                     <div className="w-full sm:w-44">
                       <form.AppForm>
-                        <form.SubmitButton text="Save Product" />
+                        <form.SubmitButton
+                          text={
+                            isCreateMode
+                              ? 'Create Product'
+                              : 'Save Product'
+                          }
+                        />
                       </form.AppForm>
                     </div>
                   </div>

@@ -39,7 +39,13 @@ const newCost = () => ({
 //   costs: [newCost()],
 // });
 
-export function VariantsSubForm({ form }: { form: any }) {
+export function VariantsSubForm({
+  form,
+  allowIdentityEditing = false,
+}: {
+  form: any;
+  allowIdentityEditing?: boolean;
+}) {
   const variants = useStore(
     form.store,
     (state: any) => state.values.variants
@@ -208,7 +214,10 @@ export function VariantsSubForm({ form }: { form: any }) {
               return (
                 <AccordionItem
                   key={i}
-                  value={variants[i]?.variant_id ?? i}
+                  value={
+                    variants[i]?.variant_id ||
+                    `variant-${i}`
+                  }
                   className="border-0"
                 >
                   <AccordionTrigger className="py-4 hover:no-underline">
@@ -241,7 +250,7 @@ export function VariantsSubForm({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
-                            disabled={true}
+                            disabled={!allowIdentityEditing}
                             className="col-span-full"
                             onChange={(e: any) =>
                               subField.handleChange(
@@ -273,7 +282,16 @@ export function VariantsSubForm({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
-                            disabled={true}
+                            disabled={
+                              !allowIdentityEditing ||
+                              variants.length === 1
+                            }
+                            description={
+                              allowIdentityEditing &&
+                              variants.length === 1
+                                ? 'Varian default menggunakan Product ID.'
+                                : undefined
+                            }
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -291,7 +309,7 @@ export function VariantsSubForm({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
-                            disabled={true}
+                            disabled={!allowIdentityEditing}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -398,7 +416,7 @@ export function VariantsSubForm({ form }: { form: any }) {
                             value={
                               subField.state.value ?? ''
                             }
-                            disabled={true}
+                            disabled={!allowIdentityEditing}
                             onChange={(e: any) =>
                               subField.handleChange(
                                 e.target.value
@@ -611,6 +629,50 @@ export function VariantsSubForm({ form }: { form: any }) {
                         </div>
                       )}
                     />
+                    {allowIdentityEditing &&
+                      variants.length > 1 && (
+                        <div className="mt-4 flex justify-end">
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => {
+                              const currentVariants =
+                                form.getFieldValue(
+                                  'variants'
+                                ) ?? [];
+                              const productId =
+                                form.getFieldValue(
+                                  'product_id'
+                                );
+                              const removedDefault =
+                                currentVariants[i]
+                                  ?.is_default;
+                              field.removeValue(i);
+
+                              if (
+                                currentVariants.length === 2
+                              ) {
+                                form.setFieldValue(
+                                  'variants[0].variant_id',
+                                  productId
+                                );
+                                form.setFieldValue(
+                                  'variants[0].is_default',
+                                  true
+                                );
+                              } else if (removedDefault) {
+                                form.setFieldValue(
+                                  'variants[0].is_default',
+                                  true
+                                );
+                              }
+                            }}
+                          >
+                            <X className="size-4" />
+                            Hapus varian
+                          </Button>
+                        </div>
+                      )}
                   </AccordionContent>
                 </AccordionItem>
               );
@@ -618,6 +680,46 @@ export function VariantsSubForm({ form }: { form: any }) {
           </Accordion>
         )}
       />
+      {allowIdentityEditing && (
+        <div className="space-y-4">
+          <p className="text-muted-foreground text-sm">
+            Produk tanpa variasi marketplace memakai satu
+            baris default. ID variannya mengikuti Product
+            ID; isi harga dan HPP pada baris ini.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              const currentVariants =
+                form.getFieldValue('variants') ?? [];
+              if (currentVariants.length === 1) {
+                form.setFieldValue(
+                  'variants[0].variant_id',
+                  ''
+                );
+              }
+              form.pushFieldValue('variants', {
+                variant_id: '',
+                name: '',
+                name_history: [],
+                child_sku: '',
+                gtin: '',
+                is_native: true,
+                price: 0,
+                discount: 0,
+                final_price: 0,
+                is_default: currentVariants.length === 0,
+                costs: [],
+                default_cost: 0,
+              });
+            }}
+          >
+            <Plus className="size-4" />
+            Tambah varian
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
