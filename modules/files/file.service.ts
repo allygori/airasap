@@ -3,8 +3,12 @@
  * Handles business logic for file operations
  */
 
-import { put } from '@vercel/blob';
 import { FileRepository } from './file.repository';
+import {
+  getFileStorageProvider,
+  hasStoredFile,
+  storeUploadedFile,
+} from './file-storage';
 import {
   CreateFileDTO,
   QueryFilterFileDTO,
@@ -14,10 +18,7 @@ import {
   calculateCRC32,
   calculateSHA256,
 } from '@/lib/file';
-import {
-  FILE_TYPES_KV,
-  STORAGE_PROVIDERS,
-} from './file.constant';
+import { FILE_TYPES_KV } from './file.constant';
 
 export class FileService {
   private repository: FileRepository;
@@ -313,45 +314,46 @@ export class FileService {
     try {
       const buffer = await file.arrayBuffer();
       const sha256Filename = await calculateSHA256(buffer);
+      const diskFilename = `${sha256Filename}.${extension}`;
+      const storageProvider = getFileStorageProvider();
 
       const existingFile = await this.repository.findOne({
-        filename: sha256Filename,
+        filename: diskFilename,
+        storage_provider: storageProvider,
+        storage_path: storagePath,
       });
 
-      if (existingFile) {
+      if (
+        existingFile &&
+        (await hasStoredFile({
+          storage_path: storagePath,
+          filename: diskFilename,
+          storage_provider: storageProvider,
+        }))
+      ) {
         return existingFile;
       }
 
-      // const ext = 'xlsx';
-      // const storagePath = 'all-orders';
-      const diskFilename = `${sha256Filename}.${extension}`;
       const crc32Checksum = calculateCRC32(buffer);
-      const blob = await put(
-        `${storagePath}/${diskFilename}`,
-        file,
-        {
-          access: 'private' /* or 'public' */,
-          allowOverwrite: true,
-          // addRandomSuffix: true,
-        }
-      );
+      const storedFile = await storeUploadedFile({
+        buffer,
+        contentType: file.type || mimeType,
+        filename: diskFilename,
+        storage_path: storagePath,
+      });
 
-      if (!blob) {
-        throw new Error('Gagal mengunggah file');
-      }
-
-      // console.log('getOrCreateDocument blob:', blob);
+      if (existingFile) return existingFile;
 
       const newFile = await this.repository.create({
         filename: diskFilename,
         original_name: file.name,
-        mime_type: blob?.contentType || mimeType,
+        mime_type: storedFile.content_type,
         file_type: FILE_TYPES_KV.DOC,
         size: file.size,
-        url: blob?.url,
+        url: storedFile.url,
         checksum: crc32Checksum,
-        storage_provider: STORAGE_PROVIDERS.VERCEL.value,
-        storage_path: storagePath, // create directory per store or per organization or per context/scope?
+        storage_provider: storedFile.storage_provider,
+        storage_path: storedFile.storage_path,
         uploaded_by: userId, // user id
       });
 
@@ -367,47 +369,51 @@ export class FileService {
     try {
       const buffer = await file.arrayBuffer();
       const sha256Filename = await calculateSHA256(buffer);
-
-      const existingFile = await this.repository.findOne({
-        filename: sha256Filename,
-      });
-
-      if (existingFile) {
-        return existingFile;
-      }
-
       const ext = 'xlsx';
       const storagePath = 'all-orders';
       const diskFilename = `${sha256Filename}.${ext}`;
-      const crc32Checksum = calculateCRC32(buffer);
-      const blob = await put(
-        `${storagePath}/${diskFilename}`,
-        file,
-        {
-          access: 'private' /* or 'public' */,
-          allowOverwrite: true,
-          // addRandomSuffix: true,
-        }
-      );
+      const storageProvider = getFileStorageProvider();
 
-      if (!blob) {
-        throw new Error('Gagal mengunggah file');
+      const existingFile = await this.repository.findOne({
+        filename: diskFilename,
+        storage_provider: storageProvider,
+        storage_path: storagePath,
+      });
+
+      if (
+        existingFile &&
+        (await hasStoredFile({
+          storage_path: storagePath,
+          filename: diskFilename,
+          storage_provider: storageProvider,
+        }))
+      ) {
+        return existingFile;
       }
 
-      console.log('createMassUploadFile blob:', blob);
+      const crc32Checksum = calculateCRC32(buffer);
+      const mimeType =
+        file.type ||
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+      const storedFile = await storeUploadedFile({
+        buffer,
+        contentType: mimeType,
+        filename: diskFilename,
+        storage_path: storagePath,
+      });
+
+      if (existingFile) return existingFile;
 
       const newFile = await this.repository.create({
         filename: diskFilename,
         original_name: file.name,
-        mime_type:
-          blob?.contentType ||
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        mime_type: storedFile.content_type,
         file_type: FILE_TYPES_KV.DOC,
         size: file.size,
-        url: blob?.url,
+        url: storedFile.url,
         checksum: crc32Checksum,
-        storage_provider: STORAGE_PROVIDERS.VERCEL.value,
-        storage_path: storagePath, // create directory per store or per organization or per context/scope?
+        storage_provider: storedFile.storage_provider,
+        storage_path: storedFile.storage_path,
         uploaded_by: userId, // user id
       });
 
