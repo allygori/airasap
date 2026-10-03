@@ -26,6 +26,9 @@ This guide distinguishes authentication, tenant context, authorization, and modu
 
 The `admin()` plugin is part of the Better Auth configuration. Its presence must not be interpreted as a complete application-level permission matrix for Organization and Store workflows. Authorization requirements still need to be explicit at the operation that reads or changes business data.
 
+## Profile ownership
+
+**[CURRENT]** Better Auth owns the configured `users` identity model through `lib/auth/configs/user.ts`; no `modules/users/` domain or dashboard Profile editor was found. **[TARGET]** A basic Profile screen should use Better Auth's supported User operations rather than introduce a duplicate User model. A separate user-domain module requires a distinct application-owned workflow; see [Settings ownership and API contracts](../../features/settings/ownership-and-api.md).
 ## Current module access is separate from user permissions
 
 **[CURRENT]** Finance has a `FinanceEntitlementService` and an access endpoint. The current service contains temporary development behavior that returns `available: true`; its plan-based check is commented out. This is not a general module-activation service and does not prove per-Organization enable/disable behavior is implemented end to end.

@@ -9,7 +9,6 @@ import {
   // HelpCircle,
   // List,
   // FileBarChart,
-  Search,
   Settings,
   // Users,
   // LayoutGrid,
@@ -226,18 +225,8 @@ export const cloudsNav = [
 export const secondaryNav = [
   {
     title: 'Settings',
-    url: '#',
+    url: '/dashboard/settings',
     icon: Settings,
-  },
-  // {
-  //   title: "Get Help",
-  //   url: "#",
-  //   icon: HelpCircle,
-  // },
-  {
-    title: 'Search',
-    url: '#',
-    icon: Search,
   },
 ];
 

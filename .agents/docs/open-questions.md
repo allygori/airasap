@@ -133,11 +133,12 @@
 ### Q-013 — Settings ownership and scope
 
 - **Status:** `open`
-- **Question:** Which settings belong to a User, Organization, Store, Finance, or an individual channel account, and which module owns each setting?
-- **Why it matters:** A broad Settings module can easily become a second home for unrelated business behavior and mix tenant scopes.
-- **Options to explore:** Settings screens composed from owning modules; a shared preference store for genuinely cross-cutting user preferences; or a small Settings capability with explicitly owned configuration.
-- **Affected areas:** Users, Organizations, Stores, Finance, feature/module activation.
-- **Guidance:** [Domain and Tenancy](./architecture/domain-and-tenancy.md), [Module Boundaries](./architecture/module-boundaries.md), [Roadmap](./roadmap.md).
+- **Current baseline:** The sidebar Settings item points to `#`; there is no Settings route. Better Auth owns User and core Organization identity, Store edits are not implemented, and Finance/Accounting lifecycle/configuration values are currently nested on the Organization record and partly written by onboarding.
+- **Agreed initial direction:** Build `/dashboard/settings` as a hub that composes owner-specific screens and APIs. The hub does not own a generic Settings document or mixed-domain write endpoint. Basic Auth Profile remains in Better Auth; a `modules/users/` module is not needed for that alone. Finance-specific configuration is planned to move behind Finance ownership in the final phase.
+- **Open decisions:** Inventory which Organization subfields represent Finance lifecycle versus editable Finance configuration; decide the Finance-owned persistence shape and update rules; decide whether Appearance preferences are browser-local or User-synced; define access requirements if multiple members are introduced.
+- **Why it matters:** A broad Settings module can become a second home for unrelated business behavior, duplicate Auth identity, and mix User/Organization/Store scopes. Moving Finance fields also risks bypassing onboarding, posting, and accounting lifecycle rules.
+- **Affected areas:** Better Auth User/Organization, Settings UI, Stores, Finance/Accounting, appearance preferences, future module activation.
+- **Guidance:** [Settings overview](../features/settings/README.md), [implementation plan](../features/settings/implementation-plan.md), [ownership and API contracts](../features/settings/ownership-and-api.md), [Domain and Tenancy](./architecture/domain-and-tenancy.md), and [Module Boundaries](./architecture/module-boundaries.md).
 
 ### Q-014 — Supplier ownership and purchasing relationship
 

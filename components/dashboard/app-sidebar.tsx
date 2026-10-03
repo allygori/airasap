@@ -1,23 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Camera,
-  BarChart3,
-  LayoutDashboard,
-  Database,
-  FileJson,
-  FileText,
-  Folder,
-  HelpCircle,
-  Box,
-  FocusIcon,
-  List,
-  FileBarChart,
-  Search,
-  Settings,
-  Users,
-} from 'lucide-react';
+import { FocusIcon } from 'lucide-react';
 
 import {
   Sidebar,
@@ -33,8 +17,6 @@ import { NavSecondary } from '@/components/dashboard/nav-secondary';
 import { NavUser } from '@/components/dashboard/nav-user';
 import {
   mainNav,
-  documentsNav,
-  organizationNav,
   financeNav,
   secondaryNav,
 } from '@/constant/menu';
@@ -105,8 +87,7 @@ export function AppSidebar({
               items={financeNav}
             />
           )}
-
-        {/* <NavSecondary items={secondaryNav} className="mt-auto" /> */}
+        <NavSecondary items={secondaryNav} />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={session?.user} />

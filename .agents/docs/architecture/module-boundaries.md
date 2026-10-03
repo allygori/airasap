@@ -32,6 +32,8 @@ These are implementation facts to account for during changes. They are not all r
 
 Not every module needs an identical set of files such as `service`, `repository`, `schema`, and `model`. Add those layers when they clarify a real responsibility. Avoid creating wrappers or one-method modules that move code without making ownership or change locality clearer.
 
+**[TARGET]** Settings is a cross-domain UI hub, not a business-data owner. Its screens compose Better Auth or the owning business module's public operations; do not add generic settings persistence or bypass a module through its private model. See [Settings ownership and API contracts](../../features/settings/ownership-and-api.md) and [Q-013](../open-questions.md#q-013--settings-ownership-and-scope).
+
 ## Public surfaces and dependencies
 
 **[TARGET]** Each module should expose a deliberate, small public surface for its consumers. Consumers should call the module's documented use cases or query contracts; they should not import another module's private models, repositories, or internal helpers. A module entry point such as `index.ts` can provide this surface, but should export only what consumers need—not every internal implementation detail.

@@ -73,16 +73,16 @@ function NavItem({
     ) : (
       <SidebarMenuItem key={item.title}>
         <SidebarMenuButton
+          render={
+            <Link
+              href={item.url ?? '#'}
+              onClick={onNavigate}
+            />
+          }
           tooltip={item.title}
           isActive={item.isActive}
         >
-          <Link
-            href={item.url ?? '#'}
-            className="flex w-full flex-row gap-2"
-            onClick={onNavigate}
-          >
-            {content}
-          </Link>
+          {content}
         </SidebarMenuButton>
       </SidebarMenuItem>
     );
