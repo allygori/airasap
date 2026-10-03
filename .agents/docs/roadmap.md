@@ -50,7 +50,8 @@
 ### 5. Settings and operational capabilities
 
 - **[OPEN]** Settings is a candidate capability spanning user, Organization, Store, and Finance preferences. Decide ownership and authorization separately for each setting before making a broad Settings module.
-- **[OPEN]** Suppliers and Customers are desired future capabilities, but their data ownership, lifecycle, and relationships to Purchases, Products, Orders, and Stores are not yet defined.
+- **[CURRENT]** Finance includes an Organization-wide Supplier directory linked to new Purchases.
+- **[OPEN]** Customer profiles and broad Settings remain future capabilities. Supplier relationships to Stores, products, and full procurement/receiving workflows remain undecided.
 - **[OPEN]** Operational features should be placed with the capability that owns their workflow; do not create a new module solely because a navigation section or settings screen exists.
 
 ### 6. Marketing and business analysis
@@ -76,7 +77,8 @@ Some future work depends on decisions or capabilities elsewhere:
 | Store allocation and stock warnings | Product-to-inventory ownership, allocation persistence, channel-account pool/quota policy, and source/freshness rules |
 | Multi-warehouse Inventory | Location-scoped availability, transfer lifecycle, in-transit handling, reservation location selection, and reconciliation |
 | Marketplace stock integration | API access, listing mapping, rate/failure handling, conflict resolution, and user-visible freshness semantics |
-| Suppliers, Customers, and Settings | Domain ownership, lifecycle, Organization/Store scope, relationships to current modules, and optionality requirements |
+| Customer profiles and broad Settings | Domain ownership, lifecycle, Organization/Store scope, relationships to current modules, and optionality requirements |
+| Expanded Supplier procurement workflows | Store/product sourcing, receiving, purchase returns, and warehouse relationships |
 
 Dependencies describe questions to resolve and are not a commitment to implement every item.
 

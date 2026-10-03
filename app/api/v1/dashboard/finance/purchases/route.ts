@@ -94,7 +94,8 @@ function mapPurchaseError(
               error.code ===
                 'FINANCE_PURCHASE_ITEM_NOT_FOUND' ||
               error.code ===
-                'FINANCE_PURCHASE_LOCATION_NOT_FOUND'
+                'FINANCE_PURCHASE_LOCATION_NOT_FOUND' ||
+              error.code === 'FINANCE_SUPPLIER_NOT_FOUND'
             ? 404
             : error.code ===
                 'FINANCE_PURCHASE_IDEMPOTENCY_CONFLICT'
@@ -104,7 +105,7 @@ function mapPurchaseError(
     return apiError(error.code, error.message, status);
   }
 
-  console.error(logContext, error);
+  console.error(logContext);
   return apiError(
     ErrorCodes.INTERNAL_ERROR,
     fallbackMessage,

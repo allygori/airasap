@@ -4,7 +4,7 @@
 
 ## Scope and status
 
-- **[CURRENT]** Finance is implemented under `modules/finance` as one business module with capabilities for onboarding, accounting, sales posting, inventory, purchases, expenses, cash management, and reporting/read models.
+- **[CURRENT]** Finance is implemented under `modules/finance` as one business module with capabilities for onboarding, accounting, sales posting, inventory, suppliers, purchases, expenses, cash management, and reporting/read models.
 - **[CURRENT]** Finance records are scoped to an Organization. Some operations also retain Store, channel, Order, or source-file dimensions. A selected Store is not the Finance tenant boundary.
 - **[CURRENT]** Finance lifecycle state is stored on the Organization and has `not_started`, `in_progress`, `blocked`, and `active` states. Most operational workflows require `active`.
 - **[CURRENT]** `FinanceEntitlementService` currently makes Finance available to every Organization in this development behavior. This is separate from lifecycle readiness and is not a general module entitlement or activation service.
@@ -16,6 +16,7 @@
 - [Accounting](accounting.md) — chart of accounts, journal lifecycle, periods, ledger, subledgers, and financial statements.
 - [Sales](sales.md) — marketplace Order posting, offline sales, and released-funds reconciliation.
 - [Inventory](inventory.md) — current inventory capability and its relationship to the agreed stock model.
+- [Suppliers](suppliers.md) — Organization-wide Finance supplier directory and its Purchase relationship.
 - [Purchases and expenses](purchases-and-expenses.md) — purchase posting, stock receipts, and expense/outflow journals.
 - [Cash management](cash-management.md) — cash/bank accounts, transfers, cash loans, and owner withdrawals.
 

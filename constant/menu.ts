@@ -21,6 +21,7 @@ import {
   ChartPieIcon,
   Landmark,
   WalletIcon,
+  Building2,
 } from 'lucide-react';
 
 export const mainNav = [
@@ -385,6 +386,16 @@ export const financeNav = [
       {
         title: 'Pinjaman Tunai',
         url: '/dashboard/finance/cash-loans',
+      },
+    ],
+  },
+  {
+    title: 'Data Usaha',
+    icon: Building2,
+    items: [
+      {
+        title: 'Supplier',
+        url: '/dashboard/finance/suppliers',
       },
     ],
   },

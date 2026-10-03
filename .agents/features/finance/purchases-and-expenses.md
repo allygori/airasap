@@ -1,13 +1,14 @@
 # Finance Purchases and Expenses
 
-> This guide documents current purchase and expense posting workflows. It does not imply that a dedicated Supplier module or procurement lifecycle exists.
+> This guide documents current purchase and expense posting workflows. It does not imply a broader procurement lifecycle.
 
 ## Purchases
 
 - **[CURRENT]** Finance Purchases supports draft and posting workflows scoped to the Organization.
 - **[CURRENT]** Posting creates an accounting journal and finalizes Inventory movements for purchase lines. Inventory lines require quantity and value tracking and use an active Finance inventory item/location.
 - **[CURRENT]** A purchase can represent payment or an amount payable according to its selected account configuration. Posting links the source purchase with the resulting journal and stock movement records and uses idempotency keys for retries.
-- **[CURRENT]** Purchase records do not establish a separate Supplier master-data module. Supplier ownership and the relationship to Organizations, Stores, and receiving remain open in [Q-014](../../docs/open-questions.md#q-014--supplier-ownership-and-purchasing-relationship).
+- **[CURRENT]** New purchases may reference an active Organization-owned Finance Supplier. Each Purchase keeps the Supplier reference, `supplier_name_snapshot` captured when it was created, and the transaction-specific `supplier_document_reference`.
+- **[CURRENT]** This development-stage field naming change includes no migration or backfill; the database may be reset before broader use.
 
 ## Expenses and outflows
 
@@ -19,7 +20,7 @@
 
 - **[CURRENT]** These workflows require Finance lifecycle readiness and use Finance Accounting for journal effects.
 - **[CURRENT]** Purchase stock receipts are Finance Inventory movements. Do not directly edit stock balances as a side effect of Product or Store UI changes.
-- **[OPEN]** Supplier master data, purchase receiving stages, purchase returns, and Store versus warehouse scope are not defined by these existing services. See [Q-014](../../docs/open-questions.md#q-014--supplier-ownership-and-purchasing-relationship) and [Q-012](../../docs/open-questions.md#q-012--multi-warehouse-operating-model).
+- **[OPEN]** Purchase receiving stages, purchase returns, and Store versus warehouse scope are not defined by these services. Supplier directory scope and the initial Purchase link are documented in [Suppliers](suppliers.md); broader sourcing and procurement workflows remain open in [Q-014](../../docs/open-questions.md#q-014--supplier-ownership-and-purchasing-relationship) and [Q-012](../../docs/open-questions.md#q-012--multi-warehouse-operating-model).
 
 ## Source entry points
 

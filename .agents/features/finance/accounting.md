@@ -9,7 +9,7 @@
 - **[CURRENT] Reversals:** The journal service supports reversal entries for posted journals. A correction should preserve the original posted record and use the supported reversal lifecycle instead of silently editing accounting history.
 - **[CURRENT] Periods:** Finance calculates monthly periods using the Organization Finance calendar timezone. A missing period record is treated as open; closing a period persists an explicit closed record.
 - **[CURRENT] Ledger:** The versioned Finance API exposes journal-entry listing/detail, reversal, Chart of Accounts, ledger reads, and period close workflows.
-- **[CURRENT] Receivables and payables:** Subledger balances are surfaced from posted journals and settlement activity; settling an item creates a settlement record and corresponding journal. These are Finance subledgers, not a separate Customers or Suppliers master-data module.
+- **[CURRENT] Receivables and payables:** Subledger balances are surfaced from posted journals and settlement activity; settling an item creates a settlement record and corresponding journal. These are Finance subledgers. Suppliers also have a separate directory; Customer master data is not implemented.
 - **[CURRENT] Financial statements:** `FinanceFinancialStatementsReadService` implements trial balance, profit and loss, balance sheet, and cash-flow read models from Finance accounting data. No versioned dashboard API route for this service was found in the current route tree; do not assume it is exposed through that API.
 
 ## Accounting invariants for contributors
@@ -24,7 +24,7 @@
 
 - **[CURRENT]** Monthly calendar behavior uses Finance's Organization timezone, which defaults to `Asia/Jakarta`.
 - **[OPEN]** Organization and Store user permissions are not a complete future RBAC/permission policy. See [Q-002 — Organization and Store role/permission scope](../../docs/open-questions.md#q-002--organization-and-store-rolepermission-scope).
-- **[OPEN]** Future Customer/Supplier entities and their scope are undecided; see [Q-014](../../docs/open-questions.md#q-014--supplier-ownership-and-purchasing-relationship) and [Q-015](../../docs/open-questions.md#q-015--customer-ownership-and-data-lifecycle).
+- **[OPEN]** Supplier links to Stores, products, and future procurement/receiving workflows remain undecided; see [Q-014](../../docs/open-questions.md#q-014--supplier-ownership-and-purchasing-relationship). Customer ownership and data lifecycle remain open in [Q-015](../../docs/open-questions.md#q-015--customer-ownership-and-data-lifecycle).
 
 ## Source entry points
 

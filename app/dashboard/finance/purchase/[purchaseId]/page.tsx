@@ -69,11 +69,11 @@ export default async function FinancePurchaseDetailPage({
             Finance / Purchase
           </p>
           <h1 className="text-4xl font-extrabold tracking-tight">
-            {purchase.supplier_name ??
+            {purchase.supplier_name_snapshot ??
               'Purchase tanpa supplier'}
           </h1>
           <p className="text-muted-foreground text-sm">
-            {purchase.supplier_reference ??
+            {purchase.supplier_document_reference ??
               'Tanpa nomor referensi'}{' '}
             · {formatDate(purchase.transaction_date)}
           </p>

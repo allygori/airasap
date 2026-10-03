@@ -50,7 +50,7 @@ Use this as a responsibility guide, not a requirement to create a file for every
 - **[TARGET]** A consumer requests a Finance operation through an explicit module seam; it does not write Finance collections directly. Since Finance is optional, core Order intake must continue to work when Finance is disabled or unavailable.
 - **[CURRENT]** Orders currently has a direct `OrderFinanceIntegrationService` dependency. This is a seam to improve, not a precedent that every consumer should import optional module internals. See [Module Boundaries](../architecture/module-boundaries.md).
 
-These ownership examples do not settle every future domain boundary. Settings, Suppliers, Customers, and Marketing ownership remains open until their behavior and data are defined.
+These ownership examples do not settle every future domain boundary. **[CURRENT]** Finance owns its Organization-wide Supplier directory and its Purchase reference. Supplier relationships to Stores, products, and future procurement remain open in [Q-014](../open-questions.md#q-014--supplier-ownership-and-purchasing-relationship). Settings, Customers, and Marketing ownership remains open until their behavior and data are defined.
 
 ## Business rules versus reusable helpers
 

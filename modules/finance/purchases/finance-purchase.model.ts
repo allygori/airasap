@@ -27,8 +27,9 @@ export type TFinancePurchaseLine = {
 
 export type TFinancePurchase = Document & {
   organization: Types.ObjectId;
-  supplier_name?: string | null;
-  supplier_reference?: string | null;
+  supplier?: Types.ObjectId | null;
+  supplier_name_snapshot?: string | null;
+  supplier_document_reference?: string | null;
   transaction_date: Date;
   payment_timing: FinancePurchasePaymentTiming;
   payment_account?: Types.ObjectId | null;
@@ -94,8 +95,16 @@ const FinancePurchaseSchema = new Schema<TFinancePurchase>(
       required: true,
       select: false,
     },
-    supplier_name: { type: String, default: null },
-    supplier_reference: { type: String, default: null },
+    supplier: {
+      type: Schema.Types.ObjectId,
+      ref: 'FinanceSupplier',
+      default: null,
+    },
+    supplier_name_snapshot: { type: String, default: null },
+    supplier_document_reference: {
+      type: String,
+      default: null,
+    },
     transaction_date: { type: Date, required: true },
     payment_timing: {
       type: String,

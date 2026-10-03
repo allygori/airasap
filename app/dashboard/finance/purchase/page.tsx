@@ -6,6 +6,7 @@ import {
   FinanceDomainError,
   FinancePurchaseListQuerySchema,
   FinancePurchaseReadService,
+  FinanceSupplierService,
   type FinancePurchaseListResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
@@ -47,6 +48,7 @@ type PageData =
       items: PurchaseItemOption[];
       locations: PurchaseLocationOption[];
       paymentAccounts: PurchaseAccountOption[];
+      suppliers: { id: string; name: string }[];
       purchases: FinancePurchaseListResponseDTO;
     }
   | { status: 'unavailable' | 'not_ready' };
@@ -75,6 +77,7 @@ export default async function FinancePurchasePage() {
       items={data.items}
       locations={data.locations}
       paymentAccounts={data.paymentAccounts}
+      suppliers={data.suppliers}
       purchases={data.purchases}
     />
   );
@@ -99,6 +102,7 @@ async function loadPageData(
       { records: items },
       locations,
       paymentAccounts,
+      suppliers,
       purchases,
     ] = await Promise.all([
       itemRepository.listActive({ page: 1, limit: 200 }),
@@ -107,6 +111,11 @@ async function loadPageData(
         [...FINANCE_CASH_BANK_SUBTYPE_VALUES],
         { limit: 100 }
       ),
+      new FinanceSupplierService(context).list({
+        page: 1,
+        limit: 100,
+        status: 'active',
+      }),
       new FinancePurchaseReadService(context).list(
         FinancePurchaseListQuerySchema.parse({})
       ),
@@ -130,6 +139,10 @@ async function loadPageData(
         code: account.code,
         name: account.name,
         subtype: account.subtype ?? null,
+      })),
+      suppliers: suppliers.suppliers.map((supplier) => ({
+        id: supplier.supplier_id,
+        name: supplier.name,
       })),
       purchases,
     };

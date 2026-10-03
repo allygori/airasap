@@ -19,6 +19,7 @@ const itemId = new Types.ObjectId();
 const locationId = new Types.ObjectId();
 const paymentAccountId = new Types.ObjectId();
 const payableAccountId = new Types.ObjectId();
+const supplierId = new Types.ObjectId();
 const inventoryAccountId = new Types.ObjectId();
 const purchaseId = new Types.ObjectId();
 const journalId = new Types.ObjectId();
@@ -216,6 +217,12 @@ const makeDependencies = () => {
   };
 
   return {
+    supplierService: {
+      findActiveById: async () => ({
+        _id: supplierId,
+        name: 'Supplier A',
+      }),
+    },
     itemRepository: {
       findActiveById: async () => item,
     },
@@ -231,8 +238,8 @@ const makeDependencies = () => {
 };
 
 const input = {
-  supplier_name: 'Supplier A',
-  supplier_reference: 'INV-001',
+  supplier_id: String(supplierId),
+  supplier_document_reference: 'INV-001',
   transaction_date: '2026-09-22T00:00:00.000Z',
   payment_timing: 'paid' as const,
   payment_account_id: String(paymentAccountId),

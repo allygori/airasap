@@ -60,7 +60,7 @@ The existing `FinanceEntitlementService` is not evidence of complete optional-mo
 
 **[TARGET]** When a second real integration creates a distinct implementation behind the same business capability, define a narrow adapter contract at that seam. Keep provider-specific formats and credentials inside their integration adapters; let domain modules consume normalized business inputs. Until then, a single implementation can remain direct and local.
 
-Settings, Suppliers, Customers, and Marketing are future capability candidates, not established module boundaries. Their questions are tracked in [Q-013](../open-questions.md#q-013--settings-ownership-and-scope), [Q-014](../open-questions.md#q-014--supplier-ownership-and-purchasing-relationship), [Q-015](../open-questions.md#q-015--customer-ownership-and-data-lifecycle), and [Q-016](../open-questions.md#q-016--marketing-capability-scope-and-optionality). Before adding one, identify which domain owns its data and rules, which existing modules consume it, and whether it is genuinely optional.
+**[CURRENT]** Finance owns the Organization-wide Supplier directory and the Supplier reference used by new Purchases. This is a bounded Finance capability, not a general Contacts or procurement module. Store/product sourcing and broader procurement relationships remain open in [Q-014](../open-questions.md#q-014--supplier-ownership-and-purchasing-relationship). Settings, Customers, and Marketing remain future capability candidates tracked in [Q-013](../open-questions.md#q-013--settings-ownership-and-scope), [Q-015](../open-questions.md#q-015--customer-ownership-and-data-lifecycle), and [Q-016](../open-questions.md#q-016--marketing-capability-scope-and-optionality).
 
 ## Practical review checklist
 

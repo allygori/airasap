@@ -1,5 +1,6 @@
 import { Types, type ClientSession } from 'mongoose';
 import { FinanceAccountRepository } from '../accounts/finance-account.repository';
+import { FinanceSupplierService } from '../suppliers/finance-supplier.service';
 import { FinanceDomainError } from '../finance.error';
 import {
   assertFinanceTenant,
@@ -47,6 +48,11 @@ type FinancePurchaseAccountPort = Pick<
   | 'findSelectableByCode'
 >;
 
+type FinancePurchaseSupplierPort = Pick<
+  FinanceSupplierService,
+  'findActiveById'
+>;
+
 type FinancePurchaseMovementPort = Pick<
   FinanceInventoryMovementRepository,
   'findByIdempotencyKey' | 'createPosted'
@@ -76,8 +82,8 @@ const isDuplicateKeyError = (error: unknown) => {
 const getSupplierDescription = (
   record: FinancePurchasePersistenceRecord
 ) =>
-  record.supplier_name
-    ? `Pembelian dari ${record.supplier_name}`
+  record.supplier_name_snapshot
+    ? `Pembelian dari ${record.supplier_name_snapshot}`
     : 'Pembelian inventory';
 
 const mapAccount = (
@@ -95,8 +101,10 @@ const toResponse = (
 ): FinancePurchaseResponseDTO =>
   FinancePurchaseResponseSchema.parse({
     purchase_id: String(record._id),
-    supplier_name: record.supplier_name ?? null,
-    supplier_reference: record.supplier_reference ?? null,
+    supplier_name_snapshot:
+      record.supplier_name_snapshot ?? null,
+    supplier_document_reference:
+      record.supplier_document_reference ?? null,
     transaction_date: record.transaction_date.toISOString(),
     payment_timing: record.payment_timing,
     payment_account: mapAccount(
@@ -156,10 +164,13 @@ const assertSameDraftRequest = (
     existing.payment_timing === input.payment_timing &&
     String(existing.payment_account ?? '') ===
       (input.payment_account_id ?? '') &&
-    (existing.supplier_name ?? null) ===
-      (input.supplier_name ?? null) &&
-    (existing.supplier_reference ?? null) ===
-      (input.supplier_reference ?? null) &&
+    (input.supplier_id
+      ? String(existing.supplier ?? '').toLowerCase() ===
+        input.supplier_id.toLowerCase()
+      : !existing.supplier &&
+        !existing.supplier_name_snapshot) &&
+    (existing.supplier_document_reference ?? null) ===
+      (input.supplier_document_reference ?? null) &&
     (existing.notes ?? null) === (input.notes ?? null) &&
     existing.idempotency_key === idempotencyKey;
 
@@ -175,6 +186,7 @@ export class FinancePurchaseService {
   private readonly itemRepository: FinancePurchaseItemPort;
   private readonly locationRepository: FinancePurchaseLocationPort;
   private readonly accountRepository: FinancePurchaseAccountPort;
+  private readonly supplierService: FinancePurchaseSupplierPort;
   private readonly movementRepository: FinancePurchaseMovementPort;
   private readonly journalService: FinancePurchaseJournalPort;
   private readonly purchaseRepository: FinancePurchaseRepositoryPort;
@@ -185,6 +197,7 @@ export class FinancePurchaseService {
       itemRepository?: FinancePurchaseItemPort;
       locationRepository?: FinancePurchaseLocationPort;
       accountRepository?: FinancePurchaseAccountPort;
+      supplierService?: FinancePurchaseSupplierPort;
       movementRepository?: FinancePurchaseMovementPort;
       journalService?: FinancePurchaseJournalPort;
       purchaseRepository?: FinancePurchaseRepositoryPort;
@@ -200,6 +213,9 @@ export class FinancePurchaseService {
     this.accountRepository =
       dependencies?.accountRepository ??
       new FinanceAccountRepository(context);
+    this.supplierService =
+      dependencies?.supplierService ??
+      new FinanceSupplierService(context);
     this.movementRepository =
       dependencies?.movementRepository ??
       new FinanceInventoryMovementRepository(context);
@@ -229,6 +245,19 @@ export class FinancePurchaseService {
         idempotencyKey
       );
       return toResponse(existing, true);
+    }
+
+    const supplier = data.supplier_id
+      ? await this.supplierService.findActiveById(
+          data.supplier_id,
+          session
+        )
+      : null;
+    if (data.supplier_id && !supplier) {
+      throw new FinanceDomainError(
+        'Supplier tidak ditemukan atau sudah tidak aktif.',
+        'FINANCE_SUPPLIER_NOT_FOUND'
+      );
     }
 
     const resolvedLines = await Promise.all(
@@ -279,8 +308,10 @@ export class FinancePurchaseService {
 
     const created = await this.createPurchase(
       {
-        supplier_name: data.supplier_name ?? null,
-        supplier_reference: data.supplier_reference ?? null,
+        supplier: supplier?._id ?? null,
+        supplier_name_snapshot: supplier?.name ?? null,
+        supplier_document_reference:
+          data.supplier_document_reference ?? null,
         transaction_date: data.transaction_date,
         payment_timing: data.payment_timing,
         payment_account: paymentAccount?._id ?? null,
@@ -467,8 +498,8 @@ export class FinancePurchaseService {
               source_id: String(purchase._id),
               idempotency_key: idempotencyKey,
               reference:
-                purchase.supplier_reference ??
-                purchase.supplier_name ??
+                purchase.supplier_document_reference ??
+                purchase.supplier_name_snapshot ??
                 undefined,
               notes: purchase.notes ?? undefined,
               journal_entry: new Types.ObjectId(
@@ -534,10 +565,22 @@ export class FinancePurchaseService {
           });
         if (
           sameLines &&
+          (data.supplier
+            ? String(
+                existing.supplier ?? ''
+              ).toLowerCase() ===
+              String(data.supplier).toLowerCase()
+            : !existing.supplier &&
+              !existing.supplier_name_snapshot) &&
           existing.total_amount === data.total_amount &&
+          existing.transaction_date.getTime() ===
+            data.transaction_date.getTime() &&
           existing.payment_timing === data.payment_timing &&
           String(existing.payment_account ?? '') ===
-            String(data.payment_account ?? '')
+            String(data.payment_account ?? '') &&
+          (existing.supplier_document_reference ?? null) ===
+            (data.supplier_document_reference ?? null) &&
+          (existing.notes ?? null) === (data.notes ?? null)
         ) {
           return existing;
         }

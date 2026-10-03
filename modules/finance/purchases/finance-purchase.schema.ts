@@ -34,8 +34,10 @@ export const FinancePurchaseLineInputSchema = z.object({
 
 export const FinancePurchaseInputSchema = z
   .object({
-    supplier_name: z.string().trim().max(160).optional(),
-    supplier_reference: z
+    supplier_id: ObjectIdStringSchema.transform((value) =>
+      value.toLowerCase()
+    ).optional(),
+    supplier_document_reference: z
       .string()
       .trim()
       .max(120)
@@ -116,8 +118,8 @@ export const FinancePurchaseAccountResponseSchema =
 
 export const FinancePurchaseResponseSchema = z.object({
   purchase_id: ObjectIdStringSchema,
-  supplier_name: z.string().nullable(),
-  supplier_reference: z.string().nullable(),
+  supplier_name_snapshot: z.string().nullable(),
+  supplier_document_reference: z.string().nullable(),
   transaction_date: z.string().datetime(),
   payment_timing: FinancePurchasePaymentTimingSchema,
   payment_account:

@@ -29,6 +29,11 @@ export type PurchaseAccountOption = {
   subtype: string | null;
 };
 
+export type PurchaseSupplierOption = {
+  id: string;
+  name: string;
+};
+
 const PurchaseLineFormSchema = z.object({
   line_key: z.string().min(1),
   item_id: z.string().min(1, 'Pilih item inventory.'),
@@ -55,8 +60,8 @@ const PurchaseLineFormSchema = z.object({
 
 export const FinancePurchaseFormSchema = z
   .object({
-    supplier_name: z.string().max(160),
-    supplier_reference: z.string().max(120),
+    supplier_id: z.string(),
+    supplier_document_reference: z.string().max(120),
     transaction_date: z
       .string()
       .regex(
@@ -109,6 +114,7 @@ export type PurchaseFormDefaultsInput = {
   items: PurchaseItemOption[];
   locations: PurchaseLocationOption[];
   paymentAccounts: PurchaseAccountOption[];
+  suppliers: PurchaseSupplierOption[];
 };
 
 export function createPurchaseFormDefaults({
@@ -117,8 +123,8 @@ export function createPurchaseFormDefaults({
   paymentAccounts,
 }: PurchaseFormDefaultsInput): FinancePurchaseFormValues {
   return {
-    supplier_name: '',
-    supplier_reference: '',
+    supplier_id: '',
+    supplier_document_reference: '',
     transaction_date: new Date().toISOString().slice(0, 10),
     payment_timing: 'paid',
     payment_account_id: paymentAccounts[0]?.id ?? '',
@@ -136,6 +142,7 @@ type FinancePurchaseFormProps = {
   items: PurchaseItemOption[];
   locations: PurchaseLocationOption[];
   paymentAccounts: PurchaseAccountOption[];
+  suppliers: PurchaseSupplierOption[];
   isSubmitting: boolean;
   errorMessage: string | null;
   successMessage: string | null;
@@ -144,8 +151,8 @@ type FinancePurchaseFormProps = {
 
 export const PurchaseForm = withForm({
   defaultValues: {
-    supplier_name: '',
-    supplier_reference: '',
+    supplier_id: '',
+    supplier_document_reference: '',
     transaction_date: '',
     payment_timing: 'paid',
     payment_account_id: '',
@@ -156,6 +163,7 @@ export const PurchaseForm = withForm({
     items: [],
     locations: [],
     paymentAccounts: [],
+    suppliers: [],
     isSubmitting: false,
     errorMessage: null,
     successMessage: null,
@@ -166,6 +174,7 @@ export const PurchaseForm = withForm({
     items,
     locations,
     paymentAccounts,
+    suppliers,
     isSubmitting,
     errorMessage,
     successMessage,
@@ -217,21 +226,32 @@ export const PurchaseForm = withForm({
       >
         <FieldGroup className="grid min-w-0 gap-5 md:grid-cols-2">
           <form.AppField
-            name="supplier_name"
+            name="supplier_id"
             children={(field) => (
-              <field.TextField
+              <field.SelectField
                 label="Supplier (opsional)"
-                maxLength={160}
-                placeholder="Contoh: PT Distributor Nusantara"
+                placeholder="Pilih supplier"
                 className="min-w-0"
+                remote={{
+                  url: '/api/v1/dashboard/finance/suppliers?status=active',
+                  resultsKey: 'data.suppliers',
+                  valueKey: 'supplier_id',
+                  labelKey: 'name',
+                  searchParam: 'search',
+                  limit: 100,
+                }}
+                items={suppliers.map((supplier) => ({
+                  label: supplier.name,
+                  value: supplier.id,
+                }))}
               />
             )}
           />
           <form.AppField
-            name="supplier_reference"
+            name="supplier_document_reference"
             children={(field) => (
               <field.TextField
-                label="No. invoice / referensi"
+                label="No. invoice / referensi dokumen supplier"
                 maxLength={120}
                 placeholder="Contoh: INV-2026-001"
                 className="min-w-0"

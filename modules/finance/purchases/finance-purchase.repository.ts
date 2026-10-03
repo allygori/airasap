@@ -19,8 +19,9 @@ import type {
 export type FinancePurchasePersistenceRecord = {
   _id: Types.ObjectId;
   organization: Types.ObjectId;
-  supplier_name?: string | null;
-  supplier_reference?: string | null;
+  supplier?: Types.ObjectId | null;
+  supplier_name_snapshot?: string | null;
+  supplier_document_reference?: string | null;
   transaction_date: Date;
   payment_timing: 'paid' | 'payable';
   payment_account?: Types.ObjectId | null;
@@ -100,8 +101,8 @@ export class FinancePurchaseRepository extends BaseRepository<TFinancePurchase> 
         'i'
       );
       queryFilter.$or = [
-        { supplier_name: search },
-        { supplier_reference: search },
+        { supplier_name_snapshot: search },
+        { supplier_document_reference: search },
         { notes: search },
         { idempotency_key: search },
       ];

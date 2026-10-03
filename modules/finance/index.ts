@@ -41,6 +41,7 @@ export { FinanceCashBankTransferReadService } from './cash-and-bank/finance-cash
 export { FinanceCashBankTransferRepository } from './cash-and-bank/finance-cash-bank-transfer.repository';
 export { FinancePurchaseService } from './purchases/finance-purchase.service';
 export { FinancePurchaseReadService } from './purchases/finance-purchase-read.service';
+export { FinanceSupplierService } from './suppliers/finance-supplier.service';
 export { FinanceExpenseService } from './expenses/finance-expense.service';
 export { FinanceExpenseReadService } from './expenses/finance-expense-read.service';
 export { FinanceOwnerWithdrawalService } from './owner-withdrawals/finance-owner-withdrawal.service';
@@ -229,6 +230,22 @@ export type {
   FinancePurchaseListResponseDTO,
   FinancePurchaseDetailResponseDTO,
 } from './purchases/finance-purchase.dto';
+export {
+  FinanceSupplierCreateInputSchema,
+  FinanceSupplierListQuerySchema,
+  FinanceSupplierListResponseSchema,
+  FinanceSupplierMutationResponseSchema,
+  FinanceSupplierResponseSchema,
+  FinanceSupplierUpdateInputSchema,
+} from './suppliers/finance-supplier.schema';
+export type {
+  FinanceSupplierCreateInputDTO,
+  FinanceSupplierDTO,
+  FinanceSupplierListQueryDTO,
+  FinanceSupplierListResponseDTO,
+  FinanceSupplierMutationResponseDTO,
+  FinanceSupplierUpdateInputDTO,
+} from './suppliers/finance-supplier.dto';
 export type {
   FinanceExpenseInputDTO,
   FinanceExpenseStatusDTO,

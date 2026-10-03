@@ -10,8 +10,9 @@ const organizationId = '507f1f77bcf86cd799439010';
 const record: FinancePurchasePersistenceRecord = {
   _id: new Types.ObjectId(),
   organization: new Types.ObjectId(organizationId),
-  supplier_name: 'Supplier A',
-  supplier_reference: 'INV-001',
+  supplier: new Types.ObjectId(),
+  supplier_name_snapshot: 'Supplier A',
+  supplier_document_reference: 'INV-001',
   transaction_date: new Date('2026-09-22T00:00:00.000Z'),
   payment_timing: 'payable',
   payment_account: null,
@@ -61,7 +62,7 @@ describe('FinancePurchaseReadService', () => {
     const detail = await service.get(String(record._id));
 
     expect(list.purchases[0]).toMatchObject({
-      supplier_name: 'Supplier A',
+      supplier_name_snapshot: 'Supplier A',
       status: 'posted',
       total_amount: 50000,
     });

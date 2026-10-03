@@ -142,11 +142,12 @@
 ### Q-014 — Supplier ownership and purchasing relationship
 
 - **Status:** `open`
-- **Question:** What records and workflows does a Supplier own, and how should Suppliers relate to Organizations, Stores, Products, and future purchasing/receiving flows?
+- **Current baseline:** Finance owns a basic Organization-scoped Supplier directory with contact fields and active/inactive status. New Purchases may select an active Supplier and retain a name snapshot plus the Supplier reference. This initial scope does not create Store-specific supplier records or a procurement lifecycle.
+- **Question:** How should Suppliers relate to Stores, Products, warehouses, and expanded purchasing/receiving workflows?
 - **Why it matters:** Supplier data could be Organization-wide while purchase operations or delivery destinations may be Store- or warehouse-scoped.
-- **Options to explore:** Organization-owned supplier directory with Store/location dimensions on purchases; Store-specific suppliers; or a phased model when procurement workflows are defined.
-- **Affected areas:** Future Suppliers, Finance purchases, Inventory receiving, product sourcing.
-- **Guidance:** [Roadmap](./roadmap.md), [Domain and Tenancy](./architecture/domain-and-tenancy.md).
+- **Options to explore:** Keep the directory Organization-wide and add Store/location dimensions to workflow records; add Store-specific availability; or extend the model only when a concrete sourcing/receiving workflow requires it.
+- **Affected areas:** Finance purchases, Inventory receiving, product sourcing, future procurement.
+- **Guidance:** [Finance Suppliers](../features/finance/suppliers.md), [Roadmap](./roadmap.md), [Domain and Tenancy](./architecture/domain-and-tenancy.md).
 
 ### Q-015 — Customer ownership and data lifecycle
 

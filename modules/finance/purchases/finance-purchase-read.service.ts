@@ -31,8 +31,10 @@ const mapSummary = (
 ): FinancePurchaseSummaryDTO =>
   FinancePurchaseSummarySchema.parse({
     purchase_id: String(record._id),
-    supplier_name: record.supplier_name ?? null,
-    supplier_reference: record.supplier_reference ?? null,
+    supplier_name_snapshot:
+      record.supplier_name_snapshot ?? null,
+    supplier_document_reference:
+      record.supplier_document_reference ?? null,
     transaction_date: record.transaction_date.toISOString(),
     payment_timing: record.payment_timing,
     payment_account:

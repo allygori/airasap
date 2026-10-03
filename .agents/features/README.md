@@ -10,7 +10,7 @@ This directory describes product capabilities and their current user-facing/busi
 - [Files](files/README.md) — file metadata and the current upload/storage helpers used by import workflows.
 - [Stores](stores/README.md) — Organization-owned Store records and the current Store/channel-account boundary.
 - [Authentication and Organization Access](authentication-and-access/README.md) — current Better Auth sign-in/onboarding flows and the unimplemented member/invitation management and future RBAC policy.
-- [Finance](finance/README.md) — optional Organization capability, with guides for setup, accounting, sales, inventory, purchases/expenses, and cash management.
+- [Finance](finance/README.md) — optional Organization capability, with guides for setup, accounting, sales, inventory, suppliers, purchases/expenses, and cash management.
 
 ## Writing and maintenance rules
 

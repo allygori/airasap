@@ -35,6 +35,7 @@ import {
   type PurchaseAccountOption,
   type PurchaseItemOption,
   type PurchaseLocationOption,
+  type PurchaseSupplierOption,
 } from './purchase.form';
 
 const ActionResponseSchema = z.object({
@@ -51,6 +52,7 @@ type FinancePurchaseClientProps = {
   items: PurchaseItemOption[];
   locations: PurchaseLocationOption[];
   paymentAccounts: PurchaseAccountOption[];
+  suppliers: PurchaseSupplierOption[];
   purchases: FinancePurchaseListResponseDTO;
 };
 
@@ -58,6 +60,7 @@ export function FinancePurchaseClient({
   items,
   locations,
   paymentAccounts,
+  suppliers,
   purchases,
 }: FinancePurchaseClientProps) {
   const router = useRouter();
@@ -84,13 +87,13 @@ export function FinancePurchaseClient({
 
     try {
       const payload = FinancePurchaseInputSchema.parse({
-        ...(values.supplier_name.trim()
-          ? { supplier_name: values.supplier_name.trim() }
+        ...(values.supplier_id
+          ? { supplier_id: values.supplier_id }
           : {}),
-        ...(values.supplier_reference.trim()
+        ...(values.supplier_document_reference.trim()
           ? {
-              supplier_reference:
-                values.supplier_reference.trim(),
+              supplier_document_reference:
+                values.supplier_document_reference.trim(),
             }
           : {}),
         transaction_date: `${values.transaction_date}T00:00:00.000Z`,
@@ -182,6 +185,7 @@ export function FinancePurchaseClient({
       items,
       locations,
       paymentAccounts,
+      suppliers,
     }),
     validationLogic: revalidateLogic(),
     validators: {
@@ -254,12 +258,20 @@ export function FinancePurchaseClient({
             pembayaran.
           </p>
         </div>
-        <Link
-          href="/dashboard/finance/inventory/product-and-stock-list"
-          className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-        >
-          Lihat saldo stok →
-        </Link>
+        <div className="flex flex-wrap gap-x-5 gap-y-2">
+          <Link
+            href="/dashboard/finance/suppliers"
+            className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Kelola supplier →
+          </Link>
+          <Link
+            href="/dashboard/finance/inventory/product-and-stock-list"
+            className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+          >
+            Lihat saldo stok →
+          </Link>
+        </div>
       </div>
 
       {!hasSetup ? (
@@ -301,6 +313,7 @@ export function FinancePurchaseClient({
                 items={items}
                 locations={locations}
                 paymentAccounts={paymentAccounts}
+                suppliers={suppliers}
                 isSubmitting={isSubmitting}
                 errorMessage={errorMessage}
                 successMessage={successMessage}
@@ -381,7 +394,7 @@ function PurchaseHistory({
                       href={`/dashboard/finance/purchase/${purchase.purchase_id}`}
                       className="font-medium underline-offset-4 hover:underline"
                     >
-                      {purchase.supplier_name ??
+                      {purchase.supplier_name_snapshot ??
                         'Purchase tanpa supplier'}
                     </Link>
                     <StatusBadge status={purchase.status} />
@@ -393,8 +406,8 @@ function PurchaseHistory({
                   </div>
                   <p className="text-muted-foreground mt-1 text-xs">
                     {formatDate(purchase.transaction_date)}
-                    {purchase.supplier_reference
-                      ? ` · ${purchase.supplier_reference}`
+                    {purchase.supplier_document_reference
+                      ? ` · ${purchase.supplier_document_reference}`
                       : ''}
                   </p>
                 </div>
