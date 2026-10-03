@@ -7,6 +7,19 @@ body {
   --header-height: calc(var(--spacing) * 12 + 1px);
 }
 
+:root.theme-blue,
+:root.theme-blue-scaled {
+  --p-h: 266.4;
+}
+
+:root.theme-green {
+  --p-h: 156.4;
+}
+
+:root.theme-amber {
+  --p-h: 86.087;
+}
+
 .theme-scaled {
   @media (min-width: 1024px) {
     --radius: 0.6rem;

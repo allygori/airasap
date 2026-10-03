@@ -9,7 +9,7 @@ Not one endpoint per field or form card. Each owner needs an explicit server-sid
 - **Better Auth-owned User and Organization identity:** use Better Auth's supported operations for the installed version where they cover the required behavior. Profile name updates use `auth.api.updateUser`; Organization name updates use `auth.api.updateOrganization` for the active Organization, without accepting a client-supplied Organization ID. Better Auth enforces membership and the `organization.update` permission. Do not duplicate those writes with raw Mongoose operations.
 - **Store:** **[CURRENT]** `PATCH /api/v1/dashboard/stores/:storeId` updates only the session's active Store through `StoreService.update()`. The route verifies active Organization membership and Store ID; the module repository applies Organization scope and rejects inactive or soft-deleted Stores without upsert.
 - **Finance:** in the final Finance phase, expose changes through a Finance-owned service/schema and route. Do not patch Finance data through a general Settings endpoint.
-- **Appearance:** use browser persistence for a device-local preference, or a User-owned preference contract if cross-device sync is selected. The latter remains open.
+- **Appearance:** **[CURRENT]** mode and dashboard theme/style are persisted in browser localStorage and update immediately; no API endpoint or database/session write is needed for this device-local scope. A User-owned preference contract for cross-device sync remains open.
 
 A page may compose more than one owner when a screen genuinely needs it, but it must call each owner's contract. Do not create `PATCH /api/v1/dashboard/settings` as a generic endpoint that accepts mixed User, Organization, Store, and Finance payloads. The Settings route group may be used for read-only composition or genuinely cross-cutting preferences only after ownership is explicit.
 
@@ -36,7 +36,7 @@ Email changes, password changes, recovery, and account deletion are security wor
 | Store name/code/timezone | `modules/stores/` and `StoreModel` | **[CURRENT]** Update the active Store through a validated item route and tenant-scoped service/repository operation |
 | Finance lifecycle | Currently nested in `Organization.finance` / `Organization.accounting` and managed partly by Finance onboarding/lifecycle code | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
 | Finance preferences/configuration | Currently mixed into Organization subdocuments | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |
-| Light/dark mode and color theme | Current dashboard theme components/providers | Group in Appearance; decide device-local versus User-synced persistence |
+| Light/dark mode and color theme | Browser localStorage and current dashboard theme provider | **[CURRENT]** Configure in Appearance for this browser; User-synced preferences remain **[OPEN]** |
 
 ## Implementation boundaries
 

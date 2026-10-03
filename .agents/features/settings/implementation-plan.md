@@ -89,20 +89,22 @@
 
 ## Phase 5 — Appearance and interface preferences
 
-**Status: [TARGET]**
+**Status: [CURRENT]**
 
 ### Scope
 
-- Bring the existing light/dark mode and dashboard color-theme controls into an Appearance screen, reusing the current theme provider and selector.
-- Before implementing persistence, decide whether the preference is browser-local or should follow the User across devices.
-- A browser-local first version can avoid database changes, but must be documented as device-specific. Do not store the preference in a session field unless the preference is intentionally session-scoped.
-- Do not add density, language, date, or accessibility preferences without defining their effect and scope.
+- **[CURRENT]** Bring system/light/dark mode and dashboard theme choices into `/dashboard/settings/appearance`, reusing the installed theme provider and existing theme selector.
+- **[CURRENT]** Persist color mode under the `theme` browser `localStorage` key and the dashboard theme in `airasap-appearance-theme`. Changes apply immediately and synchronize between same-origin tabs.
+- **[CURRENT]** Theme selection updates the dashboard root classes and color tokens. No API, database, or Session field is used; preferences are device/browser-specific.
+- **[OPEN]** Cross-browser/device synchronization remains out of scope until a User-owned preference contract is explicitly chosen.
+- Do not add language, date, or accessibility preferences without defining their effect and scope.
 
 ### Acceptance checks
 
-- Mode and color theme controls remain accessible and work with the existing theme tokens.
-- A saved preference is restored according to the selected persistence scope and does not cause a hydration mismatch or flash that breaks the dashboard.
-- No User/Session schema field is added unless cross-device or session-scoped behavior is an explicit decision.
+- **[CURRENT]** Settings exposes accessible mode and theme selectors; mode includes system, light, and dark.
+- **[CURRENT]** Blue, green, and amber themes update the primary color tokens; scaled and mono options continue to apply their dashboard styles.
+- **[CURRENT]** Browser-local choices are restored without server/client markup depending on `localStorage` and without adding User/Session persistence.
+- **[OPEN]** A preference that follows a User across devices requires a separate ownership and synchronization decision.
 
 ## Phase 6 — Finance configuration ownership (final Settings phase)
 

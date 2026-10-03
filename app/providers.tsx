@@ -10,6 +10,8 @@ export function Providers({
       attribute="class"
       defaultTheme="system"
       enableSystem
+      storage="localStorage"
+      storageKey="theme"
       disableTransitionOnChange
     >
       {children}

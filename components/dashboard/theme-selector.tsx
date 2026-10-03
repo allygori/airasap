@@ -1,6 +1,12 @@
 'use client';
 
+import { Fragment } from 'react';
+
 import { useThemeConfig } from '@/components/dashboard/active-theme';
+import {
+  APPEARANCE_THEME_GROUPS,
+  isAppearanceTheme,
+} from '@/constant/appearance';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -13,54 +19,21 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const DEFAULT_THEMES = [
-  {
-    name: 'Default',
-    value: 'default',
-  },
-  {
-    name: 'Blue',
-    value: 'blue',
-  },
-  {
-    name: 'Green',
-    value: 'green',
-  },
-  {
-    name: 'Amber',
-    value: 'amber',
-  },
-];
-
-const SCALED_THEMES = [
-  {
-    name: 'Default',
-    value: 'default-scaled',
-  },
-  {
-    name: 'Blue',
-    value: 'blue-scaled',
-  },
-];
-
-const MONO_THEMES = [
-  {
-    name: 'Mono',
-    value: 'mono-scaled',
-  },
-];
-
 export function ThemeSelector() {
   const { activeTheme, setActiveTheme } = useThemeConfig();
 
   return (
     <div className="flex items-center gap-2">
       <Label htmlFor="theme-selector" className="sr-only">
-        Theme
+        Warna tema
       </Label>
       <Select
         value={activeTheme}
-        onValueChange={(v) => v && setActiveTheme(v)}
+        onValueChange={(value) => {
+          if (isAppearanceTheme(value)) {
+            setActiveTheme(value);
+          }
+        }}
       >
         <SelectTrigger
           id="theme-selector"
@@ -68,48 +41,30 @@ export function ThemeSelector() {
           className="justify-start *:data-[slot=select-value]:w-12"
         >
           <span className="text-muted-foreground hidden sm:block">
-            Select a theme:
+            Tema tampilan:
           </span>
           <span className="text-muted-foreground block sm:hidden">
-            Theme
+            Tema
           </span>
-          <SelectValue placeholder="Select a theme" />
+          <SelectValue placeholder="Pilih tema tampilan" />
         </SelectTrigger>
         <SelectContent align="end">
-          <SelectGroup>
-            <SelectLabel>Default</SelectLabel>
-            {DEFAULT_THEMES.map((theme) => (
-              <SelectItem
-                key={theme.name}
-                value={theme.value}
-              >
-                {theme.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-          <SelectSeparator />
-          <SelectGroup>
-            <SelectLabel>Scaled</SelectLabel>
-            {SCALED_THEMES.map((theme) => (
-              <SelectItem
-                key={theme.name}
-                value={theme.value}
-              >
-                {theme.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-          <SelectGroup>
-            <SelectLabel>Monospaced</SelectLabel>
-            {MONO_THEMES.map((theme) => (
-              <SelectItem
-                key={theme.name}
-                value={theme.value}
-              >
-                {theme.name}
-              </SelectItem>
-            ))}
-          </SelectGroup>
+          {APPEARANCE_THEME_GROUPS.map((group, index) => (
+            <Fragment key={group.label}>
+              {index > 0 && <SelectSeparator />}
+              <SelectGroup>
+                <SelectLabel>{group.label}</SelectLabel>
+                {group.themes.map((theme) => (
+                  <SelectItem
+                    key={theme.value}
+                    value={theme.value}
+                  >
+                    {theme.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </Fragment>
+          ))}
         </SelectContent>
       </Select>
     </div>

@@ -91,7 +91,8 @@ export const settingsSectionGroups: SettingsSectionGroup[] =
           description:
             'Sesuaikan tema dan preferensi antarmuka.',
           icon: Palette,
-          availability: 'planned',
+          href: '/dashboard/settings/appearance',
+          availability: 'current',
         },
       ],
     },
