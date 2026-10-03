@@ -6,7 +6,7 @@
 
 Not one endpoint per field or form card. Each owner needs an explicit server-side write operation when a setting is editable, but the transport should follow the existing owner and use case.
 
-- **Better Auth-owned User and Organization identity:** use Better Auth's supported operations for the installed version where they cover the required behavior. Do not duplicate those writes with raw Mongoose operations.
+- **Better Auth-owned User and Organization identity:** use Better Auth's supported operations for the installed version where they cover the required behavior. Profile name updates use `auth.api.updateUser`; Organization name updates use `auth.api.updateOrganization` for the active Organization, without accepting a client-supplied Organization ID. Better Auth enforces membership and the `organization.update` permission. Do not duplicate those writes with raw Mongoose operations.
 - **Store:** add an Organization-scoped Store update use case and item route in the existing Store API because no update route exists and `StoreService.update()` is a TODO. A target route is `PATCH /api/v1/dashboard/stores/:storeId`.
 - **Finance:** in the final Finance phase, expose changes through a Finance-owned service/schema and route. Do not patch Finance data through a general Settings endpoint.
 - **Appearance:** use browser persistence for a device-local preference, or a User-owned preference contract if cross-device sync is selected. The latter remains open.
@@ -17,7 +17,7 @@ All application-owned routes still validate with Zod, resolve the authenticated 
 
 ## 2. Does Profile belong in `modules/users/`?
 
-**[CURRENT]** No `modules/users/` domain exists. Better Auth is configured with the `users` model in `lib/auth/configs/user.ts`, and authentication/profile identity fields belong to the Auth integration. The dashboard currently has no Profile settings workflow.
+**[CURRENT]** No `modules/users/` domain exists. Better Auth is configured with the `users` model in `lib/auth/configs/user.ts`, and authentication/profile identity fields belong to the Auth integration. Settings has a basic Profile workflow for the signed-in user.
 
 **[CURRENT]** `/dashboard/settings/profile` edits only the signed-in User's display name. `PATCH /api/v1/dashboard/settings/profile` validates the payload with Zod and delegates persistence to Better Auth's `auth.api.updateUser`, forwarding the updated session cookie. The page is UI composition; `lib/auth/` remains the Better Auth integration boundary. Do not create a second User model, repository, or `modules/users/` only to edit basic identity fields.
 
@@ -30,7 +30,9 @@ Email changes, password changes, recovery, and account deletion are security wor
 | Setting | Current source / owner | Settings behavior |
 | --- | --- | --- |
 | Display name and Auth profile | Better Auth User | **[CURRENT]** A validated profile route calls Better Auth's supported update operation for the current session |
-| Organization name/logo/slug | Better Auth Organization plugin for core fields | Use supported Organization operations; restrict sensitive fields and verify actor membership/role |
+| Organization display name | Better Auth Organization plugin | **[CURRENT]** A validated `PATCH /api/v1/dashboard/settings/organization` sends only `name`; Better Auth resolves the active Organization from the session and enforces membership/update permission |
+| Organization logo | Better Auth logo string plus private-file storage boundary | **[OPEN]** No logo edit until local and deployment files have an authenticated browser-readable path. The current shared AvatarField emits data URLs |
+| Organization slug | Better Auth Organization plugin | **[CURRENT]** Not editable from Settings; changing it requires a separate product and routing decision |
 | Store name/code/timezone | `modules/stores/` and `StoreModel` | Add a Store update use case and tenant-scoped route |
 | Finance lifecycle | Currently nested in `Organization.finance` / `Organization.accounting` and managed partly by Finance onboarding/lifecycle code | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
 | Finance preferences/configuration | Currently mixed into Organization subdocuments | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |

@@ -26,8 +26,8 @@
 ### Acceptance checks
 
 - The Settings link opens the hub from the dashboard sidebar.
-- The route provides a responsive Settings-specific sub-navigation; only Ringkasan is an active destination in this phase.
-- Profile, Organization, Store, Finance, and Appearance are clearly marked as planned and have no editable controls.
+- At the end of this phase, Ringkasan was the only active destination in Settings navigation.
+- At the completion of this phase, Profile, Organization, Store, Finance, and Appearance were marked planned and had no editable controls.
 - Navigation works on narrow and wide screens, supports keyboard use, and clearly marks the active section.
 - An unimplemented section is not presented as editable.
 
@@ -52,20 +52,21 @@
 
 ## Phase 3 — Organization profile
 
-**Status: [TARGET]**
+**Status: [CURRENT] for Organization name; [OPEN] for Organization logo.**
 
 ### Scope
 
-- Add Organization name/logo editing through the Organization plugin's supported Better Auth operations, after confirming the installed contract and actor restrictions.
+- **[CURRENT]** Edit only the active Organization display name through Better Auth's supported `updateOrganization` API. The server uses the active Organization in the session; Better Auth enforces membership and update permission.
 - Keep authentication-owned Organization identity fields under Better Auth. Any application-owned Organization configuration must be changed through its owning business module.
 - Do not expose slug changes, deletion, ownership transfer, or member management in the initial form unless their consequences and authorization rules are separately agreed.
-- Reuse the existing file-storage boundary if logo upload is included; do not put uploaded files under `public/` or introduce a second storage mechanism.
+- **[OPEN]** Decide logo upload only after defining how private local and deployment files will be served to the browser. The existing `AvatarField` submits a data URL, while the file-storage helper has no authenticated read route; do not persist the data URL or introduce another storage mechanism in this phase.
+- The Organization name update reuses the existing Better Auth field and does not change the database schema.
 
 ### Acceptance checks
 
-- The update targets the active Organization resolved by the server and confirms the actor may change it.
-- Changing Organization display data does not change Store ownership or rewrite Finance history.
-- File upload uses the existing development-local/deployment storage configuration if image upload is in scope.
+- **[CURRENT]** The update targets the active Organization from the server-side session; Better Auth verifies the signed-in actor's membership and update permission.
+- **[CURRENT]** Changing the Organization name does not change Store ownership or rewrite Finance history, and requires no schema change.
+- **[OPEN]** Logo upload needs an authenticated, browser-readable path for local and deployment storage before it is added.
 
 ## Phase 4 — Store settings
 

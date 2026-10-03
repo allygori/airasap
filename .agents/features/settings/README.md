@@ -1,15 +1,17 @@
 # Settings
 
-> **[TARGET]** Settings is a centralized dashboard hub that composes user-facing configuration from its owning capabilities. The hub owns navigation and presentation; it is not a second home for User, Organization, Store, or Finance data.
+> **[CURRENT]** Settings is a centralized dashboard hub that composes user-facing configuration from its owning capabilities. The hub owns navigation and presentation; it is not a second home for User, Organization, Store, or Finance data.
 
 ## Summary
 
-- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization, Store, Finance, and Appearance are visible but remain planned and are not editable yet.
-- **[CURRENT]** Better Auth owns authentication and User records. Settings now allows the signed-in User to update the display name; email, password, and image editing remain outside this screen.
+- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization supports name updates; Store, Finance, and Appearance remain planned and are not editable yet.
+- **[CURRENT]** Better Auth owns authentication and User records. Settings allows the signed-in User to update the display name; email, password, and image editing remain outside this screen.
+- **[CURRENT]** The Organization screen lets the signed-in user update the active Organization name through Better Auth. No database schema change is needed for this field.
+- **[OPEN]** Organization logo editing is deferred until a private-file serving contract exists for local development and deployment storage. The current shared avatar field creates data URLs and is not used for this workflow.
 - **[CURRENT]** `modules/stores/` supports Store creation and listing. The Store service update method is a TODO and there is no Store item update route.
 - **[CURRENT]** Finance and Accounting lifecycle/configuration fields are nested in the Organization record and are written by Finance onboarding and lifecycle code.
 - **[CURRENT]** Appearance controls already exist in the dashboard, but they are not collected under Settings. Persistence for every appearance choice has not been verified as one durable user preference.
-- **[CURRENT]** `/dashboard/settings` is the Settings entry point with a persistent section navigation and route-local screens planned for each setting area.
+- **[CURRENT]** `/dashboard/settings` is the Settings entry point with persistent section navigation. Profile and Organization have focused edit screens; Store, Finance, and Appearance remain planned.
 - **[TARGET]** Each screen calls the API or use case owned by the capability that owns the data. Do not add a generic Settings model or a handler that writes unrelated domains.
 - **[TARGET]** Move Finance-specific configuration behind a Finance-owned boundary in the final Settings phase. **[OPEN]** The exact split between lifecycle state and editable configuration must be reviewed before implementation; see [Q-013](../../docs/open-questions.md#q-013--settings-ownership-and-scope).
 
@@ -18,7 +20,7 @@
 | Area | Data owner | Initial scope | Status |
 | --- | --- | --- | --- |
 | Profile | Better Auth User | Update the signed-in account display name; email/password security flows remain separate | **[CURRENT]** |
-| Organization | Better Auth Organization for core identity; the owning business module for its own configuration | Organization name/logo and explicitly approved core fields | **[TARGET]** |
+| Organization | Better Auth Organization for core identity; the owning business module for its own configuration | Edit active Organization name; do not edit slug or logo in this slice | Name **[CURRENT]**; logo **[OPEN]** |
 | Store | `modules/stores/` | Edit the active Organization's Store name, code, and timezone | **[TARGET]**; update path is missing |
 | Appearance | Cross-cutting user preference | Bring current theme/mode controls together; decide browser-only versus account-synced persistence | **[OPEN]** |
 | Finance | `modules/finance/` | Own Finance configuration after classifying and moving Finance-specific fields out of generic Organization storage | **[TARGET]**, final phase |
@@ -26,9 +28,9 @@
 
 ## Decisions and assumptions
 
-- **[CURRENT]** The Settings page is a read-only hub with nested navigation; individual forms will remain focused and can be reviewed one section at a time.
-- **[TARGET]** Basic identity fields remain in Better Auth. Do not create `modules/users/` only to edit the existing Auth User name or email.
-- **[TARGET]** The initial account has one user. Member invitations, role administration, and user-management screens are outside the initial Settings scope. Authentication and trusted Organization/Store scoping remain required.
+- **[CURRENT]** The Settings hub uses nested navigation, and each implemented screen has a focused form that can be reviewed one section at a time.
+- **[CURRENT]** Basic identity fields remain in Better Auth. Do not create `modules/users/` only to edit the existing Auth User name or email.
+- **[CURRENT]** The application currently has one user. Member invitations, role administration, and user-management screens are outside the initial Settings scope. Authentication and trusted Organization/Store scoping remain required.
 - **[TARGET]** The initial implementation assumes fresh development data. No data migration or backfill is planned; any intentional schema redesign must state the development database reset requirement.
 - **[OPEN]** Whether Appearance preferences should sync across browsers/devices is not decided. A browser-local preference avoids adding persistence fields, but is device-specific.
 

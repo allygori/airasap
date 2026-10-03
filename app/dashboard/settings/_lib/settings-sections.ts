@@ -60,7 +60,8 @@ export const settingsSectionGroups: SettingsSectionGroup[] =
           description:
             'Atur identitas dan informasi organisasi.',
           icon: Building2,
-          availability: 'planned',
+          href: '/dashboard/settings/organization',
+          availability: 'current',
         },
         {
           id: 'store',

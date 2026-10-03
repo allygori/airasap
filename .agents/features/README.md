@@ -9,7 +9,7 @@ This directory describes product capabilities and their current user-facing/busi
 - [Reports](reports/README.md) — Store-scoped analytics aggregated from Orders.
 - [Files](files/README.md) — file metadata and the current upload/storage helpers used by import workflows.
 - [Stores](stores/README.md) — Organization-owned Store records and the current Store/channel-account boundary.
-- [Settings](settings/README.md) — planned Settings hub, phased implementation, and User/Organization/Store/Finance ownership boundaries.
+- [Settings](settings/README.md) — Settings hub and current Profile/Organization screens, phased implementation, and User/Organization/Store/Finance ownership boundaries.
 - [Authentication and Organization Access](authentication-and-access/README.md) — current Better Auth sign-in/onboarding flows and the unimplemented member/invitation management and future RBAC policy.
 - [Finance](finance/README.md) — optional Organization capability, with guides for setup, accounting, sales, inventory, suppliers, purchases/expenses, and cash management.
 
