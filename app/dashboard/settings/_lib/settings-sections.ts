@@ -69,7 +69,8 @@ export const settingsSectionGroups: SettingsSectionGroup[] =
           description:
             'Atur nama, kode, dan zona waktu toko aktif.',
           icon: Store,
-          availability: 'planned',
+          href: '/dashboard/settings/store',
+          availability: 'current',
         },
       ],
     },

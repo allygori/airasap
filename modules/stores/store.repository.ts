@@ -5,8 +5,12 @@
  */
 
 import { BaseRepository } from '../base.repository';
-import { StoreModel, TStore } from './store.model';
-import { QueryFilter } from 'mongoose';
+import { Types, type QueryFilter } from 'mongoose';
+import type {
+  CreateStoreDTO,
+  UpdateStoreDTO,
+} from './store.dto';
+import { StoreModel, type TStore } from './store.model';
 
 export class StoreRepository extends BaseRepository<TStore> {
   constructor(tenantContext: {
@@ -20,12 +24,20 @@ export class StoreRepository extends BaseRepository<TStore> {
    * Find current store
    */
   async findCurrentStore() {
+    const storeId = this.tenantContext.storeId;
+    if (!storeId || !Types.ObjectId.isValid(storeId)) {
+      return null;
+    }
+
     return await this.model
       .findOne({
-        _id: this.tenantContext.storeId,
+        _id: new Types.ObjectId(storeId),
         ...this.getTenantFilter(),
+        is_active: true,
+        deleted_at: null,
       })
-      .lean();
+      .lean()
+      .exec();
   }
 
   /**
@@ -44,12 +56,33 @@ export class StoreRepository extends BaseRepository<TStore> {
   /**
    * Create a new store
    */
-  async create(data: any) {
+  async create(data: CreateStoreDTO) {
     return await this.model.create({
       ...data,
       // organizationId: this.tenantContext.organizationId,
       organization: this.tenantContext.organizationId,
     });
+  }
+
+  /**
+   * Update an active Store inside the trusted Organization scope.
+   */
+  async updateById(id: string, data: UpdateStoreDTO) {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    return this.model
+      .findOneAndUpdate(
+        {
+          _id: new Types.ObjectId(id),
+          ...this.getTenantFilter(),
+          is_active: true,
+          deleted_at: null,
+        },
+        { $set: data },
+        { returnDocument: 'after', runValidators: true }
+      )
+      .lean()
+      .exec();
   }
 
   /**

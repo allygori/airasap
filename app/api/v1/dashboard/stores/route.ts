@@ -61,7 +61,7 @@ export const GET = withValidation(
 
 export const POST = withValidation(
   CreateStoreSchema,
-  async (request, { validatedBody }) => {
+  async (_request, { validatedBody }) => {
     try {
       const tenantContext = await getTenantContext();
 
@@ -77,29 +77,14 @@ export const POST = withValidation(
 
       const storeService = new StoreService(tenantContext);
       const body = validatedBody as CreateStoreDTO;
-
-      console.log(
-        'Create store body:',
-        JSON.stringify(body, null, 2)
-      );
-
       const newStore = await storeService.create(body);
 
       return apiSuccess(newStore, undefined, 201);
-    } catch (error: any) {
-      console.error('[POST /v1/dashboard/stores]', error);
-
-      if (error.message?.includes('sudah ada')) {
-        return apiError(
-          ErrorCodes.CONFLICT,
-          error.message,
-          409
-        );
-      }
-
+    } catch {
+      console.error('[POST /v1/dashboard/stores] failed');
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
-        error.message || 'Gagal membuat toko',
+        'Gagal membuat toko.',
         500
       );
     }

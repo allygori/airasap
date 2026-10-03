@@ -7,7 +7,7 @@
 Not one endpoint per field or form card. Each owner needs an explicit server-side write operation when a setting is editable, but the transport should follow the existing owner and use case.
 
 - **Better Auth-owned User and Organization identity:** use Better Auth's supported operations for the installed version where they cover the required behavior. Profile name updates use `auth.api.updateUser`; Organization name updates use `auth.api.updateOrganization` for the active Organization, without accepting a client-supplied Organization ID. Better Auth enforces membership and the `organization.update` permission. Do not duplicate those writes with raw Mongoose operations.
-- **Store:** add an Organization-scoped Store update use case and item route in the existing Store API because no update route exists and `StoreService.update()` is a TODO. A target route is `PATCH /api/v1/dashboard/stores/:storeId`.
+- **Store:** **[CURRENT]** `PATCH /api/v1/dashboard/stores/:storeId` updates only the session's active Store through `StoreService.update()`. The route verifies active Organization membership and Store ID; the module repository applies Organization scope and rejects inactive or soft-deleted Stores without upsert.
 - **Finance:** in the final Finance phase, expose changes through a Finance-owned service/schema and route. Do not patch Finance data through a general Settings endpoint.
 - **Appearance:** use browser persistence for a device-local preference, or a User-owned preference contract if cross-device sync is selected. The latter remains open.
 
@@ -33,7 +33,7 @@ Email changes, password changes, recovery, and account deletion are security wor
 | Organization display name | Better Auth Organization plugin | **[CURRENT]** A validated `PATCH /api/v1/dashboard/settings/organization` sends only `name`; Better Auth resolves the active Organization from the session and enforces membership/update permission |
 | Organization logo | Better Auth logo string plus private-file storage boundary | **[OPEN]** No logo edit until local and deployment files have an authenticated browser-readable path. The current shared AvatarField emits data URLs |
 | Organization slug | Better Auth Organization plugin | **[CURRENT]** Not editable from Settings; changing it requires a separate product and routing decision |
-| Store name/code/timezone | `modules/stores/` and `StoreModel` | Add a Store update use case and tenant-scoped route |
+| Store name/code/timezone | `modules/stores/` and `StoreModel` | **[CURRENT]** Update the active Store through a validated item route and tenant-scoped service/repository operation |
 | Finance lifecycle | Currently nested in `Organization.finance` / `Organization.accounting` and managed partly by Finance onboarding/lifecycle code | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
 | Finance preferences/configuration | Currently mixed into Organization subdocuments | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |
 | Light/dark mode and color theme | Current dashboard theme components/providers | Group in Appearance; decide device-local versus User-synced persistence |

@@ -8,7 +8,16 @@ import {
   CreateStoreDTO,
   StoreFilterDTO,
   UpdateStoreDTO,
+  UpdateStoreSchema,
 } from './store.dto';
+import type { QueryFilter } from 'mongoose';
+import type { TStore } from './store.model';
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error
+    ? error.message
+    : 'Kesalahan tidak diketahui';
+}
 
 export class StoreService {
   private repository: StoreRepository;
@@ -23,9 +32,9 @@ export class StoreService {
   async getCurrentStore() {
     try {
       return await this.repository.findCurrentStore();
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal mendapatkan toko saat ini: ${error.message}`
+        `Gagal mendapatkan toko saat ini: ${getErrorMessage(error)}`
       );
     }
   }
@@ -38,9 +47,9 @@ export class StoreService {
       return await this.repository.findAll({
         deleted_at: null,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal mengambil daftar toko: ${error.message}`
+        `Gagal mengambil daftar toko: ${getErrorMessage(error)}`
       );
     }
   }
@@ -50,7 +59,9 @@ export class StoreService {
    */
   async getWithPagination(filter: StoreFilterDTO) {
     try {
-      const queryFilter: any = { deleted_at: null };
+      const queryFilter: QueryFilter<TStore> = {
+        deleted_at: null,
+      };
 
       if (filter.is_active !== undefined) {
         queryFilter.is_active = filter.is_active;
@@ -63,7 +74,7 @@ export class StoreService {
         };
         queryFilter.$or = [
           { name: searchRegex },
-          { product_id: searchRegex },
+          { code: searchRegex },
         ];
       }
 
@@ -72,9 +83,9 @@ export class StoreService {
         filter.limit || 10,
         queryFilter
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal mengambil data toko dengan pagination: ${error.message}`
+        `Gagal mengambil data toko dengan pagination: ${getErrorMessage(error)}`
       );
     }
   }
@@ -89,9 +100,9 @@ export class StoreService {
         throw new Error('Toko tidak ditemukan');
       }
       return store;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal mengambil detail toko: ${error.message}`
+        `Gagal mengambil detail toko: ${getErrorMessage(error)}`
       );
     }
   }
@@ -100,17 +111,12 @@ export class StoreService {
    * Create new store
    */
   async create(dto: CreateStoreDTO) {
-    /** @TODO implement */
     try {
-      console.log(
-        'create store dto',
-        JSON.stringify(dto, null, 2)
-      );
       const newStore = await this.repository.create(dto);
       return newStore;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal membuat toko: ${error.message}`
+        `Gagal membuat toko: ${getErrorMessage(error)}`
       );
     }
   }
@@ -119,54 +125,8 @@ export class StoreService {
    * Update store
    */
   async update(id: string, dto: UpdateStoreDTO) {
-    /** @TODO implement */
-    // try {
-    //   const store = await this.repository.findById(id);
-    //   if (!store) {
-    //     throw new Error(
-    //       'Toko tidak ditemukan untuk diperbarui'
-    //     );
-    //   }
-    //   // Jika product_id diubah, validasi keunikan
-    //   if (
-    //     dto.product_id &&
-    //     dto.product_id !== store.product_id
-    //   ) {
-    //     const existingProduct =
-    //       await this.repository.findByProductId(
-    //         dto.product_id
-    //       );
-    //     if (existingProduct) {
-    //       throw new Error(
-    //         `Store dengan ID '${dto.product_id}' sudah ada`
-    //       );
-    //     }
-    //   }
-    //   // Hitung finalPrice untuk setiap variant jika ada
-    //   const dataToUpdate = { ...dto };
-    //   if (dataToUpdate.variants) {
-    //     dataToUpdate.variants = dataToUpdate.variants.map(
-    //       (variant) => ({
-    //         ...variant,
-    //         finalPrice:
-    //           variant.price -
-    //           (variant.price * variant.discount) / 100,
-    //       })
-    //     );
-    //   }
-    //   const updatedProduct = await this.repository.update(
-    //     id,
-    //     dataToUpdate
-    //   );
-    //   if (!updatedProduct) {
-    //     throw new Error('Gagal memperbarui store');
-    //   }
-    //   return updatedProduct;
-    // } catch (error: any) {
-    //   throw new Error(
-    //     `Gagal memperbarui store: ${error.message}`
-    //   );
-    // }
+    const validatedData = UpdateStoreSchema.parse(dto);
+    return this.repository.updateById(id, validatedData);
   }
 
   /**
@@ -189,9 +149,9 @@ export class StoreService {
       }
 
       return deletedStore;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal menghapus toko: ${error.message}`
+        `Gagal menghapus toko: ${getErrorMessage(error)}`
       );
     }
   }
@@ -214,9 +174,9 @@ export class StoreService {
       }
 
       return restoredStore;
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal memulihkan toko: ${error.message}`
+        `Gagal memulihkan toko: ${getErrorMessage(error)}`
       );
     }
   }
@@ -227,9 +187,9 @@ export class StoreService {
   async getActive() {
     try {
       return await this.repository.findActive();
-    } catch (error: any) {
+    } catch (error: unknown) {
       throw new Error(
-        `Gagal mengambil toko aktif: ${error.message}`
+        `Gagal mengambil toko aktif: ${getErrorMessage(error)}`
       );
     }
   }

@@ -2,8 +2,16 @@ import { z } from 'zod';
 import { TIMEZONE_VALUES } from '@/constant/timezone';
 
 export const BaseStoreSchema = z.object({
-  name: z.string().min(1, 'Nama toko wajib diisi'),
-  code: z.string(), // 2 chars code, e.g: 'KD'
+  name: z
+    .string()
+    .trim()
+    .min(1, 'Nama toko wajib diisi')
+    .max(160, 'Nama toko maksimal 160 karakter.'),
+  code: z
+    .string()
+    .trim()
+    .max(64, 'Kode toko maksimal 64 karakter.')
+    .optional(), // Optional in the model and onboarding flow.
   timezone: z.enum(TIMEZONE_VALUES),
   is_active: z.boolean().default(true),
 });
@@ -18,8 +26,12 @@ export const CreateStoreSchema = BaseStoreSchema.omit({
 /**
  * Skema untuk pembaruan store (PATCH/PUT) - Semua field opsional
  */
-export const UpdateStoreSchema =
-  CreateStoreSchema.partial();
+export const UpdateStoreSchema = CreateStoreSchema.partial()
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, {
+    message:
+      'Pilih setidaknya satu informasi toko untuk diubah.',
+  });
 
 /**
  * Skema untuk query filter

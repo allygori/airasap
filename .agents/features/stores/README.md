@@ -11,10 +11,10 @@
 
 ## Current operations and limits
 
-- **[CURRENT]** The versioned dashboard Store collection route exposes `GET` with pagination/filtering and `POST` for creation. The reviewed route tree has no Store item route for read/update/delete/restore.
+- **[CURRENT]** The versioned dashboard Store collection route exposes `GET` with pagination/filtering and `POST` for creation. `PATCH /api/v1/dashboard/stores/:storeId` updates name, code, and timezone for the active Store only; no item read/delete/restore route is provided by this phase.
 - **[CURRENT]** The `GET` collection handler currently requires both Organization and active Store IDs in tenant context, even though the service query lists Stores for the Organization. Preserve this as observed route behavior; review the context requirement deliberately if changing Store selection flows.
-- **[CURRENT]** The service/repository contains methods for retrieving the current Store, active Stores, a Store by ID, soft deletion, and restore. `StoreService.update()` is currently a TODO with no implemented update path.
-- **[CURRENT]** Create validation requires a name, code, and timezone. The persisted model defaults timezone to `Asia/Jakarta` and active state to `true`; the API schema is the current request validation contract.
+- **[CURRENT]** The service/repository contains methods for retrieving the current Store, active Stores, a Store by ID, updating a Store, soft deletion, and restore. `StoreService.update()` validates its input and delegates to an Organization-scoped repository operation that requires an active, undeleted Store and does not upsert.
+- **[CURRENT]** Create validation requires a name and timezone; `code` is optional, matching the model and onboarding flow. Request validation trims values and limits names to 160 characters and codes to 64. Store update validation allows a non-empty subset of name, code, and timezone and rejects unknown fields. The persisted model defaults timezone to `Asia/Jakarta` and active state to `true`; request validation changes do not alter the Mongoose schema.
 - **[CURRENT]** Soft delete and restore change the Store record's `deleted_at` field. No cascading Order, Product, or Finance deletion should be inferred from these methods.
 
 ## Channel and settings boundaries
@@ -27,5 +27,5 @@
 ## Source entry points
 
 - [Store service](../../../modules/stores/store.service.ts), [repository](../../../modules/stores/store.repository.ts), [schema](../../../modules/stores/store.schema.ts), and [model](../../../modules/stores/store.model.ts)
-- [Store collection API](../../../app/api/v1/dashboard/stores/route.ts)
+- [Store collection API](../../../app/api/v1/dashboard/stores/route.ts) and [Store item update API](../../../app/api/v1/dashboard/stores/%5BstoreId%5D/route.ts)
 - [Domain and Tenancy](../../docs/architecture/domain-and-tenancy.md), [Inventory and Sales Channels](../../docs/architecture/inventory-and-channels.md), and [Open Questions](../../docs/open-questions.md)

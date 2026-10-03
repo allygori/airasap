@@ -4,14 +4,14 @@
 
 ## Summary
 
-- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization supports name updates; Store, Finance, and Appearance remain planned and are not editable yet.
+- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization supports name updates; Store supports active Store name, code, and timezone updates. Finance and Appearance remain planned.
 - **[CURRENT]** Better Auth owns authentication and User records. Settings allows the signed-in User to update the display name; email, password, and image editing remain outside this screen.
 - **[CURRENT]** The Organization screen lets the signed-in user update the active Organization name through Better Auth. No database schema change is needed for this field.
 - **[OPEN]** Organization logo editing is deferred until a private-file serving contract exists for local development and deployment storage. The current shared avatar field creates data URLs and is not used for this workflow.
-- **[CURRENT]** `modules/stores/` supports Store creation and listing. The Store service update method is a TODO and there is no Store item update route.
+- **[CURRENT]** `modules/stores/` supports Store creation, listing, and update. Settings edits only the active Store through `PATCH /api/v1/dashboard/stores/:storeId`; membership, session Store ID, Organization scope, and active/non-deleted state are checked server-side.
 - **[CURRENT]** Finance and Accounting lifecycle/configuration fields are nested in the Organization record and are written by Finance onboarding and lifecycle code.
 - **[CURRENT]** Appearance controls already exist in the dashboard, but they are not collected under Settings. Persistence for every appearance choice has not been verified as one durable user preference.
-- **[CURRENT]** `/dashboard/settings` is the Settings entry point with persistent section navigation. Profile and Organization have focused edit screens; Store, Finance, and Appearance remain planned.
+- **[CURRENT]** `/dashboard/settings` is the Settings entry point with persistent section navigation. Profile, Organization, and active Store have focused edit screens; Finance and Appearance remain planned.
 - **[TARGET]** Each screen calls the API or use case owned by the capability that owns the data. Do not add a generic Settings model or a handler that writes unrelated domains.
 - **[TARGET]** Move Finance-specific configuration behind a Finance-owned boundary in the final Settings phase. **[OPEN]** The exact split between lifecycle state and editable configuration must be reviewed before implementation; see [Q-013](../../docs/open-questions.md#q-013--settings-ownership-and-scope).
 
@@ -21,7 +21,7 @@
 | --- | --- | --- | --- |
 | Profile | Better Auth User | Update the signed-in account display name; email/password security flows remain separate | **[CURRENT]** |
 | Organization | Better Auth Organization for core identity; the owning business module for its own configuration | Edit active Organization name; do not edit slug or logo in this slice | Name **[CURRENT]**; logo **[OPEN]** |
-| Store | `modules/stores/` | Edit the active Organization's Store name, code, and timezone | **[TARGET]**; update path is missing |
+| Store | `modules/stores/` | Edit the active Store's name, code, and timezone | **[CURRENT]** |
 | Appearance | Cross-cutting user preference | Bring current theme/mode controls together; decide browser-only versus account-synced persistence | **[OPEN]** |
 | Finance | `modules/finance/` | Own Finance configuration after classifying and moving Finance-specific fields out of generic Organization storage | **[TARGET]**, final phase |
 | Members, integrations, billing, notifications | Their future owning capabilities | Add only after a concrete workflow and permission contract exist | **[OPEN]** |

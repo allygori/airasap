@@ -70,21 +70,22 @@
 
 ## Phase 4 — Store settings
 
-**Status: [TARGET]**
+**Status: [CURRENT]**
 
 ### Scope
 
-- Add an Organization-scoped Store edit flow for existing fields such as name, code, and timezone.
-- Complete the `StoreService.update()` use case, its validation, and tenant-scoped repository operation before adding the form.
-- Add an item route such as `PATCH /api/v1/dashboard/stores/:storeId`; keep the route thin and call `modules/stores/`.
-- Validate that the requested Store belongs to the authenticated Organization. Do not accept an Organization ID from the form as authorization.
+- **[CURRENT]** Add an Organization-scoped Store edit screen for the active Store name, code, and timezone.
+- **[CURRENT]** `StoreService.update()` validates its input and calls a tenant-scoped repository update that does not upsert. It only updates an active, undeleted Store.
+- **[CURRENT]** `PATCH /api/v1/dashboard/stores/:storeId` validates ID and payload, verifies active Organization membership through Better Auth, requires the route ID to match the Store ID in session, and calls `modules/stores/`.
+- **[CURRENT]** This phase changes request validation and update behavior only; it does not change the Mongoose Store schema or require a database migration.
+- Do not accept Organization or Store IDs from the form as proof of access. The route Store ID is checked against trusted session context and the repository also scopes by Organization.
 - Treat active Store switching as session/context behavior, not as a Store profile update.
 
 ### Acceptance checks
 
-- The current Store loads from trusted session context; a requested Store ID cannot escape Organization scope.
-- Name/code/timezone updates persist and render after refresh.
-- Existing Product, Order, and Finance records keep their own snapshots and relationships; the update does not cascade changes into them.
+- **[CURRENT]** The screen loads the current Store from trusted session context; the endpoint rejects a different Store ID and the repository scopes updates by Organization.
+- **[CURRENT]** Name/code/timezone updates persist and render after refresh.
+- **[CURRENT]** Existing Product, Order, and Finance records keep their own snapshots and relationships; the update does not cascade changes into them.
 
 ## Phase 5 — Appearance and interface preferences
 
