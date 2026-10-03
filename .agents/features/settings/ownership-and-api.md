@@ -19,7 +19,7 @@ All application-owned routes still validate with Zod, resolve the authenticated 
 
 **[CURRENT]** No `modules/users/` domain exists. Better Auth is configured with the `users` model in `lib/auth/configs/user.ts`, and authentication/profile identity fields belong to the Auth integration. The dashboard currently has no Profile settings workflow.
 
-**[TARGET]** Put the Profile page under `/dashboard/settings/profile`, but keep basic identity operations in Better Auth. The page is UI composition; `lib/auth/` remains the Better Auth integration boundary. Do not create a second User model, repository, or `modules/users/` only to edit basic name/email/image fields.
+**[CURRENT]** `/dashboard/settings/profile` edits only the signed-in User's display name. `PATCH /api/v1/dashboard/settings/profile` validates the payload with Zod and delegates persistence to Better Auth's `auth.api.updateUser`, forwarding the updated session cookie. The page is UI composition; `lib/auth/` remains the Better Auth integration boundary. Do not create a second User model, repository, or `modules/users/` only to edit basic identity fields.
 
 **[OPEN]** If the application later adds user-owned business data or workflows that are not authentication/profile concerns, review a dedicated user-domain module then. Cross-device preferences may also need an explicitly User-owned preference contract; they should not be added as arbitrary Better Auth fields without a defined owner and lifecycle.
 
@@ -29,7 +29,7 @@ Email changes, password changes, recovery, and account deletion are security wor
 
 | Setting | Current source / owner | Settings behavior |
 | --- | --- | --- |
-| Display name and Auth profile | Better Auth User | Call Better Auth's supported profile update operation |
+| Display name and Auth profile | Better Auth User | **[CURRENT]** A validated profile route calls Better Auth's supported update operation for the current session |
 | Organization name/logo/slug | Better Auth Organization plugin for core fields | Use supported Organization operations; restrict sensitive fields and verify actor membership/role |
 | Store name/code/timezone | `modules/stores/` and `StoreModel` | Add a Store update use case and tenant-scoped route |
 | Finance lifecycle | Currently nested in `Organization.finance` / `Organization.accounting` and managed partly by Finance onboarding/lifecycle code | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |

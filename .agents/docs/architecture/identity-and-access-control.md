@@ -28,7 +28,7 @@ The `admin()` plugin is part of the Better Auth configuration. Its presence must
 
 ## Profile ownership
 
-**[CURRENT]** Better Auth owns the configured `users` identity model through `lib/auth/configs/user.ts`; no `modules/users/` domain or dashboard Profile editor was found. **[TARGET]** A basic Profile screen should use Better Auth's supported User operations rather than introduce a duplicate User model. A separate user-domain module requires a distinct application-owned workflow; see [Settings ownership and API contracts](../../features/settings/ownership-and-api.md).
+**[CURRENT]** Better Auth owns the configured `users` identity model through `lib/auth/configs/user.ts`. `/dashboard/settings/profile` reads the authenticated User and updates only the display name through Better Auth's supported `updateUser` operation, after server-side Zod validation. No `modules/users/` domain or duplicate User model is needed for this workflow. Email, password, and image changes remain outside the current Profile screen; see [Settings ownership and API contracts](../../features/settings/ownership-and-api.md).
 ## Current module access is separate from user permissions
 
 **[CURRENT]** Finance has a `FinanceEntitlementService` and an access endpoint. The current service contains temporary development behavior that returns `available: true`; its plan-based check is commented out. This is not a general module-activation service and does not prove per-Organization enable/disable behavior is implemented end to end.

@@ -33,19 +33,20 @@
 
 ## Phase 2 — Profile
 
-**Status: [TARGET]**
+**Status: [CURRENT]**
 
 ### Scope
 
 - Add a Profile page under Settings and read the authenticated Better Auth User.
 - Start with the basic display name. Include profile image only after confirming its storage and Better Auth update contract.
-- Use Better Auth's supported User update API; do not write the `users` collection directly from a page or add a parallel Mongoose User model.
+- Validate the display name with Zod in `PATCH /api/v1/dashboard/settings/profile`, then call Better Auth's supported `updateUser` operation using the request session. Do not write the `users` collection directly or add a parallel Mongoose User model.
 - Keep email change, password change, account deletion, and session management out of the first slice unless their verification/recovery flows are specified.
 - Do not create `modules/users/` just for basic Auth profile fields. A User domain module is a future option only if the application gains user-owned business workflows beyond authentication/profile.
 
 ### Acceptance checks
 
 - The page shows the signed-in account, not a client-selected user ID.
+- The email remains read-only; the name update persists and appears in the account UI after refresh.
 - A valid name change persists and is reflected after refresh; invalid or unauthenticated requests fail safely.
 - No unrelated user or tenant data is returned.
 
@@ -136,5 +137,3 @@ Defer invitations/member roles, channel-account credentials, marketplace integra
 - Use the existing data-table system only if a setting area includes a real collection/list workflow.
 - Apply the `shadcn` skill only when adding, searching, fixing, or composing shadcn/ui components. This documentation plan does not require the skill by itself.
 - After each implementation phase, run the relevant narrow checks and perform the phase's browser acceptance checks before moving on.
-
-

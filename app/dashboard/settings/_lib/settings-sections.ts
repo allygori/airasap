@@ -46,7 +46,8 @@ export const settingsSectionGroups: SettingsSectionGroup[] =
           description:
             'Kelola nama dan informasi akun yang digunakan untuk masuk.',
           icon: UserRound,
-          availability: 'planned',
+          href: '/dashboard/settings/profile',
+          availability: 'current',
         },
       ],
     },

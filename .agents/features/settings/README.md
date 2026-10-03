@@ -4,8 +4,8 @@
 
 ## Summary
 
-- **[CURRENT]** `/dashboard/settings` is a read-only hub with responsive section navigation, and the dashboard sidebar links to it. Profile, Organization, Store, Finance, and Appearance entries are visible but not editable yet.
-- **[CURRENT]** Better Auth owns authentication and User records. Its Organization plugin is configured, but no dashboard profile-edit workflow was found.
+- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization, Store, Finance, and Appearance are visible but remain planned and are not editable yet.
+- **[CURRENT]** Better Auth owns authentication and User records. Settings now allows the signed-in User to update the display name; email, password, and image editing remain outside this screen.
 - **[CURRENT]** `modules/stores/` supports Store creation and listing. The Store service update method is a TODO and there is no Store item update route.
 - **[CURRENT]** Finance and Accounting lifecycle/configuration fields are nested in the Organization record and are written by Finance onboarding and lifecycle code.
 - **[CURRENT]** Appearance controls already exist in the dashboard, but they are not collected under Settings. Persistence for every appearance choice has not been verified as one durable user preference.
@@ -17,7 +17,7 @@
 
 | Area | Data owner | Initial scope | Status |
 | --- | --- | --- | --- |
-| Profile | Better Auth User | Basic account profile; keep email/password security flows on Better Auth | **[TARGET]** |
+| Profile | Better Auth User | Update the signed-in account display name; email/password security flows remain separate | **[CURRENT]** |
 | Organization | Better Auth Organization for core identity; the owning business module for its own configuration | Organization name/logo and explicitly approved core fields | **[TARGET]** |
 | Store | `modules/stores/` | Edit the active Organization's Store name, code, and timezone | **[TARGET]**; update path is missing |
 | Appearance | Cross-cutting user preference | Bring current theme/mode controls together; decide browser-only versus account-synced persistence | **[OPEN]** |

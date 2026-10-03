@@ -48,4 +48,4 @@ export const {
   useSession,
   getSession,
   updateSession,
-} = createAuthClient();
+} = authClient;
