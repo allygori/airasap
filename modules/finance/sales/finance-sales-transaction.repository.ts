@@ -8,6 +8,7 @@ import { BaseRepository } from '@/modules/base.repository';
 import type { FinanceTenantContext } from '../finance.types';
 import {
   FinanceSalesTransactionModel,
+  type TFinanceSalesCogsRetryPlan,
   type TFinanceSalesTransaction,
 } from './finance-sales-transaction.model';
 import type {
@@ -41,6 +42,8 @@ export type FinanceSalesTransactionPersistenceRecord = {
   inventory_cogs_deferred_reason: string | null;
   inventory_cogs_status: FinanceSalesInventoryCogsStatusDTO;
   inventory_cogs_total_cost: number | null;
+  inventory_cogs_journal_entry_id?: Types.ObjectId | null;
+  inventory_cogs_retry_plan?: TFinanceSalesCogsRetryPlan | null;
   inventory_movement_ids: Types.ObjectId[];
   created_at?: Date;
   updated_at?: Date;
@@ -84,6 +87,120 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
     if (session) query.session(session);
     return query
       .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findByJournalEntryId(
+    journalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(journalEntryId))
+      return null;
+
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      journal_entry_id: new Types.ObjectId(journalEntryId),
+    });
+    if (session) query.session(session);
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async findByCogsRetryJournalEntryId(
+    journalEntryId: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(journalEntryId))
+      return null;
+
+    const query = this.model.findOne({
+      ...this.getTenantFilter(),
+      inventory_cogs_journal_entry_id: new Types.ObjectId(
+        journalEntryId
+      ),
+    });
+    if (session) query.session(session);
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async saveCogsRetryPlan(
+    id: string,
+    plan: TFinanceSalesCogsRetryPlan,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        status: 'posted',
+        inventory_cogs_status: { $in: ['deferred', null] },
+        $or: [
+          { inventory_cogs_retry_plan: null },
+          { inventory_cogs_retry_plan: { $exists: false } },
+        ],
+      },
+      { $set: { inventory_cogs_retry_plan: plan } },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async updateDeferredCogsReason(
+    id: string,
+    reason: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(id)) return null;
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        status: 'posted',
+        inventory_cogs_status: { $in: ['deferred', null] },
+      },
+      { $set: { inventory_cogs_deferred_reason: reason } },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async clearCogsRetryPlan(
+    id: string,
+    session?: ClientSession
+  ): Promise<void> {
+    if (!Types.ObjectId.isValid(id)) return;
+
+    await this.model
+      .updateOne(
+        {
+          ...this.getTenantFilter(),
+          _id: new Types.ObjectId(id),
+          status: 'posted',
+          inventory_cogs_status: {
+            $in: ['deferred', null],
+          },
+        },
+        { $unset: { inventory_cogs_retry_plan: 1 } },
+        session ? { session } : undefined
+      )
       .exec();
   }
 
@@ -269,6 +386,57 @@ export class FinanceSalesTransactionRepository extends BaseRepository<TFinanceSa
               }
             : {}),
         },
+      },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+    return query
+      .lean<FinanceSalesTransactionPersistenceRecord | null>()
+      .exec();
+  }
+
+  async markInventoryCogsPosted(
+    id: string,
+    journalEntryId: string,
+    cogs: {
+      total_cost: number;
+      movement_ids: string[];
+    },
+    session?: ClientSession
+  ): Promise<FinanceSalesTransactionPersistenceRecord | null> {
+    if (
+      !Types.ObjectId.isValid(id) ||
+      !Types.ObjectId.isValid(journalEntryId)
+    ) {
+      return null;
+    }
+
+    const query = this.model.findOneAndUpdate(
+      {
+        ...this.getTenantFilter(),
+        _id: new Types.ObjectId(id),
+        status: 'posted',
+        inventory_cogs_status: { $in: ['deferred', null] },
+      },
+      {
+        $set: {
+          inventory_cogs_status: 'posted',
+          inventory_cogs_deferred_reason: null,
+          inventory_cogs_total_cost: cogs.total_cost,
+          inventory_cogs_journal_entry_id:
+            new Types.ObjectId(journalEntryId),
+          inventory_movement_ids: cogs.movement_ids
+            .filter((movementId) =>
+              Types.ObjectId.isValid(movementId)
+            )
+            .map(
+              (movementId) => new Types.ObjectId(movementId)
+            ),
+        },
+        $unset: { inventory_cogs_retry_plan: 1 },
       },
       {
         returnDocument: 'after',

@@ -106,6 +106,23 @@ export class FinanceJournalService {
     return this.postOperationalInternal(input, session);
   }
 
+  async findByIdempotencyKey(
+    idempotencyKey: string,
+    session?: ClientSession
+  ): Promise<FinanceJournalPostResultDTO | null> {
+    const existing =
+      await this.journalRepository.findByIdempotencyKey(
+        idempotencyKey,
+        session
+      );
+    if (!existing) return null;
+
+    return {
+      journal_entry: mapFinanceJournalEntry(existing),
+      replayed: true,
+    };
+  }
+
   async reverse(
     journalEntryId: string,
     input: FinanceJournalReversalDTO | unknown,

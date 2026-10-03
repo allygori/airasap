@@ -272,6 +272,15 @@ export const FinanceSalesWorkflowResultSchema = z.object({
   reason: z.string().nullable(),
 });
 
+export const FinanceSalesCogsRetryResultSchema = z.object({
+  status: z.enum(['posted', 'deferred']),
+  transaction_id: ObjectIdStringSchema,
+  inventory_cogs_journal_entry_id:
+    ObjectIdStringSchema.nullable(),
+  total_cost: z.number().int().nonnegative().nullable(),
+  reason: z.string().nullable(),
+});
+
 export const FinanceSalesTransactionListQuerySchema =
   z.object({
     page: z.coerce.number().int().positive().default(1),
@@ -310,6 +319,10 @@ export const FinanceSalesTransactionSummarySchema =
       .int()
       .nonnegative()
       .nullable(),
+    inventory_cogs_journal_entry_id:
+      ObjectIdStringSchema.nullable()
+        .optional()
+        .default(null),
     created_at: z.string().datetime(),
     updated_at: z.string().datetime(),
   });

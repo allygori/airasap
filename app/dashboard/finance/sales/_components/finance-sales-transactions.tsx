@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { z } from 'zod';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
 import { Badge } from '@/components/ui/badge';
 import {
   Button,
@@ -28,6 +30,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  FinanceSalesCogsRetryResultSchema,
   FinanceSalesWorkflowResultSchema,
   type FinanceSalesTransactionListQueryDTO,
   type FinanceSalesTransactionListResponseDTO,
@@ -37,6 +46,11 @@ import { FinanceSalesFilterForm } from './finance-sales-filter.form';
 const ActionResponseSchema = z.object({
   success: z.literal(true),
   data: FinanceSalesWorkflowResultSchema,
+});
+
+const CogsRetryActionResponseSchema = z.object({
+  success: z.literal(true),
+  data: FinanceSalesCogsRetryResultSchema,
 });
 
 export function FinanceSalesTransactions({
@@ -51,6 +65,10 @@ export function FinanceSalesTransactions({
     null
   );
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [retriedCogsIds, setRetriedCogsIds] = useState<
+    Set<string>
+  >(() => new Set());
 
   const postTransaction = async (
     transactionId: string,
@@ -78,6 +96,49 @@ export function FinanceSalesTransactions({
         return;
       }
 
+      router.refresh();
+    } catch {
+      setError('Tidak dapat menghubungi server Finance.');
+    } finally {
+      setWorkingId(null);
+    }
+  };
+
+  const retryCogs = async (transactionId: string) => {
+    setWorkingId(transactionId);
+    setError(null);
+    setNotice(null);
+
+    try {
+      const response = await fetch(
+        `/api/v1/dashboard/finance/sales/${transactionId}/retry-cogs`,
+        { method: 'POST' }
+      );
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        setError(getErrorMessage(payload));
+        return;
+      }
+
+      const parsed =
+        CogsRetryActionResponseSchema.safeParse(payload);
+      if (!parsed.success) {
+        setError('Respons server Finance tidak valid.');
+        return;
+      }
+
+      if (parsed.data.data.status === 'deferred') {
+        setError(
+          parsed.data.data.reason ??
+            'HPP masih tertunda karena stok belum siap.'
+        );
+      } else {
+        setRetriedCogsIds(
+          (current) => new Set([...current, transactionId])
+        );
+        setNotice('HPP berhasil dihitung dan diposting.');
+      }
       router.refresh();
     } catch {
       setError('Tidak dapat menghubungi server Finance.');
@@ -153,6 +214,14 @@ export function FinanceSalesTransactions({
           {error}
         </div>
       ) : null}
+      {notice ? (
+        <div
+          role="status"
+          className="border-success/30 bg-success/10 text-success rounded-lg border px-4 py-3 text-sm"
+        >
+          {notice}
+        </div>
+      ) : null}
 
       <Card>
         <CardHeader className="gap-4 border-b lg:flex-row lg:items-end lg:justify-between">
@@ -190,7 +259,7 @@ export function FinanceSalesTransactions({
                   <TableHead className="text-right">
                     Nilai
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className="w-12 text-right">
                     Aksi
                   </TableHead>
                 </TableRow>
@@ -253,56 +322,110 @@ export function FinanceSalesTransactions({
                             transaction.currency
                           )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        {transaction.status ===
-                        'pending' ? (
-                          <Button
-                            size="sm"
-                            disabled={
-                              workingId === transaction.id
-                            }
-                            onClick={() =>
-                              postTransaction(
-                                transaction.id,
-                                'post'
-                              )
-                            }
-                          >
-                            {workingId === transaction.id
-                              ? 'Memproses…'
-                              : 'Post'}
-                          </Button>
-                        ) : null}
-                        {transaction.status ===
-                        'blocked' ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            disabled={
-                              workingId === transaction.id
-                            }
-                            onClick={() =>
-                              postTransaction(
-                                transaction.id,
-                                'retry'
-                              )
-                            }
-                          >
-                            {workingId === transaction.id
-                              ? 'Mencoba…'
-                              : 'Coba lagi'}
-                          </Button>
-                        ) : null}
-                        {transaction.journal_entry_id ? (
-                          <Link
-                            href={`/dashboard/finance/accounting/general-journal?search=${encodeURIComponent(transaction.source_order_id)}`}
-                            className="text-primary px-2 py-1.5 text-xs font-medium underline-offset-4 hover:underline"
-                          >
-                            Jurnal terkait
-                          </Link>
-                        ) : null}
-                      </div>
+                    <TableCell className="w-12 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          render={
+                            <Button
+                              variant="ghost"
+                              className="text-muted-foreground data-[state=open]:bg-muted flex size-8"
+                              size="icon"
+                              aria-label={`Buka menu aksi ${transaction.source_order_number}`}
+                            />
+                          }
+                        >
+                          <HugeiconsIcon
+                            icon={MoreVerticalIcon}
+                            size={16}
+                          />
+                          <span className="sr-only">
+                            Buka menu aksi
+                          </span>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent
+                          align="end"
+                          className="w-56"
+                        >
+                          {transaction.status ===
+                          'pending' ? (
+                            <DropdownMenuItem
+                              disabled={
+                                workingId === transaction.id
+                              }
+                              onClick={() =>
+                                postTransaction(
+                                  transaction.id,
+                                  'post'
+                                )
+                              }
+                            >
+                              {workingId === transaction.id
+                                ? 'Memproses…'
+                                : 'Post'}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {transaction.status ===
+                          'blocked' ? (
+                            <DropdownMenuItem
+                              disabled={
+                                workingId === transaction.id
+                              }
+                              onClick={() =>
+                                postTransaction(
+                                  transaction.id,
+                                  'retry'
+                                )
+                              }
+                            >
+                              {workingId === transaction.id
+                                ? 'Mencoba…'
+                                : 'Coba lagi'}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {transaction.status ===
+                            'posted' &&
+                          transaction.inventory_cogs_status ===
+                            'deferred' &&
+                          !retriedCogsIds.has(
+                            transaction.id
+                          ) ? (
+                            <DropdownMenuItem
+                              disabled={
+                                workingId === transaction.id
+                              }
+                              onClick={() =>
+                                retryCogs(transaction.id)
+                              }
+                            >
+                              {workingId === transaction.id
+                                ? 'Menghitung…'
+                                : 'Coba hitung HPP'}
+                            </DropdownMenuItem>
+                          ) : null}
+                          {transaction.journal_entry_id ? (
+                            <DropdownMenuItem
+                              render={
+                                <Link
+                                  href={`/dashboard/finance/accounting/general-journal?search=${encodeURIComponent(transaction.source_order_id)}`}
+                                />
+                              }
+                            >
+                              Jurnal terkait
+                            </DropdownMenuItem>
+                          ) : null}
+                          {transaction.inventory_cogs_journal_entry_id ? (
+                            <DropdownMenuItem
+                              render={
+                                <Link
+                                  href={`/dashboard/finance/accounting/general-journal?search=${encodeURIComponent(transaction.source_order_id)}`}
+                                />
+                              }
+                            >
+                              Jurnal HPP
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}

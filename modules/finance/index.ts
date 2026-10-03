@@ -157,6 +157,7 @@ export type {
   FinanceSalesTransactionListResponseDTO,
   FinanceSalesTransactionDetailResponseDTO,
   FinanceSalesInventoryCogsStatusDTO,
+  FinanceSalesCogsRetryResultDTO,
 } from './sales/finance-sales.dto';
 export type {
   FinanceOfflineSaleFormOptionsDTO,
@@ -365,6 +366,7 @@ export {
   FinanceSalesPostingModeSchema,
   FinanceSalesTransactionStatusSchema,
   FinanceSalesWorkflowResultSchema,
+  FinanceSalesCogsRetryResultSchema,
   FinanceSalesTransactionListQuerySchema,
   FinanceSalesTransactionSummarySchema,
   FinanceSalesTransactionListResponseSchema,

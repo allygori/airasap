@@ -9,13 +9,17 @@ import {
 } from '../finance.types';
 import { FinanceJournalService } from '../journal/finance-journal.service';
 import type {
+  FinanceSalesCogsRetryResultDTO,
   FinanceSalesPostingDecisionDTO,
   FinanceSalesPostingIntentDTO,
   FinanceSalesPostingModeDTO,
   FinanceSalesProjectionDTO,
   FinanceSalesWorkflowResultDTO,
 } from './finance-sales.dto';
-import { makeFinanceSalesIdempotencyKey } from './finance-sales.keys';
+import {
+  makeFinanceSalesCogsRetryJournalIdempotencyKey,
+  makeFinanceSalesIdempotencyKey,
+} from './finance-sales.keys';
 import { FinanceSalesPostingRulesService } from './finance-sales-rules.service';
 import { FinanceInventoryCogsService } from '../inventory/finance-inventory-cogs.service';
 import {
@@ -23,7 +27,9 @@ import {
   type CreateFinanceSalesTransactionRecord,
   type FinanceSalesTransactionPersistenceRecord,
 } from './finance-sales-transaction.repository';
+import type { TFinanceSalesCogsRetryPlan } from './finance-sales-transaction.model';
 import {
+  FinanceSalesCogsRetryResultSchema,
   FinanceSalesPostingIntentSchema,
   FinanceSalesWorkflowResultSchema,
 } from './finance-sales.schema';
@@ -60,6 +66,20 @@ type FinanceSalesJournalPort = Pick<
   'postOperational'
 >;
 
+type FinanceSalesCogsRetryJournalPort = Pick<
+  FinanceJournalService,
+  'postOperational' | 'findByIdempotencyKey'
+>;
+
+type FinanceSalesCogsRetryRepositoryPort = Pick<
+  FinanceSalesTransactionRepository,
+  | 'findTransactionById'
+  | 'saveCogsRetryPlan'
+  | 'updateDeferredCogsReason'
+  | 'clearCogsRetryPlan'
+  | 'markInventoryCogsPosted'
+>;
+
 type FinanceSalesCogsPort = Pick<
   FinanceInventoryCogsService,
   'prepare' | 'finalize'
@@ -91,6 +111,8 @@ export class FinanceSalesWorkflowService {
   private readonly transactionRepository: FinanceSalesTransactionRepositoryPort;
   private readonly roleResolver: FinanceSalesAccountResolverPort;
   private readonly journalService: FinanceSalesJournalPort;
+  private readonly cogsRetryJournalService: FinanceSalesCogsRetryJournalPort;
+  private readonly cogsRetryRepository: FinanceSalesCogsRetryRepositoryPort;
   private readonly rulesService: FinanceSalesPostingRulesService;
   private readonly cogsService: FinanceSalesCogsPort;
   private readonly premiumAccessChecker: FinancePremiumAccessChecker;
@@ -102,6 +124,8 @@ export class FinanceSalesWorkflowService {
       transactionRepository?: FinanceSalesTransactionRepositoryPort;
       roleResolver?: FinanceSalesAccountResolverPort;
       journalService?: FinanceSalesJournalPort;
+      cogsRetryJournalService?: FinanceSalesCogsRetryJournalPort;
+      cogsRetryRepository?: FinanceSalesCogsRetryRepositoryPort;
       rulesService?: FinanceSalesPostingRulesService;
       cogsService?: FinanceSalesCogsPort;
       premiumAccessChecker?: FinancePremiumAccessChecker;
@@ -120,6 +144,12 @@ export class FinanceSalesWorkflowService {
     this.journalService =
       dependencies?.journalService ??
       new FinanceJournalService(context);
+    this.cogsRetryJournalService =
+      dependencies?.cogsRetryJournalService ??
+      new FinanceJournalService(context);
+    this.cogsRetryRepository =
+      dependencies?.cogsRetryRepository ??
+      new FinanceSalesTransactionRepository(context);
     this.rulesService =
       dependencies?.rulesService ??
       new FinanceSalesPostingRulesService();
@@ -355,6 +385,258 @@ export class FinanceSalesWorkflowService {
       session,
       transaction.platform === 'offline'
     );
+  }
+
+  async retryDeferredCogs(
+    transactionId: string,
+    session?: ClientSession
+  ): Promise<FinanceSalesCogsRetryResultDTO> {
+    let transaction =
+      await this.cogsRetryRepository.findTransactionById(
+        transactionId,
+        session
+      );
+    if (!transaction) {
+      throw new FinanceDomainError(
+        'Transaksi sales Finance tidak ditemukan.',
+        'FINANCE_SALES_TRANSACTION_NOT_FOUND'
+      );
+    }
+
+    if (!(await this.premiumAccessChecker())) {
+      throw new FinanceDomainError(
+        'Finance tidak tersedia untuk paket organisasi ini.',
+        'FINANCE_NOT_ACTIVE'
+      );
+    }
+    const finance =
+      await this.lifecycleService.getState(session);
+    if (finance.status !== 'active') {
+      throw new FinanceDomainError(
+        'Finance module belum aktif.',
+        'FINANCE_NOT_ACTIVE'
+      );
+    }
+
+    if (
+      transaction.status === 'posted' &&
+      (transaction.inventory_cogs_status ?? 'deferred') ===
+        'posted'
+    ) {
+      return this.toCogsRetryResult(transaction, 'posted');
+    }
+    if (
+      transaction.status !== 'posted' ||
+      (transaction.inventory_cogs_status ?? 'deferred') !==
+        'deferred'
+    ) {
+      throw new FinanceDomainError(
+        'Retry HPP hanya tersedia untuk transaksi posted dengan HPP tertunda.',
+        'FINANCE_SALES_COGS_NOT_RETRYABLE'
+      );
+    }
+
+    let plan =
+      transaction.inventory_cogs_retry_plan ?? null;
+    if (!plan) {
+      const retryDate = new Date();
+      const preparation = await this.cogsService.prepare(
+        {
+          source_order_id: transaction.source_order_id,
+          source_order_number:
+            transaction.source_order_number,
+          platform: transaction.platform,
+          store_id: transaction.store_id,
+          transaction_date: retryDate,
+          lines: transaction.source_lines,
+        },
+        session
+      );
+
+      if (
+        preparation.status === 'deferred' ||
+        preparation.total_cost === null
+      ) {
+        const updated =
+          await this.cogsRetryRepository.updateDeferredCogsReason(
+            String(transaction._id),
+            preparation.reason ??
+              'HPP belum dapat dihitung.',
+            session
+          );
+        if (updated) {
+          return this.toCogsRetryResult(
+            updated,
+            'deferred'
+          );
+        }
+        const latest =
+          await this.cogsRetryRepository.findTransactionById(
+            String(transaction._id),
+            session
+          );
+        if (
+          latest?.status === 'posted' &&
+          latest.inventory_cogs_status === 'posted'
+        ) {
+          return this.toCogsRetryResult(latest, 'posted');
+        }
+        throw new FinanceDomainError(
+          'Status HPP berubah saat retry dijalankan. Muat ulang transaksi lalu coba lagi.',
+          'FINANCE_SALES_COGS_NOT_RETRYABLE'
+        );
+      }
+
+      const candidate: TFinanceSalesCogsRetryPlan = {
+        retry_date: retryDate,
+        total_cost: preparation.total_cost,
+        journal_lines: preparation.journal_lines,
+        movements: preparation.movements,
+      };
+      const saved =
+        await this.cogsRetryRepository.saveCogsRetryPlan(
+          String(transaction._id),
+          candidate,
+          session
+        );
+      if (saved) {
+        transaction = saved;
+      } else {
+        const latest =
+          await this.cogsRetryRepository.findTransactionById(
+            String(transaction._id),
+            session
+          );
+        if (
+          latest?.status === 'posted' &&
+          latest.inventory_cogs_status === 'posted'
+        ) {
+          return this.toCogsRetryResult(latest, 'posted');
+        }
+        if (!latest?.inventory_cogs_retry_plan) {
+          throw new FinanceDomainError(
+            'Rencana retry HPP berubah sebelum dapat disimpan. Muat ulang transaksi lalu coba lagi.',
+            'FINANCE_SALES_COGS_NOT_RETRYABLE'
+          );
+        }
+        transaction = latest;
+      }
+      plan = transaction.inventory_cogs_retry_plan ?? null;
+    }
+
+    if (!plan) {
+      throw new FinanceDomainError(
+        'Rencana retry HPP tidak tersedia.',
+        'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
+      );
+    }
+
+    const idempotencyKey =
+      makeFinanceSalesCogsRetryJournalIdempotencyKey(
+        String(transaction._id)
+      );
+    let journalResult;
+    try {
+      journalResult =
+        await this.cogsRetryJournalService.postOperational(
+          {
+            transaction_date: plan.retry_date,
+            posting_date: plan.retry_date,
+            currency: transaction.currency,
+            description: `HPP retry penjualan ${transaction.source_order_number}`,
+            source_type:
+              transaction.platform === 'offline'
+                ? 'offline_sale'
+                : 'order',
+            source_id: transaction.source_order_id,
+            source_event: 'inventory_cogs_retry',
+            idempotency_key: idempotencyKey,
+            lines: plan.journal_lines,
+          },
+          session
+        );
+    } catch (error: unknown) {
+      const existing =
+        await this.cogsRetryJournalService.findByIdempotencyKey(
+          idempotencyKey,
+          session
+        );
+      if (!existing) {
+        await this.cogsRetryRepository.clearCogsRetryPlan(
+          String(transaction._id),
+          session
+        );
+      }
+      throw error;
+    }
+
+    const preparation = {
+      status: 'posted' as const,
+      reason: null,
+      total_cost: plan.total_cost,
+      journal_lines: plan.journal_lines,
+      movements: plan.movements,
+    };
+    const movementIds = await this.cogsService.finalize(
+      preparation,
+      journalResult.journal_entry.id,
+      session
+    );
+    const posted =
+      await this.cogsRetryRepository.markInventoryCogsPosted(
+        String(transaction._id),
+        journalResult.journal_entry.id,
+        {
+          total_cost: plan.total_cost,
+          movement_ids: movementIds,
+        },
+        session
+      );
+    if (posted) {
+      return this.toCogsRetryResult(posted, 'posted');
+    }
+
+    const latest =
+      await this.cogsRetryRepository.findTransactionById(
+        String(transaction._id),
+        session
+      );
+    if (
+      latest?.status === 'posted' &&
+      latest.inventory_cogs_status === 'posted' &&
+      String(latest.inventory_cogs_journal_entry_id) ===
+        journalResult.journal_entry.id
+    ) {
+      return this.toCogsRetryResult(latest, 'posted');
+    }
+
+    throw new FinanceDomainError(
+      'Jurnal HPP berhasil dibuat tetapi status transaksi gagal diperbarui. Retry kembali untuk melanjutkan finalisasi.',
+      'FINANCE_INVENTORY_COGS_FINALIZATION_FAILED'
+    );
+  }
+
+  private toCogsRetryResult(
+    transaction: FinanceSalesTransactionPersistenceRecord,
+    status: 'posted' | 'deferred'
+  ): FinanceSalesCogsRetryResultDTO {
+    return FinanceSalesCogsRetryResultSchema.parse({
+      status,
+      transaction_id: String(transaction._id),
+      inventory_cogs_journal_entry_id:
+        transaction.inventory_cogs_journal_entry_id
+          ? String(
+              transaction.inventory_cogs_journal_entry_id
+            )
+          : null,
+      total_cost:
+        transaction.inventory_cogs_total_cost ?? null,
+      reason:
+        status === 'deferred'
+          ? (transaction.inventory_cogs_deferred_reason ??
+            'HPP belum dapat dihitung.')
+          : null,
+    });
   }
 
   private async postIntent(
@@ -638,6 +920,8 @@ export class FinanceSalesWorkflowService {
       inventory_cogs_status:
         intent?.inventory_cogs.status ?? 'deferred',
       inventory_cogs_total_cost: null,
+      inventory_cogs_journal_entry_id: null,
+      inventory_cogs_retry_plan: null,
       inventory_movement_ids: [],
     };
   }

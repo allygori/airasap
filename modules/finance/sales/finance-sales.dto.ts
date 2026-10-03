@@ -14,6 +14,7 @@ import {
   FinanceSalesTransactionListResponseSchema,
   FinanceSalesTransactionSummarySchema,
   FinanceSalesWorkflowResultSchema,
+  FinanceSalesCogsRetryResultSchema,
 } from './finance-sales.schema';
 
 export type FinanceSalesOrderSourceDTO = ReturnType<
@@ -59,6 +60,10 @@ export type FinanceSalesInventoryCogsStatusDTO = ReturnType<
 
 export type FinanceSalesWorkflowResultDTO = ReturnType<
   typeof FinanceSalesWorkflowResultSchema.parse
+>;
+
+export type FinanceSalesCogsRetryResultDTO = ReturnType<
+  typeof FinanceSalesCogsRetryResultSchema.parse
 >;
 
 export type FinanceSalesTransactionListQueryDTO =

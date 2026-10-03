@@ -53,6 +53,10 @@ const mapSummary = (
       record.inventory_cogs_deferred_reason ?? null,
     inventory_cogs_total_cost:
       record.inventory_cogs_total_cost ?? null,
+    inventory_cogs_journal_entry_id:
+      record.inventory_cogs_journal_entry_id
+        ? String(record.inventory_cogs_journal_entry_id)
+        : null,
     created_at: toIsoString(record.created_at),
     updated_at: toIsoString(record.updated_at),
   });

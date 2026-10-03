@@ -56,7 +56,10 @@ export {
   FinancePurchaseInputSchema,
   FinancePurchaseResponseSchema,
 } from './purchases/finance-purchase.schema';
-export { FinanceSalesWorkflowResultSchema } from './sales/finance-sales.schema';
+export {
+  FinanceSalesWorkflowResultSchema,
+  FinanceSalesCogsRetryResultSchema,
+} from './sales/finance-sales.schema';
 export {
   FinanceAccountDetailsResponseSchema,
   FinanceAccountListResponseSchema,

@@ -41,6 +41,33 @@ export type TFinanceSalesTransactionIntentLine = {
   credit: number;
 };
 
+export type TFinanceSalesCogsRetryPlan = {
+  retry_date: Date;
+  total_cost: number;
+  journal_lines: Array<{
+    account_id: string;
+    debit: number;
+    credit: number;
+    dimensions: {
+      inventory_location_id: string;
+      product_id?: string;
+    };
+  }>;
+  movements: Array<{
+    idempotency_key: string;
+    existing_movement_id: string | null;
+    inventory_item_id: string;
+    location_id: string;
+    quantity: number;
+    unit_cost: number;
+    total_cost: number;
+    occurred_at: Date;
+    source_order_id: string;
+    source_order_number: string;
+    source_type: 'order' | 'offline_sale';
+  }>;
+};
+
 export type TFinanceSalesTransaction = Document & {
   organization: Types.ObjectId;
   source_order_id: string;
@@ -66,6 +93,8 @@ export type TFinanceSalesTransaction = Document & {
   inventory_cogs_deferred_reason: string | null;
   inventory_cogs_status: 'deferred' | 'posted';
   inventory_cogs_total_cost: number | null;
+  inventory_cogs_journal_entry_id: Types.ObjectId | null;
+  inventory_cogs_retry_plan: TFinanceSalesCogsRetryPlan | null;
   inventory_movement_ids: Types.ObjectId[];
   created_at?: Date;
   updated_at?: Date;
@@ -113,6 +142,60 @@ const IntentLineSchema =
       account_id: { type: String },
       debit: { type: Number, required: true, min: 0 },
       credit: { type: Number, required: true, min: 0 },
+    },
+    { _id: false }
+  );
+
+const CogsRetryJournalLineSchema = new Schema(
+  {
+    account_id: { type: String, required: true },
+    debit: { type: Number, required: true, min: 0 },
+    credit: { type: Number, required: true, min: 0 },
+    dimensions: {
+      inventory_location_id: {
+        type: String,
+        required: true,
+      },
+      product_id: { type: String },
+    },
+  },
+  { _id: false }
+);
+
+const CogsRetryMovementSchema = new Schema(
+  {
+    idempotency_key: { type: String, required: true },
+    existing_movement_id: { type: String, default: null },
+    inventory_item_id: { type: String, required: true },
+    location_id: { type: String, required: true },
+    quantity: { type: Number, required: true, min: 0 },
+    unit_cost: { type: Number, required: true, min: 0 },
+    total_cost: { type: Number, required: true, min: 0 },
+    occurred_at: { type: Date, required: true },
+    source_order_id: { type: String, required: true },
+    source_order_number: { type: String, required: true },
+    source_type: {
+      type: String,
+      enum: ['order', 'offline_sale'],
+      required: true,
+    },
+  },
+  { _id: false }
+);
+
+const CogsRetryPlanSchema =
+  new Schema<TFinanceSalesCogsRetryPlan>(
+    {
+      retry_date: { type: Date, required: true },
+      total_cost: { type: Number, required: true, min: 0 },
+      journal_lines: {
+        type: [CogsRetryJournalLineSchema],
+        required: true,
+      },
+      movements: {
+        type: [CogsRetryMovementSchema],
+        required: true,
+      },
     },
     { _id: false }
   );
@@ -187,6 +270,15 @@ const FinanceSalesTransactionSchema =
         default: null,
         min: 0,
       },
+      inventory_cogs_journal_entry_id: {
+        type: Schema.Types.ObjectId,
+        ref: 'FinanceJournalEntry',
+        default: null,
+      },
+      inventory_cogs_retry_plan: {
+        type: CogsRetryPlanSchema,
+        default: null,
+      },
       inventory_movement_ids: {
         type: [Schema.Types.ObjectId],
         default: [],
@@ -218,6 +310,14 @@ FinanceSalesTransactionSchema.index({
 FinanceSalesTransactionSchema.index({
   organization: 1,
   source_order_id: 1,
+});
+FinanceSalesTransactionSchema.index({
+  organization: 1,
+  journal_entry_id: 1,
+});
+FinanceSalesTransactionSchema.index({
+  organization: 1,
+  inventory_cogs_journal_entry_id: 1,
 });
 
 FinanceSalesTransactionSchema.plugin(multiTenancyPlugin);

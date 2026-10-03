@@ -19,3 +19,7 @@ export const makeFinanceSalesCogsIdempotencyKey = (
   }
 ) =>
   `finance-sales-cogs:${keyPart(source.platform)}:${keyPart(source.store_id)}:${keyPart(source.source_order_id)}:${keyPart(source.source_line_id)}`;
+
+export const makeFinanceSalesCogsRetryJournalIdempotencyKey =
+  (transactionId: string) =>
+    `finance-sales-cogs-retry:${keyPart(transactionId)}`;

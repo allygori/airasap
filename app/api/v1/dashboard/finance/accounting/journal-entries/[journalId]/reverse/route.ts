@@ -46,29 +46,76 @@ export const POST = withValidation(
       const cashLoanService = new FinanceCashLoanService(
         tenantContext
       );
+      const salesTransactionRepository =
+        new FinanceSalesTransactionRepository(
+          tenantContext
+        );
+      const retryCogsTransaction =
+        await salesTransactionRepository.findByCogsRetryJournalEntryId(
+          validatedParams!.journalId
+        );
+      if (retryCogsTransaction) {
+        throw new FinanceDomainError(
+          'Jurnal HPP retry harus direverse melalui jurnal penjualan terkait.',
+          'FINANCE_SALES_COGS_RETRY_JOURNAL_REQUIRES_SALE_REVERSAL'
+        );
+      }
+
+      const salesTransaction =
+        await salesTransactionRepository.findByJournalEntryId(
+          validatedParams!.journalId
+        );
+      if (salesTransaction?.inventory_cogs_retry_plan) {
+        throw new FinanceDomainError(
+          'Retry HPP sedang dalam proses. Selesaikan atau ulangi retry HPP sebelum mereverse jurnal penjualan.',
+          'FINANCE_SALES_COGS_RETRY_IN_PROGRESS'
+        );
+      }
+
       await cashLoanService.assertCanReverseJournal(
         validatedParams!.journalId
       );
 
-      const reversalResult =
-        await new FinanceJournalService(
-          tenantContext
-        ).reverse(
-          validatedParams!.journalId,
-          validatedBody!
-        );
-
-      await new FinanceInventoryCogsService(
+      const journalService = new FinanceJournalService(
         tenantContext
-      ).reversePostedSalesMovements(
+      );
+      const inventoryCogsService =
+        new FinanceInventoryCogsService(tenantContext);
+      const effectiveDate =
+        validatedBody!.effective_date ?? new Date();
+      const reversalResult = await journalService.reverse(
         validatedParams!.journalId,
-        reversalResult.journal_entry.id,
-        validatedBody!.effective_date ?? new Date()
+        validatedBody!
       );
 
-      await new FinanceSalesTransactionRepository(
-        tenantContext
-      ).markReversedByJournalEntry(
+      await inventoryCogsService.reversePostedSalesMovements(
+        validatedParams!.journalId,
+        reversalResult.journal_entry.id,
+        effectiveDate
+      );
+
+      if (
+        salesTransaction?.inventory_cogs_journal_entry_id
+      ) {
+        const cogsReversal = await journalService.reverse(
+          String(
+            salesTransaction.inventory_cogs_journal_entry_id
+          ),
+          {
+            effective_date: effectiveDate,
+            description: `Reversal jurnal HPP penjualan ${salesTransaction.source_order_number}`,
+          }
+        );
+        await inventoryCogsService.reversePostedSalesMovements(
+          String(
+            salesTransaction.inventory_cogs_journal_entry_id
+          ),
+          cogsReversal.journal_entry.id,
+          effectiveDate
+        );
+      }
+
+      await salesTransactionRepository.markReversedByJournalEntry(
         validatedParams!.journalId
       );
 
@@ -110,6 +157,10 @@ export const POST = withValidation(
                     'FINANCE_JOURNAL_REVERSAL_FINALIZATION_FAILED' ||
                   error.code ===
                     'FINANCE_INVENTORY_COGS_REVERSAL_FAILED' ||
+                  error.code ===
+                    'FINANCE_SALES_COGS_RETRY_JOURNAL_REQUIRES_SALE_REVERSAL' ||
+                  error.code ===
+                    'FINANCE_SALES_COGS_RETRY_IN_PROGRESS' ||
                   error.code ===
                     'FINANCE_OWNER_WITHDRAWAL_REVERSAL_FINALIZATION_FAILED' ||
                   error.code ===
