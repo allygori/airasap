@@ -33,11 +33,18 @@ import {
   createEmptyFinanceOpeningBalanceFormValues,
   createFinanceOpeningBalanceFormValues,
   getFinanceOpeningBalanceSteps,
-  FinanceOpeningBalanceForm,
+  parseFinanceOpeningBalanceMode,
+  parseFinanceOpeningBalanceStep,
+  resolveFinanceOpeningBalanceStep,
+  buildFinanceOpeningBalanceHref,
+  isResumableFinanceOpeningBalanceDraft,
+  numberValue,
   FinanceOpeningBalanceFormValuesSchema,
+  type FinanceOpeningBalanceMode,
   type FinanceOpeningBalanceFormValues,
   type FinanceOpeningBalanceStep,
-} from './finance-opening-balance.form';
+} from './steps/shared/finance-opening-balance.utils';
+import { FinanceOpeningBalanceForm } from './finance-opening-balance.form';
 import { FinanceEWalletAccountForm } from './finance-e-wallet-account.form';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -49,18 +56,6 @@ type FinanceOpeningBalanceClientProps = {
 };
 
 type SubmitIntent = 'continue' | 'preview';
-
-const numberValue = (value: string) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-};
-
-const isResumableDraft = (
-  setup: FinanceOpeningBalanceSetupResponseDTO | null
-) =>
-  setup?.draft?.status === 'finalizing' ||
-  setup?.draft?.status === 'posted' ||
-  setup?.draft?.status === 'skipped';
 
 export default function FinanceOpeningBalanceClient({
   enabled,
@@ -112,6 +107,28 @@ export default function FinanceOpeningBalanceClient({
   const [successMessage, setSuccessMessage] = useState<
     string | null
   >(null);
+
+  const updateStepUrl = (
+    mode: FinanceOpeningBalanceMode,
+    step: FinanceOpeningBalanceStep,
+    replace = false
+  ) => {
+    if (typeof window !== 'undefined') {
+      const href = buildFinanceOpeningBalanceHref(
+        window.location.pathname,
+        window.location.search,
+        mode,
+        step
+      );
+      const currentHref = `${window.location.pathname}${window.location.search}`;
+      if (href !== currentHref) {
+        window.history[
+          replace ? 'replaceState' : 'pushState'
+        ](null, '', href);
+      }
+    }
+    setCurrentStep(step);
+  };
 
   const refreshProductPreparationCount =
     useCallback(async () => {
@@ -369,7 +386,9 @@ export default function FinanceOpeningBalanceClient({
             (item) => item.key === currentStep
           );
           const nextStep = steps[stepIndex + 1];
-          if (nextStep) setCurrentStep(nextStep.key);
+          if (nextStep) {
+            updateStepUrl(value.mode, nextStep.key);
+          }
         }
       }
       submitIntentRef.current = 'continue';
@@ -592,16 +611,40 @@ export default function FinanceOpeningBalanceClient({
 
         if (!cancelled) {
           setSetup(nextSetup);
+          const params = new URLSearchParams(
+            window.location.search
+          );
+          const requestedMode =
+            parseFinanceOpeningBalanceMode(
+              params.get('mode')
+            );
+          const resumable =
+            isResumableFinanceOpeningBalanceDraft(
+              nextSetup
+            );
+          const mode = resumable
+            ? (nextSetup.draft?.mode ??
+              requestedMode ??
+              'entered')
+            : (requestedMode ??
+              nextSetup.draft?.mode ??
+              'entered');
+          const step = resolveFinanceOpeningBalanceStep(
+            mode,
+            parseFinanceOpeningBalanceStep(
+              params.get('step')
+            ),
+            resumable
+          );
           // Keep the hook's initial defaults so its next update won't overwrite this loaded draft.
           openingForm.reset(
             createFinanceOpeningBalanceFormValues(
-              nextSetup
+              nextSetup,
+              mode
             ),
             { keepDefaultValues: true }
           );
-          if (isResumableDraft(nextSetup)) {
-            setCurrentStep('review');
-          }
+          updateStepUrl(mode, step, true);
         }
       } catch {
         if (!cancelled) {
@@ -619,6 +662,44 @@ export default function FinanceOpeningBalanceClient({
       cancelled = true;
     };
   }, [enabled, openingForm]);
+
+  useEffect(() => {
+    if (!enabled || !setup) return;
+
+    const syncFromBrowserHistory = () => {
+      const params = new URLSearchParams(
+        window.location.search
+      );
+      const resumable =
+        isResumableFinanceOpeningBalanceDraft(setup);
+      const mode = resumable
+        ? (setup.draft?.mode ?? 'entered')
+        : (parseFinanceOpeningBalanceMode(
+            params.get('mode')
+          ) ?? openingForm.getFieldValue('mode'));
+      const step = resolveFinanceOpeningBalanceStep(
+        mode,
+        parseFinanceOpeningBalanceStep(params.get('step')),
+        resumable
+      );
+
+      if (openingForm.getFieldValue('mode') !== mode) {
+        openingForm.setFieldValue('mode', mode);
+      }
+      updateStepUrl(mode, step, true);
+    };
+
+    window.addEventListener(
+      'popstate',
+      syncFromBrowserHistory
+    );
+    return () => {
+      window.removeEventListener(
+        'popstate',
+        syncFromBrowserHistory
+      );
+    };
+  }, [enabled, openingForm, setup]);
 
   const refreshInventoryOptions = async () => {
     setIsRefreshingInventory(true);
@@ -770,9 +851,18 @@ export default function FinanceOpeningBalanceClient({
   };
 
   const handleModeChange = (
-    mode: FinanceOpeningBalanceFormValues['mode']
+    mode: FinanceOpeningBalanceMode
   ) => {
-    if (mode === 'zero') setCurrentStep('accounts');
+    updateStepUrl(
+      mode,
+      mode === 'zero' ? 'accounts' : 'start'
+    );
+  };
+
+  const handleStepChange = (
+    step: FinanceOpeningBalanceStep
+  ) => {
+    updateStepUrl(openingForm.getFieldValue('mode'), step);
   };
 
   const startAddBankAccount = () => {
@@ -805,14 +895,15 @@ export default function FinanceOpeningBalanceClient({
     );
   }
 
-  const isResumable = isResumableDraft(setup);
+  const isResumable =
+    isResumableFinanceOpeningBalanceDraft(setup);
 
   return (
     <FinanceOpeningBalanceForm
       form={openingForm}
       setup={setup}
       step={currentStep}
-      onStepChange={setCurrentStep}
+      onStepChange={handleStepChange}
       onModeChange={handleModeChange}
       bankAccountForm={bankAccountForm}
       eWalletAccountForm={eWalletAccountForm}
