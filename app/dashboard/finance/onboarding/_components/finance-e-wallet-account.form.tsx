@@ -31,13 +31,16 @@ export const FinanceEWalletAccountForm = withForm({
   }) {
     return (
       <form
-        className="grid min-w-0 gap-4"
+        className="mt-4 grid min-w-0 gap-4"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
       >
+        <h2 className="text-base font-semibold">
+          Tambah Akun E-Wallet
+        </h2>
         <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2">
           <form.AppField
             name="provider"

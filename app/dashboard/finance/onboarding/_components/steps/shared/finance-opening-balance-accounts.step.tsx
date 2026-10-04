@@ -10,13 +10,6 @@ import {
   AlertDescription,
 } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { FINANCE_CASH_BANK_SUBTYPE_LABELS } from '@/modules/finance/client';
 import { FinanceBankAccountForm } from '../../finance-bank-account.form';
 import type { FinanceBankAccountFormApi } from '../../finance-bank-account.form';
@@ -186,31 +179,29 @@ export const FinanceOpeningBalanceAccountsStep = withForm({
         ) : null}
 
         {cashAccounts.length > 0 ? (
-          <Card className="bg-muted/10 min-w-0">
-            <CardHeader>
-              <CardTitle className="text-base">
+          <section className="grid min-w-0 gap-3">
+            <div>
+              <h3 className="text-base font-semibold">
                 Kas Toko
-              </CardTitle>
-              <CardDescription>
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm leading-5">
                 Opsional untuk uang tunai fisik usaha.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {renderAccountRows(cashAccounts)}
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            {renderAccountRows(cashAccounts)}
+          </section>
         ) : null}
 
-        <Card className="bg-muted/10 min-w-0">
-          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+        <section className="grid min-w-0 gap-3">
+          <div className="flex flex-row flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="text-base">
+              <h3 className="text-base font-semibold">
                 Bank Operasional
-              </CardTitle>
-              <CardDescription>
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm leading-5">
                 Rekening bank ditambahkan sebagai akun anak
                 di bawah grup ini.
-              </CardDescription>
+              </p>
             </div>
             {!isAddingBankAccount ? (
               <Button
@@ -222,37 +213,31 @@ export const FinanceOpeningBalanceAccountsStep = withForm({
                 Tambah rekening bank
               </Button>
             ) : null}
-          </CardHeader>
+          </div>
           {isAddingBankAccount && bankAccountForm ? (
-            <CardContent className="grid gap-4">
-              <div className="ml-3 grid gap-3 border-l pl-4">
-                {renderAccountRows(bankAccounts)}
-              </div>
+            <div className="grid gap-4">
+              <div>{renderAccountRows(bankAccounts)}</div>
               <FinanceBankAccountForm
                 form={bankAccountForm}
                 isSubmitting={isCreatingBankAccount}
                 onCancel={onCancelAddBankAccount}
               />
-            </CardContent>
+            </div>
           ) : (
-            <CardContent>
-              <div className="ml-3 grid gap-3 border-l pl-4">
-                {renderAccountRows(bankAccounts)}
-              </div>
-            </CardContent>
+            <div>{renderAccountRows(bankAccounts)}</div>
           )}
-        </Card>
+        </section>
 
-        <Card className="bg-muted/10 min-w-0">
-          <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+        <section className="grid min-w-0 gap-3">
+          <div className="flex flex-row flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="text-base">
+              <h3 className="text-base font-semibold">
                 Saldo E-wallet
-              </CardTitle>
-              <CardDescription>
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm leading-5">
                 Setiap dompet digital dicatat pada akun anak
                 tersendiri.
-              </CardDescription>
+              </p>
             </div>
             {!isAddingEWalletAccount ? (
               <Button
@@ -264,10 +249,10 @@ export const FinanceOpeningBalanceAccountsStep = withForm({
                 Tambah e-wallet
               </Button>
             ) : null}
-          </CardHeader>
+          </div>
           {isAddingEWalletAccount && eWalletAccountForm ? (
-            <CardContent className="grid gap-4">
-              <div className="ml-3 grid gap-3 border-l pl-4">
+            <div className="grid gap-4">
+              <div>
                 {renderAccountRows(eWalletAccounts)}
               </div>
               <FinanceEWalletAccountForm
@@ -275,31 +260,25 @@ export const FinanceOpeningBalanceAccountsStep = withForm({
                 isSubmitting={isCreatingEWalletAccount}
                 onCancel={onCancelAddEWalletAccount}
               />
-            </CardContent>
+            </div>
           ) : (
-            <CardContent>
-              <div className="ml-3 grid gap-3 border-l pl-4">
-                {renderAccountRows(eWalletAccounts)}
-              </div>
-            </CardContent>
+            <div>{renderAccountRows(eWalletAccounts)}</div>
           )}
-        </Card>
+        </section>
 
         {marketplaceAccounts.length > 0 ? (
-          <Card className="bg-muted/10 min-w-0">
-            <CardHeader>
-              <CardTitle className="text-base">
+          <section className="grid min-w-0 gap-3">
+            <div>
+              <h3 className="text-base font-semibold">
                 Saldo marketplace
-              </CardTitle>
-              <CardDescription>
+              </h3>
+              <p className="text-muted-foreground mt-1 text-sm leading-5">
                 Dana yang masih berada di marketplace tetap
                 dipisahkan dari rekening bank dan e-wallet.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {renderAccountRows(marketplaceAccounts)}
-            </CardContent>
-          </Card>
+              </p>
+            </div>
+            {renderAccountRows(marketplaceAccounts)}
+          </section>
         ) : null}
 
         <Alert>
