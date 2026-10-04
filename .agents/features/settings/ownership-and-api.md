@@ -34,8 +34,8 @@ Email changes, password changes, recovery, and account deletion are security wor
 | Organization logo | Better Auth logo string plus private-file storage boundary | **[OPEN]** No logo edit until local and deployment files have an authenticated browser-readable path. The current shared AvatarField emits data URLs |
 | Organization slug | Better Auth Organization plugin | **[CURRENT]** Not editable from Settings; changing it requires a separate product and routing decision |
 | Store name/code/timezone | `modules/stores/` and `StoreModel` | **[CURRENT]** Update the active Store through a validated item route and tenant-scoped service/repository operation |
-| Finance lifecycle | Currently nested in `Organization.finance` / `Organization.accounting` and managed partly by Finance onboarding/lifecycle code | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
-| Finance preferences/configuration | Currently mixed into Organization subdocuments | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |
+| Finance lifecycle | Currently nested in `Organization.finance` and managed by Finance onboarding/lifecycle code; the unused legacy `Organization.accounting` lifecycle was removed | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
+| Finance preferences/configuration | Current Finance fields are nested in `Organization.finance`; no active workflow used the removed `Organization.accounting` configuration | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |
 | Light/dark mode and color theme | Browser localStorage and current dashboard theme provider | **[CURRENT]** Configure in Appearance for this browser; User-synced preferences remain **[OPEN]** |
 
 ## Implementation boundaries

@@ -28,10 +28,10 @@ export abstract class BaseRepository<T extends Document> {
     this.tenantContext = tenantContext;
   }
 
-  // Some organization-scoped modules, such as accounting, deliberately do
-  // not have a top-level store field. Only add store scoping when the model
-  // actually declares that path; otherwise an upsert becomes a strict-schema
-  // error and the query would imply a scope the model cannot represent.
+  // Some organization-scoped models deliberately do not have a top-level
+  // store field. Only add store scoping when the model actually declares that
+  // path; otherwise an upsert becomes a strict-schema error and the query
+  // would imply a scope the model cannot represent.
   protected getTenantFields() {
     return {
       organization: this.tenantContext.organizationId,

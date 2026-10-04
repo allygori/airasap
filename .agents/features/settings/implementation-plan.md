@@ -112,9 +112,10 @@
 
 ### Scope
 
-- Inventory the fields currently nested on Organization under `finance` and `accounting`, and identify every onboarding, lifecycle, API, and accounting consumer before moving them.
+- **[CURRENT]** The unused legacy `Organization.accounting` onboarding subdocument, schema/model path, status constant, and repository methods were removed after confirming they had no callers. The active accounting capability lives under `modules/finance/`; it is not removed by this cleanup.
+- Inventory the fields currently nested on Organization under `finance`, and identify every onboarding, lifecycle, API, and Finance accounting consumer before moving any Finance-owned fields.
 - Separate Finance lifecycle/activation bookkeeping from editable Finance configuration. Do not move status fields merely because they share a parent document with settings.
-- Move Finance-specific configuration—such as Finance calendar timezone, accounting mappings, or cutoff configuration where domain review confirms ownership—behind Finance-owned services and schemas in `modules/finance/`.
+- Move Finance-specific configuration—such as Finance calendar timezone or cutoff configuration where domain review confirms ownership—behind Finance-owned services and schemas in `modules/finance/`. Design any replacement for old accounting mappings only if an active Finance workflow requires it; the removed legacy Organization field is not a source of truth.
 - Choose a Finance-owned persistence shape only after reviewing read/write patterns. Prefer a narrowly scoped Finance configuration record over a generic cross-domain Settings model.
 - Update Finance onboarding and existing lifecycle/accounting consumers to use the new Finance contract in the same phase. Preserve posting guards and make configuration changes apply prospectively unless a specific historical recalculation is approved.
 - Use Finance-owned routes/use cases for Finance settings. Do not let the general Settings page write Organization model fields directly.
