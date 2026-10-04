@@ -116,6 +116,62 @@ export class FinanceOnboardingRepository {
     return record ? this.toFinanceState(record) : null;
   }
 
+  async updateShopeePayoutAccount(
+    accountId: string,
+    session?: ClientSession
+  ): Promise<FinanceState | null> {
+    const query = FinanceOnboardingModel.findOneAndUpdate(
+      {
+        organization: this.organizationId,
+        'lifecycle.status': {
+          $in: ['in_progress', 'active'],
+        },
+      },
+      {
+        $set: {
+          'settings.shopee_payout_account_id':
+            new Types.ObjectId(accountId),
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    ).select('lifecycle settings');
+
+    const record = await query
+      .lean<FinanceOnboardingRecord | null>()
+      .exec();
+
+    return record ? this.toFinanceState(record) : null;
+  }
+
+  async setShopeePayoutAccountIfMissing(
+    accountId: string,
+    session?: ClientSession
+  ): Promise<void> {
+    const query = FinanceOnboardingModel.updateOne(
+      {
+        organization: this.organizationId,
+        'lifecycle.status': 'in_progress',
+        'settings.shopee_payout_account_id': null,
+      },
+      {
+        $set: {
+          'settings.shopee_payout_account_id':
+            new Types.ObjectId(accountId),
+        },
+      },
+      {
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    await query.exec();
+  }
+
   async activateFinance(
     data: {
       onboarding_version: number;
@@ -176,6 +232,7 @@ export class FinanceOnboardingRepository {
             settings: {
               calendar_timezone:
                 FINANCE_DEFAULT_CALENDAR_TIMEZONE,
+              shopee_payout_account_id: null,
             },
           },
         },
@@ -210,6 +267,10 @@ export class FinanceOnboardingRepository {
         ? String(record.lifecycle.completed_by)
         : undefined,
       calendar_timezone: record.settings?.calendar_timezone,
+      shopee_payout_account_id: record.settings
+        ?.shopee_payout_account_id
+        ? String(record.settings.shopee_payout_account_id)
+        : null,
     });
   }
 }

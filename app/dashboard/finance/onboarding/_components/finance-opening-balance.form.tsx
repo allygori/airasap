@@ -58,6 +58,10 @@ import {
   FinanceBankAccountForm,
   type FinanceBankAccountFormApi,
 } from './finance-bank-account.form';
+import {
+  FinanceEWalletAccountForm,
+  type FinanceEWalletAccountFormApi,
+} from './finance-e-wallet-account.form';
 
 const AmountTextSchema = z
   .string()
@@ -156,7 +160,9 @@ const allSteps: StepDefinition[] = [
 export const getFinanceOpeningBalanceSteps = (
   mode: FinanceOpeningBalanceFormValues['mode']
 ): StepDefinition[] =>
-  mode === 'zero' ? [allSteps[0], allSteps[4]] : allSteps;
+  mode === 'zero'
+    ? [allSteps[0], allSteps[1], allSteps[4]]
+    : allSteps;
 
 export const getTodayDateInputValue = (
   timeZone: FinanceCalendarTimezone = FINANCE_DEFAULT_CALENDAR_TIMEZONE
@@ -293,10 +299,15 @@ type FinanceOpeningBalanceFormProps = {
     mode: FinanceOpeningBalanceFormValues['mode']
   ) => void;
   bankAccountForm?: FinanceBankAccountFormApi;
+  eWalletAccountForm?: FinanceEWalletAccountFormApi;
   isAddingBankAccount: boolean;
+  isAddingEWalletAccount: boolean;
   isCreatingBankAccount: boolean;
+  isCreatingEWalletAccount: boolean;
   onStartAddBankAccount: () => void;
+  onStartAddEWalletAccount: () => void;
   onCancelAddBankAccount: () => void;
+  onCancelAddEWalletAccount: () => void;
   onRefreshInventory: () => void;
   isRefreshingInventory: boolean;
   preparableProductCount: number | null;
@@ -328,9 +339,13 @@ export const FinanceOpeningBalanceForm = withForm({
     onStepChange: () => undefined,
     onModeChange: () => undefined,
     isAddingBankAccount: false,
+    isAddingEWalletAccount: false,
     isCreatingBankAccount: false,
+    isCreatingEWalletAccount: false,
     onStartAddBankAccount: () => undefined,
+    onStartAddEWalletAccount: () => undefined,
     onCancelAddBankAccount: () => undefined,
+    onCancelAddEWalletAccount: () => undefined,
     onRefreshInventory: () => undefined,
     isRefreshingInventory: false,
     preparableProductCount: null,
@@ -359,10 +374,15 @@ export const FinanceOpeningBalanceForm = withForm({
     onStepChange,
     onModeChange,
     bankAccountForm,
+    eWalletAccountForm,
     isAddingBankAccount,
+    isAddingEWalletAccount,
     isCreatingBankAccount,
+    isCreatingEWalletAccount,
     onStartAddBankAccount,
+    onStartAddEWalletAccount,
     onCancelAddBankAccount,
+    onCancelAddEWalletAccount,
     onRefreshInventory,
     isRefreshingInventory,
     preparableProductCount,
@@ -440,11 +460,91 @@ export const FinanceOpeningBalanceForm = withForm({
       capitalTotal;
     const isBusy =
       isSaving ||
+      isCreatingBankAccount ||
+      isCreatingEWalletAccount ||
       isPreparingProducts ||
       isPreviewing ||
       isFinalizing ||
       isFinalized ||
       isResumable;
+    const cashAccounts =
+      setup.options.cash_bank_accounts.filter(
+        (account) => account.subtype === 'cash'
+      );
+    const bankAccounts =
+      setup.options.cash_bank_accounts.filter(
+        (account) => account.subtype === 'bank'
+      );
+    const eWalletAccounts =
+      setup.options.cash_bank_accounts.filter(
+        (account) => account.subtype === 'e_wallet'
+      );
+    const marketplaceAccounts =
+      setup.options.cash_bank_accounts.filter(
+        (account) =>
+          account.subtype === 'marketplace_balance'
+      );
+    const hasReceivingAccount =
+      bankAccounts.length > 0 || eWalletAccounts.length > 0;
+    const renderAccountRows = (
+      accounts: typeof setup.options.cash_bank_accounts
+    ) => {
+      if (accounts.length === 0) {
+        return (
+          <p className="text-muted-foreground px-3 py-2 text-sm">
+            Belum ada akun.
+          </p>
+        );
+      }
+
+      return accounts.map((account) => {
+        const lineIndex = values.cash_bank_lines.findIndex(
+          (line) => line.account_id === account.id
+        );
+
+        return (
+          <div
+            key={account.id}
+            className="bg-muted/20 grid min-w-0 gap-3 rounded-xl border p-4 sm:grid-cols-[minmax(0,1fr)_14rem] sm:items-center"
+          >
+            <div className="min-w-0">
+              <p className="truncate font-medium">
+                {account.name}
+              </p>
+              <p className="text-muted-foreground mt-1 text-xs">
+                {account.code} ·{' '}
+                {account.subtype
+                  ? (FINANCE_CASH_BANK_SUBTYPE_LABELS[
+                      account.subtype as keyof typeof FINANCE_CASH_BANK_SUBTYPE_LABELS
+                    ] ?? account.subtype)
+                  : 'Akun aset'}
+              </p>
+            </div>
+            {values.mode === 'entered' && lineIndex >= 0 ? (
+              <form.AppField
+                name={
+                  `cash_bank_lines[${lineIndex}].amount` as const
+                }
+                children={(field) => (
+                  <field.MoneyField
+                    aria-label={`Saldo ${account.name}`}
+                    label="Saldo pada tanggal tersebut"
+                    inputMode="numeric"
+                    min={0}
+                    className="min-w-0"
+                    disabled={isBusy}
+                  />
+                )}
+              />
+            ) : values.mode === 'zero' ? (
+              <p className="text-muted-foreground text-sm sm:text-right">
+                Saldo awal tidak diminta
+              </p>
+            ) : null}
+          </div>
+        );
+      });
+    };
     const stepperSteps: StepperStep[] = steps.map(
       ({ title, description, icon }) => ({
         title,
@@ -675,83 +775,60 @@ export const FinanceOpeningBalanceForm = withForm({
                 </div>
               ) : null}
 
-              {step === 'accounts' &&
-              values.mode === 'entered' ? (
+              {step === 'accounts' ? (
                 <div className="grid min-w-0 gap-6">
                   <SectionHeading
-                    title="Saldo uang yang tersedia"
-                    description="Isi saldo pada tanggal saldo awal. Biarkan 0 atau kosong jika akun belum memiliki saldo."
+                    title={
+                      values.mode === 'entered'
+                        ? 'Kas, bank, dan e-wallet'
+                        : 'Siapkan akun penerimaan'
+                    }
+                    description={
+                      values.mode === 'entered'
+                        ? 'Isi saldo pada tanggal saldo awal. Kas Toko boleh dibiarkan nol; saldo bank atau e-wallet diperlukan untuk menerima payout.'
+                        : 'Mode mulai dari nol tidak meminta saldo awal, tetapi Finance memerlukan setidaknya satu rekening bank atau e-wallet.'
+                    }
                   />
 
-                  <div className="grid min-w-0 gap-3">
-                    {setup.options.cash_bank_accounts
-                      .length === 0 ? (
-                      <EmptyHint>
-                        Belum ada akun Kas, Bank, E-wallet,
-                        atau Saldo Marketplace yang dapat
-                        dipakai.
-                      </EmptyHint>
-                    ) : (
-                      setup.options.cash_bank_accounts.map(
-                        (account) => {
-                          const lineIndex =
-                            values.cash_bank_lines.findIndex(
-                              (line) =>
-                                line.account_id ===
-                                account.id
-                            );
-                          if (lineIndex < 0) return null;
+                  {!hasReceivingAccount ? (
+                    <Alert>
+                      <HugeiconsIcon
+                        icon={InformationCircleIcon}
+                      />
+                      <AlertDescription>
+                        Tambahkan minimal satu rekening bank
+                        atau e-wallet agar Finance dapat
+                        diaktifkan.
+                      </AlertDescription>
+                    </Alert>
+                  ) : null}
 
-                          return (
-                            <div
-                              key={account.id}
-                              className="bg-muted/20 grid min-w-0 gap-3 rounded-xl border p-4 sm:grid-cols-[minmax(0,1fr)_14rem] sm:items-center"
-                            >
-                              <div className="min-w-0">
-                                <p className="truncate font-medium">
-                                  {account.name}
-                                </p>
-                                <p className="text-muted-foreground mt-1 text-xs">
-                                  {account.code} ·{' '}
-                                  {account.subtype
-                                    ? (FINANCE_CASH_BANK_SUBTYPE_LABELS[
-                                        account.subtype as keyof typeof FINANCE_CASH_BANK_SUBTYPE_LABELS
-                                      ] ?? account.subtype)
-                                    : 'Akun aset'}
-                                </p>
-                              </div>
-                              <form.AppField
-                                name={
-                                  `cash_bank_lines[${lineIndex}].amount` as const
-                                }
-                                children={(field) => (
-                                  <field.MoneyField
-                                    aria-label={`Saldo ${account.name}`}
-                                    label="Saldo pada tanggal tersebut"
-                                    inputMode="numeric"
-                                    min={0}
-                                    className="min-w-0"
-                                    disabled={isBusy}
-                                  />
-                                )}
-                              />
-                            </div>
-                          );
-                        }
-                      )
-                    )}
-                  </div>
+                  {cashAccounts.length > 0 ? (
+                    <Card className="bg-muted/10 min-w-0">
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Kas Toko
+                        </CardTitle>
+                        <CardDescription>
+                          Opsional untuk uang tunai fisik
+                          usaha.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-3">
+                        {renderAccountRows(cashAccounts)}
+                      </CardContent>
+                    </Card>
+                  ) : null}
 
                   <Card className="bg-muted/10 min-w-0">
                     <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
                       <div>
                         <CardTitle className="text-base">
-                          Rekening bank
+                          Bank Operasional
                         </CardTitle>
                         <CardDescription>
-                          Tambahkan rekening bisnis satu per
-                          satu. Nomor lengkap tidak perlu
-                          dimasukkan.
+                          Rekening bank ditambahkan sebagai
+                          akun anak di bawah grup ini.
                         </CardDescription>
                       </div>
                       {!isAddingBankAccount ? (
@@ -761,13 +838,16 @@ export const FinanceOpeningBalanceForm = withForm({
                           onClick={onStartAddBankAccount}
                           disabled={isBusy}
                         >
-                          Tambah rekening
+                          Tambah rekening bank
                         </Button>
                       ) : null}
                     </CardHeader>
                     {isAddingBankAccount &&
                     bankAccountForm ? (
-                      <CardContent>
+                      <CardContent className="grid gap-4">
+                        <div className="ml-3 grid gap-3 border-l pl-4">
+                          {renderAccountRows(bankAccounts)}
+                        </div>
                         <FinanceBankAccountForm
                           form={bankAccountForm}
                           isSubmitting={
@@ -776,17 +856,95 @@ export const FinanceOpeningBalanceForm = withForm({
                           onCancel={onCancelAddBankAccount}
                         />
                       </CardContent>
-                    ) : null}
+                    ) : (
+                      <CardContent>
+                        <div className="ml-3 grid gap-3 border-l pl-4">
+                          {renderAccountRows(bankAccounts)}
+                        </div>
+                      </CardContent>
+                    )}
                   </Card>
+
+                  <Card className="bg-muted/10 min-w-0">
+                    <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <CardTitle className="text-base">
+                          Saldo E-wallet
+                        </CardTitle>
+                        <CardDescription>
+                          Setiap dompet digital dicatat pada
+                          akun anak tersendiri.
+                        </CardDescription>
+                      </div>
+                      {!isAddingEWalletAccount ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={onStartAddEWalletAccount}
+                          disabled={isBusy}
+                        >
+                          Tambah e-wallet
+                        </Button>
+                      ) : null}
+                    </CardHeader>
+                    {isAddingEWalletAccount &&
+                    eWalletAccountForm ? (
+                      <CardContent className="grid gap-4">
+                        <div className="ml-3 grid gap-3 border-l pl-4">
+                          {renderAccountRows(
+                            eWalletAccounts
+                          )}
+                        </div>
+                        <FinanceEWalletAccountForm
+                          form={eWalletAccountForm}
+                          isSubmitting={
+                            isCreatingEWalletAccount
+                          }
+                          onCancel={
+                            onCancelAddEWalletAccount
+                          }
+                        />
+                      </CardContent>
+                    ) : (
+                      <CardContent>
+                        <div className="ml-3 grid gap-3 border-l pl-4">
+                          {renderAccountRows(
+                            eWalletAccounts
+                          )}
+                        </div>
+                      </CardContent>
+                    )}
+                  </Card>
+
+                  {marketplaceAccounts.length > 0 ? (
+                    <Card className="bg-muted/10 min-w-0">
+                      <CardHeader>
+                        <CardTitle className="text-base">
+                          Saldo marketplace
+                        </CardTitle>
+                        <CardDescription>
+                          Dana yang masih berada di
+                          marketplace tetap dipisahkan dari
+                          rekening bank dan e-wallet.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="grid gap-3">
+                        {renderAccountRows(
+                          marketplaceAccounts
+                        )}
+                      </CardContent>
+                    </Card>
+                  ) : null}
 
                   <Alert>
                     <HugeiconsIcon
                       icon={InformationCircleIcon}
                     />
                     <AlertDescription>
-                      Saldo marketplace yang belum
-                      ditransfer dicatat pada akun Saldo
-                      Marketplace, bukan sebagai saldo bank.
+                      Akun pertama yang ditambahkan menjadi
+                      default pencatatan payout Shopee. Anda
+                      dapat mengubahnya setelah onboarding
+                      di Pengaturan Finance.
                     </AlertDescription>
                   </Alert>
                 </div>
@@ -1202,7 +1360,10 @@ export const FinanceOpeningBalanceForm = withForm({
                       onClick={onSaveAndContinue}
                       disabled={
                         currentStepIndex >=
-                          steps.length - 1 || isBusy
+                          steps.length - 1 ||
+                        isBusy ||
+                        (step === 'accounts' &&
+                          !hasReceivingAccount)
                       }
                     >
                       {isSaving

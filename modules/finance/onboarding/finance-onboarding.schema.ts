@@ -32,6 +32,11 @@ export const FinanceSettingsSchema = z.object({
     FinanceCalendarTimezoneValueSchema.default(
       FINANCE_DEFAULT_CALENDAR_TIMEZONE
     ),
+  shopee_payout_account_id: z
+    .string()
+    .regex(/^[a-f\d]{24}$/i)
+    .nullable()
+    .optional(),
 });
 
 /** Flat Finance state contract used by Finance workflows and APIs. */
@@ -50,13 +55,38 @@ export type FinanceState = z.infer<
 export const FinanceSettingsResponseSchema = z.object({
   status: FinanceStatusSchema,
   calendar_timezone: FinanceCalendarTimezoneValueSchema,
+  shopee_payout_account_id: z
+    .string()
+    .regex(/^[a-f\d]{24}$/i)
+    .nullable(),
+  payout_accounts: z.array(
+    z.object({
+      id: z.string().regex(/^[a-f\d]{24}$/i),
+      code: z.string().min(1),
+      name: z.string().min(1),
+      subtype: z.enum(['bank', 'e_wallet']),
+    })
+  ),
 });
 
-export const UpdateFinanceSettingsSchema = z
+export const UpdateFinanceCalendarSettingsSchema = z
   .object({
     calendar_timezone: FinanceCalendarTimezoneValueSchema,
   })
   .strict();
+
+export const UpdateFinanceShopeePayoutSettingsSchema = z
+  .object({
+    shopee_payout_account_id: z
+      .string()
+      .regex(/^[a-f\d]{24}$/i),
+  })
+  .strict();
+
+export const UpdateFinanceSettingsSchema = z.union([
+  UpdateFinanceCalendarSettingsSchema,
+  UpdateFinanceShopeePayoutSettingsSchema,
+]);
 
 export type FinanceSettingsUpdate = z.infer<
   typeof UpdateFinanceSettingsSchema

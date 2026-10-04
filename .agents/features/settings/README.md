@@ -4,7 +4,7 @@
 
 ## Summary
 
-- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization supports name updates; Store supports active Store name, code, and timezone updates; Finance supports the Finance calendar timezone during onboarding; Appearance supports browser-local mode and theme preferences.
+- **[CURRENT]** `/dashboard/settings` is a hub with responsive section navigation, and the dashboard sidebar links to it. Profile supports display-name updates; Organization supports name updates; Store supports active Store name, code, and timezone updates; Finance supports the Finance calendar timezone during onboarding and Shopee payout bookkeeping account selection during or after onboarding; Appearance supports browser-local mode and theme preferences.
 - **[CURRENT]** Better Auth owns authentication and User records. Settings allows the signed-in User to update the display name; email, password, and image editing remain outside this screen.
 - **[CURRENT]** The Organization screen lets the signed-in user update the active Organization name through Better Auth. No database schema change is needed for this field.
 - **[OPEN]** Organization logo editing is deferred until a private-file serving contract exists for local development and deployment storage. The current shared avatar field creates data URLs and is not used for this workflow.
@@ -23,7 +23,7 @@
 | Organization | Better Auth Organization for core identity; the owning business module for its own configuration | Edit active Organization name; do not edit slug or logo in this slice | Name **[CURRENT]**; logo **[OPEN]** |
 | Store | `modules/stores/` | Edit the active Store's name, code, and timezone | **[CURRENT]** |
 | Appearance | Browser-local preference | Set system/light/dark mode and dashboard theme/style for this browser | **[CURRENT]**; cross-device sync **[OPEN]** |
-| Finance | `modules/finance/` | Edit Finance calendar timezone during onboarding; lifecycle and settings data use Finance-owned persistence | **[CURRENT]** |
+| Finance | `modules/finance/` | Edit calendar timezone during onboarding and choose a bank/e-wallet default for Shopee payout bookkeeping during or after onboarding | **[CURRENT]** |
 | Members, integrations, billing, notifications | Their future owning capabilities | Add only after a concrete workflow and permission contract exist | **[OPEN]** |
 
 ## Decisions and assumptions

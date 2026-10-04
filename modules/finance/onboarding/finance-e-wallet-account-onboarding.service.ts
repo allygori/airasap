@@ -1,24 +1,24 @@
 import type { ClientSession } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
 import { FinanceAccountRepository } from '../accounts/finance-account.repository';
-import type { FinanceOnboardingRepository } from './finance-onboarding.repository';
 import { FinanceLifecycleService } from '../finance-lifecycle.service';
+import type { FinanceOnboardingRepository } from './finance-onboarding.repository';
 import {
   assertFinanceTenant,
   type FinanceTenantContext,
 } from '../finance.types';
 import type {
-  FinanceBankAccountCreateInputDTO,
-  FinanceBankAccountCreateResponseDTO,
-} from './finance-bank-account.dto';
+  FinanceEWalletAccountCreateInputDTO,
+  FinanceEWalletAccountCreateResponseDTO,
+} from './finance-e-wallet-account.dto';
 import {
-  FinanceBankAccountCreateInputSchema,
-  FinanceBankAccountCreateResponseSchema,
-} from './finance-bank-account.schema';
+  FinanceEWalletAccountCreateInputSchema,
+  FinanceEWalletAccountCreateResponseSchema,
+} from './finance-e-wallet-account.schema';
 
-type FinanceBankAccountRepositoryPort = Pick<
+type FinanceEWalletAccountRepositoryPort = Pick<
   FinanceAccountRepository,
-  'listPostableBySubtypes' | 'createBankAccount'
+  'listPostableBySubtypes' | 'createEWalletAccount'
 > &
   Partial<
     Pick<
@@ -27,20 +27,16 @@ type FinanceBankAccountRepositoryPort = Pick<
     >
   >;
 
-type FinancePayoutDefaultRepositoryPort = Pick<
-  FinanceOnboardingRepository,
-  'setShopeePayoutAccountIfMissing'
->;
-
-type FinanceBankAccountLifecyclePort = Pick<
-  FinanceLifecycleService,
-  'getState' | 'assertOwner'
->;
-
-type FinanceBankAccountOnboardingDependencies = {
-  accountRepository?: FinanceBankAccountRepositoryPort;
-  onboardingRepository?: FinancePayoutDefaultRepositoryPort;
-  lifecycle?: FinanceBankAccountLifecyclePort;
+type FinanceEWalletOnboardingDependencies = {
+  accountRepository?: FinanceEWalletAccountRepositoryPort;
+  onboardingRepository?: Pick<
+    FinanceOnboardingRepository,
+    'setShopeePayoutAccountIfMissing'
+  >;
+  lifecycle?: Pick<
+    FinanceLifecycleService,
+    'getState' | 'assertOwner'
+  >;
 };
 
 const isDuplicateKeyError = (
@@ -51,14 +47,20 @@ const isDuplicateKeyError = (
   'code' in error &&
   error.code === 11000;
 
-export class FinanceBankAccountOnboardingService {
-  private readonly accountRepository: FinanceBankAccountRepositoryPort;
-  private readonly onboardingRepository?: FinancePayoutDefaultRepositoryPort;
-  private readonly lifecycle: FinanceBankAccountLifecyclePort;
+export class FinanceEWalletAccountOnboardingService {
+  private readonly accountRepository: FinanceEWalletAccountRepositoryPort;
+  private readonly onboardingRepository?: Pick<
+    FinanceOnboardingRepository,
+    'setShopeePayoutAccountIfMissing'
+  >;
+  private readonly lifecycle: Pick<
+    FinanceLifecycleService,
+    'getState' | 'assertOwner'
+  >;
 
   constructor(
     context: FinanceTenantContext,
-    dependencies?: FinanceBankAccountOnboardingDependencies
+    dependencies?: FinanceEWalletOnboardingDependencies
   ) {
     assertFinanceTenant(context);
     this.accountRepository =
@@ -72,9 +74,9 @@ export class FinanceBankAccountOnboardingService {
   }
 
   async create(
-    input: FinanceBankAccountCreateInputDTO | unknown,
+    input: FinanceEWalletAccountCreateInputDTO | unknown,
     session?: ClientSession
-  ): Promise<FinanceBankAccountCreateResponseDTO> {
+  ): Promise<FinanceEWalletAccountCreateResponseDTO> {
     await this.lifecycle.assertOwner();
     const state = await this.lifecycle.getState(session);
 
@@ -84,7 +86,6 @@ export class FinanceBankAccountOnboardingService {
         'FINANCE_ONBOARDING_ALREADY_COMPLETED'
       );
     }
-
     if (state.status !== 'in_progress') {
       throw new FinanceDomainError(
         'Finance onboarding belum dimulai.',
@@ -93,14 +94,14 @@ export class FinanceBankAccountOnboardingService {
     }
 
     const data =
-      FinanceBankAccountCreateInputSchema.parse(input);
+      FinanceEWalletAccountCreateInputSchema.parse(input);
     const findParent =
       this.accountRepository.findByCode ??
       this.accountRepository.findSelectableByCode;
     const parent = findParent
       ? await findParent.call(
           this.accountRepository,
-          '1120',
+          '1140',
           session
         )
       : null;
@@ -108,34 +109,23 @@ export class FinanceBankAccountOnboardingService {
     if (
       !parent ||
       parent.type !== 'asset' ||
-      parent.subtype !== 'bank'
+      parent.subtype !== 'e_wallet'
     ) {
       throw new FinanceDomainError(
-        'Akun induk Bank Finance belum tersedia.',
-        'FINANCE_BANK_ACCOUNT_PARENT_NOT_FOUND'
+        'Akun induk Saldo E-wallet Finance belum tersedia.',
+        'FINANCE_E_WALLET_ACCOUNT_PARENT_NOT_FOUND'
       );
     }
 
-    const bankAccounts =
+    const eWalletAccounts =
       await this.accountRepository.listPostableBySubtypes(
-        ['bank'],
+        ['e_wallet'],
         { limit: 500 },
         session
       );
     const existingCodes = new Set(
-      bankAccounts.map((account) => account.code)
+      eWalletAccounts.map((account) => account.code)
     );
-    const accountMetadata = {
-      ...(data.institution
-        ? { institution: data.institution }
-        : {}),
-      ...(data.account_last4
-        ? { account_last4: data.account_last4 }
-        : {}),
-      ...(data.account_holder
-        ? { account_holder: data.account_holder }
-        : {}),
-    };
 
     for (let sequence = 1; sequence <= 99; sequence += 1) {
       const code = `${parent.code}${String(sequence).padStart(2, '0')}`;
@@ -143,23 +133,21 @@ export class FinanceBankAccountOnboardingService {
 
       try {
         const account =
-          await this.accountRepository.createBankAccount(
+          await this.accountRepository.createEWalletAccount(
             {
               code,
               name: data.name,
               parent_account: parent._id,
               display_order: parent.display_order + 1,
-              ...(Object.keys(accountMetadata).length > 0
-                ? { account_metadata: accountMetadata }
-                : {}),
+              account_metadata: { provider: data.provider },
             },
             session
           );
 
         if (!account) {
           throw new FinanceDomainError(
-            'Rekening bank Finance gagal dibuat.',
-            'FINANCE_BANK_ACCOUNT_CREATE_FAILED'
+            'Akun e-wallet Finance gagal dibuat.',
+            'FINANCE_E_WALLET_ACCOUNT_CREATE_FAILED'
           );
         }
 
@@ -168,14 +156,14 @@ export class FinanceBankAccountOnboardingService {
           session
         );
 
-        return FinanceBankAccountCreateResponseSchema.parse(
+        return FinanceEWalletAccountCreateResponseSchema.parse(
           {
             account: {
               id: String(account._id),
               code: account.code,
               name: account.name,
               type: 'asset',
-              subtype: 'bank',
+              subtype: 'e_wallet',
               normal_balance: 'debit',
             },
           }
@@ -187,8 +175,8 @@ export class FinanceBankAccountOnboardingService {
     }
 
     throw new FinanceDomainError(
-      'Jumlah rekening bank Finance sudah mencapai batas.',
-      'FINANCE_BANK_ACCOUNT_CODE_EXHAUSTED'
+      'Jumlah akun e-wallet Finance sudah mencapai batas.',
+      'FINANCE_E_WALLET_ACCOUNT_CODE_EXHAUSTED'
     );
   }
 }

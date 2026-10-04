@@ -27,7 +27,10 @@ export default async function SettingsFinancePage() {
     <FinanceSettingsForm
       initialValues={{
         calendar_timezone: settings.calendar_timezone,
+        shopee_payout_account_id:
+          settings.shopee_payout_account_id,
       }}
+      payoutAccounts={settings.payout_accounts}
       status={settings.status}
     />
   );

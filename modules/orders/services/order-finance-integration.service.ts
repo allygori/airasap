@@ -5,6 +5,7 @@ import {
   FinanceSalesProjectionService,
   FinanceSalesWorkflowService,
   FinanceMarketplaceReleaseService,
+  FinanceSettingsService,
   FinanceInventoryReservationService,
   type FinanceSalesProjectionDTO,
   type FinanceSalesWorkflowResultDTO,
@@ -202,7 +203,9 @@ export class OrderFinanceIntegrationService {
       new FinanceSalesWorkflowService(context);
     this.marketplaceReleaseService =
       dependencies?.marketplaceReleaseService ??
-      new FinanceMarketplaceReleaseService(context);
+      new FinanceMarketplaceReleaseService(context, {
+        payoutSettings: new FinanceSettingsService(context),
+      });
     this.inventoryReservationService =
       dependencies?.inventoryReservationService ??
       new FinanceInventoryReservationService(context);

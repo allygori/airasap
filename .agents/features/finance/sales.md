@@ -24,6 +24,7 @@ The current direct Orders-to-Finance composition and the missing durable recover
 
 - **[CURRENT]** The released-funds import passes source Order, Store, platform, release amount/date, marketplace fees, and source File context into Finance.
 - **[CURRENT]** Finance checks that a corresponding sales transaction is posted and compares released amount plus eligible fee lines with the expected marketplace receivable. Missing data or a non-zero difference leaves the release blocked for review.
+- **[CURRENT]** For Shopee, the net released amount is debited directly to the default payout bookkeeping account selected in Finance Settings (bank or e-wallet); eligible fees are debited separately and marketplace receivable is credited. This setting is an Airasap accounting mapping and does not change the seller's payout configuration in Shopee. Other platforms retain the marketplace-balance account path unless their mapping is implemented separately.
 - **[CURRENT]** Refunds/returns and certain tax or shipping-refund fee cases remain unsupported and are blocked rather than treated as reconciled.
 
 This is file-import reconciliation, not a live marketplace settlement integration. Its evidence and freshness depend on the source export.

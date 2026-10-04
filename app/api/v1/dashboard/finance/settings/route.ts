@@ -65,16 +65,16 @@ export const PATCH = withValidation(
 
       await db.connect();
       await assertFinancePremium(context);
-      const state = await new FinanceSettingsService(
-        context
-      ).setCalendarTimezone(
-        validatedBody.calendar_timezone
-      );
+      const service = new FinanceSettingsService(context);
+      if ('calendar_timezone' in validatedBody) {
+        await service.setCalendarTimezone(
+          validatedBody.calendar_timezone
+        );
+      } else {
+        await service.setShopeePayoutAccount(validatedBody);
+      }
 
-      return apiSuccess({
-        status: state.status,
-        calendar_timezone: state.calendar_timezone,
-      });
+      return apiSuccess(await service.getSettings());
     } catch (error) {
       return handleFinanceSettingsError(
         error,
@@ -102,9 +102,16 @@ function handleFinanceSettingsError(
               error.code ===
                 'FINANCE_ONBOARDING_NOT_IN_PROGRESS' ||
               error.code ===
-                'FINANCE_CALENDAR_TIMEZONE_UPDATE_FAILED'
+                'FINANCE_CALENDAR_TIMEZONE_UPDATE_FAILED' ||
+              error.code ===
+                'FINANCE_PAYOUT_ACCOUNT_SETTINGS_LOCKED' ||
+              error.code ===
+                'FINANCE_PAYOUT_ACCOUNT_UPDATE_FAILED'
             ? 409
-            : 400;
+            : error.code ===
+                'FINANCE_PAYOUT_ACCOUNT_INVALID'
+              ? 422
+              : 400;
 
     return apiError(error.code, error.message, status);
   }

@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { FinanceDomainError } from '../finance.error';
 import { FinanceEntitlementService } from '../finance-entitlement.service';
 import { FinanceLifecycleService } from '../finance-lifecycle.service';
+import type { FinanceSettingsService } from '../finance-settings.service';
 import { FinanceAccountRoleResolverService } from '../accounts/finance-account-role-resolver.service';
 import { FinanceJournalService } from '../journal/finance-journal.service';
 import { FinanceSalesTransactionRepository } from '../sales/finance-sales-transaction.repository';
@@ -131,6 +132,11 @@ type FinanceReadinessPort = {
   isReady: () => Promise<boolean>;
 };
 
+type FinancePayoutSettingsPort = Pick<
+  FinanceSettingsService,
+  'getSettings'
+>;
+
 type FeeLineWithRole =
   FinanceMarketplaceReleaseFeeLineDTO & {
     role: FinanceAccountRole;
@@ -189,6 +195,7 @@ export class FinanceMarketplaceReleaseService {
   private readonly roleResolver: FinanceRoleResolverPort;
   private readonly journalService: FinanceJournalPort;
   private readonly readiness: FinanceReadinessPort;
+  private readonly payoutSettings?: FinancePayoutSettingsPort;
 
   constructor(
     private readonly context: FinanceTenantContext,
@@ -198,6 +205,7 @@ export class FinanceMarketplaceReleaseService {
       roleResolver?: FinanceRoleResolverPort;
       journalService?: FinanceJournalPort;
       readiness?: FinanceReadinessPort;
+      payoutSettings?: FinancePayoutSettingsPort;
     }
   ) {
     assertFinanceTenant(context);
@@ -213,6 +221,7 @@ export class FinanceMarketplaceReleaseService {
     this.journalService =
       dependencies?.journalService ??
       new FinanceJournalService(context);
+    this.payoutSettings = dependencies?.payoutSettings;
     this.readiness = dependencies?.readiness ?? {
       isReady: async () => {
         const entitlement =
@@ -488,12 +497,31 @@ export class FinanceMarketplaceReleaseService {
     releasedAmount: number;
     expectedGrossAmount: number;
   }) {
+    const payoutAccountId =
+      input.source.platform === 'shopee' &&
+      this.payoutSettings
+        ? (await this.payoutSettings.getSettings())
+            .shopee_payout_account_id
+        : null;
+    if (
+      input.source.platform === 'shopee' &&
+      this.payoutSettings &&
+      !payoutAccountId
+    ) {
+      throw new FinanceDomainError(
+        'Atur akun tujuan payout Shopee di Pengaturan Finance sebelum mengimpor pencairan.',
+        'FINANCE_SHOPEE_PAYOUT_ACCOUNT_REQUIRED'
+      );
+    }
+
     const accountIds = new Map<
       FinanceAccountRole,
       string
     >();
     const roles = new Set<FinanceAccountRole>([
-      'marketplace_balance',
+      ...(!payoutAccountId
+        ? ['marketplace_balance' as const]
+        : []),
       'marketplace_receivable',
       ...input.feeLines.map((line) => line.role),
     ]);
@@ -518,9 +546,9 @@ export class FinanceMarketplaceReleaseService {
       ...(input.releasedAmount > 0
         ? [
             {
-              account_id: accountIds.get(
-                'marketplace_balance'
-              )!,
+              account_id:
+                accountIds.get('marketplace_balance') ??
+                payoutAccountId!,
               debit: input.releasedAmount,
               credit: 0,
               dimensions,

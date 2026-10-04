@@ -51,24 +51,24 @@
       "subtype": "bank",
       "parent_code": "1100",
       "normal_balance": "debit",
-      "is_system": false,
-      "is_postable": true,
+      "is_system": true,
+      "is_postable": false,
       "is_active": true,
       "display_order": 112,
-      "description": "Rekening bank utama untuk operasional."
+      "description": "Grup akun rekening bank. Buat akun rekening postable tersendiri di bawah grup ini."
     },
     {
-      "code": "1130",
+      "code": "1220",
       "name": "Saldo Marketplace",
       "type": "asset",
       "subtype": "marketplace_balance",
-      "parent_code": "1100",
+      "parent_code": "1200",
       "normal_balance": "debit",
       "is_system": false,
       "is_postable": true,
       "is_active": true,
-      "display_order": 113,
-      "description": "Saldo yang sudah tersedia di marketplace tetapi belum ditarik ke bank."
+      "display_order": 122,
+      "description": "Dana penjualan yang sudah tersedia pada marketplace tetapi belum dicairkan ke rekening penerima."
     },
     {
       "code": "1140",
@@ -77,11 +77,11 @@
       "subtype": "e_wallet",
       "parent_code": "1100",
       "normal_balance": "debit",
-      "is_system": false,
-      "is_postable": true,
+      "is_system": true,
+      "is_postable": false,
       "is_active": true,
       "display_order": 114,
-      "description": "Saldo operasional pada dompet elektronik."
+      "description": "Grup akun saldo yang dititipkan pada penyedia dompet digital; buat akun postable tersendiri untuk setiap e-wallet."
     },
     {
       "code": "1200",

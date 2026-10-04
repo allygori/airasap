@@ -14,6 +14,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import {
   FinanceBankAccountCreateInputSchema,
   FinanceBankAccountCreateResponseSchema,
+  FinanceEWalletAccountCreateInputSchema,
+  FinanceEWalletAccountCreateResponseSchema,
   FinanceOpeningBalanceSaveInputSchema,
   FinanceOpeningBalanceFinalizeResponseSchema,
   FinanceOpeningBalancePreviewSchema,
@@ -21,6 +23,7 @@ import {
   FinanceInventorySetupActionResponseSchema,
   FinanceInventorySetupResponseSchema,
   type FinanceBankAccountCreateInputDTO,
+  type FinanceEWalletAccountCreateInputDTO,
   type FinanceOpeningBalanceSaveInputDTO,
   type FinanceOpeningBalancePreviewDTO,
   type FinanceOpeningBalanceSetupResponseDTO,
@@ -35,6 +38,8 @@ import {
   type FinanceOpeningBalanceFormValues,
   type FinanceOpeningBalanceStep,
 } from './finance-opening-balance.form';
+import { FinanceEWalletAccountForm } from './finance-e-wallet-account.form';
+import { Spinner } from '@/components/ui/spinner';
 
 type FinanceOpeningBalanceClientProps = {
   enabled: boolean;
@@ -84,9 +89,17 @@ export default function FinanceOpeningBalanceClient({
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isCreatingBankAccount, setIsCreatingBankAccount] =
     useState(false);
+  const [
+    isCreatingEWalletAccount,
+    setIsCreatingEWalletAccount,
+  ] = useState(false);
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [isAddingBankAccount, setIsAddingBankAccount] =
     useState(false);
+  const [
+    isAddingEWalletAccount,
+    setIsAddingEWalletAccount,
+  ] = useState(false);
   const [currentStep, setCurrentStep] =
     useState<FinanceOpeningBalanceStep>('start');
   const [preview, setPreview] =
@@ -439,6 +452,88 @@ export default function FinanceOpeningBalanceClient({
     }
   };
 
+  const createEWalletAccount = async (
+    values: FinanceEWalletAccountCreateInputDTO
+  ) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setIsCreatingEWalletAccount(true);
+
+    try {
+      const body =
+        FinanceEWalletAccountCreateInputSchema.parse(
+          values
+        );
+      const response = await fetch(
+        '/api/v1/dashboard/finance/onboarding/e-wallet-accounts',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        }
+      );
+      const payload: unknown = await response.json();
+      const parsed =
+        FinanceEWalletAccountCreateResponseSchema.safeParse(
+          getSuccessData(payload)
+        );
+
+      if (!response.ok || !parsed.success) {
+        setErrorMessage(
+          getErrorMessage(payload) ??
+            'Akun e-wallet gagal ditambahkan.'
+        );
+        return false;
+      }
+
+      const account = parsed.data.account;
+      setSetup((current) =>
+        current
+          ? {
+              ...current,
+              options: {
+                ...current.options,
+                cash_bank_accounts:
+                  current.options.cash_bank_accounts.some(
+                    (option) => option.id === account.id
+                  )
+                    ? current.options.cash_bank_accounts
+                    : [
+                        ...current.options
+                          .cash_bank_accounts,
+                        account,
+                      ],
+              },
+            }
+          : current
+      );
+      openingForm.setFieldValue(
+        'cash_bank_lines',
+        (current) =>
+          current.some(
+            (line) => line.account_id === account.id
+          )
+            ? current
+            : [
+                ...current,
+                { account_id: account.id, amount: '' },
+              ]
+      );
+      setIsAddingEWalletAccount(false);
+      setSuccessMessage(
+        `${account.name} ditambahkan sebagai akun e-wallet.`
+      );
+      return true;
+    } catch {
+      setErrorMessage(
+        'Akun e-wallet gagal ditambahkan. Periksa kembali isian.'
+      );
+      return false;
+    } finally {
+      setIsCreatingEWalletAccount(false);
+    }
+  };
+
   const bankAccountForm = useAppForm({
     defaultValues: {
       name: '',
@@ -452,6 +547,20 @@ export default function FinanceOpeningBalanceClient({
     },
     onSubmit: async ({ value }) => {
       await createBankAccount(value);
+    },
+  });
+
+  const eWalletAccountForm = useAppForm({
+    defaultValues: {
+      name: '',
+      provider: '',
+    },
+    validationLogic: revalidateLogic(),
+    validators: {
+      onDynamic: FinanceEWalletAccountCreateInputSchema,
+    },
+    onSubmit: async ({ value }) => {
+      await createEWalletAccount(value);
     },
   });
 
@@ -663,7 +772,7 @@ export default function FinanceOpeningBalanceClient({
   const handleModeChange = (
     mode: FinanceOpeningBalanceFormValues['mode']
   ) => {
-    if (mode === 'zero') setCurrentStep('review');
+    if (mode === 'zero') setCurrentStep('accounts');
   };
 
   const startAddBankAccount = () => {
@@ -672,16 +781,27 @@ export default function FinanceOpeningBalanceClient({
     setIsAddingBankAccount(true);
   };
 
+  const startAddEWalletAccount = () => {
+    eWalletAccountForm.reset();
+    setErrorMessage(null);
+    setIsAddingEWalletAccount(true);
+  };
+
   if (!enabled) return null;
 
   if (isLoading || !setup) {
     return (
-      <Card>
-        <CardContent className="text-muted-foreground py-8 text-sm">
-          Memuat akun, persediaan, dan lokasi untuk saldo
-          awal…
-        </CardContent>
-      </Card>
+      <div className="flex min-h-screen w-full items-center justify-center">
+        <Card>
+          <CardContent className="text-muted-foreground flex flex-col items-center justify-center py-8 text-sm">
+            <Spinner className="block size-6" />
+            <p>
+              Memuat akun, persediaan, dan lokasi untuk
+              saldo awal…
+            </p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -695,11 +815,18 @@ export default function FinanceOpeningBalanceClient({
       onStepChange={setCurrentStep}
       onModeChange={handleModeChange}
       bankAccountForm={bankAccountForm}
+      eWalletAccountForm={eWalletAccountForm}
       isAddingBankAccount={isAddingBankAccount}
+      isAddingEWalletAccount={isAddingEWalletAccount}
       isCreatingBankAccount={isCreatingBankAccount}
+      isCreatingEWalletAccount={isCreatingEWalletAccount}
       onStartAddBankAccount={startAddBankAccount}
+      onStartAddEWalletAccount={startAddEWalletAccount}
       onCancelAddBankAccount={() =>
         setIsAddingBankAccount(false)
+      }
+      onCancelAddEWalletAccount={() =>
+        setIsAddingEWalletAccount(false)
       }
       onRefreshInventory={() =>
         void refreshInventoryOptions()

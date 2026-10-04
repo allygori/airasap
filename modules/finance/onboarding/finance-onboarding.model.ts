@@ -25,6 +25,7 @@ export type TFinanceOnboarding = Document & {
   };
   settings: {
     calendar_timezone: TimeZone;
+    shopee_payout_account_id?: Types.ObjectId | null;
   };
   created_at?: Date;
   updated_at?: Date;
@@ -64,6 +65,11 @@ const FinanceOnboardingSchema =
           type: String,
           enum: TIMEZONE_VALUES,
           default: 'Asia/Jakarta',
+        },
+        shopee_payout_account_id: {
+          type: Schema.Types.ObjectId,
+          ref: 'FinanceChartAccount',
+          default: null,
         },
       },
     },

@@ -32,7 +32,7 @@ const ROLE_DEFINITIONS: Record<
   },
   marketplace_balance: {
     subtype: 'marketplace_balance',
-    fallback_code: '1130',
+    fallback_code: '1220',
   },
   marketplace_admin_fee: {
     subtype: 'marketplace_admin_fee',

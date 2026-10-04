@@ -113,10 +113,12 @@
 ### Scope
 
 - **[CURRENT]** The unused legacy `Organization.accounting` onboarding subdocument, schema/model path, status constant, and repository methods were removed after confirming they had no callers. Active Accounting remains part of `modules/finance/`.
-- **[CURRENT]** Finance lifecycle state and editable configuration are now owned by `modules/finance/` and stored in the Organization-scoped `finance_onboarding_states` collection through the `FinanceOnboarding` model. The record separates `lifecycle` fields from `settings.calendar_timezone`.
+- **[CURRENT]** Finance lifecycle state and editable configuration are owned by `modules/finance/` and stored in the Organization-scoped `finance_onboarding_states` collection through the `FinanceOnboarding` model. The record separates lifecycle fields from `settings.calendar_timezone` and `settings.shopee_payout_account_id`.
 - **[CURRENT]** Lifecycle transitions stay in `FinanceLifecycleService`. `FinanceSettingsService` owns Finance settings reads and writes, including owner and lifecycle guards for timezone changes.
 - **[CURRENT]** Finance onboarding, Finance periods, and financial statements now read or update the Finance-owned state contract. The Organization schema/model no longer declares a `finance` field.
-- **[CURRENT]** `/dashboard/settings/finance` edits the calendar timezone through `PATCH /api/v1/dashboard/finance/settings`. Editing is available during Finance onboarding; the server rejects changes after activation or once a journal exists.
+- **[CURRENT]** `/dashboard/settings/finance` edits the calendar timezone and the Shopee payout bookkeeping destination through `PATCH /api/v1/dashboard/finance/settings`. Timezone editing is available only during Finance onboarding and is locked after activation or once a journal exists. Payout account editing is available during onboarding and after activation, and only accepts an active, postable bank or e-wallet account owned by the current Organization.
+- **[CURRENT]** Finance onboarding Step 2 appears in both entered-balance and start-from-zero modes and requires at least one bank or e-wallet account before activation. Store Cash remains optional. Bank and e-wallet add forms create postable children beneath their respective nonpostable Chart of Accounts groups.
+- **[CURRENT]** The first bank/e-wallet account created during onboarding is stored as the initial Shopee payout bookkeeping destination. Shopee released-funds journals debit that selected account; the setting does not change payout instructions in Shopee.
 - **[CURRENT]** Old `account_mappings` were not recreated because no active Finance workflow consumed them.
 - **[CURRENT]** No migration or backfill was added. Values are not copied from `Organization.finance` or the previous intermediate `finance_organization_states` collection; remove obsolete data manually or reset the development database before testing.
 
@@ -125,6 +127,7 @@
 - **[CURRENT]** No application workflow reads or writes Finance lifecycle/settings values through the Organization model.
 - **[CURRENT]** Onboarding, Finance readiness, period calculation, and financial statements use the Finance-owned state repository.
 - **[CURRENT]** Changing the calendar timezone is guarded by Finance lifecycle state and existing journal history; historical journals are not rewritten.
+- **[CURRENT]** Changing the Shopee payout bookkeeping account accepts only an active, postable bank or e-wallet account in the current Organization. Marketplace released-funds amounts remain separate from fees and marketplace receivable reconciliation.
 - **[CURRENT]** The fresh-data/no-migration assumption and manual cleanup requirement for old Organization fields are documented.
 
 ## Phase 7 — Future settings areas

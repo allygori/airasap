@@ -5,7 +5,9 @@
 ## Cash and bank accounts
 
 - **[CURRENT]** Finance accounts provide the Chart of Accounts and role mapping; cash/bank read services expose selectable accounts and balance-oriented views from Finance records.
-- **[CURRENT]** Bank-account onboarding creates child bank accounts under the seeded Bank account role while Finance setup is in progress. See [Setup and Onboarding](setup-and-onboarding.md).
+- **[CURRENT]** Step 2 of Finance onboarding always appears, including start-from-zero setup. It requires at least one bank or e-wallet account before Finance can be activated; Store Cash stays optional.
+- **[CURRENT]** Bank accounts are postable children of the nonpostable `1120 Bank Operasional` group, and e-wallets are postable children of the nonpostable `1140 Saldo E-wallet` group. Each child account is shown under its corresponding group in onboarding. See [Setup and Onboarding](setup-and-onboarding.md).
+- **[CURRENT]** New bank and e-wallet accounts can be added during onboarding. Adding them after Finance activation is not implemented yet.
 - **[CURRENT]** A cash/bank transfer moves value between eligible Finance accounts through a transfer workflow and journal posting. Posted transfers can be reversed through a separate reversal path.
 
 ## Cash loans and owner withdrawals

@@ -15,9 +15,11 @@
 
 1. An Organization owner checks Finance readiness and starts onboarding.
 2. Finance ensures the default accounts exist and moves Finance lifecycle state to `in_progress`.
-3. The owner may set the Finance calendar timezone during onboarding through `FinanceSettingsService`. It is locked after Finance becomes active or after the first journal exists; the Settings screen uses the same server-side guard.
-4. Opening-balance setup accepts a draft, supports preview, and finalizes the selected balances at a cut-off date. Finalization can create an opening journal, inventory opening movements, and receivable/payable subledger items, then activates Finance.
-5. During `in_progress`, an owner can add bank accounts under the seeded Bank account role. This setup flow is not a general account-management permission model.
+3. During `in_progress`, Step 2 (Kas, bank, dan e-wallet) is required in both entered-balance and start-from-zero modes. Finance activation requires at least one active, postable bank or e-wallet account. Physical Store Cash remains optional.
+4. Bank accounts are postable children of the seeded nonpostable `1120 Bank Operasional` group; e-wallet accounts are postable children of the seeded nonpostable `1140 Saldo E-wallet` group. Their add forms are separate and remain hidden until requested. Bank and e-wallet account creation is available during onboarding only; post-onboarding account management is a separate plan.
+5. The first bank or e-wallet account added during onboarding becomes the initial Shopee payout bookkeeping destination. The owner can change it in `/dashboard/settings/finance` while Finance is `in_progress` or `active`. This does not configure payout instructions in Shopee.
+6. The owner may set the Finance calendar timezone during onboarding through `FinanceSettingsService`. It is locked after Finance becomes active or after the first journal exists; the Settings screen uses the same server-side guard.
+7. Opening-balance setup accepts a draft, supports preview, and finalizes the selected balances at a cut-off date. Entered-balance mode can create an opening journal, inventory opening movements, and receivable/payable subledger items; start-from-zero mode skips opening balances. Both paths require a receiving account before activation.
 
 An opening-balance line marked `skipped` is an explicit onboarding choice; do not assume it creates a posted balance. Inspect the opening-balance service and its preview before changing this workflow.
 
@@ -25,11 +27,13 @@ An opening-balance line marked `skipped` is an explicit onboarding choice; do no
 
 - **[CURRENT]** Finance readiness is not equivalent to user authorization for every Finance action. The current owner check is used specifically by onboarding paths; future role/permission scope remains in [Q-002](../../docs/open-questions.md#q-002--organization-and-store-rolepermission-scope).
 - **[CURRENT]** The Finance lifecycle is not yet the general Organization-level runtime plugin/module registry.
+- **[CURRENT]** Chart of Accounts seeding uses insert-only defaults. The changed account hierarchy and flags apply to newly initialized Finance data; no migration updates an existing Organization's seeded accounts. Manual browser verification of this change should use a fresh Finance setup as agreed.
+- **[OPEN]** Add, edit, deactivate, and archive bank/e-wallet accounts after Finance activation as a separate account-management feature. The current Settings control only changes the Shopee payout bookkeeping destination among existing eligible accounts.
 - **[OPEN]** Entitlement versus activation and read/export/finish behavior after Finance disablement are tracked in [Q-005](../../docs/open-questions.md#q-005--finance-entitlement-activation-and-disable-behavior).
 
 ## Source entry points
 
 - [Lifecycle service](../../../modules/finance/finance-lifecycle.service.ts), [settings service](../../../modules/finance/finance-settings.service.ts), [Finance state types](../../../modules/finance/finance.types.ts), and [entitlement service](../../../modules/finance/finance-entitlement.service.ts)
-- [Opening-balance service](../../../modules/finance/onboarding/finance-opening-balance.service.ts) and [bank-account onboarding service](../../../modules/finance/onboarding/finance-bank-account-onboarding.service.ts)
-- [Finance onboarding API routes](../../../app/api/v1/dashboard/finance/onboarding/)
+- [Opening-balance service](../../../modules/finance/onboarding/finance-opening-balance.service.ts), [bank-account onboarding service](../../../modules/finance/onboarding/finance-bank-account-onboarding.service.ts), and [e-wallet onboarding service](../../../modules/finance/onboarding/finance-e-wallet-account-onboarding.service.ts)
+- [Finance onboarding API routes](../../../app/api/v1/dashboard/finance/onboarding/), including bank and e-wallet account creation
 - [Identity and access control](../../docs/architecture/identity-and-access-control.md) and [optional modules](../../docs/architecture/optional-modules-and-flags.md)

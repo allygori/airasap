@@ -8,14 +8,14 @@ import {
 import { db } from '@/lib/db/connection';
 import {
   assertFinancePremium,
-  FinanceBankAccountCreateInputSchema,
-  FinanceBankAccountOnboardingService,
   FinanceDomainError,
+  FinanceEWalletAccountCreateInputSchema,
+  FinanceEWalletAccountOnboardingService,
   FinanceOnboardingRepository,
 } from '@/modules/finance';
 
 export const POST = withValidation(
-  { body: FinanceBankAccountCreateInputSchema },
+  { body: FinanceEWalletAccountCreateInputSchema },
   async (_request, { validatedBody }) => {
     try {
       const tenantContext = await getTenantContext();
@@ -30,7 +30,7 @@ export const POST = withValidation(
       await db.connect();
       await assertFinancePremium(tenantContext);
       const result =
-        await new FinanceBankAccountOnboardingService(
+        await new FinanceEWalletAccountOnboardingService(
           tenantContext,
           {
             onboardingRepository:
@@ -56,7 +56,7 @@ export const POST = withValidation(
                     'FINANCE_ONBOARDING_ALREADY_COMPLETED'
                 ? 409
                 : error.code ===
-                    'FINANCE_BANK_ACCOUNT_CREATE_FAILED'
+                    'FINANCE_E_WALLET_ACCOUNT_CREATE_FAILED'
                   ? 500
                   : 422;
 
@@ -64,12 +64,12 @@ export const POST = withValidation(
       }
 
       console.error(
-        '[POST /api/v1/dashboard/finance/onboarding/bank-accounts]',
+        '[POST /api/v1/dashboard/finance/onboarding/e-wallet-accounts]',
         error
       );
       return apiError(
         ErrorCodes.INTERNAL_ERROR,
-        'Gagal menambahkan rekening bank Finance.',
+        'Gagal menambahkan akun e-wallet Finance.',
         500
       );
     }

@@ -43,6 +43,16 @@ export type FinanceBankAccountRecord = {
   };
 };
 
+export type FinanceEWalletAccountRecord = {
+  code: string;
+  name: string;
+  parent_account: Types.ObjectId;
+  display_order: number;
+  account_metadata: {
+    provider: string;
+  };
+};
+
 export type FinanceAccountPersistenceRecord = {
   _id: Types.ObjectId;
   organization: Types.ObjectId;
@@ -63,6 +73,8 @@ export type FinanceAccountPersistenceRecord = {
     account_holder?: string;
     provider?: string;
   };
+  created_at?: Date;
+  updated_at?: Date;
 };
 
 const isDuplicateKeyError = (
@@ -189,6 +201,29 @@ export class FinanceAccountRepository {
           ...record,
           type: 'asset',
           subtype: 'bank',
+          normal_balance: 'debit',
+          is_system: false,
+          is_postable: true,
+          is_active: true,
+        },
+      ],
+      session ? { session } : undefined
+    );
+
+    return this.findById(String(created._id), session);
+  }
+
+  async createEWalletAccount(
+    record: FinanceEWalletAccountRecord,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    const [created] = await FinanceAccountModel.create(
+      [
+        {
+          organization: this.organizationId,
+          ...record,
+          type: 'asset',
+          subtype: 'e_wallet',
           normal_balance: 'debit',
           is_system: false,
           is_postable: true,

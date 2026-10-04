@@ -2,7 +2,11 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { revalidateLogic } from '@tanstack/react-form';
+import {
+  revalidateLogic,
+  useStore,
+} from '@tanstack/react-form';
+import { z } from 'zod';
 import {
   TIMEZONES,
   TIMEZONE_VALUES,
@@ -35,13 +39,24 @@ import {
 } from '@/components/ui/select';
 import { Spinner } from '@/components/ui/spinner';
 import {
-  UpdateFinanceSettingsSchema,
+  UpdateFinanceCalendarSettingsSchema,
+  UpdateFinanceShopeePayoutSettingsSchema,
   type FinanceStatus,
-  type FinanceSettingsUpdate,
 } from '@/modules/finance/onboarding/finance-onboarding.schema';
 
+type FinancePayoutAccountOption = {
+  id: string;
+  code: string;
+  name: string;
+  subtype: 'bank' | 'e_wallet';
+};
+
 type FinanceSettingsFormProps = {
-  initialValues: FinanceSettingsUpdate;
+  initialValues: {
+    calendar_timezone: TimeZone;
+    shopee_payout_account_id: string | null;
+  };
+  payoutAccounts: FinancePayoutAccountOption[];
   status: FinanceStatus;
 };
 
@@ -105,17 +120,24 @@ function getSettingsDescription(status: FinanceStatus) {
 
 export function FinanceSettingsForm({
   initialValues,
+  payoutAccounts,
   status,
 }: FinanceSettingsFormProps) {
   const [notice, setNotice] =
     useState<FinanceSettingsNotice | null>(null);
+  const [payoutNotice, setPayoutNotice] =
+    useState<FinanceSettingsNotice | null>(null);
   const canEdit = status === 'in_progress';
+  const canEditPayoutAccount =
+    status === 'in_progress' || status === 'active';
 
   const form = useAppForm({
-    defaultValues: initialValues,
+    defaultValues: {
+      calendar_timezone: initialValues.calendar_timezone,
+    },
     validationLogic: revalidateLogic(),
     validators: {
-      onDynamic: UpdateFinanceSettingsSchema,
+      onDynamic: UpdateFinanceCalendarSettingsSchema,
     },
     onSubmit: async ({ value }) => {
       setNotice(null);
@@ -162,6 +184,77 @@ export function FinanceSettingsForm({
       }
     },
   });
+
+  const payoutForm = useAppForm({
+    defaultValues: {
+      shopee_payout_account_id:
+        initialValues.shopee_payout_account_id ?? '',
+    },
+    validationLogic: revalidateLogic(),
+    validators: {
+      onDynamic: z
+        .object({ shopee_payout_account_id: z.string() })
+        .strict(),
+    },
+    onSubmit: async ({ value }) => {
+      setPayoutNotice(null);
+      const update =
+        UpdateFinanceShopeePayoutSettingsSchema.safeParse(
+          value
+        );
+      if (!update.success) {
+        setPayoutNotice({
+          kind: 'error',
+          message:
+            'Pilih akun bank atau e-wallet terlebih dahulu.',
+        });
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          '/api/v1/dashboard/finance/settings',
+          {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(update.data),
+          }
+        );
+        const payload: unknown = await response
+          .json()
+          .catch(() => null);
+
+        if (!response.ok) {
+          setPayoutNotice({
+            kind: 'error',
+            message:
+              getErrorMessage(payload) ??
+              'Akun tujuan payout gagal disimpan. Silakan coba lagi.',
+          });
+          return;
+        }
+
+        payoutForm.reset(value);
+        setPayoutNotice({
+          kind: 'success',
+          message:
+            'Akun tujuan payout Shopee berhasil diperbarui.',
+        });
+      } catch {
+        setPayoutNotice({
+          kind: 'error',
+          message:
+            'Akun tujuan payout gagal disimpan. Periksa koneksi lalu coba lagi.',
+        });
+      }
+    },
+  });
+  const selectedPayoutAccountId = useStore(
+    payoutForm.store,
+    (state) => state.values.shopee_payout_account_id
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -317,6 +410,160 @@ export function FinanceSettingsForm({
                   </div>
                 )}
               </form.Subscribe>
+            )}
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Akun tujuan payout Shopee</CardTitle>
+          <CardDescription>
+            Dipakai sebagai akun penerima default saat
+            mencatat payout Shopee. Pengaturan ini hanya
+            untuk pembukuan Airasap dan tidak mengubah
+            rekening pencairan di Shopee.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void payoutForm.handleSubmit();
+            }}
+            className="flex flex-col gap-6"
+          >
+            <FieldGroup>
+              <div className="text-muted-foreground grid gap-2 text-sm">
+                <p>
+                  Akun pertama yang ditambahkan saat
+                  onboarding menjadi default awal. Anda
+                  dapat menggantinya di sini kapan saja.
+                </p>
+                <p>
+                  Pilihan ini hanya digunakan sebagai
+                  default pembukuan jika data payout tidak
+                  menyebutkan akun penerima. Ini tidak
+                  mengubah pengaturan pencairan di Shopee.
+                </p>
+              </div>
+              <Field data-disabled={!canEditPayoutAccount}>
+                <FieldLabel htmlFor="shopee-payout-account">
+                  Akun penerima default
+                </FieldLabel>
+                <Select
+                  value={selectedPayoutAccountId}
+                  disabled={
+                    !canEditPayoutAccount ||
+                    payoutAccounts.length === 0
+                  }
+                  onValueChange={(value) => {
+                    if (typeof value === 'string') {
+                      payoutForm.setFieldValue(
+                        'shopee_payout_account_id',
+                        value
+                      );
+                    }
+                  }}
+                >
+                  <SelectTrigger
+                    id="shopee-payout-account"
+                    className="w-full"
+                  >
+                    <SelectValue placeholder="Pilih akun penerima" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {payoutAccounts.map((account) => (
+                        <SelectItem
+                          key={account.id}
+                          value={account.id}
+                        >
+                          {account.name} (
+                          {account.subtype === 'bank'
+                            ? 'Bank'
+                            : 'E-wallet'}
+                          )
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+                <FieldDescription>
+                  Rekening bank dan e-wallet tetap dicatat
+                  sebagai akun terpisah. Pilih akun yang
+                  paling sering menerima payout Shopee.
+                  {payoutAccounts.length === 0 &&
+                  status === 'in_progress' ? (
+                    <>
+                      {' '}
+                      <Link
+                        href="/dashboard/finance/onboarding"
+                        className="text-primary underline-offset-4 hover:underline"
+                      >
+                        Buka onboarding Finance
+                      </Link>{' '}
+                      untuk menambahkan akun.
+                    </>
+                  ) : null}
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
+
+            {payoutNotice && (
+              <p
+                role={
+                  payoutNotice.kind === 'error'
+                    ? 'alert'
+                    : 'status'
+                }
+                className={
+                  payoutNotice.kind === 'error'
+                    ? 'text-destructive text-sm'
+                    : 'text-success text-sm'
+                }
+              >
+                {payoutNotice.message}
+              </p>
+            )}
+
+            {canEditPayoutAccount && (
+              <payoutForm.Subscribe
+                selector={(state) => ({
+                  isDirty: state.isDirty,
+                  isSubmitting: state.isSubmitting,
+                })}
+              >
+                {({ isDirty, isSubmitting }) => (
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={!isDirty || isSubmitting}
+                      onClick={() => {
+                        payoutForm.reset();
+                        setPayoutNotice(null);
+                      }}
+                    >
+                      Batalkan
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={
+                        !isDirty ||
+                        isSubmitting ||
+                        payoutAccounts.length === 0
+                      }
+                    >
+                      {isSubmitting && (
+                        <Spinner className="mr-2" />
+                      )}
+                      Simpan akun payout
+                    </Button>
+                  </div>
+                )}
+              </payoutForm.Subscribe>
             )}
           </form>
         </CardContent>

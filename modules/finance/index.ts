@@ -7,6 +7,7 @@ export { FinanceLifecycleService } from './finance-lifecycle.service';
 export { FinanceSettingsService } from './finance-settings.service';
 export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';
 export { FinanceBankAccountOnboardingService } from './onboarding/finance-bank-account-onboarding.service';
+export { FinanceEWalletAccountOnboardingService } from './onboarding/finance-e-wallet-account-onboarding.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
 export { FinanceJournalService } from './journal/finance-journal.service';
 export { FinanceJournalReadService } from './journal/finance-journal-read.service';
@@ -26,6 +27,8 @@ export {
   FinanceStateSchema,
   FinanceStatusSchema,
   UpdateFinanceSettingsSchema,
+  UpdateFinanceCalendarSettingsSchema,
+  UpdateFinanceShopeePayoutSettingsSchema,
 } from './onboarding/finance-onboarding.schema';
 export {
   getFinanceCalendarDate,
@@ -99,6 +102,10 @@ export {
   FinanceBankAccountCreateResponseSchema,
 } from './onboarding/finance-bank-account.schema';
 export {
+  FinanceEWalletAccountCreateInputSchema,
+  FinanceEWalletAccountCreateResponseSchema,
+} from './onboarding/finance-e-wallet-account.schema';
+export {
   FINANCE_ACCOUNT_TYPE_VALUES,
   FINANCE_NORMAL_BALANCE_VALUES,
   FINANCE_ACCOUNT_ROLE_VALUES,
@@ -152,6 +159,10 @@ export type {
   FinanceBankAccountCreateInputDTO,
   FinanceBankAccountCreateResponseDTO,
 } from './onboarding/finance-bank-account.dto';
+export type {
+  FinanceEWalletAccountCreateInputDTO,
+  FinanceEWalletAccountCreateResponseDTO,
+} from './onboarding/finance-e-wallet-account.dto';
 export type {
   FinanceSalesOrderSourceDTO,
   FinanceSalesProjectionDTO,

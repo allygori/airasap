@@ -738,6 +738,25 @@ export class FinanceOpeningBalanceService {
         'FINANCE_LIFECYCLE_CONFLICT'
       );
     }
+
+    const postingAccounts =
+      await this.accountRepository.list(
+        { is_active: true, is_postable: true, limit: 500 },
+        session
+      );
+    const hasReceivingAccount = postingAccounts.some(
+      (account) =>
+        account.type === 'asset' &&
+        (account.subtype === 'bank' ||
+          account.subtype === 'e_wallet')
+    );
+    if (!hasReceivingAccount) {
+      throw new FinanceDomainError(
+        'Tambahkan setidaknya satu rekening bank atau e-wallet sebelum mengaktifkan Finance.',
+        'FINANCE_RECEIVING_ACCOUNT_REQUIRED'
+      );
+    }
+
     if (
       !this.draftRepository.beginFinalization ||
       !this.draftRepository.markFinalized ||

@@ -118,6 +118,16 @@ const classifyCashFlowMovement = (
     };
   }
 
+  if (
+    sourceType === 'marketplace_release' &&
+    counterpartSubtypes.has('marketplace_receivable')
+  ) {
+    return {
+      section: 'operating',
+      label: 'Payout marketplace',
+    };
+  }
+
   if (sourceType === 'offline_sale') {
     return amount > 0
       ? {

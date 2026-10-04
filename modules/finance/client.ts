@@ -53,6 +53,10 @@ export {
   FinanceBankAccountCreateResponseSchema,
 } from './onboarding/finance-bank-account.schema';
 export {
+  FinanceEWalletAccountCreateInputSchema,
+  FinanceEWalletAccountCreateResponseSchema,
+} from './onboarding/finance-e-wallet-account.schema';
+export {
   FinancePurchaseInputSchema,
   FinancePurchaseResponseSchema,
 } from './purchases/finance-purchase.schema';
@@ -73,6 +77,10 @@ export {
   FinanceAccountListResponseSchema,
   FinanceAccountUpdateDetailsSchema,
 } from './accounts/finance-account.schema';
+export {
+  FinanceSettingsResponseSchema,
+  UpdateFinanceSettingsSchema,
+} from './onboarding/finance-onboarding.schema';
 export {
   FinanceOfflineSaleFormOptionsSchema,
   FinanceOfflineSaleInputSchema,
@@ -150,6 +158,11 @@ export type {
   FinanceBankAccountCreateInputDTO,
   FinanceBankAccountCreateResponseDTO,
 } from './onboarding/finance-bank-account.dto';
+export type {
+  FinanceEWalletAccountCreateInputDTO,
+  FinanceEWalletAccountCreateResponseDTO,
+} from './onboarding/finance-e-wallet-account.dto';
+export type { FinanceSettingsUpdate } from './onboarding/finance-onboarding.schema';
 export type {
   FinancePurchaseListResponseDTO,
   FinancePurchaseSummaryDTO,
