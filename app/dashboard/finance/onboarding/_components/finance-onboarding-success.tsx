@@ -79,6 +79,7 @@ export function FinanceOnboardingSuccess({
           <Button
             className="w-full sm:w-auto"
             size="lg"
+            nativeButton={false}
             render={
               <Link href="/dashboard/finance/accounting/chart-of-accounts" />
             }

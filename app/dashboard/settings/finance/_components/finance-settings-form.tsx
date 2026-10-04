@@ -352,6 +352,7 @@ export function FinanceSettingsForm({
             {status === 'not_started' && (
               <div className="flex justify-end">
                 <Button
+                  nativeButton={false}
                   render={
                     <Link href="/dashboard/finance/onboarding" />
                   }

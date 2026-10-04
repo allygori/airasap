@@ -100,7 +100,10 @@ function StoreSettingsUnavailable() {
         </EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
-        <Button render={<Link href="/onboarding" />}>
+        <Button
+          nativeButton={false}
+          render={<Link href="/onboarding" />}
+        >
           Buka onboarding
         </Button>
       </EmptyContent>
