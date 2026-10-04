@@ -2,13 +2,11 @@ import { z } from 'zod';
 
 export const FinanceBankAccountCreateInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(120),
-    institution: z.string().trim().max(120),
+    institution: z.string().trim().min(1).max(120),
     account_last4: z
       .string()
       .trim()
-      .regex(/^(?:\d{4})?$/),
-    account_holder: z.string().trim().max(120),
+      .regex(/^\d{4}$/),
   })
   .strict();
 

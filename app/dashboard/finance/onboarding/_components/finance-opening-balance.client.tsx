@@ -555,10 +555,8 @@ export default function FinanceOpeningBalanceClient({
 
   const bankAccountForm = useAppForm({
     defaultValues: {
-      name: '',
       institution: '',
       account_last4: '',
-      account_holder: '',
     },
     validationLogic: revalidateLogic(),
     validators: {
@@ -571,8 +569,8 @@ export default function FinanceOpeningBalanceClient({
 
   const eWalletAccountForm = useAppForm({
     defaultValues: {
-      name: '',
       provider: '',
+      account_last4: '',
     },
     validationLogic: revalidateLogic(),
     validators: {

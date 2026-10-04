@@ -50,6 +50,7 @@ export type FinanceEWalletAccountRecord = {
   display_order: number;
   account_metadata: {
     provider: string;
+    account_last4: string;
   };
 };
 

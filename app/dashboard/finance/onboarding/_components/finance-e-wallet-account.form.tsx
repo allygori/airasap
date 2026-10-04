@@ -17,8 +17,8 @@ type FinanceEWalletAccountFormProps = {
 
 export const FinanceEWalletAccountForm = withForm({
   defaultValues: {
-    name: '',
     provider: '',
+    account_last4: '',
   } as FinanceEWalletAccountFormValues,
   props: {
     isSubmitting: false,
@@ -40,18 +40,6 @@ export const FinanceEWalletAccountForm = withForm({
       >
         <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2">
           <form.AppField
-            name="name"
-            children={(field) => (
-              <field.TextField
-                label="Nama akun e-wallet"
-                placeholder="Contoh: ShopeePay Toko"
-                maxLength={120}
-                required
-                className="min-w-0"
-              />
-            )}
-          />
-          <form.AppField
             name="provider"
             children={(field) => (
               <field.TextField
@@ -63,12 +51,27 @@ export const FinanceEWalletAccountForm = withForm({
               />
             )}
           />
+          <form.AppField
+            name="account_last4"
+            children={(field) => (
+              <field.TextField
+                label="4 digit terakhir nomor handphone"
+                placeholder="1234"
+                inputMode="numeric"
+                maxLength={4}
+                minLength={4}
+                required
+                className="min-w-0"
+              />
+            )}
+          />
         </FieldGroup>
 
         <p className="text-muted-foreground text-xs leading-5">
-          Jangan masukkan PIN, OTP, atau kredensial akun.
-          Saldo e-wallet akan dibuat sebagai akun terpisah
-          di Chart of Accounts Finance.
+          Nomor handphone lengkap tidak diminta. Jangan
+          masukkan PIN, OTP, atau kredensial akun. Nama akun
+          dibuat dari penyedia dan empat digit terakhir
+          handphone.
         </p>
 
         <div className="flex flex-wrap justify-end gap-2">

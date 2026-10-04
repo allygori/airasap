@@ -2,8 +2,11 @@ import { z } from 'zod';
 
 export const FinanceEWalletAccountCreateInputSchema = z
   .object({
-    name: z.string().trim().min(1).max(120),
     provider: z.string().trim().min(1).max(120),
+    account_last4: z
+      .string()
+      .trim()
+      .regex(/^\d{4}$/),
   })
   .strict();
 

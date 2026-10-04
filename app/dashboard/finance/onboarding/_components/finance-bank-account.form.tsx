@@ -17,10 +17,8 @@ type FinanceBankAccountFormProps = {
 
 export const FinanceBankAccountForm = withForm({
   defaultValues: {
-    name: '',
     institution: '',
     account_last4: '',
-    account_holder: '',
   } as FinanceBankAccountFormValues,
   props: {
     isSubmitting: false,
@@ -42,35 +40,13 @@ export const FinanceBankAccountForm = withForm({
       >
         <FieldGroup className="grid min-w-0 gap-4 sm:grid-cols-2">
           <form.AppField
-            name="name"
-            children={(field) => (
-              <field.TextField
-                label="Nama rekening"
-                placeholder="Contoh: BCA Operasional"
-                maxLength={120}
-                required
-                className="min-w-0"
-              />
-            )}
-          />
-          <form.AppField
             name="institution"
             children={(field) => (
               <field.TextField
-                label="Nama bank (opsional)"
+                label="Nama bank"
                 placeholder="Contoh: BCA"
                 maxLength={120}
-                className="min-w-0"
-              />
-            )}
-          />
-          <form.AppField
-            name="account_holder"
-            children={(field) => (
-              <field.TextField
-                label="Pemilik rekening (opsional)"
-                placeholder="Nama pemilik rekening"
-                maxLength={120}
+                required
                 className="min-w-0"
               />
             )}
@@ -79,10 +55,12 @@ export const FinanceBankAccountForm = withForm({
             name="account_last4"
             children={(field) => (
               <field.TextField
-                label="4 digit terakhir (opsional)"
+                label="4 digit terakhir nomor rekening"
                 placeholder="1234"
                 inputMode="numeric"
                 maxLength={4}
+                minLength={4}
+                required
                 className="min-w-0"
               />
             )}
@@ -90,9 +68,9 @@ export const FinanceBankAccountForm = withForm({
         </FieldGroup>
 
         <p className="text-muted-foreground text-xs leading-5">
-          Nomor rekening lengkap tidak diperlukan. Rekening
-          akan dibuat sebagai akun Bank di Chart of Accounts
-          Finance.
+          Nomor rekening lengkap tidak diminta. Nama akun
+          dibuat dari nama bank dan empat digit terakhir
+          rekening.
         </p>
 
         <div className="flex flex-wrap justify-end gap-2">

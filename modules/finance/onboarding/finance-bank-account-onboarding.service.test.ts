@@ -88,19 +88,17 @@ const makeService = (options?: {
 };
 
 describe('FinanceBankAccountOnboardingService', () => {
-  it('creates an organization-scoped CoA bank account with optional metadata', async () => {
+  it('creates an organization-scoped CoA bank account with required metadata', async () => {
     const { service, createBankAccount } = makeService();
 
     const result = await service.create({
-      name: 'BCA Operasional',
       institution: 'BCA',
       account_last4: '1234',
-      account_holder: 'Toko Contoh',
     });
 
     expect(result.account).toMatchObject({
       code: '112001',
-      name: 'BCA Operasional',
+      name: 'BCA •••• 1234',
       type: 'asset',
       subtype: 'bank',
       normal_balance: 'debit',
@@ -108,12 +106,11 @@ describe('FinanceBankAccountOnboardingService', () => {
     expect(createBankAccount).toHaveBeenCalledWith(
       expect.objectContaining({
         code: '112001',
-        name: 'BCA Operasional',
+        name: 'BCA •••• 1234',
         parent_account: parentId,
         account_metadata: {
           institution: 'BCA',
           account_last4: '1234',
-          account_holder: 'Toko Contoh',
         },
       }),
       undefined
@@ -133,10 +130,8 @@ describe('FinanceBankAccountOnboardingService', () => {
     });
 
     await service.create({
-      name: 'BCA Cabang',
-      institution: '',
-      account_last4: '',
-      account_holder: '',
+      institution: 'BCA',
+      account_last4: '0000',
     });
 
     expect(createBankAccount).toHaveBeenCalledWith(
@@ -152,10 +147,8 @@ describe('FinanceBankAccountOnboardingService', () => {
 
     await expect(
       service.create({
-        name: 'BCA Operasional',
-        institution: '',
-        account_last4: '',
-        account_holder: '',
+        institution: 'BCA',
+        account_last4: '1234',
       })
     ).rejects.toMatchObject({
       code: 'FINANCE_ONBOARDING_NOT_IN_PROGRESS',
@@ -170,10 +163,8 @@ describe('FinanceBankAccountOnboardingService', () => {
 
     await expect(
       service.create({
-        name: 'BCA Operasional',
-        institution: '',
-        account_last4: '',
-        account_holder: '',
+        institution: 'BCA',
+        account_last4: '1234',
       })
     ).rejects.toMatchObject({
       code: 'FINANCE_OWNER_REQUIRED',

@@ -136,10 +136,13 @@ export class FinanceEWalletAccountOnboardingService {
           await this.accountRepository.createEWalletAccount(
             {
               code,
-              name: data.name,
+              name: `${data.provider} •••• ${data.account_last4}`,
               parent_account: parent._id,
               display_order: parent.display_order + 1,
-              account_metadata: { provider: data.provider },
+              account_metadata: {
+                provider: data.provider,
+                account_last4: data.account_last4,
+              },
             },
             session
           );

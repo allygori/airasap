@@ -125,17 +125,6 @@ export class FinanceBankAccountOnboardingService {
     const existingCodes = new Set(
       bankAccounts.map((account) => account.code)
     );
-    const accountMetadata = {
-      ...(data.institution
-        ? { institution: data.institution }
-        : {}),
-      ...(data.account_last4
-        ? { account_last4: data.account_last4 }
-        : {}),
-      ...(data.account_holder
-        ? { account_holder: data.account_holder }
-        : {}),
-    };
 
     for (let sequence = 1; sequence <= 99; sequence += 1) {
       const code = `${parent.code}${String(sequence).padStart(2, '0')}`;
@@ -146,12 +135,13 @@ export class FinanceBankAccountOnboardingService {
           await this.accountRepository.createBankAccount(
             {
               code,
-              name: data.name,
+              name: `${data.institution} •••• ${data.account_last4}`,
               parent_account: parent._id,
               display_order: parent.display_order + 1,
-              ...(Object.keys(accountMetadata).length > 0
-                ? { account_metadata: accountMetadata }
-                : {}),
+              account_metadata: {
+                institution: data.institution,
+                account_last4: data.account_last4,
+              },
             },
             session
           );
