@@ -10,7 +10,7 @@
 4. Keep page and form components thin. Use Server Components by default, the existing TanStack React Form primitives, and server-side Zod validation.
 5. Respect authenticated actor and trusted Organization/Store context on every write, even for the initial single-user setup.
 6. The development database starts fresh. No migration or backfill is planned; document when a reset is required after a schema redesign.
-7. Keep Finance configuration extraction until the final phase, after the simpler sections have been reviewed.
+7. Handle Finance configuration ownership in the final phase, after the simpler Settings sections have been reviewed.
 
 ## Phase 1 — Settings hub and navigation
 
@@ -108,25 +108,24 @@
 
 ## Phase 6 — Finance configuration ownership (final Settings phase)
 
-**Status: [TARGET]** for Finance ownership; **[OPEN]** for the exact field split and persisted shape.
+**Status: [CURRENT]**
 
 ### Scope
 
-- **[CURRENT]** The unused legacy `Organization.accounting` onboarding subdocument, schema/model path, status constant, and repository methods were removed after confirming they had no callers. The active accounting capability lives under `modules/finance/`; it is not removed by this cleanup.
-- Inventory the fields currently nested on Organization under `finance`, and identify every onboarding, lifecycle, API, and Finance accounting consumer before moving any Finance-owned fields.
-- Separate Finance lifecycle/activation bookkeeping from editable Finance configuration. Do not move status fields merely because they share a parent document with settings.
-- Move Finance-specific configuration—such as Finance calendar timezone or cutoff configuration where domain review confirms ownership—behind Finance-owned services and schemas in `modules/finance/`. Design any replacement for old accounting mappings only if an active Finance workflow requires it; the removed legacy Organization field is not a source of truth.
-- Choose a Finance-owned persistence shape only after reviewing read/write patterns. Prefer a narrowly scoped Finance configuration record over a generic cross-domain Settings model.
-- Update Finance onboarding and existing lifecycle/accounting consumers to use the new Finance contract in the same phase. Preserve posting guards and make configuration changes apply prospectively unless a specific historical recalculation is approved.
-- Use Finance-owned routes/use cases for Finance settings. Do not let the general Settings page write Organization model fields directly.
-- Because development starts fresh, no migration/backfill is planned. If field storage changes, reset development data and update fixtures/docs in this phase.
+- **[CURRENT]** The unused legacy `Organization.accounting` onboarding subdocument, schema/model path, status constant, and repository methods were removed after confirming they had no callers. Active Accounting remains part of `modules/finance/`.
+- **[CURRENT]** Finance lifecycle state and editable configuration are now owned by `modules/finance/` and stored in the Organization-scoped `finance_onboarding_states` collection through the `FinanceOnboarding` model. The record separates `lifecycle` fields from `settings.calendar_timezone`.
+- **[CURRENT]** Lifecycle transitions stay in `FinanceLifecycleService`. `FinanceSettingsService` owns Finance settings reads and writes, including owner and lifecycle guards for timezone changes.
+- **[CURRENT]** Finance onboarding, Finance periods, and financial statements now read or update the Finance-owned state contract. The Organization schema/model no longer declares a `finance` field.
+- **[CURRENT]** `/dashboard/settings/finance` edits the calendar timezone through `PATCH /api/v1/dashboard/finance/settings`. Editing is available during Finance onboarding; the server rejects changes after activation or once a journal exists.
+- **[CURRENT]** Old `account_mappings` were not recreated because no active Finance workflow consumed them.
+- **[CURRENT]** No migration or backfill was added. Values are not copied from `Organization.finance` or the previous intermediate `finance_organization_states` collection; remove obsolete data manually or reset the development database before testing.
 
 ### Acceptance checks
 
-- No application workflow continues to read/write a Finance-owned preference through a generic Settings or Organization UI path after cutover.
-- Existing onboarding, Finance readiness, journal posting, and report behavior use the agreed Finance-owned contract.
-- Changing a Finance setting cannot silently rewrite already-posted journals or historical operational records.
-- The reset/no-migration assumption is explicit before the schema change is applied.
+- **[CURRENT]** No application workflow reads or writes Finance lifecycle/settings values through the Organization model.
+- **[CURRENT]** Onboarding, Finance readiness, period calculation, and financial statements use the Finance-owned state repository.
+- **[CURRENT]** Changing the calendar timezone is guarded by Finance lifecycle state and existing journal history; historical journals are not rewritten.
+- **[CURRENT]** The fresh-data/no-migration assumption and manual cleanup requirement for old Organization fields are documented.
 
 ## Phase 7 — Future settings areas
 

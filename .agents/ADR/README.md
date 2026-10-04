@@ -15,6 +15,7 @@ Architecture Decision Records (ADRs) preserve durable choices and why they were 
 | --- | --- | --- |
 | [0001 — Organization-level physical inventory and Store allocation](0001-organization-inventory-allocation.md) | Accepted | Keep physical stock at Organization scope; distinguish Store allocation from Order reservation and physical movement. |
 | [0002 — Organization-scoped optional module activation](0002-organization-scoped-module-activation.md) | Accepted | Optional capabilities are enabled or disabled per Organization at runtime in the deployed application. |
+| [0003 — Finance-owned Organization state](0003-finance-owned-organization-state.md) | Accepted | Store Finance lifecycle and settings state in Finance-owned, Organization-scoped persistence with separate lifecycle and settings paths. |
 
 ## Authoring rules
 

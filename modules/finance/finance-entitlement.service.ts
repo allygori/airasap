@@ -1,5 +1,6 @@
 import { OrganizationRepository } from '@/modules/organizations/organization.repository';
 import { FinanceDomainError } from './finance.error';
+import { FinanceOnboardingRepository } from './onboarding/finance-onboarding.repository';
 import {
   assertFinanceTenant,
   normalizeFinanceState,
@@ -11,12 +12,16 @@ export { FINANCE_PREMIUM_ORGANIZATION_PLANS } from '@/constant/finance/entitleme
 
 type FinanceEntitlementOrganization = {
   plan?: string | null;
-  finance?: { status?: FinanceStatus } | null;
 };
 
-type FinanceEntitlementRepository = {
-  findFinanceAccessState: () => Promise<FinanceEntitlementOrganization | null>;
+type FinanceEntitlementOrganizationRepository = {
+  findPlanState: () => Promise<FinanceEntitlementOrganization | null>;
 };
+
+type FinanceEntitlementStateRepository = Pick<
+  FinanceOnboardingRepository,
+  'findFinanceState'
+>;
 
 export type FinanceAvailability = {
   available: boolean;
@@ -24,25 +29,32 @@ export type FinanceAvailability = {
 };
 
 export class FinanceEntitlementService {
-  private readonly repository: FinanceEntitlementRepository;
+  private readonly organizationRepository: FinanceEntitlementOrganizationRepository;
+  private readonly financeRepository: FinanceEntitlementStateRepository;
 
   constructor(
     context: FinanceTenantContext,
     dependencies?: {
-      repository?: FinanceEntitlementRepository;
+      organizationRepository?: FinanceEntitlementOrganizationRepository;
+      financeRepository?: FinanceEntitlementStateRepository;
     }
   ) {
     assertFinanceTenant(context);
-    this.repository =
-      dependencies?.repository ??
+    this.organizationRepository =
+      dependencies?.organizationRepository ??
       new OrganizationRepository({
         organizationId: context.organizationId,
       });
+    this.financeRepository =
+      dependencies?.financeRepository ??
+      new FinanceOnboardingRepository(context);
   }
 
   async getAvailability(): Promise<FinanceAvailability> {
-    const organization =
-      await this.repository.findFinanceAccessState();
+    const [organization, finance] = await Promise.all([
+      this.organizationRepository.findPlanState(),
+      this.financeRepository.findFinanceState(),
+    ]);
 
     if (!organization) {
       throw new FinanceDomainError(
@@ -61,7 +73,7 @@ export class FinanceEntitlementService {
     return {
       available,
       status: available
-        ? normalizeFinanceState(organization.finance).status
+        ? normalizeFinanceState(finance).status
         : null,
     };
   }

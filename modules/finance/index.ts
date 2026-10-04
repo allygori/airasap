@@ -1,8 +1,10 @@
 /** Server-side Finance API. Client Components must import from ./client. */
 export { FinanceDomainError } from './finance.error';
 export { FinanceEntitlementService } from './finance-entitlement.service';
+export { FinanceOnboardingRepository } from './onboarding/finance-onboarding.repository';
 export { FinanceMarketplaceReleaseService } from './marketplace-releases/finance-marketplace-release.service';
 export { FinanceLifecycleService } from './finance-lifecycle.service';
+export { FinanceSettingsService } from './finance-settings.service';
 export { FinanceOpeningBalanceService } from './onboarding/finance-opening-balance.service';
 export { FinanceBankAccountOnboardingService } from './onboarding/finance-bank-account-onboarding.service';
 export { FinanceAccountService } from './accounts/finance-account.service';
@@ -17,6 +19,14 @@ export {
   FinanceCalendarTimezoneSchema,
   FinanceCalendarTimezoneValueSchema,
 } from './calendar/finance-calendar.schema';
+export {
+  FinanceLifecycleStateSchema,
+  FinanceSettingsResponseSchema,
+  FinanceSettingsSchema,
+  FinanceStateSchema,
+  FinanceStatusSchema,
+  UpdateFinanceSettingsSchema,
+} from './onboarding/finance-onboarding.schema';
 export {
   getFinanceCalendarDate,
   getFinancePeriodBounds,

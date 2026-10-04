@@ -1,9 +1,9 @@
 import { Types } from 'mongoose';
 import { z } from 'zod';
 import {
-  OrganizationFinanceSchema,
-  OrganizationFinanceStatusSchema,
-} from '@/modules/organizations/organization.schema';
+  FinanceStateSchema,
+  FinanceStatusSchema,
+} from './onboarding/finance-onboarding.schema';
 import { FinanceDomainError } from './finance.error';
 
 export type FinanceTenantContext = {
@@ -13,11 +13,11 @@ export type FinanceTenantContext = {
 };
 
 export type FinanceState = z.infer<
-  typeof OrganizationFinanceSchema
+  typeof FinanceStateSchema
 >;
 
 export type FinanceStatus = z.infer<
-  typeof OrganizationFinanceStatusSchema
+  typeof FinanceStatusSchema
 >;
 
 export const assertFinanceTenant = (

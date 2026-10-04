@@ -23,6 +23,7 @@ import {
   type FinanceInventoryLocationPersistenceRecord,
 } from '../inventory/finance-inventory-location.repository';
 import { FinanceLifecycleService } from '../finance-lifecycle.service';
+import { FinanceSettingsService } from '../finance-settings.service';
 import type {
   FinanceOpeningBalanceDraftInputDTO,
   FinanceOpeningBalanceSaveInputDTO,
@@ -78,9 +79,14 @@ type FinanceOpeningBalanceDraftRepositoryPort = Pick<
 
 type FinanceOpeningBalanceLifecyclePort = Pick<
   FinanceLifecycleService,
-  'getState' | 'assertOwner' | 'setCalendarTimezone'
+  'getState' | 'assertOwner'
 > &
   Partial<Pick<FinanceLifecycleService, 'activate'>>;
+
+type FinanceOpeningBalanceSettingsPort = Pick<
+  FinanceSettingsService,
+  'setCalendarTimezone'
+>;
 
 type FinanceOpeningBalanceJournalPort = Pick<
   FinanceJournalService,
@@ -357,6 +363,7 @@ const getSummary = (
 export class FinanceOpeningBalanceService {
   private readonly context: FinanceTenantContext;
   private readonly lifecycle: FinanceOpeningBalanceLifecyclePort;
+  private readonly settings: FinanceOpeningBalanceSettingsPort;
   private readonly draftRepository: FinanceOpeningBalanceDraftRepositoryPort;
   private readonly accountRepository: FinanceOpeningBalanceAccountRepositoryPort;
   private readonly itemRepository: FinanceOpeningBalanceItemRepositoryPort;
@@ -369,6 +376,7 @@ export class FinanceOpeningBalanceService {
     context: FinanceTenantContext,
     dependencies?: {
       lifecycle?: FinanceOpeningBalanceLifecyclePort;
+      settings?: FinanceOpeningBalanceSettingsPort;
       draftRepository?: FinanceOpeningBalanceDraftRepositoryPort;
       accountRepository?: FinanceOpeningBalanceAccountRepositoryPort;
       itemRepository?: FinanceOpeningBalanceItemRepositoryPort;
@@ -383,6 +391,9 @@ export class FinanceOpeningBalanceService {
     this.lifecycle =
       dependencies?.lifecycle ??
       new FinanceLifecycleService(context);
+    this.settings =
+      dependencies?.settings ??
+      new FinanceSettingsService(context);
     this.draftRepository =
       dependencies?.draftRepository ??
       new FinanceOpeningBalanceDraftRepository(context);
@@ -516,7 +527,7 @@ export class FinanceOpeningBalanceService {
       session
     );
     await this.validateInventory(data, session);
-    await this.lifecycle.setCalendarTimezone(
+    await this.settings.setCalendarTimezone(
       calendar_timezone,
       session
     );

@@ -1,4 +1,5 @@
 import { FinanceLifecycleService } from './finance-lifecycle.service';
+import { FinanceSettingsService } from './finance-settings.service';
 
 const organizationId = '507f1f77bcf86cd799439010';
 
@@ -7,10 +8,8 @@ describe('FinanceLifecycleService readiness', () => {
     const service = new FinanceLifecycleService(
       { organizationId, userId: 'user-1' },
       {
-        organizationRepository: {
-          findFinanceState: jest.fn(async () => ({
-            finance: undefined,
-          })),
+        financeRepository: {
+          findFinanceState: jest.fn(async () => null),
           startFinance: jest.fn(async () => null),
         },
         ownerAccessChecker: jest.fn(async () => true),
@@ -37,12 +36,11 @@ describe('FinanceLifecycleService readiness', () => {
     const service = new FinanceLifecycleService(
       { organizationId, userId: 'user-2' },
       {
-        organizationRepository: {
+        financeRepository: {
           findFinanceState: jest.fn(async () => ({
-            finance: {
-              status: 'in_progress' as const,
-              onboarding_version: 1,
-            },
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
           startFinance: jest.fn(async () => null),
         },
@@ -75,12 +73,11 @@ describe('FinanceLifecycleService readiness', () => {
     const service = new FinanceLifecycleService(
       { organizationId, userId: 'user-1' },
       {
-        organizationRepository: {
+        financeRepository: {
           findFinanceState: jest.fn(async () => ({
-            finance: {
-              status: 'in_progress' as const,
-              onboarding_version: 1,
-            },
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
           startFinance,
         },
@@ -104,17 +101,14 @@ describe('FinanceLifecycleService readiness', () => {
     const service = new FinanceLifecycleService(
       { organizationId, userId: 'user-1' },
       {
-        organizationRepository: {
-          findFinanceState: jest.fn(async () => ({
-            finance: undefined,
-          })),
+        financeRepository: {
+          findFinanceState: jest.fn(async () => null),
           startFinance: jest.fn(async () => {
             calls.push('start');
             return {
-              finance: {
-                status: 'in_progress' as const,
-                onboarding_version: 1,
-              },
+              status: 'in_progress' as const,
+              onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta' as const,
             };
           }),
         },
@@ -131,7 +125,7 @@ describe('FinanceLifecycleService readiness', () => {
     expect(calls).toEqual(['seed', 'start']);
   });
 
-  it('saves the organization calendar timezone before any journal exists', async () => {
+  it('saves the Finance calendar timezone before any journal exists', async () => {
     const updateFinanceCalendarTimezone = jest.fn(
       async (
         calendar_timezone:
@@ -139,25 +133,20 @@ describe('FinanceLifecycleService readiness', () => {
           | 'Asia/Makassar'
           | 'Asia/Jayapura'
       ) => ({
-        finance: {
-          status: 'in_progress' as const,
-          onboarding_version: 1,
-          calendar_timezone,
-        },
+        status: 'in_progress' as const,
+        onboarding_version: 1,
+        calendar_timezone,
       })
     );
-    const service = new FinanceLifecycleService(
+    const service = new FinanceSettingsService(
       { organizationId, userId: 'user-1' },
       {
-        organizationRepository: {
+        financeRepository: {
           findFinanceState: jest.fn(async () => ({
-            finance: {
-              status: 'in_progress' as const,
-              onboarding_version: 1,
-              calendar_timezone: 'Asia/Jakarta' as const,
-            },
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
-          startFinance: jest.fn(async () => null),
           updateFinanceCalendarTimezone,
         },
         ownerAccessChecker: jest.fn(async () => true),
@@ -174,20 +163,17 @@ describe('FinanceLifecycleService readiness', () => {
     ).toHaveBeenCalledWith('Asia/Makassar', undefined);
   });
 
-  it('locks the calendar timezone after the first journal exists', async () => {
+  it('locks the Finance calendar timezone after the first journal exists', async () => {
     const updateFinanceCalendarTimezone = jest.fn();
-    const service = new FinanceLifecycleService(
+    const service = new FinanceSettingsService(
       { organizationId, userId: 'user-1' },
       {
-        organizationRepository: {
+        financeRepository: {
           findFinanceState: jest.fn(async () => ({
-            finance: {
-              status: 'in_progress' as const,
-              onboarding_version: 1,
-              calendar_timezone: 'Asia/Jakarta' as const,
-            },
+            status: 'in_progress' as const,
+            onboarding_version: 1,
+            calendar_timezone: 'Asia/Jakarta' as const,
           })),
-          startFinance: jest.fn(async () => null),
           updateFinanceCalendarTimezone,
         },
         ownerAccessChecker: jest.fn(async () => true),

@@ -83,7 +83,8 @@ export const settingsSectionGroups: SettingsSectionGroup[] =
           description:
             'Kelola konfigurasi keuangan dan akuntansi.',
           icon: WalletCards,
-          availability: 'planned',
+          href: '/dashboard/settings/finance',
+          availability: 'current',
         },
         {
           id: 'appearance',

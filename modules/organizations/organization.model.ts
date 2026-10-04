@@ -1,7 +1,5 @@
 import { Schema, model, models, Document } from 'mongoose';
 import { OrganizationBaseDTO } from './organization.dto';
-import { ORGANIZATION_FINANCE_STATUS_VALUES } from './organization.schema';
-import { TIMEZONE_VALUES } from '@/constant/timezone';
 
 // export type TOrganization = Document & {
 //   name?: string;
@@ -48,38 +46,6 @@ const OrganizationSchema = new Schema<TOrganization>(
       type: String,
       enum: ['free', 'pro', 'plus', 'enterprise'],
       default: 'free',
-    },
-    finance: {
-      status: {
-        type: String,
-        enum: ORGANIZATION_FINANCE_STATUS_VALUES,
-        default: 'not_started',
-      },
-      onboarding_version: {
-        type: Number,
-        default: 1,
-      },
-      calendar_timezone: {
-        type: String,
-        enum: TIMEZONE_VALUES,
-        default: 'Asia/Jakarta',
-      },
-      started_at: {
-        type: Date,
-      },
-      blocked_reason: {
-        type: String,
-      },
-      cut_off_date: {
-        type: Date,
-      },
-      completed_at: {
-        type: Date,
-      },
-      completed_by: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-      },
     },
     // username: {
     //   type: String,

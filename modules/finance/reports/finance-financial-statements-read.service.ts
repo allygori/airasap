@@ -1,5 +1,4 @@
 import type { ClientSession } from 'mongoose';
-import { OrganizationRepository } from '@/modules/organizations/organization.repository';
 import type { FinanceAccountType } from '../accounts/finance-account.constants';
 import {
   getFinanceCalendarDate,
@@ -13,6 +12,7 @@ import {
   type FinanceState,
   type FinanceTenantContext,
 } from '../finance.types';
+import { FinanceOnboardingRepository } from '../onboarding/finance-onboarding.repository';
 import { FinanceSalesTransactionRepository } from '../sales/finance-sales-transaction.repository';
 import {
   FinanceBalanceSheetReportSchema,
@@ -32,14 +32,10 @@ import {
   type FinanceStatementAccountTotalsRecord,
 } from './finance-financial-statements.repository';
 
-type FinanceStatementOrganization = {
-  finance?: Partial<FinanceState> | null;
-} | null;
-
-type FinanceStatementOrganizationPort = {
+type FinanceStatementStateRepositoryPort = {
   findFinanceState(
     session?: ClientSession
-  ): Promise<FinanceStatementOrganization>;
+  ): Promise<FinanceState | null>;
 };
 
 type FinanceStatementRepositoryPort = Pick<
@@ -237,7 +233,7 @@ const classifyCashFlowMovement = (
 };
 
 export class FinanceFinancialStatementsReadService {
-  private readonly organizationRepository: FinanceStatementOrganizationPort;
+  private readonly financeRepository: FinanceStatementStateRepositoryPort;
   private readonly statementRepository: FinanceStatementRepositoryPort;
   private readonly salesRepository: FinanceStatementSalesRepositoryPort;
   private readonly now: () => Date;
@@ -245,16 +241,16 @@ export class FinanceFinancialStatementsReadService {
   constructor(
     context: FinanceTenantContext,
     dependencies?: {
-      organizationRepository?: FinanceStatementOrganizationPort;
+      financeRepository?: FinanceStatementStateRepositoryPort;
       statementRepository?: FinanceStatementRepositoryPort;
       salesRepository?: FinanceStatementSalesRepositoryPort;
       now?: () => Date;
     }
   ) {
     assertFinanceTenant(context);
-    this.organizationRepository =
-      dependencies?.organizationRepository ??
-      new OrganizationRepository(context);
+    this.financeRepository =
+      dependencies?.financeRepository ??
+      new FinanceOnboardingRepository(context);
     this.statementRepository =
       dependencies?.statementRepository ??
       new FinanceFinancialStatementsRepository(context);
@@ -732,20 +728,11 @@ export class FinanceFinancialStatementsReadService {
     session?: ClientSession
   ) {
     const query = FinanceStatementQuerySchema.parse(input);
-    const organization =
-      await this.organizationRepository.findFinanceState(
+    const finance =
+      await this.financeRepository.findFinanceState(
         session
       );
-    if (!organization) {
-      throw new FinanceDomainError(
-        'Organization tidak ditemukan.',
-        'FINANCE_ORGANIZATION_NOT_FOUND'
-      );
-    }
-
-    const state = normalizeFinanceState(
-      organization.finance
-    );
+    const state = normalizeFinanceState(finance);
     if (state.status !== 'active') {
       throw new FinanceDomainError(
         'Finance module belum aktif.',

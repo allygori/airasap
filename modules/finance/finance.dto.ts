@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { OrganizationFinanceSchema } from '@/modules/organizations/organization.schema';
+import { FinanceStateSchema } from './onboarding/finance-onboarding.schema';
 
 export const FinanceStatusResponseSchema = z.object({
-  finance: OrganizationFinanceSchema,
+  finance: FinanceStateSchema,
 });
 
 export type FinanceStatusResponseDTO = z.infer<

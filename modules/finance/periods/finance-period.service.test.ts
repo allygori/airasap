@@ -27,7 +27,9 @@ const makeOrganizationRepository = (
   calendarTimezone: TimeZone = 'Asia/Jakarta'
 ) => ({
   findFinanceState: jest.fn(async () => ({
-    finance: { calendar_timezone: calendarTimezone },
+    status: 'not_started' as const,
+    onboarding_version: 1,
+    calendar_timezone: calendarTimezone,
   })),
 });
 

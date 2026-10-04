@@ -10,10 +10,16 @@ describe('FinanceEntitlementService', () => {
       const service = new FinanceEntitlementService(
         { organizationId },
         {
-          repository: {
-            findFinanceAccessState: async () => ({
+          organizationRepository: {
+            findPlanState: async () => ({
               plan,
-              finance: { status: 'in_progress' },
+            }),
+          },
+          financeRepository: {
+            findFinanceState: async () => ({
+              status: 'in_progress',
+              onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta',
             }),
           },
         }
@@ -34,10 +40,16 @@ describe('FinanceEntitlementService', () => {
       const service = new FinanceEntitlementService(
         { organizationId },
         {
-          repository: {
-            findFinanceAccessState: async () => ({
+          organizationRepository: {
+            findPlanState: async () => ({
               plan,
-              finance: { status: 'active' },
+            }),
+          },
+          financeRepository: {
+            findFinanceState: async () => ({
+              status: 'active',
+              onboarding_version: 1,
+              calendar_timezone: 'Asia/Jakarta',
             }),
           },
         }
@@ -62,8 +74,11 @@ describe('FinanceEntitlementService', () => {
     const service = new FinanceEntitlementService(
       { organizationId },
       {
-        repository: {
-          findFinanceAccessState: async () => null,
+        organizationRepository: {
+          findPlanState: async () => null,
+        },
+        financeRepository: {
+          findFinanceState: async () => null,
         },
       }
     );

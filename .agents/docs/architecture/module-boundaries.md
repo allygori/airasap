@@ -15,7 +15,7 @@ This guide describes how business capabilities should own their rules and how mo
 Current cross-module examples include:
 
 - Orders uses Products and Stores, and `OrderFinanceIntegrationService` imports Finance directly. `OrderService` constructs that integration service and passes it into order-import flows. This makes Finance a code-level dependency of Orders even though Finance is intended to be optional per Organization.
-- Finance uses Products' public inventory-source contract and also reaches into Organization and Member data for Finance lifecycle/access work.
+- Finance uses Products' public inventory-source contract, Member data for owner-only setup/settings actions, and Organization plan data for the current development entitlement check. Finance lifecycle and settings persistence are owned by Finance.
 - Reports reads Orders and Stores data directly in parts of its current implementation.
 
 These are implementation facts to account for during changes. They are not all recommended patterns for new code.

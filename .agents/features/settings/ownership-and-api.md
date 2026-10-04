@@ -8,7 +8,7 @@ Not one endpoint per field or form card. Each owner needs an explicit server-sid
 
 - **Better Auth-owned User and Organization identity:** use Better Auth's supported operations for the installed version where they cover the required behavior. Profile name updates use `auth.api.updateUser`; Organization name updates use `auth.api.updateOrganization` for the active Organization, without accepting a client-supplied Organization ID. Better Auth enforces membership and the `organization.update` permission. Do not duplicate those writes with raw Mongoose operations.
 - **Store:** **[CURRENT]** `PATCH /api/v1/dashboard/stores/:storeId` updates only the session's active Store through `StoreService.update()`. The route verifies active Organization membership and Store ID; the module repository applies Organization scope and rejects inactive or soft-deleted Stores without upsert.
-- **Finance:** in the final Finance phase, expose changes through a Finance-owned service/schema and route. Do not patch Finance data through a general Settings endpoint.
+- **Finance:** **[CURRENT]** expose changes through `FinanceSettingsService`, Finance-owned schemas, and `PATCH /api/v1/dashboard/finance/settings`. Do not patch Finance data through a general Settings endpoint.
 - **Appearance:** **[CURRENT]** mode and dashboard theme/style are persisted in browser localStorage and update immediately; no API endpoint or database/session write is needed for this device-local scope. A User-owned preference contract for cross-device sync remains open.
 
 A page may compose more than one owner when a screen genuinely needs it, but it must call each owner's contract. Do not create `PATCH /api/v1/dashboard/settings` as a generic endpoint that accepts mixed User, Organization, Store, and Finance payloads. The Settings route group may be used for read-only composition or genuinely cross-cutting preferences only after ownership is explicit.
@@ -34,14 +34,14 @@ Email changes, password changes, recovery, and account deletion are security wor
 | Organization logo | Better Auth logo string plus private-file storage boundary | **[OPEN]** No logo edit until local and deployment files have an authenticated browser-readable path. The current shared AvatarField emits data URLs |
 | Organization slug | Better Auth Organization plugin | **[CURRENT]** Not editable from Settings; changing it requires a separate product and routing decision |
 | Store name/code/timezone | `modules/stores/` and `StoreModel` | **[CURRENT]** Update the active Store through a validated item route and tenant-scoped service/repository operation |
-| Finance lifecycle | Currently nested in `Organization.finance` and managed by Finance onboarding/lifecycle code; the unused legacy `Organization.accounting` lifecycle was removed | Keep lifecycle semantics distinct; do not move as a blind settings-field copy |
-| Finance preferences/configuration | Current Finance fields are nested in `Organization.finance`; no active workflow used the removed `Organization.accounting` configuration | Target Finance-owned configuration contract in the final phase; exact fields and storage shape remain open pending inventory |
+| Finance lifecycle | `modules/finance/onboarding/` and `finance_onboarding_states.lifecycle` | **[CURRENT]** Persisted by `FinanceOnboarding`; updated by Finance onboarding/lifecycle use cases and not editable as ordinary Settings fields |
+| Finance preferences/configuration | `modules/finance/onboarding/` and `finance_onboarding_states.settings` | **[CURRENT]** Calendar timezone is editable during onboarding through the Finance-owned settings route; locked after activation or journal creation |
 | Light/dark mode and color theme | Browser localStorage and current dashboard theme provider | **[CURRENT]** Configure in Appearance for this browser; User-synced preferences remain **[OPEN]** |
 
 ## Implementation boundaries
 
 - The `modules/organizations/OrganizationService` is not a general Settings service. Inspect its actual operations before reusing it; do not infer update capabilities from the module name.
 - `modules/stores/` owns Store rules and writes. The Settings page must not import its Mongoose model directly.
-- `modules/finance/` owns Finance behavior, including accounting lifecycle guards and posting effects. The final settings phase must preserve those boundaries.
+- `modules/finance/` owns Finance behavior, state, settings, accounting lifecycle guards, and posting effects. Settings calls `FinanceSettingsService` and never writes Finance persistence directly.
 - Use `components/form/form.hook.tsx`, existing field components, and Zod schemas for forms. Keep page composition server-side where possible and isolate interactive form behavior in route-local components.
 - Keep one-user scope in the initial UX, but continue server-side session and tenant checks. Do not add member management or role configuration as a side effect of making Profile/Organization settings editable.

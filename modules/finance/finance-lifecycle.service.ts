@@ -1,9 +1,6 @@
 import { Types, type ClientSession } from 'mongoose';
-import { MemberModel } from '@/modules/members/member.model';
-import { OrganizationRepository } from '@/modules/organizations/organization.repository';
-import { FinanceJournalRepository } from './journal/finance-journal.repository';
-import { FinanceCalendarTimezoneValueSchema } from './calendar/finance-calendar.schema';
-import type { TimeZone } from '@/constant/timezone';
+import { FinanceOnboardingRepository } from './onboarding/finance-onboarding.repository';
+import { hasFinanceOwnerAccess } from './finance-owner-access';
 import { FinanceAccountService } from './accounts/finance-account.service';
 import { FinanceEntitlementService } from './finance-entitlement.service';
 import { FinanceDomainError } from './finance.error';
@@ -16,21 +13,17 @@ import {
 import type { FinanceReadinessResponseDTO } from './onboarding/finance-onboarding.dto';
 import { FinanceReadinessResponseSchema } from './onboarding/finance-onboarding.schema';
 
-type FinanceLifecycleOrganization = {
-  finance?: Partial<FinanceState> | null;
-};
-
 type FinanceLifecycleRepository = {
   findFinanceState: (
     session?: ClientSession
-  ) => Promise<FinanceLifecycleOrganization | null>;
+  ) => Promise<FinanceState | null>;
   startFinance: (
     data: {
       onboarding_version: number;
       started_at: Date;
     },
     session?: ClientSession
-  ) => Promise<FinanceLifecycleOrganization | null>;
+  ) => Promise<FinanceState | null>;
   activateFinance?: (
     data: {
       onboarding_version: number;
@@ -39,24 +32,11 @@ type FinanceLifecycleRepository = {
       completed_by?: string;
     },
     session?: ClientSession
-  ) => Promise<FinanceLifecycleOrganization | null>;
-  updateFinanceCalendarTimezone?: (
-    calendarTimezone: TimeZone,
-    session?: ClientSession
-  ) => Promise<FinanceLifecycleOrganization | null>;
+  ) => Promise<FinanceState | null>;
 };
 
-type FinanceLifecycleJournalRepository = Pick<
-  FinanceJournalRepository,
-  'hasAnyEntries'
->;
-
 type FinanceLifecycleDependencies = {
-  organizationRepository?: FinanceLifecycleRepository;
-  journalRepository?: FinanceLifecycleJournalRepository;
-  postedJournalChecker?: (
-    session?: ClientSession
-  ) => Promise<boolean>;
+  financeRepository?: FinanceLifecycleRepository;
   ownerAccessChecker?: () => Promise<boolean>;
   defaultAccountInitializer?: (
     session?: ClientSession
@@ -65,10 +45,7 @@ type FinanceLifecycleDependencies = {
 };
 
 export class FinanceLifecycleService {
-  private readonly organizationRepository: FinanceLifecycleRepository;
-  private readonly postedJournalChecker: (
-    session?: ClientSession
-  ) => Promise<boolean>;
+  private readonly financeRepository: FinanceLifecycleRepository;
   private readonly context: FinanceTenantContext;
   private readonly ownerAccessChecker: () => Promise<boolean>;
   private readonly defaultAccountInitializer: (
@@ -82,18 +59,9 @@ export class FinanceLifecycleService {
   ) {
     assertFinanceTenant(context);
     this.context = context;
-    this.organizationRepository =
-      dependencies?.organizationRepository ??
-      new OrganizationRepository({
-        organizationId: context.organizationId,
-      });
-    const journalRepository =
-      dependencies?.journalRepository ??
-      new FinanceJournalRepository(context);
-    this.postedJournalChecker =
-      dependencies?.postedJournalChecker ??
-      ((session) =>
-        journalRepository.hasAnyEntries(session));
+    this.financeRepository =
+      dependencies?.financeRepository ??
+      new FinanceOnboardingRepository(context);
     this.ownerAccessChecker =
       dependencies?.ownerAccessChecker ??
       (() => this.hasOwnerAccess());
@@ -114,19 +82,12 @@ export class FinanceLifecycleService {
   async getState(
     session?: ClientSession
   ): Promise<FinanceState> {
-    const organization =
-      await this.organizationRepository.findFinanceState(
+    const state =
+      await this.financeRepository.findFinanceState(
         session
       );
 
-    if (!organization) {
-      throw new FinanceDomainError(
-        'Organization tidak ditemukan.',
-        'FINANCE_ORGANIZATION_NOT_FOUND'
-      );
-    }
-
-    return normalizeFinanceState(organization.finance);
+    return normalizeFinanceState(state);
   }
 
   async assertActive(
@@ -142,65 +103,6 @@ export class FinanceLifecycleService {
     }
 
     return state;
-  }
-
-  async setCalendarTimezone(
-    value: unknown,
-    session?: ClientSession
-  ): Promise<FinanceState> {
-    const calendarTimezone =
-      FinanceCalendarTimezoneValueSchema.parse(value);
-    await this.assertOwner();
-    const state = await this.getState(session);
-
-    if (state.status !== 'in_progress') {
-      throw new FinanceDomainError(
-        'Timezone kalender hanya dapat diubah selama onboarding Finance.',
-        state.status === 'active'
-          ? 'FINANCE_CALENDAR_TIMEZONE_LOCKED'
-          : 'FINANCE_ONBOARDING_NOT_IN_PROGRESS'
-      );
-    }
-
-    if (state.calendar_timezone === calendarTimezone) {
-      return state;
-    }
-
-    if (await this.postedJournalChecker(session)) {
-      throw new FinanceDomainError(
-        'Timezone kalender tidak dapat diubah setelah jurnal Finance pertama dibuat.',
-        'FINANCE_CALENDAR_TIMEZONE_LOCKED'
-      );
-    }
-
-    const updateTimezone =
-      this.organizationRepository
-        .updateFinanceCalendarTimezone;
-    if (!updateTimezone) {
-      throw new FinanceDomainError(
-        'Penyimpanan timezone kalender Finance belum tersedia.',
-        'FINANCE_CALENDAR_TIMEZONE_UPDATE_FAILED'
-      );
-    }
-
-    const updated = await updateTimezone.call(
-      this.organizationRepository,
-      calendarTimezone,
-      session
-    );
-    if (updated) {
-      return normalizeFinanceState(updated.finance);
-    }
-
-    const latest = await this.getState(session);
-    if (latest.calendar_timezone === calendarTimezone) {
-      return latest;
-    }
-
-    throw new FinanceDomainError(
-      'Timezone kalender Finance gagal disimpan karena status onboarding berubah.',
-      'FINANCE_CALENDAR_TIMEZONE_UPDATE_FAILED'
-    );
   }
 
   async assertOwner() {
@@ -269,21 +171,7 @@ export class FinanceLifecycleService {
   }
 
   private async hasOwnerAccess() {
-    if (!this.context.userId) return false;
-
-    const member = await MemberModel.findOne({
-      organizationId: this.context.organizationId,
-      userId: this.context.userId,
-      role: 'owner',
-      $or: [
-        { deletedAt: null },
-        { deletedAt: { $exists: false } },
-      ],
-    })
-      .select('_id role')
-      .lean();
-
-    return Boolean(member);
+    return hasFinanceOwnerAccess(this.context);
   }
 
   async start(session?: ClientSession) {
@@ -305,7 +193,7 @@ export class FinanceLifecycleService {
     }
 
     const updated =
-      await this.organizationRepository.startFinance(
+      await this.financeRepository.startFinance(
         {
           onboarding_version:
             current.onboarding_version || 1,
@@ -315,7 +203,7 @@ export class FinanceLifecycleService {
       );
 
     if (updated) {
-      return normalizeFinanceState(updated.finance);
+      return normalizeFinanceState(updated);
     }
 
     const latest = await this.getState(session);
@@ -356,7 +244,7 @@ export class FinanceLifecycleService {
     }
 
     const activateFinance =
-      this.organizationRepository.activateFinance;
+      this.financeRepository.activateFinance;
     if (!activateFinance) {
       throw new FinanceDomainError(
         'Aktivasi Finance belum tersedia.',
@@ -364,7 +252,7 @@ export class FinanceLifecycleService {
       );
     }
     const updated = await activateFinance.call(
-      this.organizationRepository,
+      this.financeRepository,
       {
         ...input,
         completed_at: input.completed_at ?? new Date(),
@@ -372,8 +260,7 @@ export class FinanceLifecycleService {
       },
       session
     );
-    if (updated)
-      return normalizeFinanceState(updated.finance);
+    if (updated) return normalizeFinanceState(updated);
 
     const latest = await this.getState(session);
     if (

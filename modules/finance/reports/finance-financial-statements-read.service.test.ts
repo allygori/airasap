@@ -162,14 +162,12 @@ const makeService = (
     >
   > = {}
 ) => {
-  const organizationRepository = {
+  const financeRepository = {
     findFinanceState: async () => ({
-      finance: {
-        status: 'active' as const,
-        onboarding_version: 1,
-        calendar_timezone: 'Asia/Jakarta' as const,
-        cut_off_date: new Date('2026-04-01T00:00:00.000Z'),
-      },
+      status: 'active' as const,
+      onboarding_version: 1,
+      calendar_timezone: 'Asia/Jakarta' as const,
+      cut_off_date: new Date('2026-04-01T00:00:00.000Z'),
     }),
   };
   const statementRepository: Pick<
@@ -199,7 +197,7 @@ const makeService = (
   return new FinanceFinancialStatementsReadService(
     { organizationId },
     {
-      organizationRepository,
+      financeRepository,
       statementRepository,
       salesRepository,
       now: () => new Date('2026-09-26T12:00:00.000Z'),

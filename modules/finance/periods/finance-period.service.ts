@@ -7,7 +7,7 @@ import {
   type FinanceState,
   type FinanceTenantContext,
 } from '../finance.types';
-import { OrganizationRepository } from '@/modules/organizations/organization.repository';
+import { FinanceOnboardingRepository } from '../onboarding/finance-onboarding.repository';
 import {
   getFinancePeriodBounds,
   getFinancePeriodKey,
@@ -32,31 +32,27 @@ type FinancePeriodRepositoryPort = Pick<
   'findByPeriodKey' | 'createPeriod' | 'closePeriod'
 >;
 
-type FinancePeriodOrganization = {
-  finance?: Partial<FinanceState> | null;
-} | null;
-
-type FinanceOrganizationRepositoryPort = {
+type FinanceStateRepositoryPort = {
   findFinanceState: (
     session?: ClientSession
-  ) => Promise<FinancePeriodOrganization>;
+  ) => Promise<FinanceState | null>;
 };
 
 export class FinancePeriodService {
   private readonly repository: FinancePeriodRepositoryPort;
-  private readonly organizationRepository: FinanceOrganizationRepositoryPort;
+  private readonly financeRepository: FinanceStateRepositoryPort;
 
   constructor(
     context: FinanceTenantContext,
     repository?: FinancePeriodRepositoryPort,
-    organizationRepository?: FinanceOrganizationRepositoryPort
+    financeRepository?: FinanceStateRepositoryPort
   ) {
     assertFinanceTenant(context);
     this.repository =
       repository ?? new FinancePeriodRepository(context);
-    this.organizationRepository =
-      organizationRepository ??
-      new OrganizationRepository(context);
+    this.financeRepository =
+      financeRepository ??
+      new FinanceOnboardingRepository(context);
   }
 
   async getPeriodKey(
@@ -189,20 +185,12 @@ export class FinancePeriodService {
   private async getCalendarTimezone(
     session?: ClientSession
   ): Promise<TimeZone> {
-    const organization: FinancePeriodOrganization =
-      await this.organizationRepository.findFinanceState(
+    const finance =
+      await this.financeRepository.findFinanceState(
         session
       );
 
-    if (!organization) {
-      throw new FinanceDomainError(
-        'Organization tidak ditemukan.',
-        'FINANCE_ORGANIZATION_NOT_FOUND'
-      );
-    }
-
-    return normalizeFinanceState(organization.finance)
-      .calendar_timezone;
+    return normalizeFinanceState(finance).calendar_timezone;
   }
 
   private isDuplicateKeyError(error: unknown) {
