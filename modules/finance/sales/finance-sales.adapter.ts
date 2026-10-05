@@ -33,7 +33,9 @@ export const projectFinanceSalesOrder = (
 ): FinanceSalesProjectionDTO => {
   const salesAmount = getSalesAmount(source);
   const transactionDate =
-    source.completed_at ?? source.placed_at;
+    source.platform === 'shopee'
+      ? source.completed_at
+      : (source.completed_at ?? source.placed_at);
   const issues = [] as FinanceSalesProjectionDTO['issues'];
 
   if (!source.store_id) {
@@ -63,7 +65,9 @@ export const projectFinanceSalesOrder = (
     issues.push({
       code: 'MISSING_TRANSACTION_DATE',
       message:
-        'Order belum memiliki completed_at atau placed_at.',
+        source.platform === 'shopee'
+          ? 'Order Shopee belum memiliki completed_at untuk tanggal jurnal penjualan.'
+          : 'Order belum memiliki completed_at atau placed_at.',
     });
   }
 

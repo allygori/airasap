@@ -6,8 +6,8 @@
 
 - **[CURRENT]** Orders imports Order data and calls `OrderFinanceIntegrationService`; Finance projects the Order into a sales workflow and records the accounting/Inventory consequences through Finance services.
 - **[CURRENT]** A marketplace Order is eligible for sales posting only when its imported status is `selesai`, its projection and amount/date are valid, and it has no returned quantity. Returns/refunds are currently blocked because Finance return correction rules are not implemented.
-- **[CURRENT]** The sales adapter chooses `completed_at` as the transaction date and falls back to `placed_at` when `completed_at` is absent. The current Shopee importer maps `shipping_arranged_at` from `shippingTimeArranged`; this is the time the label is prepared and ready to print, not a verified courier handoff time.
-- **[TARGET]** Keep `selesai` as the Shopee sales-posting trigger and use `completed_at` as the journal date. If it is missing, leave the posting blocked for review instead of falling back to `placed_at`. Preserve `placed_at` as the Order date for per-Order analysis. This target is recorded in [ADR-0004](../../ADR/0004-shopee-marketplace-settlement-and-withdrawal.md).
+- **[CURRENT]** For Shopee, the sales adapter uses `completed_at` as the transaction date and marks the projection incomplete when it is absent; it does not fall back to `placed_at`. The current Shopee importer maps `shipping_arranged_at` from `shippingTimeArranged`; this is the time the label is prepared and ready to print, not a verified courier handoff time.
+- **[CURRENT]** `selesai` remains the Shopee sales-posting trigger, and a missing `completed_at` leaves the Finance posting blocked for review. `placed_at` remains the Order date for per-Order analysis. This Shopee-specific rule is recorded in [ADR-0004](../../ADR/0004-shopee-marketplace-settlement-and-withdrawal.md); other marketplace date mappings have not been reviewed and retain their existing behavior.
 - **[CURRENT]** Marketplace sales journals debit marketplace receivable and credit sales revenue. Inventory COGS/movement processing is coordinated with the Finance Inventory COGS service during posting; its readiness and outcome are stored with the sales transaction.
 - **[CURRENT]** The Order import path uses automatic posting for completed Orders. Other imported statuses can synchronize the Inventory reservation lifecycle without creating a sales journal.
 - **[CURRENT]** Sales workflow results distinguish disabled, not eligible, blocked, pending, and posted/reversed outcomes. Manual mode can save a pending posting intent; automatic mode attempts posting. The Finance sales API exposes list, post, and retry operations.
@@ -19,7 +19,7 @@ The target sale, settlement, and manual-withdrawal entries are separate journal 
 
 | Event | Debit | Credit | Journal date |
 | --- | --- | --- | --- |
-| **[TARGET]** Sales recognition when the imported Order is `selesai` | 1210 Piutang Marketplace | Sales revenue | `completed_at`; missing date blocks review rather than falling back to `placed_at` |
+| **[CURRENT]** Shopee sales recognition when the imported Order is `selesai` | 1210 Piutang Marketplace | Sales revenue | `completed_at`; missing date blocks review rather than falling back to `placed_at` |
 | **[CURRENT]** HPP when Finance Inventory posts the sale movement | Cost of goods sold | Inventory | Coordinated with sale posting; a deferred HPP retry currently posts in the retry period |
 | **[TARGET]** Shopee reports released funds and fee amounts | 1220 Saldo Marketplace for net released funds; 6310 Beban Admin Marketplace for Shopee fees | 1210 Piutang Marketplace for the gross receivable cleared | `released_funds_at` |
 | **[TARGET]** Seller manually withdraws from Shopee balance | Selected Bank/E-wallet account | 1220 Saldo Marketplace | Actual withdrawal date recorded by the seller |

@@ -67,10 +67,10 @@ This uses the available `completed_at` milestone for the sales journal, the rele
 
 ## Implementation status
 
-- **[CURRENT]** Sales eligibility is based on `selesai`, but the sales adapter falls back from `completed_at` to `placed_at`.
+- **[CURRENT]** Shopee sales eligibility is based on `selesai`, and its sales transaction date requires `completed_at`; missing dates leave the projection incomplete. Other marketplace date mappings were not changed.
 - **[CURRENT]** Shopee released-funds posting may debit the configured payout bookkeeping account directly.
 - **[CURRENT]** Generic cash/bank transfers accept marketplace-balance accounts but do not prevent a transfer greater than the source balance.
-- **[TARGET]** Apply the decisions above in later implementation steps. This ADR does not claim that the target workflow or Penarikan Marketplace page exists yet.
+- **[TARGET]** Apply the released-funds and manual-withdrawal decisions above in later implementation steps. This ADR does not claim that those target workflows or the Penarikan Marketplace page exist yet.
 
 ## Open questions and related records
 
