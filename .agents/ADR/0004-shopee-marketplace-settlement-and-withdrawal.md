@@ -10,7 +10,7 @@
 
 Shopee Order, completed-order, and released-funds files describe different stages of the seller workflow. A released-funds amount means the money has become available in the seller's Shopee marketplace balance; it does not mean that Shopee has transferred it to the seller's bank or e-wallet.
 
-The current implementation posts marketplace sales for Orders whose imported status is `selesai`. Its transaction date uses `completed_at` when available and otherwise falls back to `placed_at`. Released-funds posting currently uses the configured Shopee payout bookkeeping account when one is set, which can debit a bank/e-wallet before the seller manually withdraws the Shopee balance. The generic Cash & Bank transfer workflow accepts marketplace-balance accounts, but does not enforce that a transfer amount is within the source account's available balance.
+The current implementation posts marketplace sales for Orders whose imported status is `selesai`, using `completed_at`; a missing date blocks review rather than falling back to `placed_at`. Before this decision was implemented, released-funds posting could use the configured Shopee payout bookkeeping account, which debited a bank/e-wallet before the seller manually withdrew the Shopee balance. The generic Cash & Bank transfer workflow accepts marketplace-balance accounts, but does not enforce that a transfer amount is within the source account's available balance.
 
 For the seller's Shopee workflow, the export field mapped to `shipping_arranged_at` records that a shipping label has been prepared and is ready to print. It is not a courier handoff timestamp, and the available source data does not provide a reliable date/time for the courier taking possession of a parcel.
 
@@ -28,7 +28,7 @@ This decision is scoped to Shopee, the only marketplace for which this workflow 
 
 ### Option A — Recognize and settle directly to the configured bank account
 
-This matches the current Shopee released-funds journal when the payout bookkeeping account is configured. It conflates Shopee wallet availability with the seller's separate manual withdrawal and can overstate bank/e-wallet balances.
+This matched the previous Shopee released-funds journal when the payout bookkeeping account was configured. It conflates Shopee wallet availability with the seller's separate manual withdrawal and can overstate bank/e-wallet balances.
 
 ### Option B — Recognize the sale on Order placement
 
@@ -68,9 +68,10 @@ This uses the available `completed_at` milestone for the sales journal, the rele
 ## Implementation status
 
 - **[CURRENT]** Shopee sales eligibility is based on `selesai`, and its sales transaction date requires `completed_at`; missing dates leave the projection incomplete. Other marketplace date mappings were not changed.
-- **[CURRENT]** Shopee released-funds posting may debit the configured payout bookkeeping account directly.
+- **[CURRENT]** Shopee released-funds posting debits 1220 Saldo Marketplace for net released funds, debits 6310 Beban Admin Marketplace for supported Shopee fee components, and credits 1210 Piutang Marketplace for the gross amount cleared. Fee category/amount details remain in the release record. The journal no longer depends on the configured payout bookkeeping account.
+- **[CURRENT]** The Shopee payout bookkeeping setting remains available in Finance Settings, but does not determine released-funds journals. Its future removal or reuse as a withdrawal-form default remains unresolved.
 - **[CURRENT]** Generic cash/bank transfers accept marketplace-balance accounts but do not prevent a transfer greater than the source balance.
-- **[TARGET]** Apply the released-funds and manual-withdrawal decisions above in later implementation steps. This ADR does not claim that those target workflows or the Penarikan Marketplace page exist yet.
+- **[TARGET]** The dedicated Penarikan Marketplace page and its available-balance guard are still pending. This ADR does not claim that withdrawal workflow exists yet.
 
 ## Open questions and related records
 
