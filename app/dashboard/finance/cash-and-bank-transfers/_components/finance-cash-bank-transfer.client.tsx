@@ -326,13 +326,10 @@ function TransferHistory({
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/dashboard/finance/cash-and-bank-transfers/${transfer.transfer_id}`}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
+                    <p className="font-medium">
                       {transfer.source_account.name} →{' '}
                       {transfer.destination_account.name}
-                    </Link>
+                    </p>
                     <TransferStatusBadge
                       status={transfer.status}
                     />

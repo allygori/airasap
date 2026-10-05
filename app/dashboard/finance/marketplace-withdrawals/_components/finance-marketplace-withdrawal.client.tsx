@@ -49,12 +49,14 @@ type FinanceMarketplaceWithdrawalClientProps = {
   marketplaceBalance: FinanceCashBankAccountDTO | null;
   destinations: FinanceCashBankAccountDTO[];
   withdrawals: FinanceCashBankTransferSummaryDTO[];
+  pendingWithdrawalCount: number;
 };
 
 export function FinanceMarketplaceWithdrawalClient({
   marketplaceBalance,
   destinations,
   withdrawals,
+  pendingWithdrawalCount,
 }: FinanceMarketplaceWithdrawalClientProps) {
   const router = useRouter();
   const [idempotencyKey, setIdempotencyKey] = useState(() =>
@@ -67,6 +69,12 @@ export function FinanceMarketplaceWithdrawalClient({
   const [successMessage, setSuccessMessage] = useState<
     string | null
   >(null);
+  const [retryingWithdrawalId, setRetryingWithdrawalId] =
+    useState<string | null>(null);
+  const [historyMessage, setHistoryMessage] = useState<{
+    kind: 'error' | 'success';
+    text: string;
+  } | null>(null);
   const withdrawableBalance = Math.max(
     0,
     marketplaceBalance?.current_balance ?? 0
@@ -140,6 +148,67 @@ export function FinanceMarketplaceWithdrawalClient({
       );
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const retryPendingWithdrawal = async (
+    withdrawal: FinanceCashBankTransferSummaryDTO
+  ) => {
+    setHistoryMessage(null);
+    setRetryingWithdrawalId(withdrawal.transfer_id);
+
+    try {
+      const response = await fetch(
+        '/api/v1/dashboard/finance/marketplace-withdrawals',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            destination_account_id:
+              withdrawal.destination_account.id,
+            amount: withdrawal.amount,
+            transaction_date: withdrawal.transaction_date,
+            ...(withdrawal.reference
+              ? { reference: withdrawal.reference }
+              : {}),
+            description: withdrawal.description,
+            idempotency_key: withdrawal.idempotency_key,
+          }),
+        }
+      );
+      const payload: unknown = await response.json();
+
+      if (!response.ok) {
+        setHistoryMessage({
+          kind: 'error',
+          text: getErrorMessage(payload),
+        });
+        return;
+      }
+
+      const parsed =
+        ActionResponseSchema.safeParse(payload);
+      if (!parsed.success) {
+        setHistoryMessage({
+          kind: 'error',
+          text: 'Respons server Finance tidak valid.',
+        });
+        return;
+      }
+
+      const transfer = parsed.data.data;
+      setHistoryMessage({
+        kind: 'success',
+        text: `${formatIDR(transfer.amount)} berhasil diposting ke ${transfer.destination_account.name}.`,
+      });
+      router.refresh();
+    } catch {
+      setHistoryMessage({
+        kind: 'error',
+        text: 'Tidak dapat menghubungi server Finance. Coba lagi dengan tombol yang sama.',
+      });
+    } finally {
+      setRetryingWithdrawalId(null);
     }
   };
 
@@ -237,7 +306,10 @@ export function FinanceMarketplaceWithdrawalClient({
                   form={form}
                   destinations={destinations}
                   withdrawableBalance={withdrawableBalance}
-                  isSubmitting={isSubmitting}
+                  isSubmitting={
+                    isSubmitting ||
+                    retryingWithdrawalId !== null
+                  }
                   errorMessage={errorMessage}
                   successMessage={successMessage}
                 />
@@ -311,26 +383,79 @@ export function FinanceMarketplaceWithdrawalClient({
         </Card>
       </div>
 
-      <WithdrawalHistory withdrawals={withdrawals} />
+      <WithdrawalHistory
+        withdrawals={withdrawals}
+        pendingWithdrawalCount={pendingWithdrawalCount}
+        isSubmitting={isSubmitting}
+        retryingWithdrawalId={retryingWithdrawalId}
+        historyMessage={historyMessage}
+        onRetry={retryPendingWithdrawal}
+      />
     </div>
   );
 }
 
 function WithdrawalHistory({
   withdrawals,
+  pendingWithdrawalCount,
+  isSubmitting,
+  retryingWithdrawalId,
+  historyMessage,
+  onRetry,
 }: {
   withdrawals: FinanceCashBankTransferSummaryDTO[];
+  pendingWithdrawalCount: number;
+  isSubmitting: boolean;
+  retryingWithdrawalId: string | null;
+  historyMessage: {
+    kind: 'error' | 'success';
+    text: string;
+  } | null;
+  onRetry: (
+    withdrawal: FinanceCashBankTransferSummaryDTO
+  ) => void;
 }) {
+  const visiblePendingCount = withdrawals.filter(
+    (withdrawal) => withdrawal.status === 'pending'
+  ).length;
+
   return (
     <Card>
       <CardHeader className="border-b">
         <CardTitle>Riwayat penarikan</CardTitle>
         <CardDescription>
-          Menampilkan 10 penarikan terbaru dari Saldo
-          Marketplace.
+          Penarikan pending ditampilkan untuk dicoba lagi;
+          riwayat juga menampilkan 10 transaksi terbaru.
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
+        {historyMessage ? (
+          <Alert
+            className="m-4"
+            variant={
+              historyMessage.kind === 'error'
+                ? 'destructive'
+                : 'default'
+            }
+            role={
+              historyMessage.kind === 'error'
+                ? 'alert'
+                : 'status'
+            }
+          >
+            <AlertDescription>
+              {historyMessage.text}
+            </AlertDescription>
+          </Alert>
+        ) : null}
+        {pendingWithdrawalCount > visiblePendingCount ? (
+          <Alert className="m-4">
+            <AlertDescription>
+              Menampilkan {visiblePendingCount} dari{' '}
+              {pendingWithdrawalCount} penarikan pending.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         {withdrawals.length === 0 ? (
           <div className="text-muted-foreground px-6 py-10 text-center text-sm">
             Belum ada penarikan Marketplace.
@@ -344,13 +469,10 @@ function WithdrawalHistory({
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Link
-                      href={`/dashboard/finance/cash-and-bank-transfers/${withdrawal.transfer_id}`}
-                      className="font-medium underline-offset-4 hover:underline"
-                    >
+                    <p className="font-medium">
                       {withdrawal.source_account.name} →{' '}
                       {withdrawal.destination_account.name}
-                    </Link>
+                    </p>
                     <WithdrawalStatusBadge
                       status={withdrawal.status}
                     />
@@ -378,6 +500,23 @@ function WithdrawalHistory({
                     >
                       Journal
                     </Link>
+                  ) : null}
+                  {withdrawal.status === 'pending' ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={
+                        isSubmitting ||
+                        retryingWithdrawalId !== null
+                      }
+                      onClick={() => onRetry(withdrawal)}
+                    >
+                      {retryingWithdrawalId ===
+                      withdrawal.transfer_id
+                        ? 'Mencoba posting…'
+                        : 'Coba posting lagi'}
+                    </Button>
                   ) : null}
                 </div>
               </div>

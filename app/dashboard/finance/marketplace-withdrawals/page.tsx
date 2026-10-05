@@ -26,6 +26,7 @@ type PageData =
       marketplaceBalance: FinanceCashBankAccountDTO | null;
       destinations: FinanceCashBankAccountDTO[];
       withdrawals: FinanceCashBankTransferSummaryDTO[];
+      pendingWithdrawalCount: number;
     }
   | { status: 'unavailable' | 'not_ready' };
 
@@ -54,6 +55,7 @@ export default async function MarketplaceWithdrawalsPage() {
       marketplaceBalance={data.marketplaceBalance}
       destinations={data.destinations}
       withdrawals={data.withdrawals}
+      pendingWithdrawalCount={data.pendingWithdrawalCount}
     />
   );
 }
@@ -82,25 +84,47 @@ async function loadPageData(
         account.subtype === 'bank' ||
         account.subtype === 'e_wallet'
     );
-    const withdrawals = marketplaceBalance
-      ? (
-          await new FinanceCashBankTransferReadService(
-            context
-          ).list(
+    const transferReadService =
+      new FinanceCashBankTransferReadService(context);
+    const [pendingData, recentData] = marketplaceBalance
+      ? await Promise.all([
+          transferReadService.list(
+            FinanceCashBankTransferListQuerySchema.parse({
+              page: 1,
+              limit: 100,
+              status: 'pending',
+              source_account_id: marketplaceBalance.id,
+            })
+          ),
+          transferReadService.list(
             FinanceCashBankTransferListQuerySchema.parse({
               page: 1,
               limit: 10,
               source_account_id: marketplaceBalance.id,
             })
-          )
-        ).transfers
-      : [];
+          ),
+        ])
+      : [null, null];
+    const pendingWithdrawals = pendingData?.transfers ?? [];
+    const pendingIds = new Set(
+      pendingWithdrawals.map(
+        (transfer) => transfer.transfer_id
+      )
+    );
+    const withdrawals = [
+      ...pendingWithdrawals,
+      ...(recentData?.transfers ?? []).filter(
+        (transfer) => !pendingIds.has(transfer.transfer_id)
+      ),
+    ];
 
     return {
       status: 'ready',
       marketplaceBalance,
       destinations,
       withdrawals,
+      pendingWithdrawalCount:
+        pendingData?.pagination.total ?? 0,
     };
   } catch (error) {
     if (
