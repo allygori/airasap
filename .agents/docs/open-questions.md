@@ -113,9 +113,11 @@
 ### Q-011 — Imported Order, shortage, cancellation, and return reconciliation
 
 - **Status:** `open`
-- **Question:** How should Inventory handle Orders imported after their marketplace status has advanced, partial fulfillment, cancellation after reservation, returns/refunds, and channel sales that exceed local available stock?
+- **Current Shopee baseline:** The locally configured status values `perlu-dikirim`, `sedang-dikirim`, and `telah-dikirim` currently reserve Finance stock; `batal` releases an unconsumed reservation; and `selesai` consumes it after the HPP stock movement posts. These are the application's current mappings, not a guarantee that every Shopee export uses those labels or meanings. The configured `pengembalian` and `pengembalian-dana` values have no verified source-file examples; current code sends them to review.
+- **Current source-data limit:** The seller's `shipping_arranged_at` maps to the time the shipping label is prepared and ready to print, not a courier handoff time. The Order import carries `paid_at`, but Finance reservation rules currently use status only; existing Order re-import updates status without refreshing other fields.
+- **Question:** How should Inventory handle Orders imported after their marketplace status has advanced, when reservation should begin relative to `paid_at`, when physical on-hand should leave the seller's warehouse, partial fulfillment, cancellation after reservation, returns/refunds, and channel sales that exceed local available stock?
 - **Why it matters:** External status may arrive late or be incomplete. The system must distinguish a local reservation shortage from guaranteed prevention of a sale on a marketplace.
-- **Options to explore:** Reserve/release/consume using normalized Order status; record unresolved cases for review; model partial quantities explicitly; define returns as a separate receipt/inspection workflow.
+- **Options to explore:** Reserve on a reliable payment or normalized-status milestone; keep order reservation separate from physical warehouse stock-out; record unresolved cases for review; model partial quantities explicitly; verify Shopee return/refund source statuses before defining a receipt, reversal, or inspection workflow.
 - **Affected areas:** Orders import/status mapping, Finance Inventory reservations and movements, reconciliation UI.
 - **Guidance:** [Inventory and Sales Channels](./architecture/inventory-and-channels.md), [Business Logic](./conventions/business-logic.md).
 
@@ -167,6 +169,15 @@
 - **Prerequisite:** Define a concrete user problem and required data sources before designing a module.
 - **Affected areas:** Reports, Customers, channel integrations, future Marketing.
 - **Guidance:** [Module Boundaries](./architecture/module-boundaries.md), [Roadmap](./roadmap.md).
+
+### Q-017 — Marketplace release fee updates and correction workflow
+
+- **Status:** `open`
+- **Question:** How should the file-import workflow handle a Shopee released-funds record whose fee details or amount are absent on the first import and become available or change after a release journal has posted?
+- **Why it matters:** Posted Finance journals are immutable, while marketplace source files may be enriched or re-imported. Replays must not duplicate a settlement, and a later fee difference must remain traceable to its source.
+- **Options to explore:** Keep the release blocked until the source data is complete and then post once; post a separate adjustment journal for a later delta; or reverse and repost when accounting-period rules allow it. Define whether the user sees a pending/review state and how the source-file evidence is retained.
+- **Affected areas:** Orders released-funds import, Finance marketplace-release reconciliation, journal entries, Finance Sales review UI.
+- **Guidance:** [Finance Sales](../features/finance/sales.md), [ADR-0004 — Shopee Marketplace Sales, Settlement, and Withdrawal](../ADR/0004-shopee-marketplace-settlement-and-withdrawal.md).
 
 ## Resolving a question
 

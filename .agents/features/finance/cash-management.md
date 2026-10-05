@@ -17,6 +17,15 @@
 - **[CURRENT]** Owner withdrawals follow a separate draft, post, and reversal lifecycle and create their own journal postings. Do not conflate an owner withdrawal with a business expense.
 - **[CURRENT]** These workflows use Organization-scoped Finance records and idempotency keys. They do not define a future role/permission model for who may perform each action.
 
+## Marketplace withdrawals
+
+- **[CURRENT]** The generic Cash & Bank transfer service accepts postable marketplace-balance accounts as transfer sources or destinations. Its form lists eligible accounts and displays their current balances, but the service does not enforce that a transfer amount is within the source account's available balance.
+- **[TARGET]** Add a dedicated **Penarikan Marketplace** page under Finance → Transaksi for the seller's manual withdrawal from marketplace balance to Bank/E-wallet. For Shopee, show the withdrawable balance from 1220 Saldo Marketplace; 1210 Piutang Marketplace is not withdrawable and must not be offered as a source.
+- **[TARGET]** The form fixes the source to Saldo Marketplace, lets the user choose an eligible Bank/E-wallet destination, and accepts the actual withdrawal amount, date, and optional reference/description. The amount may be any positive IDR value up to the withdrawable balance. The server enforces the limit, including concurrent requests; the client-side balance hint is informational only.
+- **[TARGET]** Posting records a transfer journal: debit the selected Bank/E-wallet account and credit 1220 Saldo Marketplace. This represents the seller's withdrawal after funds were released to the Shopee balance; it is distinct from marketplace settlement and owner withdrawal. Reuse Finance's journal and transfer lifecycle where possible rather than writing ledger entries in the page or route.
+
+The target accounting flow and its implementation status are recorded in [ADR-0004](../../ADR/0004-shopee-marketplace-settlement-and-withdrawal.md).
+
 ## Boundaries
 
 - Cash-management APIs should compose Finance services and journal operations; routes should not write ledger records directly.
