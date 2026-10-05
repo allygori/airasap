@@ -16,6 +16,7 @@ export {
   FinanceCashBankManagedAccountsResponseSchema,
 } from './cash-and-bank/finance-cash-bank-account-management.schema';
 export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-cash-bank-transfer.schema';
+export { FinanceMarketplaceWithdrawalInputSchema } from './cash-and-bank/finance-marketplace-withdrawal.schema';
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
   FinanceOwnerWithdrawalInputSchema,

@@ -229,9 +229,10 @@ export function FinanceCashBankTransferClient({
           </CardHeader>
           <CardContent className="text-muted-foreground leading-7">
             Transfer membutuhkan minimal dua akun postable
-            dari kategori Kas, Bank, E-wallet, atau Saldo
-            Marketplace. Aktifkan akun yang sesuai di Chart
-            of Accounts terlebih dahulu.
+            dari kategori Kas, Bank, atau E-wallet. Aktifkan
+            akun yang sesuai di Chart of Accounts terlebih
+            dahulu. Penarikan dari Saldo Marketplace dicatat
+            melalui halaman Penarikan Marketplace.
           </CardContent>
         </Card>
       ) : (

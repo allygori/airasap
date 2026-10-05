@@ -1,7 +1,9 @@
 import { Types, type ClientSession } from 'mongoose';
 import { FinanceAccountRepository } from '../accounts/finance-account.repository';
+import { FinanceAccountRoleResolverService } from '../accounts/finance-account-role-resolver.service';
 import { FinanceDomainError } from '../finance.error';
 import { FinanceJournalService } from '../journal/finance-journal.service';
+import { FinanceJournalRepository } from '../journal/finance-journal.repository';
 import type { FinanceJournalReversalDTO } from '../journal/finance-journal.dto';
 import { FinanceJournalReversalSchema } from '../journal/finance-journal.schema';
 import {
@@ -18,6 +20,10 @@ import {
   FinanceCashBankTransferResponseSchema,
 } from './finance-cash-bank-transfer.schema';
 import {
+  FinanceMarketplaceWithdrawalInputSchema,
+  type FinanceMarketplaceWithdrawalInputDTO,
+} from './finance-marketplace-withdrawal.schema';
+import {
   FinanceCashBankTransferRepository,
   type CreateFinanceCashBankTransferRecord,
   type FinanceCashBankTransferPersistenceRecord,
@@ -31,7 +37,10 @@ type FinanceCashBankTransferAccountPort = Pick<
 type FinanceCashBankTransferJournalPort = Pick<
   FinanceJournalService,
   'postOperational' | 'reverse'
->;
+> &
+  Partial<
+    Pick<FinanceJournalService, 'findByIdempotencyKey'>
+  >;
 
 type FinanceCashBankTransferRepositoryPort = Pick<
   FinanceCashBankTransferRepository,
@@ -42,9 +51,35 @@ type FinanceCashBankTransferRepositoryPort = Pick<
   | 'markReversedByJournalEntry'
 >;
 
+type FinanceCashBankTransferBalancePort = Pick<
+  FinanceJournalRepository,
+  'aggregatePostedAccountBalances'
+>;
+
+type FinanceCashBankTransferRoleResolverPort = Pick<
+  FinanceAccountRoleResolverService,
+  'resolve'
+>;
+
 const eligibleSubtypes = new Set<string>(
-  FINANCE_CASH_BANK_SUBTYPE_VALUES
+  FINANCE_CASH_BANK_SUBTYPE_VALUES.filter(
+    (subtype) => subtype !== 'marketplace_balance'
+  )
 );
+
+const marketplaceWithdrawalDestinationSubtypes = new Set([
+  'bank',
+  'e_wallet',
+]);
+
+const getAccountBalance = (
+  normalBalance: 'debit' | 'credit',
+  debit: number,
+  credit: number
+) =>
+  normalBalance === 'credit'
+    ? credit - debit
+    : debit - credit;
 
 const isDuplicateKeyError = (error: unknown) => {
   if (!error || typeof error !== 'object') return false;
@@ -128,6 +163,8 @@ export class FinanceCashBankTransferService {
   private readonly accountRepository: FinanceCashBankTransferAccountPort;
   private readonly journalService: FinanceCashBankTransferJournalPort;
   private readonly transferRepository: FinanceCashBankTransferRepositoryPort;
+  private readonly balanceRepository: FinanceCashBankTransferBalancePort;
+  private readonly roleResolver: FinanceCashBankTransferRoleResolverPort;
 
   constructor(
     context: FinanceTenantContext,
@@ -135,6 +172,8 @@ export class FinanceCashBankTransferService {
       accountRepository?: FinanceCashBankTransferAccountPort;
       journalService?: FinanceCashBankTransferJournalPort;
       transferRepository?: FinanceCashBankTransferRepositoryPort;
+      balanceRepository?: FinanceCashBankTransferBalancePort;
+      roleResolver?: FinanceCashBankTransferRoleResolverPort;
     }
   ) {
     assertFinanceTenant(context);
@@ -147,37 +186,91 @@ export class FinanceCashBankTransferService {
     this.transferRepository =
       dependencies?.transferRepository ??
       new FinanceCashBankTransferRepository(context);
+    this.balanceRepository =
+      dependencies?.balanceRepository ??
+      new FinanceJournalRepository(context);
+    this.roleResolver =
+      dependencies?.roleResolver ??
+      new FinanceAccountRoleResolverService(context);
   }
 
   async post(
     input: FinanceCashBankTransferInputDTO | unknown,
     session?: ClientSession
   ): Promise<FinanceCashBankTransferResponseDTO> {
+    return this.postInternal(input, session);
+  }
+
+  async postMarketplaceWithdrawal(
+    input: FinanceMarketplaceWithdrawalInputDTO | unknown
+  ): Promise<FinanceCashBankTransferResponseDTO> {
+    const data =
+      FinanceMarketplaceWithdrawalInputSchema.parse(input);
+    const marketplaceBalanceAccount =
+      await this.roleResolver.resolve(
+        'marketplace_balance'
+      );
+
+    return this.postInternal(
+      {
+        ...data,
+        source_account_id: String(
+          marketplaceBalanceAccount._id
+        ),
+      },
+      undefined,
+      String(marketplaceBalanceAccount._id)
+    );
+  }
+
+  private async postInternal(
+    input: FinanceCashBankTransferInputDTO | unknown,
+    session?: ClientSession,
+    marketplaceWithdrawalSourceId?: string
+  ): Promise<FinanceCashBankTransferResponseDTO> {
     const data =
       FinanceCashBankTransferInputSchema.parse(input);
     const idempotencyKey = getIdempotencyKey(data);
-    const [sourceAccount, destinationAccount] =
-      await Promise.all([
-        this.accountRepository.findSelectableById(
-          data.source_account_id,
-          session
-        ),
-        this.accountRepository.findSelectableById(
-          data.destination_account_id,
-          session
-        ),
-      ]);
+    const sourceAccount =
+      await this.accountRepository.findSelectableById(
+        data.source_account_id,
+        session
+      );
+    const destinationAccount =
+      await this.accountRepository.findSelectableById(
+        data.destination_account_id,
+        session
+      );
+
+    const isMarketplaceWithdrawal =
+      marketplaceWithdrawalSourceId !== undefined;
+    const sourceAllowed = sourceAccount
+      ? isMarketplaceWithdrawal
+        ? sourceAccount.subtype === 'marketplace_balance' &&
+          String(sourceAccount._id) ===
+            marketplaceWithdrawalSourceId
+        : eligibleSubtypes.has(sourceAccount.subtype ?? '')
+      : false;
+    const destinationAllowed = destinationAccount
+      ? isMarketplaceWithdrawal
+        ? marketplaceWithdrawalDestinationSubtypes.has(
+            destinationAccount.subtype ?? ''
+          )
+        : eligibleSubtypes.has(
+            destinationAccount.subtype ?? ''
+          )
+      : false;
 
     if (
       !sourceAccount ||
       !destinationAccount ||
-      !eligibleSubtypes.has(sourceAccount.subtype ?? '') ||
-      !eligibleSubtypes.has(
-        destinationAccount.subtype ?? ''
-      )
+      !sourceAllowed ||
+      !destinationAllowed
     ) {
       throw new FinanceDomainError(
-        'Sumber dan tujuan transfer harus berupa akun Kas, Bank, E-wallet, atau Saldo Marketplace yang aktif dan postable.',
+        isMarketplaceWithdrawal
+          ? 'Penarikan Marketplace harus berasal dari Saldo Marketplace dan menuju akun Bank atau E-wallet yang aktif.'
+          : 'Transfer Kas & Bank hanya menerima akun Kas, Bank, atau E-wallet yang aktif dan postable. Gunakan halaman Penarikan Marketplace untuk sumber Saldo Marketplace.',
         'FINANCE_CASH_BANK_TRANSFER_ACCOUNT_INVALID'
       );
     }
@@ -201,6 +294,49 @@ export class FinanceCashBankTransferService {
       );
       if (existing.status === 'posted') {
         return toResponse(existing, true);
+      }
+    }
+
+    if (isMarketplaceWithdrawal) {
+      if (!marketplaceWithdrawalSourceId) {
+        throw new FinanceDomainError(
+          'Akun Saldo Marketplace tidak tersedia untuk penarikan.',
+          'FINANCE_CASH_BANK_TRANSFER_ACCOUNT_INVALID'
+        );
+      }
+
+      const journalIdempotencyKey = `finance-cash-bank-transfer-journal:${idempotencyKey}`;
+      const existingJournal = this.journalService
+        .findByIdempotencyKey
+        ? await this.journalService.findByIdempotencyKey(
+            journalIdempotencyKey,
+            session
+          )
+        : null;
+
+      if (!existingJournal) {
+        const balances =
+          await this.balanceRepository.aggregatePostedAccountBalances(
+            [marketplaceWithdrawalSourceId],
+            session
+          );
+        const balance = balances.find(
+          (entry) =>
+            String(entry._id) ===
+            marketplaceWithdrawalSourceId
+        );
+        const availableBalance = getAccountBalance(
+          sourceAccount.normal_balance,
+          balance?.debit_total ?? 0,
+          balance?.credit_total ?? 0
+        );
+
+        if (data.amount > availableBalance) {
+          throw new FinanceDomainError(
+            'Nominal penarikan melebihi saldo Marketplace yang tersedia. Muat ulang halaman untuk melihat saldo terbaru.',
+            'FINANCE_MARKETPLACE_WITHDRAWAL_EXCEEDS_BALANCE'
+          );
+        }
       }
     }
 

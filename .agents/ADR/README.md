@@ -17,6 +17,7 @@ Architecture Decision Records (ADRs) preserve durable choices and why they were 
 | [0002 — Organization-scoped optional module activation](0002-organization-scoped-module-activation.md) | Accepted | Optional capabilities are enabled or disabled per Organization at runtime in the deployed application. |
 | [0003 — Finance-owned Organization state](0003-finance-owned-organization-state.md) | Accepted | Store Finance lifecycle and settings state in Finance-owned, Organization-scoped persistence with separate lifecycle and settings paths. |
 | [0004 — Shopee marketplace sales, settlement, and withdrawal](0004-shopee-marketplace-settlement-and-withdrawal.md) | Accepted | Separate Order sales recognition, released funds in Shopee's marketplace balance, and manual withdrawal to Bank/E-wallet; preserve fee detail under one marketplace-admin expense account. |
+| [0005 — MongoDB standalone deployment and transaction policy](0005-mongodb-standalone-and-transaction-policy.md) | Accepted | Keep marketplace-withdrawal balance checks compatible with the current standalone deployment; revisit transaction-based protection for production use with multiple users. |
 
 ## Authoring rules
 

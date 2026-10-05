@@ -86,6 +86,7 @@ introduce a legacy `middleware.ts`. Read the relevant local Next.js guide in
 - Do not bypass tenant scoping, authorization, soft-delete rules, or accounting lifecycle guards.
 - Never trust client-provided tenant headers as an authorization mechanism.
 - A client-side feature flag is never an authorization mechanism.
+- For marketplace withdrawals, follow [ADR-0005](.agents/ADR/0005-mongodb-standalone-and-transaction-policy.md). While MongoDB remains standalone and the application is not used in production by multiple users, keep balance validation request-scoped. Do not add a multi-document transaction requirement or separate concurrency-control subsystem preemptively; the documented overlapping-request race is accepted until the scale-up trigger in that ADR.
 - Ignore every directory named `.trash`: do not inspect, search, read, modify, or use its contents as code examples. Do not add code under `*.trash` or prototype-only folders.
 - Do not copy old `/api/products` documentation; the active dashboard API is versioned under `/api/v1/dashboard/...`.
 - Do not create a second database connection, auth configuration, response envelope, table system, or form system without documenting the decision.
@@ -128,7 +129,7 @@ before adding or changing persisted fields.
 - `modules/base.repository.ts` is the shared repository base used by current business modules.
 - Application models commonly use `organization` and optional `store` fields. Better Auth models use `organizationId`; do not mix these conventions without an explicit mapping.
 - Queries and mutations must include the tenant context and must not allow a caller to override it.
-- Accounting operations may require a Mongoose `ClientSession` and lifecycle guards; preserve both when composing services.
+- Accounting operations may require a Mongoose `ClientSession` and lifecycle guards; preserve both when composing services. Optional session propagation does not imply that the current standalone deployment supports multi-document transactions. Follow [ADR-0005](.agents/ADR/0005-mongodb-standalone-and-transaction-policy.md) for marketplace withdrawals.
 
 Detailed rules are in `.agents/docs/conventions/api-and-data-access.md` and
 `.agents/docs/architecture/identity-and-access-control.md`. Current user-facing

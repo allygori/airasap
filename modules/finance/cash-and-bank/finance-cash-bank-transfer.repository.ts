@@ -80,6 +80,7 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
       page: number;
       limit: number;
       status?: FinanceCashBankTransferStatusDTO;
+      source_account_id?: string;
       search?: string;
     },
     session?: ClientSession
@@ -91,6 +92,13 @@ export class FinanceCashBankTransferRepository extends BaseRepository<TFinanceCa
       {
         ...this.getTenantFilter(),
         ...(filter.status ? { status: filter.status } : {}),
+        ...(filter.source_account_id
+          ? {
+              source_account: new Types.ObjectId(
+                filter.source_account_id
+              ),
+            }
+          : {}),
         ...(filter.search
           ? {
               $or: [

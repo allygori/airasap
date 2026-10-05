@@ -82,6 +82,7 @@ export const FinanceCashBankTransferListQuerySchema = z
       .max(100)
       .default(25),
     status: FinanceCashBankTransferStatusSchema.optional(),
+    source_account_id: ObjectIdStringSchema.optional(),
     search: z.string().trim().max(100).optional(),
   })
   .strict();

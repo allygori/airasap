@@ -351,6 +351,7 @@ export {
   FinanceCashBankTransferListResponseSchema,
   FinanceCashBankTransferSummarySchema,
 } from './cash-and-bank/finance-cash-bank-transfer.schema';
+export { FinanceMarketplaceWithdrawalInputSchema } from './cash-and-bank/finance-marketplace-withdrawal.schema';
 export {
   FinancePurchaseInputSchema,
   FinancePurchaseLineInputSchema,

@@ -62,7 +62,7 @@ This uses the available `completed_at` milestone for the sales journal, the rele
 
 - Orders without `completed_at` require review before automatic sales posting.
 - Released-funds reconciliation must route each Shopee fee component to one expense role while retaining its source detail.
-- Withdrawal posting needs a server-side, concurrency-safe available-balance guard.
+- In the current standalone MongoDB deployment, the server-side balance check is per request and overlapping withdrawals can race. See [ADR-0005](0005-mongodb-standalone-and-transaction-policy.md) for the accepted deployment constraint and scale-up trigger.
 - Return/refund and inventory lifecycle behavior are not settled by this decision.
 
 ## Implementation status
@@ -70,11 +70,13 @@ This uses the available `completed_at` milestone for the sales journal, the rele
 - **[CURRENT]** Shopee sales eligibility is based on `selesai`, and its sales transaction date requires `completed_at`; missing dates leave the projection incomplete. Other marketplace date mappings were not changed.
 - **[CURRENT]** Shopee released-funds posting debits 1220 Saldo Marketplace for net released funds, debits 6310 Beban Admin Marketplace for supported Shopee fee components, and credits 1210 Piutang Marketplace for the gross amount cleared. Fee category/amount details remain in the release record. The journal no longer depends on the configured payout bookkeeping account.
 - **[CURRENT]** The Shopee payout bookkeeping setting remains available in Finance Settings, but does not determine released-funds journals. Its future removal or reuse as a withdrawal-form default remains unresolved.
-- **[CURRENT]** Generic cash/bank transfers accept marketplace-balance accounts but do not prevent a transfer greater than the source balance.
-- **[TARGET]** The dedicated Penarikan Marketplace page and its available-balance guard are still pending. This ADR does not claim that withdrawal workflow exists yet.
+- **[CURRENT]** Generic Cash & Bank transfers exclude marketplace-balance accounts. The dedicated Penarikan Marketplace page records the actual seller withdrawal from 1220 Saldo Marketplace to an active Bank/E-wallet account.
+- **[CURRENT]** The withdrawal service validates the requested amount against the latest posted balance of 1220 before posting. The current database is a standalone MongoDB deployment, so this check is not atomic with journal creation and two overlapping withdrawals can both pass against the same balance. The UI displays the current withdrawable amount; the server remains authoritative for each individual request.
+- **[TARGET]** When the application is used in production with multiple users, migrate MongoDB from standalone to a transaction-capable replica set or mongos deployment and add a transaction-based available-balance guard for withdrawals.
 
 ## Open questions and related records
 
 - [Q-011 — Imported Order, shortage, cancellation, and return reconciliation](../docs/open-questions.md#q-011--imported-order-shortage-cancellation-and-return-reconciliation)
 - [Q-017 — Marketplace release fee updates and correction workflow](../docs/open-questions.md#q-017--marketplace-release-fee-updates-and-correction-workflow)
+- [ADR-0005 — MongoDB standalone deployment and transaction policy](0005-mongodb-standalone-and-transaction-policy.md)
 - [Finance Sales](../features/finance/sales.md), [Finance Cash Management](../features/finance/cash-management.md), [Finance Inventory](../features/finance/inventory.md), and [Inventory and Sales Channels](../docs/architecture/inventory-and-channels.md)

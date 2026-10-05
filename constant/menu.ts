@@ -369,6 +369,10 @@ export const financeNav = [
         url: '/dashboard/finance/cash-and-bank-transfers',
       },
       {
+        title: 'Penarikan Marketplace',
+        url: '/dashboard/finance/marketplace-withdrawals',
+      },
+      {
         title: 'Penarikan Pemilik',
         url: '/dashboard/finance/owner-withdrawals',
       },

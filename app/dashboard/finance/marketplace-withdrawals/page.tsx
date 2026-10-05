@@ -8,7 +8,7 @@ import {
   FinanceCashBankTransferReadService,
   FinanceDomainError,
   type FinanceCashBankAccountDTO,
-  type FinanceCashBankTransferListResponseDTO,
+  type FinanceCashBankTransferSummaryDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
 import { FinanceNotReadyState } from '../_components/finance-not-ready-state';
@@ -18,17 +18,18 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { FinanceCashBankTransferClient } from './_components/finance-cash-bank-transfer.client';
+import { FinanceMarketplaceWithdrawalClient } from './_components/finance-marketplace-withdrawal.client';
 
 type PageData =
   | {
       status: 'ready';
-      accounts: FinanceCashBankAccountDTO[];
-      transfers: FinanceCashBankTransferListResponseDTO;
+      marketplaceBalance: FinanceCashBankAccountDTO | null;
+      destinations: FinanceCashBankAccountDTO[];
+      withdrawals: FinanceCashBankTransferSummaryDTO[];
     }
   | { status: 'unavailable' | 'not_ready' };
 
-export default async function CashAndBankTransfersPage() {
+export default async function MarketplaceWithdrawalsPage() {
   const tenantContext = await getTenantContext();
 
   if (!tenantContext.organizationId) {
@@ -42,16 +43,17 @@ export default async function CashAndBankTransfersPage() {
       <UnavailableState />
     ) : (
       <FinanceNotReadyState
-        title="Transfer antar akun kas dan bank"
-        description="Aktifkan Finance untuk mencatat perpindahan dana antar rekening dan melihat jurnal transfernya."
+        title="Penarikan Marketplace"
+        description="Aktifkan Finance untuk mencatat penarikan dana dari saldo Marketplace ke rekening Bank atau E-wallet."
       />
     );
   }
 
   return (
-    <FinanceCashBankTransferClient
-      accounts={data.accounts}
-      transfers={data.transfers}
+    <FinanceMarketplaceWithdrawalClient
+      marketplaceBalance={data.marketplaceBalance}
+      destinations={data.destinations}
+      withdrawals={data.withdrawals}
     />
   );
 }
@@ -63,22 +65,42 @@ async function loadPageData(
     await db.connect();
     await assertFinanceModuleActive(context);
 
-    const [cashBankData, transferData] = await Promise.all([
-      new FinanceCashBankReadService(context).list(
-        FinanceCashBankQuerySchema.parse({})
-      ),
-      new FinanceCashBankTransferReadService(context).list(
-        FinanceCashBankTransferListQuerySchema.parse({})
-      ),
-    ]);
+    const cashBankData =
+      await new FinanceCashBankReadService(context).list(
+        FinanceCashBankQuerySchema.parse({
+          status: 'active',
+          limit: 100,
+        })
+      );
+    const marketplaceBalance =
+      cashBankData.accounts.find(
+        (account) =>
+          account.subtype === 'marketplace_balance'
+      ) ?? null;
+    const destinations = cashBankData.accounts.filter(
+      (account) =>
+        account.subtype === 'bank' ||
+        account.subtype === 'e_wallet'
+    );
+    const withdrawals = marketplaceBalance
+      ? (
+          await new FinanceCashBankTransferReadService(
+            context
+          ).list(
+            FinanceCashBankTransferListQuerySchema.parse({
+              page: 1,
+              limit: 10,
+              source_account_id: marketplaceBalance.id,
+            })
+          )
+        ).transfers
+      : [];
 
     return {
       status: 'ready',
-      accounts: cashBankData.accounts.filter(
-        (account) =>
-          account.subtype !== 'marketplace_balance'
-      ),
-      transfers: transferData,
+      marketplaceBalance,
+      destinations,
+      withdrawals,
     };
   } catch (error) {
     if (
@@ -105,7 +127,7 @@ function UnavailableState() {
       <Card className="max-w-2xl">
         <CardHeader>
           <CardTitle>
-            Transfer Kas & Bank tidak tersedia
+            Penarikan Marketplace tidak tersedia
           </CardTitle>
         </CardHeader>
         <CardContent className="text-muted-foreground">
