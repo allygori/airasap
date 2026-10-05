@@ -49,6 +49,7 @@ export { FinanceInventoryCogsService } from './inventory/finance-inventory-cogs.
 export { FinanceInventoryReservationService } from './inventory/finance-inventory-reservation.service';
 export type { FinanceInventoryReservationSyncResult } from './inventory/finance-inventory-reservation.service';
 export { FinanceCashBankReadService } from './cash-and-bank/finance-cash-bank-read.service';
+export { FinanceCashBankAccountManagementService } from './cash-and-bank/finance-cash-bank-account-management.service';
 export { FinanceCashBankTransferService } from './cash-and-bank/finance-cash-bank-transfer.service';
 export { FinanceCashBankTransferReadService } from './cash-and-bank/finance-cash-bank-transfer-read.service';
 export { FinanceCashBankTransferRepository } from './cash-and-bank/finance-cash-bank-transfer.repository';
@@ -231,6 +232,12 @@ export type {
   FinanceCashBankSubtypeDTO,
 } from './cash-and-bank/finance-cash-bank.dto';
 export type {
+  FinanceCashBankAccountActiveInputDTO,
+  FinanceCashBankAccountManagementInputDTO,
+  FinanceCashBankManagedAccountDTO,
+  FinanceCashBankManagedAccountsResponseDTO,
+} from './cash-and-bank/finance-cash-bank-account-management.dto';
+export type {
   FinanceCashBankTransferInputDTO,
   FinanceCashBankTransferResponseDTO,
   FinanceCashBankTransferStatusDTO,
@@ -328,6 +335,13 @@ export {
   FinanceCashBankAccountSchema,
   FinanceCashBankSubtypeSchema,
 } from './cash-and-bank/finance-cash-bank.schema';
+export {
+  FinanceCashBankAccountActiveInputSchema,
+  FinanceCashBankAccountManagementInputSchema,
+  FinanceCashBankManagedAccountSchema,
+  FinanceCashBankManagedAccountResponseSchema,
+  FinanceCashBankManagedAccountsResponseSchema,
+} from './cash-and-bank/finance-cash-bank-account-management.schema';
 export {
   FinanceCashBankTransferInputSchema,
   FinanceCashBankTransferResponseSchema,

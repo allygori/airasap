@@ -2,11 +2,13 @@ import { getTenantContext } from '@/lib/api/tenant-context';
 import { db } from '@/lib/db/connection';
 import {
   assertFinanceModuleActive,
+  FinanceCashBankAccountManagementService,
   FinanceCashBankQuerySchema,
   FinanceCashBankReadService,
   FinanceDomainError,
   type FinanceCashBankQueryDTO,
   type FinanceCashBankResponseDTO,
+  type FinanceCashBankManagedAccountsResponseDTO,
   type FinanceTenantContext,
 } from '@/modules/finance';
 import { FinanceNotReadyState } from '../_components/finance-not-ready-state';
@@ -28,6 +30,7 @@ type PageData =
   | {
       status: 'ready';
       data: FinanceCashBankResponseDTO;
+      managedAccounts: FinanceCashBankManagedAccountsResponseDTO;
       query: FinanceCashBankQueryDTO;
     }
   | { status: 'unavailable' | 'not_ready' };
@@ -44,6 +47,7 @@ export default async function CashAndBankPage({
   const params = searchParams ? await searchParams : {};
   const queryResult = FinanceCashBankQuerySchema.safeParse({
     search: getParam(params.search),
+    status: getParam(params.status),
     limit: getParam(params.limit) ?? '100',
   });
   const data = await loadPageData(
@@ -65,6 +69,7 @@ export default async function CashAndBankPage({
   return (
     <FinanceCashAndBank
       data={data.data}
+      managedAccounts={data.managedAccounts}
       query={data.query}
     />
   );
@@ -86,11 +91,19 @@ async function loadPageData(
     const query = queryResult.success
       ? queryResult.data
       : FinanceCashBankQuerySchema.parse({});
-    const data = await new FinanceCashBankReadService(
-      context
-    ).list(query);
+    const [data, managedAccounts] = await Promise.all([
+      new FinanceCashBankReadService(context).list(query),
+      new FinanceCashBankAccountManagementService(
+        context
+      ).listAccounts(),
+    ]);
 
-    return { status: 'ready', data, query };
+    return {
+      status: 'ready',
+      data,
+      managedAccounts,
+      query,
+    };
   } catch (error) {
     if (
       error instanceof FinanceDomainError &&

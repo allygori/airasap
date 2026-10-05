@@ -54,6 +54,15 @@ export type FinanceEWalletAccountRecord = {
   };
 };
 
+export type FinanceCashBankAccountDetailsRecord = {
+  name: string;
+  account_metadata: {
+    institution?: string;
+    provider?: string;
+    account_last4: string;
+  };
+};
+
 export type FinanceAccountPersistenceRecord = {
   _id: Types.ObjectId;
   organization: Types.ObjectId;
@@ -237,6 +246,104 @@ export class FinanceAccountRepository {
     return this.findById(String(created._id), session);
   }
 
+  async listCashBankAccounts(
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord[]> {
+    const query = FinanceAccountModel.find({
+      organization: this.organizationId,
+      type: 'asset',
+      is_postable: true,
+      subtype: { $in: ['bank', 'e_wallet'] },
+    })
+      .sort({ display_order: 1, code: 1 })
+      .limit(500);
+
+    if (session) query.session(session);
+
+    return query
+      .lean<FinanceAccountPersistenceRecord[]>()
+      .exec();
+  }
+
+  async updateCashBankAccountDetails(
+    accountId: string,
+    data: FinanceCashBankAccountDetailsRecord,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(accountId)) return null;
+
+    const accountMetadataUpdates = {
+      ...(data.account_metadata.institution !== undefined
+        ? {
+            'account_metadata.institution':
+              data.account_metadata.institution,
+          }
+        : {}),
+      ...(data.account_metadata.provider !== undefined
+        ? {
+            'account_metadata.provider':
+              data.account_metadata.provider,
+          }
+        : {}),
+      'account_metadata.account_last4':
+        data.account_metadata.account_last4,
+    };
+    const query = FinanceAccountModel.findOneAndUpdate(
+      {
+        organization: this.organizationId,
+        _id: new Types.ObjectId(accountId),
+        type: 'asset',
+        subtype: { $in: ['bank', 'e_wallet'] },
+        is_system: false,
+        is_postable: true,
+      },
+      {
+        $set: {
+          name: data.name,
+          ...accountMetadataUpdates,
+        },
+      },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
+  async setCashBankAccountActive(
+    accountId: string,
+    isActive: boolean,
+    session?: ClientSession
+  ): Promise<FinanceAccountPersistenceRecord | null> {
+    if (!Types.ObjectId.isValid(accountId)) return null;
+
+    const query = FinanceAccountModel.findOneAndUpdate(
+      {
+        organization: this.organizationId,
+        _id: new Types.ObjectId(accountId),
+        type: 'asset',
+        subtype: { $in: ['bank', 'e_wallet'] },
+        is_system: false,
+        is_postable: true,
+      },
+      { $set: { is_active: isActive } },
+      {
+        returnDocument: 'after',
+        runValidators: true,
+        ...(session ? { session } : {}),
+      }
+    );
+
+    return query
+      .lean<FinanceAccountPersistenceRecord | null>()
+      .exec();
+  }
+
   async list(
     filter: FinanceAccountFilterDTO,
     session?: ClientSession
@@ -382,7 +489,11 @@ export class FinanceAccountRepository {
 
   async listPostableBySubtypes(
     subtypes: string[],
-    filter: { search?: string; limit: number },
+    filter: {
+      search?: string;
+      limit: number;
+      status?: 'all' | 'active' | 'inactive';
+    },
     session?: ClientSession
   ): Promise<FinanceAccountPersistenceRecord[]> {
     if (subtypes.length === 0) return [];
@@ -390,7 +501,9 @@ export class FinanceAccountRepository {
     const queryFilter: QueryFilter<TFinanceAccount> = {
       organization: this.organizationId,
       type: 'asset',
-      is_active: true,
+      ...(filter.status === 'all'
+        ? {}
+        : { is_active: filter.status !== 'inactive' }),
       is_postable: true,
       subtype: { $in: subtypes },
     };

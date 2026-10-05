@@ -130,4 +130,65 @@ describe('FinanceCashBankReadService', () => {
       current_balance: 750000,
     });
   });
+
+  it('keeps inactive cash and bank accounts visible with their posted balance', async () => {
+    const inactiveAccount = makeAccount(bankId, 'bank');
+    inactiveAccount.is_active = false;
+    const accountRepository: AccountPort = {
+      listPostableBySubtypes: async (_subtypes, filter) => {
+        expect(filter.status).toBe('all');
+        return [inactiveAccount];
+      },
+    };
+    const journalRepository: JournalPort = {
+      aggregatePostedAccountBalances: async () => [
+        {
+          _id: bankId,
+          debit_total: 875000,
+          credit_total: 125000,
+          opening_debit_total: 0,
+          opening_credit_total: 0,
+          journal_line_count: 3,
+          last_transaction_date: new Date(
+            '2026-10-01T00:00:00.000Z'
+          ),
+        },
+      ],
+    };
+    const service = new FinanceCashBankReadService(
+      { organizationId },
+      { accountRepository, journalRepository }
+    );
+
+    const result = await service.list({});
+
+    expect(result.accounts[0]).toMatchObject({
+      is_active: false,
+      opening_balance: 0,
+      current_balance: 750000,
+      journal_line_count: 3,
+    });
+    expect(result.meta.total_balance).toBe(750000);
+  });
+
+  it('can filter cash and bank accounts by status', async () => {
+    const listPostableBySubtypes = jest.fn(async () => []);
+    const service = new FinanceCashBankReadService(
+      { organizationId },
+      {
+        accountRepository: { listPostableBySubtypes },
+        journalRepository: {
+          aggregatePostedAccountBalances: async () => [],
+        },
+      }
+    );
+
+    await service.list({ status: 'inactive' });
+
+    expect(listPostableBySubtypes).toHaveBeenCalledWith(
+      expect.arrayContaining(['bank', 'e_wallet']),
+      { status: 'inactive', limit: 100 },
+      undefined
+    );
+  });
 });

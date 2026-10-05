@@ -117,6 +117,7 @@ export class FinanceCashBankReadService {
           id: String(account._id),
           code: account.code,
           name: account.name,
+          is_active: account.is_active,
           subtype:
             account.subtype as FinanceCashBankSubtype,
           normal_balance: account.normal_balance,

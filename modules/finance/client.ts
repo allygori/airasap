@@ -9,6 +9,12 @@ export {
 } from './calendar/finance-calendar.schema';
 export { getFinanceCalendarDate } from './calendar/finance-calendar';
 export { FINANCE_CASH_BANK_SUBTYPE_LABELS } from './cash-and-bank/finance-cash-bank.constants';
+export {
+  FinanceCashBankAccountActiveInputSchema,
+  FinanceCashBankAccountManagementInputSchema,
+  FinanceCashBankManagedAccountResponseSchema,
+  FinanceCashBankManagedAccountsResponseSchema,
+} from './cash-and-bank/finance-cash-bank-account-management.schema';
 export { FinanceCashBankTransferResponseSchema } from './cash-and-bank/finance-cash-bank-transfer.schema';
 export { FinanceExpenseResponseSchema } from './expenses/finance-expense.schema';
 export {
@@ -111,7 +117,17 @@ export type {
   FinanceAccountType,
   FinanceNormalBalance,
 } from './accounts/finance-account.constants';
-export type { FinanceCashBankAccountDTO } from './cash-and-bank/finance-cash-bank.dto';
+export type {
+  FinanceCashBankAccountDTO,
+  FinanceCashBankQueryDTO,
+  FinanceCashBankResponseDTO,
+} from './cash-and-bank/finance-cash-bank.dto';
+export type {
+  FinanceCashBankAccountActiveInputDTO,
+  FinanceCashBankAccountManagementInputDTO,
+  FinanceCashBankManagedAccountDTO,
+  FinanceCashBankManagedAccountsResponseDTO,
+} from './cash-and-bank/finance-cash-bank-account-management.dto';
 export type {
   FinanceCashBankTransferListResponseDTO,
   FinanceCashBankTransferSummaryDTO,

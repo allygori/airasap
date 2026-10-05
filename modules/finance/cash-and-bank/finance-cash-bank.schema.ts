@@ -8,6 +8,9 @@ export const FinanceCashBankSubtypeSchema = z.enum(
 export const FinanceCashBankQuerySchema = z
   .object({
     search: z.string().trim().max(80).optional(),
+    status: z
+      .enum(['all', 'active', 'inactive'])
+      .default('all'),
     limit: z.coerce
       .number()
       .int()
@@ -32,6 +35,7 @@ export const FinanceCashBankAccountSchema = z.object({
   id: z.string(),
   code: z.string(),
   name: z.string(),
+  is_active: z.boolean(),
   subtype: FinanceCashBankSubtypeSchema,
   normal_balance: z.enum(['debit', 'credit']),
   account_metadata: FinanceCashBankAccountMetadataSchema,
