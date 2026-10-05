@@ -330,16 +330,6 @@ export const PurchaseForm = withForm({
                 purchase saat diposting.
               </p>
             </div>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              disabled={isSubmitting || lines.length >= 100}
-              onClick={addLine}
-              className="self-start sm:self-auto"
-            >
-              + Tambah barang
-            </Button>
           </div>
 
           <div className="grid min-w-0 gap-4">
@@ -361,7 +351,7 @@ export const PurchaseForm = withForm({
                   <Button
                     type="button"
                     size="sm"
-                    variant="ghost"
+                    variant="destructive"
                     disabled={
                       isSubmitting || lines.length === 1
                     }
@@ -467,7 +457,20 @@ export const PurchaseForm = withForm({
           </div>
         </section>
 
-        <FieldGroup className="grid min-w-0 gap-5 md:grid-cols-2">
+        <div className="flex w-full items-center justify-center">
+          <Button
+            type="button"
+            size="sm"
+            variant="constructive"
+            disabled={isSubmitting || lines.length >= 100}
+            onClick={addLine}
+            className="self-start sm:self-auto"
+          >
+            + Tambah barang
+          </Button>
+        </div>
+
+        <FieldGroup className="grid min-w-0">
           <form.AppField
             name="notes"
             children={(field) => (
@@ -480,18 +483,19 @@ export const PurchaseForm = withForm({
               />
             )}
           />
-          <div className="bg-primary/5 border-primary/20 flex min-w-0 flex-col justify-center rounded-xl border p-5">
-            <p className="text-muted-foreground text-xs font-semibold tracking-[0.16em] uppercase">
-              Total purchase
-            </p>
-            <p className="mt-2 text-3xl font-extrabold tracking-tight break-words">
-              {formatMoney(totalAmount)}
-            </p>
-            <p className="text-muted-foreground mt-2 text-xs">
-              Tidak termasuk pajak pada phase ini.
-            </p>
-          </div>
         </FieldGroup>
+
+        <div className="bg-primary/5 border-primary/20 flex min-w-0 flex-col justify-center rounded-xl border p-5">
+          <p className="text-muted-foreground text-xs font-semibold tracking-[0.16em] uppercase">
+            Total purchase
+          </p>
+          <p className="mt-2 text-3xl font-extrabold tracking-tight break-words">
+            {formatMoney(totalAmount)}
+          </p>
+          <p className="text-muted-foreground mt-2 text-xs">
+            Tidak termasuk pajak pada phase ini.
+          </p>
+        </div>
 
         {errorMessage ? (
           <div
